@@ -1,0 +1,200 @@
+.cw-container {
+  padding: 0 !important;
+  overflow: hidden !important;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.chat-workspace {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  padding: 18px;
+  gap: 10px;
+  color: var(--shell-text, #e9e0d7);
+  font-family: var(--font-ui, Manrope, system-ui);
+}
+.cw-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+.cw-heading h2 {
+  font:
+    30px 'Instrument Serif',
+    Georgia,
+    serif;
+  margin: 0;
+}
+.cw-location,
+.cw-status,
+.cw-note {
+  font-size: 11px;
+  color: var(--shell-muted, #a69789);
+  margin: 0;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.cw-status {
+  min-height: 18px;
+}
+.cw-tabs,
+.cw-breadcrumb,
+.cw-file-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.cw-button {
+  border: 0;
+  background: var(--shell-surface, #29201b);
+  color: var(--shell-text, #e9e0d7);
+  border-radius: 9px;
+  font: 12px var(--font-ui, system-ui);
+  padding: 8px 11px;
+  cursor: pointer;
+  text-decoration: none;
+}
+.cw-button:hover,
+.cw-tabs [aria-pressed='true'] {
+  background: #493426;
+  color: #f1d2b7;
+}
+.cw-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.cw-files,
+.cw-terminal,
+.cw-activity {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.chat-workspace [hidden] {
+  display: none !important;
+}
+.cw-search {
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  background: var(--shell-surface, #241c17);
+  padding: 10px 12px;
+  color: inherit;
+  font: 12px var(--font-ui, system-ui);
+}
+.cw-file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cw-file {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: transparent;
+  text-align: left;
+  min-width: 0;
+}
+.cw-file > span:nth-child(2) {
+  overflow-wrap: anywhere;
+  flex: 1;
+}
+.cw-file-icon svg {
+  width: 17px;
+  height: 17px;
+  display: block;
+}
+.cw-file > small {
+  flex-shrink: 0;
+}
+.cw-command {
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--shell-surface, #201a16);
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+.cw-command-line,
+.cw-command-output,
+.cw-source {
+  font:
+    11px/1.7 ui-monospace,
+    Consolas,
+    monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  tab-size: 2;
+}
+.cw-command-line {
+  display: block;
+  color: #e7b98e;
+  margin-bottom: 6px;
+}
+.cw-command-output {
+  margin: 12px 0;
+}
+.cw-command-state {
+  display: block;
+  color: #c5ab95;
+  font-size: 10px;
+}
+.cw-commands {
+  overflow: auto;
+  min-height: 0;
+  flex: 1;
+}
+.cw-preview {
+  background: var(--shell-surface, #201a16);
+  border-radius: 14px;
+  padding: 0;
+}
+.cw-preview:not(:empty) {
+  padding: 14px;
+}
+.cw-preview strong {
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.cw-file-actions {
+  margin: 10px 0;
+}
+.cw-image {
+  max-width: 100%;
+  border-radius: 10px;
+}
+.cw-activity-row {
+  display: flex;
+  gap: 10px;
+  padding: 9px 0;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.cw-activity-row time {
+  flex: 0 0 70px;
+}
+.cw-breadcrumb .cw-button {
+  padding: 5px 8px;
+  font-size: 10px;
+}
+.cw-source {
+  margin: 0;
+}
+.cw-terminal {
+  overflow: hidden;
+}
+.cw-terminal[data-compact='true'] {
+  flex: 0 0 220px;
+  padding-top: 10px;
+}
+.cw-terminal-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #c7a78c;
+}

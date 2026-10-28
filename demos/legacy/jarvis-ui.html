@@ -1,0 +1,2262 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SIS TACTICAL INTERFACE v4.7.2</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      :root {
+        --obsidian: #06080d;
+        --surface: #0f141f;
+        --border: #1e2738;
+        --brown: #8b5e3c;
+        --brown-lt: #c89b68;
+        --blue: #2563eb;
+        --blue-lt: #60a5fa;
+        --lime: #84cc16;
+        --lime-lt: #a3e635;
+        --muted: #94a3b8;
+        --text: #e2e8f0;
+      }
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+        background: var(--obsidian);
+        color: var(--text);
+        font-family: 'Inter', system-ui, sans-serif;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+
+      /* === LAYOUT === */
+      #app {
+        display: grid;
+        grid-template-rows: 56px 1fr 48px;
+        height: 100vh;
+        width: 100vw;
+      }
+      #topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 24px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        z-index: 20;
+      }
+      #main {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 0;
+        overflow: hidden;
+      }
+      #bottombar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 24px;
+        background: var(--surface);
+        border-top: 1px solid var(--border);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      /* === TOPBAR === */
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        font-size: 15px;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+      }
+      .logo svg {
+        width: 28px;
+        height: 28px;
+      }
+      .logo .ver {
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--blue-lt);
+        background: rgba(37, 99, 235, 0.15);
+        padding: 2px 8px;
+        border-radius: 2px;
+        border: 1px solid rgba(37, 99, 235, 0.3);
+        letter-spacing: 1px;
+      }
+      .top-right {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+      }
+      .status-pill {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 2px;
+        border: 1px solid rgba(132, 204, 22, 0.3);
+        background: rgba(132, 204, 22, 0.08);
+        color: var(--lime-lt);
+        font-weight: 600;
+        font-size: 11px;
+        letter-spacing: 0.5px;
+      }
+      .status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--lime);
+        animation: pulse-dot 2s ease-in-out infinite;
+      }
+      @keyframes pulse-dot {
+        0%,
+        100% {
+          opacity: 0.4;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+      #clock {
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* === VIEWPORT (3D) === */
+      #viewport {
+        position: relative;
+        overflow: hidden;
+        background: var(--obsidian);
+      }
+      #viewport canvas {
+        display: block;
+        width: 100% !important;
+        height: 100% !important;
+      }
+      #vp-overlay {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 5;
+      }
+      .corner-bracket {
+        position: absolute;
+        width: 32px;
+        height: 32px;
+        border-color: var(--blue);
+        border-style: solid;
+        border-width: 0;
+        opacity: 0.5;
+      }
+      .corner-bracket.tl {
+        top: 16px;
+        left: 16px;
+        border-top-width: 2px;
+        border-left-width: 2px;
+      }
+      .corner-bracket.tr {
+        top: 16px;
+        right: 16px;
+        border-top-width: 2px;
+        border-right-width: 2px;
+      }
+      .corner-bracket.bl {
+        bottom: 16px;
+        left: 16px;
+        border-bottom-width: 2px;
+        border-left-width: 2px;
+      }
+      .corner-bracket.br {
+        bottom: 16px;
+        right: 16px;
+        border-bottom-width: 2px;
+        border-right-width: 2px;
+      }
+      #scanline {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--blue-lt), transparent);
+        opacity: 0.3;
+        animation: scan 4s linear infinite;
+      }
+      @keyframes scan {
+        0% {
+          top: 0;
+        }
+        100% {
+          top: 100%;
+        }
+      }
+      #vp-label {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px;
+        color: var(--muted);
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+      }
+
+      /* === SIDEBAR PANELS === */
+      #sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        overflow-y: auto;
+        background: var(--surface);
+        border-left: 1px solid var(--border);
+        scrollbar-width: thin;
+        scrollbar-color: var(--border) transparent;
+      }
+      .panel {
+        padding: 20px;
+        border-bottom: 1px solid var(--border);
+        animation: fadeSlideIn 0.5s ease both;
+      }
+      .panel:nth-child(2) {
+        animation-delay: 0.1s;
+      }
+      .panel:nth-child(3) {
+        animation-delay: 0.2s;
+      }
+      .panel:nth-child(4) {
+        animation-delay: 0.3s;
+      }
+      .panel:nth-child(5) {
+        animation-delay: 0.4s;
+      }
+      @keyframes fadeSlideIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+      .panel-title {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--muted);
+        font-family: 'JetBrains Mono', monospace;
+      }
+      .panel-badge {
+        font-size: 9px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 2px;
+        letter-spacing: 0.5px;
+      }
+      .badge-blue {
+        background: rgba(37, 99, 235, 0.15);
+        color: var(--blue-lt);
+        border: 1px solid rgba(37, 99, 235, 0.3);
+      }
+      .badge-lime {
+        background: rgba(132, 204, 22, 0.1);
+        color: var(--lime-lt);
+        border: 1px solid rgba(132, 204, 22, 0.3);
+      }
+      .badge-brown {
+        background: rgba(139, 94, 60, 0.15);
+        color: var(--brown-lt);
+        border: 1px solid rgba(139, 94, 60, 0.3);
+      }
+
+      /* === HERO CARD === */
+      .hero-card {
+        background: var(--obsidian);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--blue);
+        border-radius: 2px;
+        padding: 16px;
+        margin-bottom: 12px;
+      }
+      .hero-card h2 {
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: -0.3px;
+        margin-bottom: 4px;
+        line-height: 1.2;
+      }
+      .hero-card p {
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      /* === TELEMETRY BARS === */
+      .telem-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .telem-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--muted);
+        width: 52px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+      .telem-track {
+        flex: 1;
+        height: 6px;
+        background: var(--obsidian);
+        border: 1px solid var(--border);
+        border-radius: 1px;
+        overflow: hidden;
+        position: relative;
+      }
+      .telem-fill {
+        height: 100%;
+        border-radius: 1px;
+        transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .fill-blue {
+        background: var(--blue);
+      }
+      .fill-lime {
+        background: var(--lime);
+      }
+      .fill-brown {
+        background: var(--brown);
+      }
+      .fill-red {
+        background: #ef4444;
+      }
+      .telem-val {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        font-weight: 600;
+        width: 42px;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* === THREAT MATRIX === */
+      .threat-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+      .threat-btn {
+        background: var(--obsidian);
+        border: 1px solid var(--border);
+        border-radius: 2px;
+        padding: 10px 8px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+      .threat-btn:hover {
+        border-color: var(--blue);
+        color: var(--text);
+        transform: translateY(-1px);
+      }
+      .threat-btn.active-green {
+        border-color: var(--lime);
+        color: var(--lime-lt);
+        background: rgba(132, 204, 22, 0.06);
+      }
+      .threat-btn.active-yellow {
+        border-color: var(--brown-lt);
+        color: var(--brown-lt);
+        background: rgba(200, 155, 104, 0.06);
+      }
+      .threat-btn.active-red {
+        border-color: #ef4444;
+        color: #fca5a5;
+        background: rgba(239, 68, 68, 0.06);
+      }
+
+      /* === SLIDERS === */
+      .slider-group {
+        margin-bottom: 14px;
+      }
+      .slider-head {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 6px;
+      }
+      .slider-name {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .slider-val {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        color: var(--blue-lt);
+        font-weight: 600;
+      }
+      input[type='range'] {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 4px;
+        background: var(--obsidian);
+        border: 1px solid var(--border);
+        border-radius: 1px;
+        outline: none;
+      }
+      input[type='range']::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 14px;
+        height: 14px;
+        border-radius: 2px;
+        background: var(--blue);
+        border: 2px solid var(--blue-lt);
+        cursor: pointer;
+        transition: transform 0.15s;
+      }
+      input[type='range']::-webkit-slider-thumb:hover {
+        transform: scale(1.2);
+      }
+
+      /* === LOG TERMINAL === */
+      #log-terminal {
+        background: var(--obsidian);
+        border: 1px solid var(--border);
+        border-radius: 2px;
+        padding: 12px;
+        height: 160px;
+        overflow-y: auto;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        line-height: 1.7;
+        scrollbar-width: thin;
+        scrollbar-color: var(--border) transparent;
+      }
+      .log-line {
+        display: flex;
+        gap: 8px;
+      }
+      .log-time {
+        color: var(--brown-lt);
+        white-space: nowrap;
+      }
+      .log-msg {
+        color: var(--muted);
+      }
+      .log-msg.info {
+        color: var(--blue-lt);
+      }
+      .log-msg.warn {
+        color: var(--brown-lt);
+      }
+      .log-msg.ok {
+        color: var(--lime-lt);
+      }
+
+      /* === COMMAND INPUT === */
+      .cmd-wrap {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .cmd-input {
+        flex: 1;
+        background: var(--obsidian);
+        border: 1px solid var(--border);
+        border-radius: 2px;
+        padding: 8px 12px;
+        color: var(--text);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      .cmd-input:focus {
+        border-color: var(--blue);
+      }
+      .cmd-input::placeholder {
+        color: rgba(148, 163, 184, 0.4);
+      }
+      .cmd-btn {
+        background: var(--blue);
+        border: 1px solid var(--blue);
+        color: #fff;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 8px 16px;
+        border-radius: 2px;
+        cursor: pointer;
+        letter-spacing: 0.5px;
+        transition: all 0.2s;
+      }
+      .cmd-btn:hover {
+        background: var(--blue-lt);
+        border-color: var(--blue-lt);
+      }
+
+      /* === BOTTOM DOCK (MIC + CHAT) === */
+      .dock-btns {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .dock-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 34px;
+        padding: 0 14px;
+        border-radius: 2px;
+        background: var(--obsidian);
+        border: 1px solid var(--border);
+        color: var(--muted);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .dock-btn:focus-visible {
+        outline: 2px solid var(--blue-lt);
+        outline-offset: 2px;
+      }
+      .dock-btn svg {
+        width: 15px;
+        height: 15px;
+      }
+      .dock-btn:hover {
+        color: var(--text);
+        border-color: var(--blue-lt);
+      }
+      .dock-btn[data-live='1'] {
+        color: #fff;
+        border-color: var(--blue);
+        background: rgba(37, 99, 235, 0.18);
+      }
+      .dock-btn[data-live='listening'] {
+        color: #fff;
+        border-color: #ef4444;
+        background: rgba(239, 68, 68, 0.18);
+        animation: mic-glow 1.1s ease-in-out infinite;
+      }
+      @keyframes mic-glow {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.35);
+        }
+        50% {
+          box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+        }
+      }
+      .dock-meter {
+        width: 46px;
+        height: 5px;
+        background: var(--obsidian);
+        border: 1px solid var(--border);
+        border-radius: 1px;
+        overflow: hidden;
+      }
+      .dock-meter span {
+        display: block;
+        height: 100%;
+        width: 0%;
+        background: var(--lime);
+        transition: width 0.08s linear;
+      }
+      .dock-btn[data-live='listening'] .dock-meter span {
+        background: #ef4444;
+      }
+      #uplink-state {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      /* === CHAT DRAWER === */
+      #chat-drawer {
+        position: fixed;
+        left: 0;
+        right: 380px;
+        bottom: 48px;
+        height: min(58vh, 520px);
+        background: var(--surface);
+        border-top: 1px solid var(--border);
+        display: none;
+        flex-direction: column;
+        z-index: 40;
+        box-shadow: 0 -18px 40px rgba(0, 0, 0, 0.55);
+      }
+      #chat-drawer.open {
+        display: flex;
+      }
+      #chat-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--border);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        letter-spacing: 1.5px;
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+      #chat-status {
+        color: var(--blue-lt);
+        font-size: 10px;
+        letter-spacing: 0.5px;
+        text-transform: none;
+      }
+      #chat-log {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        scrollbar-width: thin;
+        scrollbar-color: var(--border) transparent;
+      }
+      .chat-msg {
+        max-width: 82%;
+        padding: 9px 12px;
+        border-radius: 2px;
+        font-size: 12px;
+        line-height: 1.55;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: 'JetBrains Mono', monospace;
+      }
+      .chat-msg.user {
+        align-self: flex-end;
+        background: rgba(37, 99, 235, 0.16);
+        border: 1px solid rgba(37, 99, 235, 0.35);
+        color: var(--text);
+      }
+      .chat-msg.sis {
+        align-self: flex-start;
+        background: var(--obsidian);
+        border: 1px solid var(--border);
+        color: var(--text);
+      }
+      .chat-msg.sys {
+        align-self: center;
+        max-width: 100%;
+        background: transparent;
+        border: none;
+        color: var(--muted);
+        font-size: 10.5px;
+        letter-spacing: 0.5px;
+      }
+      .chat-msg.err {
+        align-self: flex-start;
+        background: rgba(239, 68, 68, 0.08);
+        border: 1px solid rgba(239, 68, 68, 0.35);
+        color: #fca5a5;
+      }
+      .chat-caret {
+        display: inline-block;
+        width: 7px;
+        background: var(--blue-lt);
+        animation: caret 0.7s steps(1) infinite;
+      }
+      @keyframes caret {
+        0%,
+        49% {
+          opacity: 1;
+        }
+        50%,
+        100% {
+          opacity: 0;
+        }
+      }
+      #chat-foot {
+        display: flex;
+        gap: 8px;
+        padding: 12px 16px;
+        border-top: 1px solid var(--border);
+      }
+      #chat-input {
+        flex: 1;
+        background: var(--obsidian);
+        border: 1px solid var(--border);
+        border-radius: 2px;
+        padding: 9px 12px;
+        color: var(--text);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        outline: none;
+        resize: none;
+      }
+      #chat-input:focus {
+        border-color: var(--blue);
+      }
+      #chat-send {
+        background: var(--blue);
+        border: 1px solid var(--blue);
+        color: #fff;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 9px 18px;
+        border-radius: 2px;
+        cursor: pointer;
+        letter-spacing: 0.5px;
+      }
+      #chat-send:hover {
+        background: var(--blue-lt);
+        border-color: var(--blue-lt);
+      }
+
+      @media (max-width: 900px) {
+        #chat-drawer {
+          right: 0;
+        }
+      }
+
+      /* === RESPONSIVE === */
+      @media (max-width: 900px) {
+        #main {
+          grid-template-columns: 1fr;
+          grid-template-rows: 45vh 1fr;
+        }
+        #sidebar {
+          border-left: none;
+          border-top: 1px solid var(--border);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <!-- ===== TOP BAR ===== -->
+      <header id="topbar">
+        <div class="logo">
+          <svg viewBox="0 0 28 28" fill="none">
+            <circle cx="14" cy="14" r="12" stroke="#2563EB" stroke-width="1.5" />
+            <circle cx="14" cy="14" r="6" stroke="#60A5FA" stroke-width="1" />
+            <line x1="14" y1="2" x2="14" y2="8" stroke="#2563EB" stroke-width="1.5" />
+            <line x1="14" y1="20" x2="14" y2="26" stroke="#2563EB" stroke-width="1.5" />
+            <line x1="2" y1="14" x2="8" y2="14" stroke="#2563EB" stroke-width="1.5" />
+            <line x1="20" y1="14" x2="26" y2="14" stroke="#2563EB" stroke-width="1.5" />
+          </svg>
+          SIS TACTICAL INTERFACE
+          <span class="ver" id="build-tag">BUILD —</span>
+        </div>
+        <div class="top-right">
+          <div class="status-pill" id="status-pill" data-sound="status-ping">
+            <span class="status-dot"></span><span id="status-text">LINKING</span>
+          </div>
+          <div id="clock">--:--:--</div>
+        </div>
+      </header>
+
+      <!-- ===== MAIN ===== -->
+      <div id="main">
+        <!-- 3D Viewport -->
+        <div id="viewport">
+          <div id="vp-overlay">
+            <div class="corner-bracket tl"></div>
+            <div class="corner-bracket tr"></div>
+            <div class="corner-bracket bl"></div>
+            <div class="corner-bracket br"></div>
+            <div id="scanline"></div>
+            <div id="vp-label">REACTOR CORE — AWAITING TELEMETRY</div>
+          </div>
+        </div>
+
+        <!-- Sidebar Panels -->
+        <aside id="sidebar">
+          <!-- Hero -->
+          <div class="panel">
+            <div class="hero-card">
+              <h2 id="hero-title">Connecting…</h2>
+              <p id="hero-text">Establishing uplink to the SIS backend.</p>
+            </div>
+          </div>
+
+          <!-- Telemetry -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Systems Telemetry</span>
+              <span class="panel-badge badge-lime" id="telem-badge">WAIT</span>
+            </div>
+            <div id="telem-body"></div>
+          </div>
+
+          <!-- Threat Matrix -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Threat Matrix</span>
+              <span class="panel-badge badge-blue">MONITORING</span>
+            </div>
+            <div class="threat-grid">
+              <button
+                class="threat-btn active-green"
+                data-level="low"
+                data-sound="threat-click"
+                onclick="setThreat(this, 'low')"
+              >
+                Low
+              </button>
+              <button
+                class="threat-btn"
+                data-level="elevated"
+                data-sound="threat-click"
+                onclick="setThreat(this, 'elevated')"
+              >
+                Elevated
+              </button>
+              <button
+                class="threat-btn"
+                data-level="guarded"
+                data-sound="threat-click"
+                onclick="setThreat(this, 'guarded')"
+              >
+                Guarded
+              </button>
+              <button
+                class="threat-btn"
+                data-level="high"
+                data-sound="threat-click"
+                onclick="setThreat(this, 'high')"
+              >
+                High
+              </button>
+              <button
+                class="threat-btn"
+                data-level="severe"
+                data-sound="threat-click"
+                onclick="setThreat(this, 'severe')"
+              >
+                Severe
+              </button>
+              <button
+                class="threat-btn"
+                data-level="critical"
+                data-sound="threat-click"
+                onclick="setThreat(this, 'critical')"
+              >
+                Critical
+              </button>
+            </div>
+          </div>
+
+          <!-- Controls -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Reactor Controls</span>
+              <span class="panel-badge badge-brown">MANUAL</span>
+            </div>
+            <div class="slider-group">
+              <div class="slider-head">
+                <span class="slider-name">Core Rotation Speed</span
+                ><span class="slider-val" id="sv-speed">1.0x</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="300"
+                value="100"
+                id="sl-speed"
+                data-sound="slider-move"
+                oninput="updateSlider('speed', this.value)"
+              />
+            </div>
+            <div class="slider-group">
+              <div class="slider-head">
+                <span class="slider-name">Orbital Radius</span
+                ><span class="slider-val" id="sv-radius">1.0x</span>
+              </div>
+              <input
+                type="range"
+                min="50"
+                max="200"
+                value="100"
+                id="sl-radius"
+                data-sound="slider-move"
+                oninput="updateSlider('radius', this.value)"
+              />
+            </div>
+            <div class="slider-group">
+              <div class="slider-head">
+                <span class="slider-name">Particle Density</span
+                ><span class="slider-val" id="sv-density">100%</span>
+              </div>
+              <input
+                type="range"
+                min="10"
+                max="100"
+                value="100"
+                id="sl-density"
+                data-sound="slider-move"
+                oninput="updateSlider('density', this.value)"
+              />
+            </div>
+          </div>
+
+          <!-- Command Deck -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Command Deck</span>
+              <span class="panel-badge badge-blue" id="cmd-badge">OFFLINE</span>
+            </div>
+            <div class="cmd-wrap">
+              <input
+                class="cmd-input"
+                id="cmd-input"
+                type="text"
+                placeholder="Ask SIS anything…"
+                data-sound="keystroke"
+                autocomplete="off"
+              />
+              <button class="cmd-btn" data-sound="command-execute" onclick="executeCommand()">
+                EXEC
+              </button>
+            </div>
+          </div>
+
+          <!-- Activity Log -->
+          <div class="panel" style="border-bottom: none">
+            <div class="panel-header">
+              <span class="panel-title">Activity Log</span>
+              <span class="panel-badge badge-lime">STREAM</span>
+            </div>
+            <div id="log-terminal"></div>
+          </div>
+        </aside>
+      </div>
+
+      <!-- ===== BOTTOM BAR / DOCK ===== -->
+      <footer id="bottombar">
+        <span id="uplink-state"
+          ><span id="uplink-label">UPLINK: CONNECTING</span> · LATENCY:
+          <span id="latency">—</span></span
+        >
+        <div class="dock-btns">
+          <button
+            type="button"
+            class="dock-btn"
+            id="mic-btn"
+            data-live="0"
+            aria-pressed="false"
+            aria-label="Start voice dictation"
+            title="Voice dictation — Web Speech API"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            >
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+              <path d="M12 19v3" />
+            </svg>
+            <span id="mic-label">MIC</span>
+            <span class="dock-meter" aria-hidden="true"><span id="mic-meter"></span></span>
+          </button>
+          <button
+            type="button"
+            class="dock-btn"
+            id="chat-btn"
+            data-live="0"
+            aria-expanded="false"
+            aria-label="Toggle chat with SIS"
+            title="Chat with SIS"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.9 8.9 0 0 1-3.8-.8L3 21l1.9-5A8.4 8.4 0 0 1 12 3.1a8.4 8.4 0 0 1 9 8.4z"
+              />
+            </svg>
+            <span id="chat-label">CHAT</span>
+          </button>
+        </div>
+        <span
+          >NODES: <span id="stat-nodes">—</span> · EDGES: <span id="stat-edges">—</span> · FRAMES:
+          <span id="stat-frames">0</span> · FPS: <span id="fps-counter">—</span></span
+        >
+      </footer>
+
+      <!-- ===== CHAT DRAWER ===== -->
+      <section id="chat-drawer" aria-label="Chat with SIS">
+        <header id="chat-head">
+          <span>NEURAL CHAT</span>
+          <span id="chat-status">idle</span>
+          <button type="button" class="dock-btn" id="chat-close" aria-label="Close chat">
+            CLOSE ✕
+          </button>
+        </header>
+        <div id="chat-log" role="log" aria-live="polite"></div>
+        <form id="chat-foot">
+          <textarea
+            id="chat-input"
+            rows="1"
+            placeholder="Message SIS — or hold the mic and speak…"
+            autocomplete="off"
+          ></textarea>
+          <button type="submit" id="chat-send">SEND</button>
+        </form>
+      </section>
+    </div>
+
+    <script type="importmap">
+      { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+    </script>
+    <script type="module">
+      import * as THREE from 'three';
+
+      /* ========================================================================
+   CONFIG & STATE
+======================================================================== */
+      const CFG = { speedMul: 1.0, radiusMul: 1.0, densityMul: 1.0 };
+      let frameCount = 0,
+        lastFpsTime = performance.now();
+
+      // Every value below is measured from the running SIS backend. Nothing is seeded.
+      const LIVE = {
+        apiBase: null,
+        ws: null,
+        wsOpen: false,
+        wsRetries: 0,
+        rtt: null,
+        frames: 0,
+        awaitingReply: false,
+        connectedAt: 0,
+        state: null,
+        homeostasis: null,
+        oscillations: null,
+        lifecycle: null,
+        survival: null,
+        knowledgeGraph: null,
+        streams: {},
+      };
+      const SELECTED = { name: null };
+      const HOVER = { name: null };
+      // Camera orbit state (mutated by viewport drag, read by the render loop).
+      const ORBIT = { yaw: 0, pitch: 0.18, dragging: false, lastX: 0, lastY: 0 };
+
+      /* ========================================================================
+   SOUND HOOK DISPATCHER
+======================================================================== */
+      function emitSound(name, detail = {}) {
+        window.dispatchEvent(new CustomEvent('SIS_SOUND', { detail: { sound: name, ...detail } }));
+      }
+      window.SIS_SOUND = emitSound;
+      document.querySelectorAll('[data-sound]').forEach((el) => {
+        el.addEventListener('click', () => emitSound(el.dataset.sound));
+        if (el.tagName === 'INPUT') el.addEventListener('input', () => emitSound(el.dataset.sound));
+      });
+
+      /* ========================================================================
+   CLOCK
+======================================================================== */
+      function tickClock() {
+        const d = new Date();
+        document.getElementById('clock').textContent =
+          d.toTimeString().slice(0, 8) +
+          ' UTC' +
+          (d.getTimezoneOffset() > 0 ? '-' : '+') +
+          String(Math.abs(d.getTimezoneOffset()) / 60).padStart(2, '0');
+      }
+      tickClock();
+      setInterval(tickClock, 1000);
+
+      /* ========================================================================
+   THREE.JS SCENE
+======================================================================== */
+      const container = document.getElementById('viewport');
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.1;
+      container.insertBefore(renderer.domElement, container.firstChild);
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color('#06080D');
+      scene.fog = new THREE.FogExp2('#06080D', 0.035);
+
+      const camera = new THREE.PerspectiveCamera(
+        55,
+        container.clientWidth / container.clientHeight,
+        0.1,
+        200,
+      );
+      camera.position.set(0, 2.5, 8);
+      camera.lookAt(0, 0, 0);
+
+      // Lights
+      const ambLight = new THREE.AmbientLight('#1a2030', 0.6);
+      scene.add(ambLight);
+      const dirLight = new THREE.DirectionalLight('#60A5FA', 1.2);
+      dirLight.position.set(5, 10, 7);
+      scene.add(dirLight);
+      const pointBlue = new THREE.PointLight('#2563EB', 2.5, 20);
+      pointBlue.position.set(0, 0, 0);
+      scene.add(pointBlue);
+      const pointBrown = new THREE.PointLight('#8B5E3C', 1.5, 15);
+      pointBrown.position.set(-3, 2, -2);
+      scene.add(pointBrown);
+
+      // Core Icosahedron (wireframe) — non-indexed so vertices can be displaced live
+      const coreGeo = new THREE.IcosahedronGeometry(1.6, 2);
+      const coreMat = new THREE.MeshStandardMaterial({
+        color: '#2563EB',
+        wireframe: true,
+        emissive: '#2563EB',
+        emissiveIntensity: 0.3,
+        roughness: 0.4,
+        metalness: 0.8,
+      });
+      const core = new THREE.Mesh(coreGeo, coreMat);
+      core.name = 'reactor-core';
+      scene.add(core);
+
+      // Stable per-vertex phase offsets so the same vertex always bulges the same way
+      const CORE_BASE = Float32Array.from(coreGeo.attributes.position.array);
+      const CORE_DIR = new Float32Array(CORE_BASE.length);
+      for (let i = 0; i < CORE_DIR.length; i += 3) {
+        const x = CORE_BASE[i],
+          y = CORE_BASE[i + 1],
+          z = CORE_BASE[i + 2];
+        const l = Math.hypot(x, y, z) || 1;
+        CORE_DIR[i] = x / l;
+        CORE_DIR[i + 1] = y / l;
+        CORE_DIR[i + 2] = z / l;
+      }
+      const CORE_PHASE = new Float32Array(CORE_DIR.length / 3);
+      for (let i = 0; i < CORE_PHASE.length; i++) CORE_PHASE[i] = Math.random() * Math.PI * 2;
+
+      // Inner sphere
+      const innerGeo = new THREE.SphereGeometry(0.6, 24, 24);
+      const innerMat = new THREE.MeshStandardMaterial({
+        color: '#84CC16',
+        emissive: '#84CC16',
+        emissiveIntensity: 0.6,
+        roughness: 0.2,
+        metalness: 0.9,
+      });
+      const inner = new THREE.Mesh(innerGeo, innerMat);
+      inner.name = 'reactor-inner';
+      scene.add(inner);
+
+      // Orbital Rings
+      const rings = [];
+      const ringColors = ['#2563EB', '#8B5E3C', '#84CC16'];
+      for (let i = 0; i < 3; i++) {
+        const rGeo = new THREE.TorusGeometry(2.8 + i * 0.7, 0.015, 8, 128);
+        const rMat = new THREE.MeshStandardMaterial({
+          color: ringColors[i],
+          emissive: ringColors[i],
+          emissiveIntensity: 0.4,
+          roughness: 0.3,
+          metalness: 0.7,
+        });
+        const ring = new THREE.Mesh(rGeo, rMat);
+        ring.name = `orbital-ring-${i}`;
+        ring.rotation.x = Math.PI / 2 + i * 0.4;
+        ring.rotation.y = i * 0.6;
+        scene.add(ring);
+        rings.push(ring);
+      }
+
+      // Floating Data Nodes
+      const nodeGroup = new THREE.Group();
+      nodeGroup.name = 'data-nodes';
+      const nodeGeo = new THREE.OctahedronGeometry(0.08, 0);
+      const nodeMat = new THREE.MeshStandardMaterial({
+        color: '#60A5FA',
+        emissive: '#60A5FA',
+        emissiveIntensity: 0.8,
+      });
+      const NODE_COUNT = 80;
+      const nodes = [];
+      for (let i = 0; i < NODE_COUNT; i++) {
+        const m = new THREE.Mesh(nodeGeo, nodeMat.clone());
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2 * Math.random() - 1);
+        const r = 3.5 + Math.random() * 3;
+        m.position.setFromSphericalCoords(r, phi, theta);
+        m.name = `data-node-${i}`;
+        m.userData = {
+          baseR: r,
+          theta,
+          phi,
+          speed: 0.2 + Math.random() * 0.5,
+          offset: Math.random() * Math.PI * 2,
+        };
+        nodeGroup.add(m);
+        nodes.push(m);
+      }
+      scene.add(nodeGroup);
+
+      // Radar Sweep Plane
+      const radarGeo = new THREE.RingGeometry(0.1, 5, 64, 1, 0, Math.PI * 0.3);
+      const radarMat = new THREE.MeshBasicMaterial({
+        color: '#2563EB',
+        transparent: true,
+        opacity: 0.08,
+        side: THREE.DoubleSide,
+      });
+      const radar = new THREE.Mesh(radarGeo, radarMat);
+      radar.name = 'radar-sweep';
+      radar.rotation.x = -Math.PI / 2;
+      radar.position.y = -1.5;
+      scene.add(radar);
+
+      // Grid floor
+      const gridHelper = new THREE.GridHelper(40, 60, '#1E2738', '#0F141F');
+      gridHelper.position.y = -2;
+      scene.add(gridHelper);
+
+      /* ========================================================================
+   ANIMATION LOOP
+======================================================================== */
+      const clock = new THREE.Clock();
+
+      function animate() {
+        requestAnimationFrame(animate);
+        const t = clock.getElapsedTime();
+        const dt = clock.getDelta();
+        const sp = CFG.speedMul;
+
+        // Core rotation + live shape deformation driven by real brain-wave band power
+        core.rotation.x += 0.003 * sp;
+        core.rotation.y += 0.005 * sp;
+        inner.rotation.y -= 0.008 * sp;
+        morphCore(t);
+
+        // Pulse inner glow
+        innerMat.emissiveIntensity = 0.4 + Math.sin(t * 2) * 0.3;
+        pointBlue.intensity = 2.0 + Math.sin(t * 1.5) * 0.8;
+
+        // Rings
+        rings.forEach((ring, i) => {
+          ring.rotation.z += (0.004 + i * 0.002) * sp;
+          ring.scale.setScalar(CFG.radiusMul);
+        });
+
+        // Nodes
+        const visibleCount = Math.floor(NODE_COUNT * CFG.densityMul);
+        nodes.forEach((n, i) => {
+          n.visible = i < visibleCount;
+          if (!n.visible) return;
+          const ud = n.userData;
+          const angle = ud.theta + t * ud.speed * 0.15 * sp;
+          const r = ud.baseR * CFG.radiusMul + Math.sin(t * ud.speed + ud.offset) * 0.3;
+          n.position.setFromSphericalCoords(r, ud.phi, angle);
+          n.material.emissiveIntensity = 0.5 + Math.sin(t * 2 + ud.offset) * 0.4;
+        });
+
+        // Radar sweep
+        radar.rotation.z += 0.015 * sp;
+
+        // Camera: drag orbit + subtle sway
+        const dist = 8;
+        camera.position.x =
+          Math.cos(ORBIT.yaw) * Math.cos(ORBIT.pitch) * dist + Math.sin(t * 0.1) * 0.2;
+        camera.position.y = Math.sin(ORBIT.pitch) * dist + Math.sin(t * 0.15) * 0.2;
+        camera.position.z = Math.sin(ORBIT.yaw) * Math.cos(ORBIT.pitch) * dist;
+        camera.lookAt(0, 0, 0);
+
+        renderer.render(scene, camera);
+
+        // FPS counter
+        frameCount++;
+        const now = performance.now();
+        if (now - lastFpsTime >= 1000) {
+          document.getElementById('fps-counter').textContent = frameCount;
+          frameCount = 0;
+          lastFpsTime = now;
+        }
+      }
+      animate();
+
+      /* ========================================================================
+   RESIZE
+======================================================================== */
+      window.addEventListener('resize', () => {
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+      });
+
+      /* ========================================================================
+   ACTIVITY LOG — every line is a real event from the backend
+======================================================================== */
+      const logEl = document.getElementById('log-terminal');
+      const seenCounts = new Map();
+
+      function addLog(msg, cls = '') {
+        const time = new Date().toTimeString().slice(0, 8);
+        const line = document.createElement('div');
+        line.className = 'log-line';
+        line.innerHTML = `<span class="log-time">${time}</span><span class="log-msg ${cls}"></span>`;
+        line.lastChild.textContent = msg;
+        logEl.appendChild(line);
+        logEl.scrollTop = logEl.scrollHeight;
+        while (logEl.children.length > 80) logEl.removeChild(logEl.firstChild);
+      }
+
+      /** Log a WebSocket event type once per occurrence, with a running count. */
+      function logEvent(type, msg, cls = 'info') {
+        const n = (seenCounts.get(type) || 0) + 1;
+        seenCounts.set(type, n);
+        addLog(`${type} · ${msg}`, cls);
+      }
+
+      /* ========================================================================
+   BACKEND LINK — discovers the SIS server, opens the live WebSocket
+======================================================================== */
+      const CANDIDATE_PORTS = [];
+      for (let p = 3001; p <= 3020; p++) CANDIDATE_PORTS.push(p);
+
+      async function probeHealth(base) {
+        try {
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), 800);
+          const res = await fetch(`${base}/api/health`, { signal: ctrl.signal });
+          clearTimeout(timer);
+          if (!res.ok) return null;
+          const health = await res.json();
+          return health?.name?.includes('SIS') ? health : null;
+        } catch {
+          return null;
+        }
+      }
+
+      async function discoverBackend() {
+        const probes = [];
+        if (location.protocol === 'http:' || location.protocol === 'https:')
+          probes.push(location.origin);
+        CANDIDATE_PORTS.forEach((p) => probes.push(`http://localhost:${p}`));
+
+        // Parallel scan: first healthy SIS endpoint wins.
+        const found = await Promise.all(probes.map(probeHealth));
+        const idx = found.findIndex(Boolean);
+        return idx === -1 ? null : { base: probes[idx], health: found[idx] };
+      }
+
+      function setUplink(label, color) {
+        document.getElementById('uplink-label').textContent = `UPLINK: ${label}`;
+        document.getElementById('uplink-label').style.color = color;
+        document.getElementById('status-text').textContent = label;
+      }
+
+      function setHero(title, text) {
+        document.getElementById('hero-title').textContent = title;
+        document.getElementById('hero-text').textContent = text;
+      }
+
+      async function connectBackend() {
+        setUplink('DISCOVERING', 'var(--brown-lt)');
+        addLog('Scanning for SIS backend on localhost…', 'info');
+
+        const found = await discoverBackend();
+        if (!found) {
+          setUplink('NO BACKEND', '#EF4444');
+          setHero(
+            'Backend Offline',
+            'No SIS server answered /api/health on localhost:3001-3020. Start it with `npm run server`, then this page links itself automatically.',
+          );
+          document.getElementById('telem-badge').textContent = 'OFFLINE';
+          document.getElementById('cmd-badge').textContent = 'OFFLINE';
+          addLog(
+            'No backend found — telemetry, chat and mic stay disabled until one is running.',
+            'warn',
+          );
+          setTimeout(connectBackend, 5000);
+          return;
+        }
+
+        LIVE.apiBase = found.base;
+        document.getElementById('build-tag').textContent = `BUILD ${found.health.build ?? '—'}`;
+        setUplink('HANDSHAKE', 'var(--blue-lt)');
+        addLog(
+          `Backend located at ${found.base} · build ${found.health.build} · up ${Math.round(found.health.uptime)}s`,
+          'ok',
+        );
+
+        // Open the socket first — it is the real-time channel and must never wait on HTTP.
+        openSocket();
+
+        // Then the lightweight pollers. /api/state is ~10MB and blocks the server's event
+        // loop, so it is fetched once in the background and never polled.
+        pollLifecycle();
+        pollWaves();
+        pollSurvival();
+        pollGraph();
+
+        setInterval(pollLifecycle, 2000);
+        setInterval(pollWaves, 1000);
+        setInterval(pollSurvival, 4000);
+        setInterval(pollGraph, 15000);
+      }
+
+      function wsUrl() {
+        return LIVE.apiBase.replace(/^http/, 'ws');
+      }
+
+      function openSocket() {
+        if (LIVE.ws) {
+          try {
+            LIVE.ws.close();
+          } catch {}
+        }
+        let ws;
+        try {
+          ws = new WebSocket(wsUrl());
+        } catch (err) {
+          addLog(`WebSocket construction failed: ${err.message}`, 'warn');
+          return;
+        }
+        LIVE.ws = ws;
+
+        ws.addEventListener('open', () => {
+          LIVE.wsOpen = true;
+          LIVE.connectedAt = Date.now();
+          setUplink('SECURE', 'var(--lime-lt)');
+          document.getElementById('cmd-badge').textContent = 'READY';
+          addLog('WebSocket open — live event stream attached', 'ok');
+          [
+            'brain-state',
+            'get-brain-waves',
+            'get-thought-stream',
+            'get-neurochemistry',
+            'state',
+            'survival-state',
+          ].forEach((t) => ws.send(JSON.stringify({ type: t })));
+        });
+
+        ws.addEventListener('message', (ev) => {
+          LIVE.frames++;
+          document.getElementById('stat-frames').textContent = LIVE.frames;
+          let msg;
+          try {
+            msg = JSON.parse(ev.data);
+          } catch {
+            return;
+          }
+          handleFrame(msg);
+        });
+
+        ws.addEventListener('close', () => {
+          LIVE.wsOpen = false;
+          setUplink('RECONNECTING', 'var(--brown-lt)');
+          addLog('WebSocket closed — retrying', 'warn');
+          setTimeout(openSocket, 2500);
+        });
+
+        ws.addEventListener('error', () => addLog('WebSocket error', 'warn'));
+      }
+
+      function sendWs(obj) {
+        if (LIVE.ws && LIVE.ws.readyState === 1) {
+          LIVE.ws.send(JSON.stringify(obj));
+          return true;
+        }
+        return false;
+      }
+
+      /* ========================================================================
+   LIVE FRAME HANDLING
+======================================================================== */
+      let streamingEl = null;
+      let statusEl = null;
+
+      function setChatStatus(text) {
+        const el = document.getElementById('chat-status');
+        if (el) el.textContent = text;
+      }
+
+      function appendChat(text, cls) {
+        const log = document.getElementById('chat-log');
+        const el = document.createElement('div');
+        el.className = `chat-msg ${cls}`;
+        el.textContent = text;
+        log.appendChild(el);
+        log.scrollTop = log.scrollHeight;
+        while (log.children.length > 200) log.removeChild(log.firstChild);
+        return el;
+      }
+
+      function handleFrame(msg) {
+        switch (msg.type) {
+          case 'init':
+            logEvent('init', msg.message || 'handshake', 'ok');
+            break;
+
+          case 'status': {
+            statusEl = msg;
+            setChatStatus(msg.message || msg.status || 'working');
+            renderHero();
+            logEvent(
+              'status',
+              `${msg.status || ''} ${msg.stage ? `· ${msg.stage}` : ''} ${msg.message || ''}`.trim(),
+              msg.status === 'error' ? 'warn' : 'info',
+            );
+            break;
+          }
+
+          case 'reasoning-token':
+            if (streamingEl) {
+              streamingEl.textContent += msg.chunk || '';
+              scrollChat();
+            }
+            break;
+
+          case 'token':
+            if (msg.token) {
+              if (!streamingEl) streamingEl = appendChat('', 'sis');
+              streamingEl.textContent += msg.token;
+              if (statusEl && statusEl.status === 'thinking') setChatStatus('generating…');
+              scrollChat();
+            }
+            break;
+
+          case 'complete':
+            streamingEl = null;
+            LIVE.awaitingReply = false;
+            setChatStatus(LIVE.wsOpen ? 'idle' : 'offline');
+            addLog(`complete · ${String(msg.response || '').length} chars`, 'ok');
+            if (msg.isShutdown)
+              setHero(
+                'SIS Shut Down',
+                'Survival vitality is exhausted. Use the survival revive endpoint or ask SIS to revive.',
+              );
+            break;
+
+          case 'brain-state':
+            LIVE.homeostasis = msg.homeostasis ?? LIVE.homeostasis;
+            LIVE.lifecycle = msg.lifecycle ?? LIVE.lifecycle;
+            renderTelemetry();
+            logEvent(
+              'brain-state',
+              msg.event
+                ? `${msg.event.from || '—'} → ${msg.event.to}`
+                : `homeostasis sleepPressure ${msg.homeostasis?.sleepPressure ?? '—'}%`,
+              'info',
+            );
+            break;
+
+          case 'brain-waves':
+            LIVE.oscillations = msg;
+            renderTelemetry();
+            break;
+
+          case 'thought-stream':
+            LIVE.streams.thought = msg;
+            logEvent('thought-stream', summarize(msg), 'info');
+            break;
+
+          case 'state':
+            LIVE.state = msg.state ?? msg;
+            LIVE.knowledgeGraph = LIVE.state?.knowledgeGraph ?? LIVE.knowledgeGraph;
+            LIVE.survival = LIVE.state?.survival ?? LIVE.survival;
+            renderTelemetry();
+            renderHero();
+            break;
+
+          case 'survival-state':
+            LIVE.survival = msg.state ?? msg.survival ?? LIVE.survival;
+            renderTelemetry();
+            break;
+
+          case 'neurochemistry':
+            logEvent('neurochemistry', summarize(msg), 'info');
+            break;
+
+          case 'coders-progress':
+          case 'coder-progress':
+            logEvent('coder-progress', summarize(msg), 'info');
+            break;
+
+          case 'tool-execution':
+          case 'tools':
+            logEvent('tools', msg.message || summarize(msg), 'info');
+            break;
+
+          case 'chat-focus-changed':
+            logEvent('chat-focus', msg.status || '', 'info');
+            break;
+
+          default:
+            // Every other engine broadcast still reaches the operator, live.
+            logEvent(msg.type, summarize(msg), 'info');
+        }
+      }
+
+      function summarize(obj) {
+        if (!obj || typeof obj !== 'object') return String(obj ?? '');
+        const parts = [];
+        for (const [k, v] of Object.entries(obj)) {
+          if (k === 'type' || k === 'timestamp') continue;
+          if (v === null || v === undefined) continue;
+          if (typeof v === 'object') {
+            parts.push(`${k}{${Object.keys(v).length}}`);
+            continue;
+          }
+          parts.push(`${k}=${typeof v === 'number' ? Math.round(v * 100) / 100 : v}`);
+          if (parts.length >= 4) break;
+        }
+        return parts.join(' ');
+      }
+
+      function scrollChat() {
+        const log = document.getElementById('chat-log');
+        log.scrollTop = log.scrollHeight;
+      }
+
+      /* ========================================================================
+   HTTP POLLING — the authoritative state, refreshed on a timer
+======================================================================== */
+      async function getJson(path, timeoutMs = 6000) {
+        if (!LIVE.apiBase) return null;
+        const t0 = performance.now();
+        try {
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+          const res = await fetch(`${LIVE.apiBase}${path}`, { signal: ctrl.signal });
+          clearTimeout(timer);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          const ms = performance.now() - t0;
+          LIVE.rtt = Math.round(LIVE.rtt ? LIVE.rtt * 0.7 + ms * 0.3 : ms);
+          document.getElementById('latency').textContent = `${LIVE.rtt}ms`;
+          return data;
+        } catch (err) {
+          document.getElementById('latency').textContent = '—';
+          return null;
+        }
+      }
+
+      async function pollLifecycle() {
+        const data = await getJson('/api/brain/lifecycle', 4000);
+        if (!data) return;
+        LIVE.lifecycle = data.lifecycle;
+        LIVE.homeostasis = data.homeostasis;
+        LIVE.sleep = data.sleep;
+        LIVE.glymphatics = data.glymphatics;
+        renderTelemetry();
+        renderHero();
+      }
+
+      async function pollWaves() {
+        const data = await getJson('/api/brain/waves', 4000);
+        if (!data) return;
+        LIVE.oscillations = data;
+        renderTelemetry();
+      }
+
+      async function pollSurvival() {
+        const data = await getJson('/api/survival', 4000);
+        if (!data) return;
+        LIVE.survival = data;
+        renderTelemetry();
+        renderHero();
+      }
+
+      async function pollGraph() {
+        const data = await getJson('/api/memory/graph', 8000);
+        if (!data) return;
+        LIVE.knowledgeGraph = data;
+        renderTelemetry();
+      }
+
+      /* ========================================================================
+   TELEMETRY RENDERING — bars are built from live values only
+======================================================================== */
+      const telemBody = document.getElementById('telem-body');
+
+      function renderRow(key, label, value, pct, fill) {
+        let row = telemBody.querySelector(`[data-key="${key}"]`);
+        if (!row) {
+          row = document.createElement('div');
+          row.className = 'telem-row';
+          row.dataset.key = key;
+          row.innerHTML =
+            '<span class="telem-label"></span><div class="telem-track"><div class="telem-fill"></div></div><span class="telem-val"></span>';
+          telemBody.appendChild(row);
+        }
+        row.querySelector('.telem-label').textContent = label;
+        row.querySelector('.telem-fill').className = `telem-fill ${fill}`;
+        row.querySelector('.telem-fill').style.width = `${Math.max(0, Math.min(100, pct))}%`;
+        row.querySelector('.telem-val').textContent = value;
+      }
+
+      function renderTelemetry() {
+        const h = LIVE.homeostasis;
+        const osc = LIVE.oscillations;
+        const kg = LIVE.knowledgeGraph;
+        const surv = LIVE.survival;
+        const badge = document.getElementById('telem-badge');
+
+        if (h) {
+          const usage = parseFloat(h.tokenBudget?.usage) || 0;
+          renderRow('budget', 'BUDGET', h.tokenBudget?.usage ?? '—', usage, 'fill-blue');
+          renderRow(
+            'sleep',
+            'SLEEP',
+            `${h.sleepPressure ?? '—'}%`,
+            h.sleepPressure ?? 0,
+            (h.sleepPressure ?? 0) > 70 ? 'fill-red' : 'fill-lime',
+          );
+          renderRow(
+            'exc',
+            'EXCIT',
+            String(h.eiBalance?.excitation ?? '—'),
+            h.eiBalance?.excitation ?? 0,
+            'fill-brown',
+          );
+          renderRow(
+            'inhib',
+            'INHIB',
+            String(h.eiBalance?.inhibition ?? '—'),
+            h.eiBalance?.inhibition ?? 0,
+            'fill-blue',
+          );
+          renderRow(
+            'lat',
+            'LATENCY',
+            `${h.health?.avgResponseLatency ?? '—'}ms`,
+            Math.min(100, (h.health?.avgResponseLatency ?? 0) / 5),
+            'fill-brown',
+          );
+          renderRow(
+            'errs',
+            'ERRORS',
+            String(h.health?.recentErrorCount ?? '—'),
+            Math.min(100, (h.health?.recentErrorCount ?? 0) * 10),
+            (h.health?.recentErrorCount ?? 0) > 0 ? 'fill-red' : 'fill-lime',
+          );
+        }
+
+        if (osc) {
+          const bands = osc.bands || {};
+          for (const [band, power] of Object.entries(bands)) {
+            renderRow(
+              `band-${band}`,
+              band.toUpperCase(),
+              `${Math.round(power * 100)}%`,
+              power * 100,
+              'fill-lime',
+            );
+          }
+        }
+
+        if (kg) {
+          document.getElementById('stat-nodes').textContent = kg.nodeCount ?? '—';
+          document.getElementById('stat-edges').textContent = kg.edgeCount ?? '—';
+          renderRow(
+            'nodes',
+            'GRAPH',
+            String(kg.nodeCount ?? '—'),
+            Math.min(100, (kg.nodeCount ?? 0) / 10),
+            'fill-blue',
+          );
+          renderRow(
+            'edges',
+            'EDGES',
+            String(kg.edgeCount ?? '—'),
+            Math.min(100, (kg.edgeCount ?? 0) / 10),
+            'fill-brown',
+          );
+        }
+
+        if (surv) {
+          const pts = surv.points ?? surv.currentPoints ?? 0;
+          const max = surv.maxPoints ?? surv.max ?? 100;
+          renderRow(
+            'vitality',
+            'VITAL',
+            String(pts),
+            (pts / max) * 100,
+            pts / max < 0.25 ? 'fill-red' : 'fill-lime',
+          );
+        }
+
+        if (badge) badge.textContent = LIVE.apiBase ? (LIVE.wsOpen ? 'LIVE' : 'POLL') : 'OFFLINE';
+
+        document.getElementById('vp-label').textContent = osc
+          ? `REACTOR CORE — ${String(osc.cognitiveMode || '').toUpperCase()} ${Number(osc.dominantFrequencyHz || 0).toFixed(1)}Hz`
+          : 'REACTOR CORE — AWAITING TELEMETRY';
+      }
+
+      function renderHero() {
+        const osc = LIVE.oscillations;
+        const h = LIVE.homeostasis;
+        const lc = LIVE.lifecycle;
+        const msgs = [];
+        if (lc?.state) msgs.push(`lifecycle ${lc.state}`);
+        if (osc?.cognitiveMode) msgs.push(`mode ${osc.cognitiveMode}`);
+        if (h?.sleepPressure !== undefined) msgs.push(`sleep pressure ${h.sleepPressure}%`);
+        if (LIVE.survival?.points !== undefined) msgs.push(`vitality ${LIVE.survival.points}`);
+        if (statusEl?.status === 'thinking' || LIVE.awaitingReply) msgs.push('processing');
+        if (LIVE.state?.messageCount !== undefined)
+          msgs.push(`${LIVE.state.messageCount} messages`);
+        if (!msgs.length) return;
+        setHero(LIVE.awaitingReply ? 'Processing' : 'System Online', msgs.join(' · '));
+      }
+
+      /* ========================================================================
+   EXPOSE GLOBAL CONTROLS
+======================================================================== */
+      window.setThreat = function (btn, level) {
+        document.querySelectorAll('.threat-btn').forEach((b) => {
+          b.className = 'threat-btn';
+        });
+        const colorMap = {
+          low: 'active-green',
+          elevated: 'active-yellow',
+          guarded: 'active-yellow',
+          high: 'active-red',
+          severe: 'active-red',
+          critical: 'active-red',
+        };
+        btn.classList.add(colorMap[level] || 'active-green');
+        addLog(
+          `Threat level updated: ${level.toUpperCase()}`,
+          level === 'low' ? 'ok' : level === 'critical' ? 'warn' : 'info',
+        );
+        emitSound('threat-change', { level });
+
+        // Ask the real brain to apply the declared threat posture.
+        sendToBrain(
+          `Threat posture set to ${level}. Acknowledge and state the concrete operational implications for the current system state.`,
+        );
+      };
+
+      window.updateSlider = function (name, val) {
+        const num = parseInt(val, 10);
+        if (name === 'speed') {
+          CFG.speedMul = num / 100;
+          document.getElementById('sv-speed').textContent = `${CFG.speedMul.toFixed(1)}x`;
+        } else if (name === 'radius') {
+          CFG.radiusMul = num / 100;
+          document.getElementById('sv-radius').textContent = `${CFG.radiusMul.toFixed(1)}x`;
+        } else if (name === 'density') {
+          CFG.densityMul = num / 100;
+          document.getElementById('sv-density').textContent = `${num}%`;
+        }
+        emitSound('slider-adjust', { control: name, value: num });
+        addLog(`control ${name} → ${num}`, 'info');
+      };
+
+      window.executeCommand = function () {
+        const input = document.getElementById('cmd-input');
+        const cmd = input.value.trim();
+        if (!cmd) return;
+        input.value = '';
+        toggleChat(true);
+        sendToBrain(cmd, 'command-deck');
+      };
+
+      document.getElementById('cmd-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          window.executeCommand();
+        }
+      });
+
+      /* ========================================================================
+   CHAT — WebSocket first, HTTP /api/chat as fallback
+======================================================================== */
+      function toggleChat(force) {
+        const drawer = document.getElementById('chat-drawer');
+        const open = force === undefined ? !drawer.classList.contains('open') : force;
+        drawer.classList.toggle('open', open);
+        document.getElementById('chat-btn').dataset.live = open ? '1' : '0';
+        document.getElementById('chat-btn').setAttribute('aria-expanded', String(open));
+        if (open) setTimeout(() => document.getElementById('chat-input').focus(), 30);
+      }
+
+      async function sendToBrain(text, source = 'chat') {
+        text = (text || '').trim();
+        if (!text) return;
+
+        openChat();
+        appendChat(text, 'user');
+        addLog(`→ ${text}`, 'info');
+        emitSound('command-dispatch', { command: text, source });
+
+        if (
+          sendWs({
+            type: 'message',
+            content: text,
+            conversationId: LIVE.state?.activeConversationId,
+          })
+        ) {
+          LIVE.awaitingReply = true;
+          streamingEl = null;
+          setChatStatus('transmitted…');
+          return;
+        }
+
+        // No WebSocket: fall back to the HTTP route so chat still reaches the brain.
+        if (!LIVE.apiBase) {
+          appendChat('No SIS backend is reachable. Start it with `npm run server`.', 'err');
+          setChatStatus('offline');
+          return;
+        }
+        streamingEl = appendChat('', 'sis');
+        setChatStatus('http request…');
+        try {
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), 120000);
+          const res = await fetch(`${LIVE.apiBase}/api/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: text,
+              conversationId: LIVE.state?.activeConversationId,
+            }),
+            signal: ctrl.signal,
+          });
+          clearTimeout(timer);
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+          streamingEl.textContent = data.response || JSON.stringify(data);
+          addLog('← http reply', 'ok');
+        } catch (err) {
+          if (streamingEl) {
+            streamingEl.remove();
+            streamingEl = null;
+          }
+          appendChat(`Request failed: ${err.message}`, 'err');
+          addLog(`chat error: ${err.message}`, 'warn');
+        } finally {
+          streamingEl = null;
+          setChatStatus(LIVE.wsOpen ? 'idle' : 'http');
+        }
+      }
+
+      function openChat() {
+        if (!document.getElementById('chat-drawer').classList.contains('open')) toggleChat(true);
+      }
+
+      document.getElementById('chat-btn').addEventListener('click', () => toggleChat());
+      document.getElementById('chat-close').addEventListener('click', () => toggleChat(false));
+      document.getElementById('chat-foot').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = document.getElementById('chat-input');
+        const text = input.value.trim();
+        if (!text) return;
+        input.value = '';
+        sendToBrain(text);
+      });
+      document.getElementById('chat-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          document.getElementById('chat-foot').requestSubmit();
+        }
+      });
+      document.getElementById('chat-input').addEventListener('input', (e) => {
+        e.target.style.height = 'auto';
+        e.target.style.height = `${Math.min(140, e.target.scrollHeight)}px`;
+      });
+
+      /* ========================================================================
+   MICROPHONE — Web Speech dictation + live level meter from getUserMedia
+======================================================================== */
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      let recognition = null;
+      let listening = false;
+      let meterRaf = 0;
+      let audioCtx = null;
+      let analyser = null;
+      let micStream = null;
+
+      function setMic(state, label) {
+        const btn = document.getElementById('mic-btn');
+        btn.dataset.live = state;
+        btn.setAttribute('aria-pressed', String(state === 'listening'));
+        document.getElementById('mic-label').textContent = label;
+      }
+
+      async function startMeter() {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        audioCtx.createMediaStreamSource(micStream).connect(analyser);
+        const data = new Uint8Array(analyser.frequencyBinCount);
+        const meter = document.getElementById('mic-meter');
+        const loop = () => {
+          if (!analyser) return;
+          analyser.getByteFrequencyData(data);
+          let sum = 0;
+          for (const v of data) sum += v;
+          meter.style.width = `${Math.min(100, sum / data.length / 2.55)}%`;
+          meterRaf = requestAnimationFrame(loop);
+        };
+        loop();
+      }
+
+      function stopMeter() {
+        cancelAnimationFrame(meterRaf);
+        meterRaf = 0;
+        document.getElementById('mic-meter').style.width = '0%';
+        if (micStream) micStream.getTracks().forEach((tr) => tr.stop());
+        micStream = null;
+        if (audioCtx) {
+          audioCtx.close().catch(() => {});
+          audioCtx = null;
+        }
+        analyser = null;
+      }
+
+      function stopMic() {
+        listening = false;
+        if (recognition) {
+          try {
+            recognition.stop();
+          } catch {}
+        }
+        recognition = null;
+        stopMeter();
+        setMic('0', 'MIC');
+        addLog('Microphone released', '');
+      }
+
+      async function startMic() {
+        if (!SpeechRecognition) {
+          appendChat(
+            'This browser has no Web Speech API. Use Chrome or Edge for dictation.',
+            'err',
+          );
+          addLog('SpeechRecognition unavailable in this browser', 'warn');
+          setMic('0', 'N/A');
+          return;
+        }
+        try {
+          await startMeter();
+        } catch (err) {
+          appendChat(`Microphone permission denied: ${err.message}`, 'err');
+          addLog(`mic permission denied: ${err.message}`, 'warn');
+          setMic('0', 'DENIED');
+          return;
+        }
+
+        recognition = new SpeechRecognition();
+        recognition.lang = navigator.language || 'en-US';
+        recognition.continuous = true;
+        recognition.interimResults = true;
+
+        const input = document.getElementById('chat-input');
+        let baseText = input.value;
+
+        recognition.addEventListener('result', (e) => {
+          let interim = '';
+          let finalText = '';
+          for (let i = e.resultIndex; i < e.results.length; i++) {
+            const r = e.results[i];
+            if (r.isFinal) finalText += r[0].transcript;
+            else interim += r[0].transcript;
+          }
+          input.value = finalText
+            ? `${baseText}${baseText ? ' ' : ''}${finalText}`.trim()
+            : `${baseText}${baseText ? ' ' : ''}${interim}`;
+          input.dispatchEvent(new Event('input'));
+          if (finalText) {
+            baseText = input.value;
+            addLog(`🎙 ${finalText.trim()}`, 'ok');
+          }
+        });
+
+        recognition.addEventListener('error', (ev) => {
+          const reason = ev.error;
+          const fatal = reason !== 'no-speech';
+          addLog(`speech error: ${reason}`, 'warn');
+          if (fatal) {
+            appendChat(`Dictation stopped: ${reason}.`, 'err');
+            stopMic();
+          }
+        });
+
+        recognition.addEventListener('end', () => {
+          // Chrome ends the session periodically — restart while the operator holds the mic.
+          if (listening) {
+            try {
+              recognition.start();
+            } catch {}
+          }
+        });
+
+        listening = true;
+        recognition.start();
+        openChat();
+        setMic('listening', 'LISTENING');
+        addLog(
+          `Dictation live (${recognition.lang}) — interim words stream into the chat box`,
+          'info',
+        );
+      }
+
+      document.getElementById('mic-btn').addEventListener('click', () => {
+        emitSound('mic-toggle', { listening });
+        if (listening) stopMic();
+        else startMic();
+      });
+      window.addEventListener('beforeunload', stopMic);
+
+      /* ========================================================================
+   OBJECT INTERACTION — raycast hover/click, real replies from the brain
+======================================================================== */
+      const raycaster = new THREE.Raycaster();
+      const pointer = new THREE.Vector2();
+      const interactive = [core, inner, ...rings, ...nodes];
+      const pointerTargets = new Map(interactive.map((o) => [o, o.name]));
+
+      function pickAt(clientX, clientY) {
+        const rect = renderer.domElement.getBoundingClientRect();
+        pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+        pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+        raycaster.setFromCamera(pointer, camera);
+        const hits = raycaster.intersectObjects(interactive, false);
+        return hits.length ? hits[0].object : null;
+      }
+
+      renderer.domElement.addEventListener('pointermove', (e) => {
+        const obj = pickAt(e.clientX, e.clientY);
+        HOVER.name = obj ? pointerTargets.get(obj) : null;
+        renderer.domElement.style.cursor = obj ? 'pointer' : 'default';
+        document.getElementById('vp-label').style.color = obj ? 'var(--blue-lt)' : '';
+      });
+
+      renderer.domElement.addEventListener('click', (e) => {
+        const obj = pickAt(e.clientX, e.clientY);
+        if (!obj) return;
+        const name = pointerTargets.get(obj);
+        SELECTED.name = name;
+        emitSound('object-select', { object: name });
+        addLog(`object selected: ${name}`, 'info');
+        sendToBrain(
+          `I clicked the "${name}" object in your reactor core visualization. Describe what it represents in your own architecture, and what it is doing right now.`,
+        );
+      });
+
+      // Drag to orbit the scene.
+      renderer.domElement.addEventListener('pointerdown', (e) => {
+        ORBIT.dragging = true;
+        ORBIT.lastX = e.clientX;
+        ORBIT.lastY = e.clientY;
+        renderer.domElement.setPointerCapture(e.pointerId);
+      });
+      renderer.domElement.addEventListener('pointerup', (e) => {
+        ORBIT.dragging = false;
+        try {
+          renderer.domElement.releasePointerCapture(e.pointerId);
+        } catch {}
+      });
+      renderer.domElement.addEventListener('pointermove', (e) => {
+        if (!ORBIT.dragging) return;
+        ORBIT.yaw += (e.clientX - ORBIT.lastX) * 0.005;
+        ORBIT.pitch = Math.max(
+          -1.2,
+          Math.min(1.2, ORBIT.pitch + (e.clientY - ORBIT.lastY) * 0.004),
+        );
+        ORBIT.lastX = e.clientX;
+        ORBIT.lastY = e.clientY;
+      });
+      renderer.domElement.addEventListener('dblclick', () => {
+        sendToBrain(
+          'Give me your current cognitive mode, dominant brain-wave band and what you are working on right now.',
+        );
+      });
+
+      /* ========================================================================
+   CORE SHAPE MORPHING — driven by the live band spectrum
+======================================================================== */
+      function morphCore(t) {
+        const bands = LIVE.oscillations?.bands || {};
+        const power = bands.beta || 0;
+        const slow = bands.delta || 0;
+        const bright = bands.gamma || 0;
+        const processing = LIVE.state?.isProcessing ? 1 : 0;
+
+        const amp = 0.12 + power * 0.9 + processing * 0.35;
+        const detail = 1.5 + bright * 5;
+        const attr = core.geometry.attributes.position;
+        const arr = attr.array;
+
+        for (let i = 0, v = 0; i < arr.length; i += 3, v++) {
+          const dx = CORE_DIR[i],
+            dy = CORE_DIR[i + 1],
+            dz = CORE_DIR[i + 2];
+          const ph = CORE_PHASE[v];
+          const n =
+            Math.sin(dx * detail + t * 0.9 + ph) +
+            Math.sin(dy * detail * 1.3 - t * 0.7 + ph * 1.7) +
+            Math.sin(dz * detail * 0.8 + t * 1.1 + ph * 2.3);
+          const r = 1.6 * (1 + (n / 3) * amp) + slow * 0.35 * Math.sin(t * 0.5 + ph);
+          arr[i] = dx * r;
+          arr[i + 1] = dy * r;
+          arr[i + 2] = dz * r;
+        }
+        attr.needsUpdate = true;
+        core.geometry.computeVertexNormals();
+      }
+
+      /* ========================================================================
+   BOOT
+======================================================================== */
+      // Read-only handles for inspection/debugging from the console or a test harness.
+      window.__core = core;
+      window.__live = LIVE;
+      window.__nodes = nodes;
+      window.__rings = rings;
+
+      addLog('SIS Tactical Interface initialized', 'ok');
+      addLog(
+        `Three.js renderer online — WebGL${renderer.capabilities.isWebGL2 ? '2' : '1'} context acquired`,
+        'info',
+      );
+      connectBackend();
+    </script>
+  </body>
+</html>

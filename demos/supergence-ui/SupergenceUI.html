@@ -1,0 +1,2747 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Supergence — Autonomous Superintelligence System</title>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@200;300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&family=Nunito:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="./SupergenceUI.css" />
+  </head>
+
+  <body>
+    <!-- SUPERGENCE FIXED LUXURY WALLPAPER LAYER -->
+    <div id="supergenceWallpaperLayer"></div>
+
+    <!-- HOME SCREEN: DIGITAL CLOCK & SIS SYSTEM MASCOT -->
+    <div id="homeScreen">
+      <div class="home-top-bar">
+        <div class="home-brand-pill">
+          <span class="brand-glow-dot"></span>
+          <span>Supergence</span>
+        </div>
+
+        <button
+          class="home-settings-btn"
+          onclick="openSettings()"
+          title="Settings & Core Power Controls"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="15"
+            height="15"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="3"></circle>
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+            ></path>
+          </svg>
+          <span>Settings</span>
+        </button>
+      </div>
+
+      <!-- FLOATING LIQUID GLASS DATE & CLOCK (REFERENCE IMAGE 2 MATCH) -->
+      <div class="liquid-clock-floating" id="liquidClockContainer">
+        <div class="liquid-clock-date" id="clockDate">Thu Oct 8</div>
+        <svg class="liquid-clock-svg" viewBox="0 0 460 140" aria-label="Liquid Glass Clock">
+          <defs>
+            <!-- Liquid Glass Optical Specular Bevel Filter (True Liquid Optics - No harsh white border!) -->
+            <filter id="liquidGlassOptics" x="-25%" y="-25%" width="150%" height="150%">
+              <!-- Surface blur for smooth 3D bevel lighting normal -->
+              <feGaussianBlur in="SourceAlpha" stdDeviation="2.2" result="alphaBlur" />
+
+              <!-- Directional specular reflection glinting along top curves -->
+              <feSpecularLighting
+                in="alphaBlur"
+                surfaceScale="4.2"
+                specularConstant="1.5"
+                specularExponent="32"
+                lighting-color="#ffffff"
+                result="specLight"
+              >
+                <fePointLight x="210" y="-60" z="160" />
+              </feSpecularLighting>
+              <feComposite in="specLight" in2="SourceAlpha" operator="in" result="rimHighlight" />
+
+              <!-- Inner refraction depth contour -->
+              <feOffset in="SourceAlpha" dx="0" dy="1.5" result="offsetAlpha" />
+              <feComposite
+                in="SourceAlpha"
+                in2="offsetAlpha"
+                operator="out"
+                result="innerContour"
+              />
+              <feGaussianBlur in="innerContour" stdDeviation="1.2" result="blurredContour" />
+              <feColorMatrix
+                in="blurredContour"
+                type="matrix"
+                values="0 0 0 0 0.05
+                                    0 0 0 0 0.25
+                                    0 0 0 0 0.65
+                                    0 0 0 0.45 0"
+                result="shadowRim"
+              />
+
+              <!-- Soft ambient glass shadow -->
+              <feDropShadow
+                dx="0"
+                dy="6"
+                stdDeviation="10"
+                flood-color="#02102e"
+                flood-opacity="0.38"
+                result="ambientShadow"
+              />
+
+              <!-- Merge layers: shadow -> translucent fill -> inner contour -> specular rim -->
+              <feMerge>
+                <feMergeNode in="ambientShadow" />
+                <feMergeNode in="SourceGraphic" />
+                <feMergeNode in="shadowRim" />
+                <feMergeNode in="rimHighlight" />
+              </feMerge>
+            </filter>
+
+            <!-- Translucent Glass Fill Gradient (fluid waves pass cleanly through) -->
+            <linearGradient id="liquidGlassBody" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#ffffff" stop-opacity="0.52" />
+              <stop offset="35%" stop-color="#cbe4ff" stop-opacity="0.22" />
+              <stop offset="100%" stop-color="#8ac2ff" stop-opacity="0.35" />
+            </linearGradient>
+
+            <!-- Optical Refractive Rim Bevel (subtle translucent gradient, NOT harsh opaque white) -->
+            <linearGradient id="liquidGlassRim" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#ffffff" stop-opacity="0.65" />
+              <stop offset="50%" stop-color="#c2e0ff" stop-opacity="0.25" />
+              <stop offset="100%" stop-color="#6baeff" stop-opacity="0.40" />
+            </linearGradient>
+          </defs>
+
+          <text
+            id="digitalClock"
+            x="230"
+            y="112"
+            text-anchor="middle"
+            font-family="'SF Pro Rounded', 'Nunito', system-ui, -apple-system, sans-serif"
+            font-weight="600"
+            font-size="124"
+            letter-spacing="-2"
+            fill="url(#liquidGlassBody)"
+            stroke="url(#liquidGlassRim)"
+            stroke-width="1.1"
+            filter="url(#liquidGlassOptics)"
+          >
+            9:41
+          </text>
+        </svg>
+      </div>
+
+      <!-- FLOATING ON-SCREEN TASKS & OPERATIONS PANEL (1-CLICK OPENING) -->
+      <div id="homeTasksPanel" class="home-tasks-panel" style="display: none">
+        <div class="home-tasks-header">
+          <div class="home-tasks-title-group">
+            <span class="home-tasks-title">Tasks & Operations</span>
+          </div>
+          <div class="home-tasks-badge-group">
+            <span class="home-task-chip rem" id="homeCountRemBadge">2 Remaining</span>
+            <span class="home-task-chip past" id="homeCountPastBadge">3 Past</span>
+          </div>
+        </div>
+
+        <div class="home-tasks-filter-bar">
+          <button
+            class="home-filter-tab active"
+            data-filter="all"
+            onclick="filterSupergenceTasks('all', this)"
+          >
+            All
+          </button>
+          <button
+            class="home-filter-tab"
+            data-filter="remaining"
+            onclick="filterSupergenceTasks('remaining', this)"
+          >
+            Remaining
+          </button>
+          <button
+            class="home-filter-tab"
+            data-filter="past"
+            onclick="filterSupergenceTasks('past', this)"
+          >
+            Past
+          </button>
+        </div>
+
+        <div class="home-tasks-list-scroll" id="homeTasksList">
+          <!-- Dynamically rendered with remaining/current and past tasks -->
+        </div>
+      </div>
+
+      <div id="mascotWrap" class="mascot-wrap">
+        <svg class="mascot-svg" viewBox="0 0 500 500">
+          <g class="arm">
+            <line class="segment" x1="250" y1="250" x2="300" y2="250"></line>
+            <circle class="joint" cx="250" cy="250" r="64"></circle>
+            <g class="arm1">
+              <line class="segment" x1="300" y1="250" x2="400" y2="250"></line>
+              <circle class="joint" cx="300" cy="250" r="30"></circle>
+              <g class="arm2">
+                <line class="segment" x1="400" y1="250" x2="490" y2="250"></line>
+                <circle class="joint" cx="400" cy="250" r="24"></circle>
+                <g class="arm3">
+                  <line class="segment" x1="490" y1="250" x2="550" y2="250"></line>
+                  <circle class="joint" cx="490" cy="250" r="16"></circle>
+                </g>
+              </g>
+              <g class="arm1">
+                <line class="segment" x1="300" y1="250" x2="400" y2="250"></line>
+                <circle class="joint" cx="300" cy="250" r="30"></circle>
+                <g class="arm2">
+                  <line class="segment" x1="400" y1="250" x2="490" y2="250"></line>
+                  <circle class="joint" cx="400" cy="250" r="8"></circle>
+                  <g class="arm3">
+                    <line class="segment" x1="490" y1="250" x2="550" y2="250"></line>
+                    <circle class="joint" cx="490" cy="250" r="8"></circle>
+                  </g>
+                  <g class="arm2">
+                    <line class="segment" x1="400" y1="250" x2="490" y2="250"></line>
+                    <circle class="joint" cx="400" cy="250" r="8"></circle>
+                    <g class="arm3">
+                      <line class="segment" x1="490" y1="250" x2="550" y2="250"></line>
+                      <circle class="joint" cx="490" cy="250" r="8"></circle>
+                    </g>
+                  </g>
+                </g>
+              </g>
+            </g>
+          </g>
+          <g id="mir" class="arm">
+            <line class="segment" x1="250" y1="250" x2="300" y2="250"></line>
+            <circle class="joint" cx="250" cy="250" r="64"></circle>
+            <g class="arm1">
+              <line class="segment" x1="300" y1="250" x2="400" y2="250"></line>
+              <circle class="joint" cx="300" cy="250" r="30"></circle>
+              <g class="arm2">
+                <line class="segment" x1="400" y1="250" x2="490" y2="250"></line>
+                <circle class="joint" cx="400" cy="250" r="24"></circle>
+                <g class="arm3">
+                  <line class="segment" x1="490" y1="250" x2="550" y2="250"></line>
+                  <circle class="joint" cx="490" cy="250" r="16"></circle>
+                </g>
+              </g>
+              <g class="arm1">
+                <line class="segment" x1="300" y1="250" x2="400" y2="250"></line>
+                <circle class="joint" cx="300" cy="250" r="30"></circle>
+                <g class="arm2">
+                  <line class="segment" x1="400" y1="250" x2="490" y2="250"></line>
+                  <circle class="joint" cx="400" cy="250" r="8"></circle>
+                  <g class="arm3">
+                    <line class="segment" x1="490" y1="250" x2="550" y2="250"></line>
+                    <circle class="joint" cx="490" cy="250" r="8"></circle>
+                  </g>
+                  <g class="arm2">
+                    <line class="segment" x1="400" y1="250" x2="490" y2="250"></line>
+                    <circle class="joint" cx="400" cy="250" r="8"></circle>
+                    <g class="arm3">
+                      <line class="segment" x1="490" y1="250" x2="550" y2="250"></line>
+                      <circle class="joint" cx="490" cy="250" r="8"></circle>
+                    </g>
+                  </g>
+                </g>
+              </g>
+            </g>
+          </g>
+          <filter id="metaball">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="17" result="blur"></feGaussianBlur>
+            <feColorMatrix
+              in="blur"
+              mode="matrix"
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 100 -7"
+              result="fluid"
+            ></feColorMatrix>
+            <feComposite in="SourceGraphic" in2="fluid" operator="atop"></feComposite>
+          </filter>
+        </svg>
+      </div>
+      <div id="powerOnWrap" class="power-on-wrap">
+        <button id="powerOnBtn" class="power-on-btn" onclick="activateSupergencePower()">
+          <span class="power-icon">⚡</span> POWER ON SUPERNATURAL SYSTEM
+        </button>
+        <div id="powerStatusText" class="power-status-text"></div>
+      </div>
+    </div>
+
+    <!-- CHAT WINDOW (REFERENCE IMAGE 1) -->
+    <div id="chatWindow" class="chat-window">
+      <!-- Top Header with macOS dots and "Go back to home" button -->
+      <header class="chat-top-header">
+        <div class="chat-header-left">
+          <button id="backHomeBtn" class="back-home-btn" onclick="goBackToHome()">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span>Home</span>
+          </button>
+          <div class="header-divider"></div>
+          <div class="brand-title">Supergence</div>
+          <span class="system-subtag">The best learner, and builder.</span>
+        </div>
+        <div class="chat-header-right">
+          <a
+            href="/projects"
+            target="_blank"
+            class="nav-action-pill"
+            style="text-decoration: none; color: #38bdf8; border-color: rgba(56, 189, 248, 0.4)"
+            title="View All 50+ SIS Empirical Projects Catalog & Showcase"
+            ><span>▦</span> 50+ Projects</a
+          >
+          <button
+            class="nav-action-pill"
+            onclick="openCreateAgentModal()"
+            title="Forge new specialized SIS agent"
+          >
+            <span>+</span> New Supergence agent
+          </button>
+
+          <div class="system-live-pill"><span class="live-dot"></span> Online 24/7</div>
+          <button
+            class="header-settings-btn"
+            onclick="openSettings()"
+            title="Settings & Power Control"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              width="14"
+              height="14"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="3"></circle>
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+              ></path>
+            </svg>
+            <span>Settings</span>
+          </button>
+          <button
+            class="header-action-btn"
+            title="Toggle Virtual Screen Pane"
+            onclick="toggleScreenPane()"
+          >
+            🖥️
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Workspace 3-Column Layout -->
+      <div class="chat-workspace-grid">
+        <!-- COLUMN 1: LEFT AGENTS ROSTER (Matching Reference Image) -->
+        <aside class="chat-agents-nav" id="chatAgentsNav">
+          <div class="nav-roster-header">
+            <div class="nav-roster-title-row">
+              <span class="nav-roster-title">SIS Swarm Agents</span>
+              <button
+                class="nav-add-btn"
+                onclick="openCreateAgentModal()"
+                title="Create New SIS Agent"
+              >
+                +
+              </button>
+            </div>
+            <div class="nav-search-wrap">
+              <svg
+                viewBox="0 0 24 24"
+                width="14"
+                height="14"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input
+                type="text"
+                id="rosterSearchInp"
+                placeholder="Search agents & fields..."
+                style="border: none"
+                oninput="filterRosterAgents(this.value)"
+              />
+            </div>
+          </div>
+
+          <!-- Agent List with Avatars from systemfaces.html, status preview & timestamps -->
+          <div class="nav-roster-list sis-agents-list" id="sisAgentsList">
+            <!-- Populated dynamically -->
+          </div>
+
+          <!-- User profile card at bottom of Column 1 -->
+          <div class="nav-user-bar">
+            <div class="nav-user-info">
+              <div class="nav-user-avatar" id="navUserAvatar">OP</div>
+              <div class="nav-user-meta">
+                <span class="nav-user-name" id="navUserName">Operator</span>
+                <span class="nav-user-status">Supergence Linked</span>
+              </div>
+            </div>
+            <button class="nav-user-settings-btn" onclick="openSettings()" title="Settings">
+              ⚙️
+            </button>
+          </div>
+        </aside>
+
+        <!-- COLUMN 2: CENTER MAIN CHAT STREAM -->
+        <main class="chat-main-stream" id="chatMainStream">
+          <!-- Active Agent Sub-Header (From Reference Image) -->
+          <div class="stream-agent-header" id="streamAgentHeader">
+            <div class="stream-agent-info">
+              <div class="stream-agent-mini-face" id="activeAgentMiniFace"></div>
+              <div>
+                <div class="stream-agent-title" id="activeAgentTitle">
+                  Bio-SIS
+                  <span style="font-size: 10px; color: #34d399; font-weight: 500">● Active</span>
+                </div>
+                <div class="stream-agent-subtitle" id="activeAgentSubtitle">
+                  Specialized in Biology, CRISPR & Genetics
+                </div>
+              </div>
+            </div>
+            <div class="stream-header-actions">
+              <button
+                class="stream-action-btn"
+                onclick="toggleSideBySideFromHeader()"
+                title="Toggle Side-by-Side Column"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                  <line x1="12" y1="3" x2="12" y2="21"></line>
+                </svg>
+              </button>
+              <button
+                class="stream-action-btn"
+                onclick="toggleScreenPane()"
+                title="Toggle Virtual Screen"
+              >
+                🖥️
+              </button>
+            </div>
+          </div>
+
+          <div class="chat-scroll-content" id="chatScrollContent">
+            <div class="chat-time-divider">
+              <span id="chatStreamDate">Today</span>
+            </div>
+
+            <!-- User query bubble -->
+            <div id="chatUserBubble" class="chat-user-bubble"></div>
+
+            <!-- Work Tree ("Thoughts ∨") -->
+            <div id="workTreeWrap" class="work-tree-wrap">
+              <div class="work-tree-header" onclick="toggleWorkTree()">
+                <span class="work-tree-title">Thoughts</span>
+                <svg
+                  class="tree-chevron"
+                  id="treeChevron"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+                <span id="treeStepCounter" class="tree-step-counter"></span>
+              </div>
+              <div class="work-tree-body" id="workTreeBody">
+                <div class="tree-steps-list" id="treeStepsList"></div>
+              </div>
+            </div>
+
+            <!-- Main Agent Response Content (Frosted bubble + rich attachment card) -->
+            <div id="chatResponseArea" class="chat-response-area"></div>
+          </div>
+        </main>
+
+        <!-- Side-by-Side Multi-Agent Workspace (Multi-Agent Swarm Collaboration) -->
+        <div id="sideBySideWorkspace" class="side-by-side-workspace"></div>
+
+        <!-- COLUMN 3: RIGHT SCREEN & ROUTINES PANE (From Reference Image) -->
+        <aside class="chat-screen-pane" id="chatScreenPane">
+          <div class="screen-pane-header">
+            <div class="sidebar-sec-title" id="screenPaneTitle">Agent's screen</div>
+            <button
+              class="pane-header-icon-btn"
+              onclick="toggleScreenPane()"
+              title="Collapse Screen"
+            >
+              ✕
+            </button>
+          </div>
+
+          <!-- Virtual Computer Monitor Box -->
+          <div class="virtual-screen-box">
+            <div class="virtual-screen-monitor">
+              <div class="monitor-top-bar">
+                <div class="monitor-dots"><span></span><span></span><span></span></div>
+                <span class="monitor-tab-title" id="screenTabTitle"
+                  >supergence-os // browser.active</span
+                >
+              </div>
+              <div class="monitor-display" id="screenDisplay">
+                <canvas id="monitorOscilloscope" class="monitor-telemetry-canvas"></canvas>
+                <div class="monitor-live-term" id="monitorLiveTerm">
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      border-bottom: 1px solid rgba(244, 240, 224, 0.1);
+                      padding-bottom: 4px;
+                    "
+                  >
+                    <span class="monitor-term-lav">● SWARM_KERNEL_LIVE</span>
+                    <span style="color: var(--palette-pistachio); font-size: 10px">14ms</span>
+                  </div>
+                  <div class="monitor-term-dim">&gt; binding autonomous memory graph...</div>
+                  <div>
+                    &gt; [Bio-SIS]: Epigenetic circuit stable
+                    <span style="color: #34d399">[OK]</span>
+                  </div>
+                  <div class="monitor-term-dim">
+                    &gt; [Math-SIS]: Lean 4 verification
+                    <span style="color: var(--palette-lavender)">[PASS]</span>
+                  </div>
+                  <div class="monitor-term-dim">&gt; [OpenClaw]: Sandbox command loop ready</div>
+                </div>
+                <div class="monitor-cursor"></div>
+              </div>
+            </div>
+            <div class="monitor-caption" id="screenCaption">
+              Simulated live autonomous execution environment
+            </div>
+          </div>
+
+          <!-- Routines Section (From Reference Image) -->
+          <div class="routines-box">
+            <div class="routines-header">
+              <span class="routines-title">Routines</span>
+              <button
+                class="add-routine-btn"
+                onclick="openAddRoutinePrompt()"
+                title="Add autonomous routine"
+              >
+                +
+              </button>
+            </div>
+            <div class="routines-list" id="routinesList">
+              <!-- Populated dynamically with toggleable routines -->
+            </div>
+          </div>
+
+          <!-- Past Tasks List (Kept for backward compatibility) -->
+          <div class="sidebar-section" style="margin-top: 10px">
+            <div class="sidebar-sub-title">Past tasks & progress</div>
+            <div class="past-tasks-list" id="pastTasksList"></div>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- Modal to create a whole new SIS system agent -->
+    <div id="createAgentModal" class="modal-overlay" style="display: none">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Create New SIS System Agent</h3>
+          <button class="modal-close-btn" onclick="closeCreateAgentModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <label>Agent Name</label>
+          <input
+            type="text"
+            id="newAgentName"
+            placeholder="e.g. BioGen-SIS, Quantum-SIS"
+            class="modal-input"
+          />
+
+          <label>Field of Specialization</label>
+          <input
+            type="text"
+            id="newAgentField"
+            placeholder="e.g. Biology, Mathematics, CS, EE, Physics"
+            class="modal-input"
+          />
+
+          <label>Custom Instructions & Objectives</label>
+          <textarea
+            id="newAgentPrompt"
+            rows="3"
+            placeholder="Define how this agent works, domain rules to research, and specific tasks it specializes in..."
+            class="modal-textarea"
+          ></textarea>
+
+          <label>Mascot Accent Tint</label>
+          <div class="color-picker-row">
+            <button
+              type="button"
+              class="color-dot active"
+              data-color="rgb(90, 53, 25)"
+              style="background: rgb(90, 53, 25)"
+            ></button>
+            <button
+              type="button"
+              class="color-dot"
+              data-color="#34d399"
+              style="background: #34d399"
+            ></button>
+            <button
+              type="button"
+              class="color-dot"
+              data-color="#38bdf8"
+              style="background: #38bdf8"
+            ></button>
+            <button
+              type="button"
+              class="color-dot"
+              data-color="#fbbf24"
+              style="background: #fbbf24"
+            ></button>
+            <button
+              type="button"
+              class="color-dot"
+              data-color="#a855f7"
+              style="background: #a855f7"
+            ></button>
+            <button
+              type="button"
+              class="color-dot"
+              data-color="#f43f5e"
+              style="background: #f43f5e"
+            ></button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn-cancel" onclick="closeCreateAgentModal()">Cancel</button>
+          <button class="modal-btn-confirm" onclick="createNewSisAgent()">
+            Forge SIS Agent & Research
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUTH MODAL -->
+
+    <!-- =========================================================================
+       SUPERGENCE WALLPAPER PICKER MODAL (ALL PRE-INSTALLED BACKGROUNDS)
+       ========================================================================= -->
+    <div id="wallpaperPickerModal" class="supergence-modal-backdrop">
+      <div class="supergence-modal-box">
+        <div class="modal-hdr">
+          <div>
+            <div class="modal-hdr-title">🖼️ Desktop Backgrounds & Wallpapers</div>
+            <div class="modal-hdr-subtitle">
+              Pre-installed high-definition luxury optics from C:\Users\Akshan
+              sharma\Desktop\SIS1.0\Supergencebackgrounds
+            </div>
+          </div>
+          <button class="modal-close-btn" onclick="closeWallpaperPicker()">✕</button>
+        </div>
+        <div class="modal-bdy">
+          <div class="wallpaper-grid" id="wallpaperGrid">
+            <!-- Populated dynamically with all pre-installed wallpapers -->
+          </div>
+
+          <div
+            style="
+              margin-top: 24px;
+              padding: 18px;
+              border-radius: 14px;
+              background: rgba(255, 255, 255, 0.02);
+              border: 1px solid rgba(244, 240, 224, 0.08);
+            "
+          >
+            <div
+              style="
+                font-size: 13px;
+                font-weight: 600;
+                margin-bottom: 8px;
+                color: var(--palette-linen);
+              "
+            >
+              Custom Image URL or Path
+            </div>
+            <div style="display: flex; gap: 10px">
+              <input
+                type="text"
+                id="customWallpaperInp"
+                placeholder="Enter path or URL (e.g. ./Supergencebackgrounds/Screenshot 2026-10-08 142228.png)..."
+                class="s-input"
+                style="flex: 1"
+              />
+              <button
+                onclick="applyCustomWallpaper()"
+                class="s-save"
+                style="margin: 0; padding: 0 20px"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-ftr">
+          <span style="font-size: 12px; color: rgba(244, 240, 224, 0.5)"
+            >Instant live preview across Home Screen & Chat Liquid Glass</span
+          >
+          <button
+            onclick="closeWallpaperPicker()"
+            class="modal-btn-confirm"
+            style="padding: 8px 22px"
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+       SUPERGENCE GUIDED SETUP & DIAGNOSTIC TOUR WIZARD
+       ========================================================================= -->
+    <div id="setupWalkthroughModal" class="supergence-modal-backdrop">
+      <div class="supergence-modal-box">
+        <div class="modal-hdr">
+          <div>
+            <div class="modal-hdr-title">✨ Supergence System Setup & Tour</div>
+            <div class="modal-hdr-subtitle">
+              Configure model providers, execute full diagnostic benchmarks, and verify autonomous
+              swarm operations.
+            </div>
+          </div>
+          <button class="modal-close-btn" onclick="closeSetupWalkthrough()">✕</button>
+        </div>
+
+        <!-- Steps navigation bar -->
+        <div style="padding: 14px 28px 0 28px">
+          <div class="setup-steps-nav">
+            <div class="setup-step-pill active" id="setupPill-1" onclick="goToSetupStep(1)">
+              1. Architecture
+            </div>
+            <div class="setup-step-pill" id="setupPill-2" onclick="goToSetupStep(2)">
+              2. Provider & Keys
+            </div>
+            <div class="setup-step-pill" id="setupPill-3" onclick="goToSetupStep(3)">
+              3. Diagnostic Tests
+            </div>
+            <div class="setup-step-pill" id="setupPill-4" onclick="goToSetupStep(4)">
+              4. Wallpapers
+            </div>
+            <div class="setup-step-pill" id="setupPill-5" onclick="goToSetupStep(5)">
+              5. Complete
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-bdy">
+          <!-- STEP 1: ARCHITECTURE & INTEL -->
+          <div class="setup-step-pane active" id="setupStepPane-1">
+            <h3
+              style="
+                font-size: 22px;
+                font-weight: 700;
+                margin-bottom: 10px;
+                color: var(--palette-linen);
+              "
+            >
+              Unified Supergence Architecture
+            </h3>
+            <p
+              style="
+                font-size: 13.5px;
+                color: rgba(244, 240, 224, 0.7);
+                line-height: 1.6;
+                margin-bottom: 20px;
+              "
+            >
+              Supergence unifies cutting-edge autonomous agents into one synchronized organism.
+              Hermes v32.1, OpenClaw, OpenDots, and OpenBots operate as a single cognitive
+              collective while specialized SIS agents handle deep intellectual domains.
+            </p>
+
+            <div
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px"
+            >
+              <div
+                style="
+                  padding: 16px;
+                  border-radius: 14px;
+                  background: rgba(159, 124, 239, 0.08);
+                  border: 1px solid rgba(159, 124, 239, 0.25);
+                "
+              >
+                <div
+                  style="
+                    font-size: 14px;
+                    font-weight: 700;
+                    color: var(--palette-lavender);
+                    margin-bottom: 6px;
+                  "
+                >
+                  🧠 Hermes v32.1 Cognitive Core
+                </div>
+                <div style="font-size: 12.5px; color: rgba(244, 240, 224, 0.7); line-height: 1.5">
+                  High-velocity reasoning kernel, continuous multi-turn chat learning, and deep
+                  self-reflection loops.
+                </div>
+              </div>
+              <div
+                style="
+                  padding: 16px;
+                  border-radius: 14px;
+                  background: rgba(198, 205, 133, 0.08);
+                  border: 1px solid rgba(198, 205, 133, 0.25);
+                "
+              >
+                <div
+                  style="
+                    font-size: 14px;
+                    font-weight: 700;
+                    color: var(--palette-pistachio);
+                    margin-bottom: 6px;
+                  "
+                >
+                  ⚡ OpenClaw OS Tool Sandbox
+                </div>
+                <div style="font-size: 12.5px; color: rgba(244, 240, 224, 0.7); line-height: 1.5">
+                  Full machine control, safe non-destructive shell execution, local file
+                  manipulation, and 24/7 web research.
+                </div>
+              </div>
+              <div
+                style="
+                  padding: 16px;
+                  border-radius: 14px;
+                  background: rgba(61, 82, 76, 0.3);
+                  border: 1px solid rgba(61, 82, 76, 0.5);
+                "
+              >
+                <div style="font-size: 14px; font-weight: 700; color: #34d399; margin-bottom: 6px">
+                  👁️ OpenDots & OpenBots
+                </div>
+                <div style="font-size: 12.5px; color: rgba(244, 240, 224, 0.7); line-height: 1.5">
+                  Computer vision perception, spatial browser automation, and recurring background
+                  routine execution.
+                </div>
+              </div>
+              <div
+                style="
+                  padding: 16px;
+                  border-radius: 14px;
+                  background: rgba(241, 205, 226, 0.08);
+                  border: 1px solid rgba(241, 205, 226, 0.25);
+                "
+              >
+                <div
+                  style="
+                    font-size: 14px;
+                    font-weight: 700;
+                    color: var(--palette-candyfloss);
+                    margin-bottom: 6px;
+                  "
+                >
+                  🧬 SIS Domain Swarms
+                </div>
+                <div style="font-size: 12.5px; color: rgba(244, 240, 224, 0.7); line-height: 1.5">
+                  Deep domain specialists in Biology (Bio-SIS), Math (Math-SIS), Computer Science
+                  (Turing-SIS), Physics (Quantum-SIS).
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 2: PROVIDER & API KEY -->
+          <div class="setup-step-pane" id="setupStepPane-2">
+            <h3
+              style="
+                font-size: 22px;
+                font-weight: 700;
+                margin-bottom: 10px;
+                color: var(--palette-linen);
+              "
+            >
+              Model Provider & API Configuration
+            </h3>
+            <p
+              style="
+                font-size: 13.5px;
+                color: rgba(244, 240, 224, 0.7);
+                line-height: 1.6;
+                margin-bottom: 20px;
+              "
+            >
+              Connect your preferred inference engine. Keys are persisted in your secure local
+              configuration.
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 16px; max-width: 640px">
+              <div>
+                <label
+                  style="
+                    font-size: 12.5px;
+                    font-weight: 600;
+                    color: rgba(244, 240, 224, 0.7);
+                    display: block;
+                    margin-bottom: 6px;
+                  "
+                  >Primary AI Provider</label
+                >
+                <select
+                  id="setupProviderSelect"
+                  class="modal-input"
+                  style="width: 100%"
+                  onchange="handleSetupProviderChange()"
+                >
+                  <option value="gemini">Google Gemini (Gemini 2.5 Flash / Pro)</option>
+                  <option value="claude">Anthropic Claude (Claude 3.7 Sonnet)</option>
+                  <option value="deepseek">DeepSeek (DeepSeek-V3 / DeepSeek-R1)</option>
+                  <option value="openai">OpenAI (GPT-4o / o3-mini)</option>
+                  <option value="local">Local / Ollama (Hermes-3-Llama-3.1-8B)</option>
+                  <option value="openrouter">OpenRouter Multi-Provider</option>
+                </select>
+              </div>
+
+              <div>
+                <label
+                  style="
+                    font-size: 12.5px;
+                    font-weight: 600;
+                    color: rgba(244, 240, 224, 0.7);
+                    display: block;
+                    margin-bottom: 6px;
+                  "
+                  >API Key / Endpoint Token</label
+                >
+                <div style="display: flex; gap: 10px">
+                  <input
+                    type="password"
+                    id="setupApiKeyInput"
+                    placeholder="sk-..."
+                    class="modal-input"
+                    style="flex: 1"
+                  />
+                  <button
+                    type="button"
+                    class="s-save"
+                    style="margin: 0; padding: 0 18px"
+                    onclick="toggleApiKeyVisibility()"
+                  >
+                    Show
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label
+                  style="
+                    font-size: 12.5px;
+                    font-weight: 600;
+                    color: rgba(244, 240, 224, 0.7);
+                    display: block;
+                    margin-bottom: 6px;
+                  "
+                  >Active Default Model</label
+                >
+                <input
+                  type="text"
+                  id="setupModelInput"
+                  value="gemini-2.5-flash"
+                  class="modal-input"
+                  style="width: 100%"
+                />
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px">
+                <button
+                  type="button"
+                  class="s-save"
+                  style="margin: 0; padding: 10px 22px"
+                  onclick="testProviderConnection()"
+                >
+                  🔌 Test Provider Connection
+                </button>
+                <span
+                  id="setupConnectionStatus"
+                  style="
+                    font-size: 13px;
+                    font-family: 'JetBrains Mono', monospace;
+                    color: var(--palette-pistachio);
+                  "
+                ></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 3: DIAGNOSTIC TESTS -->
+          <div class="setup-step-pane" id="setupStepPane-3">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 12px;
+              "
+            >
+              <div>
+                <h3 style="font-size: 22px; font-weight: 700; color: var(--palette-linen)">
+                  System Diagnostic & Swarm Tests
+                </h3>
+                <p style="font-size: 13px; color: rgba(244, 240, 224, 0.7)">
+                  Execute automated health checks on engine daemons, tool sandbox, and memory
+                  indexing.
+                </p>
+              </div>
+              <button
+                type="button"
+                class="s-save"
+                style="margin: 0; padding: 10px 22px"
+                onclick="runDiagnosticTests()"
+              >
+                ▶ Run Diagnostic Tests
+              </button>
+            </div>
+
+            <div style="margin-top: 16px">
+              <div class="setup-test-row" id="diagRow-1">
+                <div>
+                  <div style="font-size: 14px; font-weight: 600; color: var(--palette-linen)">
+                    1. Supergence Core Engine & WebSocket Daemon
+                  </div>
+                  <div style="font-size: 12px; color: rgba(244, 240, 224, 0.5)">
+                    Verifies localhost process heartbeat and event loop responsiveness
+                  </div>
+                </div>
+                <span class="setup-test-badge pending" id="diagBadge-1">Pending</span>
+              </div>
+
+              <div class="setup-test-row" id="diagRow-2">
+                <div>
+                  <div style="font-size: 14px; font-weight: 600; color: var(--palette-linen)">
+                    2. AI Provider Endpoint & Latency Benchmark
+                  </div>
+                  <div style="font-size: 12px; color: rgba(244, 240, 224, 0.5)">
+                    Validates token streaming, model handshake, and roundtrip ping
+                  </div>
+                </div>
+                <span class="setup-test-badge pending" id="diagBadge-2">Pending</span>
+              </div>
+
+              <div class="setup-test-row" id="diagRow-3">
+                <div>
+                  <div style="font-size: 14px; font-weight: 600; color: var(--palette-linen)">
+                    3. SIS Swarm Inter-Agent Message Bus
+                  </div>
+                  <div style="font-size: 12px; color: rgba(244, 240, 224, 0.5)">
+                    Tests concurrent communication between Bio-SIS, Math-SIS, and Turing-SIS
+                  </div>
+                </div>
+                <span class="setup-test-badge pending" id="diagBadge-3">Pending</span>
+              </div>
+
+              <div class="setup-test-row" id="diagRow-4">
+                <div>
+                  <div style="font-size: 14px; font-weight: 600; color: var(--palette-linen)">
+                    4. OpenClaw Tool Sandbox & Shell Safety
+                  </div>
+                  <div style="font-size: 12px; color: rgba(244, 240, 224, 0.5)">
+                    Verifies safe non-destructive terminal permissions and file access
+                  </div>
+                </div>
+                <span class="setup-test-badge pending" id="diagBadge-4">Pending</span>
+              </div>
+
+              <div class="setup-test-row" id="diagRow-5">
+                <div>
+                  <div style="font-size: 14px; font-weight: 600; color: var(--palette-linen)">
+                    5. Persistent Memory Graph & Learned Rules Store
+                  </div>
+                  <div style="font-size: 12px; color: rgba(244, 240, 224, 0.5)">
+                    Tests user rules recall, vector embedding cache, and local state integrity
+                  </div>
+                </div>
+                <span class="setup-test-badge pending" id="diagBadge-5">Pending</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 4: WALLPAPERS -->
+          <div class="setup-step-pane" id="setupStepPane-4">
+            <h3
+              style="
+                font-size: 22px;
+                font-weight: 700;
+                margin-bottom: 10px;
+                color: var(--palette-linen);
+              "
+            >
+              Select Default Wallpaper & Visual Identity
+            </h3>
+            <p
+              style="
+                font-size: 13.5px;
+                color: rgba(244, 240, 224, 0.7);
+                line-height: 1.6;
+                margin-bottom: 20px;
+              "
+            >
+              Choose your primary desktop wallpaper from the 8 pre-installed luxury backgrounds.
+            </p>
+            <div class="wallpaper-grid" id="setupWallpaperGrid">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+
+          <!-- STEP 5: COMPLETION -->
+          <div class="setup-step-pane" id="setupStepPane-5">
+            <div style="text-align: center; padding: 30px 20px">
+              <div style="font-size: 48px; margin-bottom: 16px">✨</div>
+              <h3
+                style="
+                  font-size: 26px;
+                  font-weight: 700;
+                  color: var(--palette-linen);
+                  margin-bottom: 10px;
+                "
+              >
+                Supergence 1.0 Fully Configured
+              </h3>
+              <p
+                style="
+                  font-size: 14.5px;
+                  color: rgba(244, 240, 224, 0.7);
+                  max-width: 560px;
+                  margin: 0 auto 28px auto;
+                  line-height: 1.6;
+                "
+              >
+                Your unified swarm orchestrator, inference provider, diagnostic verifications, and
+                luxury liquid glass optics are active.
+              </p>
+              <button
+                type="button"
+                class="s-save"
+                style="padding: 14px 38px; font-size: 15px; font-weight: 700; border-radius: 9999px"
+                onclick="closeSetupWalkthrough()"
+              >
+                🚀 Enter Supergence System
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-ftr">
+          <button
+            type="button"
+            id="setupBackBtn"
+            class="modal-btn-cancel"
+            onclick="navigateSetupStep(-1)"
+          >
+            Back
+          </button>
+          <button
+            type="button"
+            id="setupNextBtn"
+            class="modal-btn-confirm"
+            onclick="navigateSetupStep(1)"
+          >
+            Next →
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS MODAL -->
+    <div
+      id="settingsModal"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
+        color: var(--text);
+      "
+    >
+      <div
+        style="
+          display: flex;
+          width: 100%;
+          height: 100%;
+          max-width: 1400px;
+          margin: 0 auto;
+          position: relative;
+        "
+      >
+        <!-- Settings Sidebar -->
+        <div
+          style="
+            width: 280px;
+            padding: 60px 30px;
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+          "
+        >
+          <h2
+            style="
+              font-size: 24px;
+              font-weight: 700;
+              margin-bottom: 40px;
+              letter-spacing: -0.5px;
+              color: var(--text);
+            "
+          >
+            Settings
+          </h2>
+
+          <button onclick="switchSettingsTab('system')" class="s-tab active" id="tab-system">
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+              <line x1="12" y1="2" x2="12" y2="12"></line>
+            </svg>
+            System Power
+          </button>
+          <button onclick="switchSettingsTab('rules')" class="s-tab" id="tab-rules">
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+            Learned Rules & Memory
+          </button>
+          <button onclick="switchSettingsTab('swarm')" class="s-tab" id="tab-swarm">
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="3"></circle>
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+              ></path>
+            </svg>
+            SIS Swarms (Unified)
+          </button>
+
+          <button onclick="switchSettingsTab('setup')" class="s-tab" id="tab-setup">
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polygon
+                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+              ></polygon>
+            </svg>
+            Setup & Diagnostics Tour
+          </button>
+
+          <button onclick="switchSettingsTab('appearance')" class="s-tab" id="tab-appearance">
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 2a10 10 0 0 1 0 20v-20z"></path>
+            </svg>
+            Appearance (Deep Black)
+          </button>
+          <button onclick="switchSettingsTab('account')" class="s-tab" id="tab-account">
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              stroke="currentColor"
+              stroke-width="2"
+              fill="none"
+            >
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            Operator Account
+          </button>
+
+          <div style="flex: 1"></div>
+
+          <button onclick="handleLogout()" class="logoutbtn">
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              stroke="currentColor"
+              stroke-width="2"
+              fill="none"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            Logout
+          </button>
+        </div>
+
+        <!-- Settings Content -->
+        <div style="flex: 1; padding: 80px 100px; overflow-y: auto; position: relative">
+          <button
+            onclick="$('#settingsModal').style.display = 'none'"
+            style="
+              position: absolute;
+              top: 40px;
+              right: 40px;
+              background: var(--glass);
+              border: none;
+              color: var(--text);
+              width: 40px;
+              height: 40px;
+              border-radius: 50%;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              transition: 0.2s;
+            "
+            onmouseover="this.style.background = 'rgba(255,255,255,0.1)'"
+            onmouseout="this.style.background = 'var(--glass)'"
+          >
+            ✕
+          </button>
+
+          <!-- Section: System Power & Core Controls -->
+          <div id="sec-system" class="s-section on">
+            <h3 style="font-size: 28px; font-weight: 600; margin-bottom: 12px">
+              System Power & Core Controls
+            </h3>
+            <p style="color: var(--text-dim); margin-bottom: 32px">
+              Manage Supergence autonomous power state, full OS access, and composer availability.
+            </p>
+
+            <div
+              class="settings-power-card"
+              style="
+                padding: 24px 28px;
+                border-radius: 24px;
+                background: rgba(255, 255, 255, 0.04);
+                backdrop-filter: blur(30px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-top: 1px solid rgba(255, 255, 255, 0.25);
+                box-shadow:
+                  0 20px 40px rgba(0, 0, 0, 0.5),
+                  inset 0 1px 1px rgba(255, 255, 255, 0.4);
+              "
+            >
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  flex-wrap: wrap;
+                  gap: 16px;
+                "
+              >
+                <div style="display: flex; align-items: center; gap: 14px">
+                  <div
+                    id="settingsPowerLed"
+                    style="
+                      width: 14px;
+                      height: 14px;
+                      border-radius: 50%;
+                      background: #10b981;
+                      box-shadow: 0 0 12px #10b981;
+                      transition: all 0.3s;
+                    "
+                  ></div>
+                  <div>
+                    <div
+                      style="
+                        font-size: 17px;
+                        font-weight: 600;
+                        color: #ffffff;
+                        letter-spacing: -0.2px;
+                      "
+                    >
+                      Supergence Autonomous Engine
+                    </div>
+                    <div
+                      id="settingsPowerStatusSub"
+                      style="font-size: 13px; color: rgba(255, 255, 255, 0.5); margin-top: 2px"
+                    >
+                      Online • Autonomous Swarm, Internet & Computer Access Active
+                    </div>
+                  </div>
+                </div>
+                <button
+                  id="settingsPowerStopBtn"
+                  onclick="stopSystemFromSettings()"
+                  style="
+                    padding: 10px 24px;
+                    border-radius: 9999px;
+                    font-size: 13px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.25s;
+                    border: 1px solid rgba(239, 68, 68, 0.4);
+                    background: rgba(239, 68, 68, 0.18);
+                    color: #fca5a5;
+                  "
+                >
+                  🛑 Stop System
+                </button>
+              </div>
+              <div
+                style="
+                  margin-top: 18px;
+                  padding-top: 16px;
+                  border-top: 1px solid rgba(255, 255, 255, 0.06);
+                  font-size: 12.5px;
+                  line-height: 1.5;
+                  color: rgba(255, 255, 255, 0.45);
+                "
+              >
+                When powered on, Supergence has persistent access to computer capabilities, 24/7
+                internet research, and user rule synthesis. The unified fiaibar composer remains
+                active. Stopping the system deactivates autonomous operations, closes active
+                workspaces, retracts the composer, and resets to idle standby.
+              </div>
+            </div>
+
+            <div style="margin-top: 28px; display: flex; flex-direction: column; gap: 18px">
+              <div class="s-row">
+                <div>
+                  <div class="s-row-title">Full Computer & Internet Access</div>
+                  <div class="s-row-desc">
+                    Allow Supergence swarm to execute shell commands, perform Web research, and
+                    automate tasks.
+                  </div>
+                </div>
+                <label class="switch"
+                  ><input type="checkbox" id="setFullAccess" checked /><span
+                    class="slider round"
+                  ></span
+                ></label>
+              </div>
+              <div class="s-row">
+                <div>
+                  <div class="s-row-title">Autonomous 24/7 Background Research</div>
+                  <div class="s-row-desc">
+                    Periodically index academic papers, code repos, and synthesized user rules while
+                    system is active.
+                  </div>
+                </div>
+                <label class="switch"
+                  ><input type="checkbox" id="setBgResearch" checked /><span
+                    class="slider round"
+                  ></span
+                ></label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section: User Memory & Learned Rules -->
+          <div id="sec-rules" class="s-section">
+            <h3 style="font-size: 28px; font-weight: 600; margin-bottom: 12px">
+              User Memory & Learned Rules
+            </h3>
+            <p style="color: var(--text-dim); margin-bottom: 28px">
+              Supergence collects and stores rules about you, your preferences, and specialized
+              domain instructions to use anytime later.
+            </p>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 24px">
+              <input
+                type="text"
+                id="newUserRuleInput"
+                placeholder="Add custom rule (e.g. Always verify biological data via PubMed, concise code style)..."
+                class="s-input"
+                style="flex: 1"
+                onkeydown="if (event.key === 'Enter') addUserRule();"
+              />
+              <button
+                onclick="addUserRule()"
+                class="s-save"
+                style="margin: 0; padding: 0 22px; font-size: 13px"
+              >
+                + Add Rule
+              </button>
+            </div>
+
+            <div id="userRulesList" style="display: flex; flex-direction: column; gap: 10px">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Section: SIS Swarms & Unified System -->
+          <div id="sec-swarm" class="s-section">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 12px;
+              "
+            >
+              <h3 style="font-size: 28px; font-weight: 600">Unified Swarm Architecture</h3>
+              <button
+                onclick="openCreateAgentModal()"
+                class="s-save"
+                style="margin: 0; padding: 8px 20px; font-size: 13px"
+              >
+                + Forge SIS Agent
+              </button>
+            </div>
+            <p style="color: var(--text-dim); margin-bottom: 28px">
+              Hermes v32.1, OpenClaw, OpenDots, and OpenBots are united into ONE single combined
+              Supergence system. Specialized SIS agents focus on distinct intellectual domains and
+              collaborate seamlessly.
+            </p>
+
+            <div
+              class="swarm-overview-card"
+              style="
+                padding: 20px;
+                border-radius: 18px;
+                background: rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                margin-bottom: 24px;
+              "
+            >
+              <div style="font-size: 15px; font-weight: 600; color: #38bdf8; margin-bottom: 6px">
+                Unified System Stack
+              </div>
+              <div style="font-size: 13px; color: rgba(255, 255, 255, 0.6); line-height: 1.6">
+                • <strong>Orchestrator:</strong> Supergence Core 1.0 (Autonomous Swarm)<br />
+                • <strong>Execution Engines:</strong> Unified OpenClaw (OS Tools), Hermes v32.1
+                (Chat & Reasoning), OpenDots & OpenBots (Automation)<br />
+                • <strong>Specialization Model:</strong> Domain-specific SIS agents (Biology, Math,
+                CS, EE, Physics, Neuroscience)
+              </div>
+            </div>
+
+            <div
+              id="settingsSwarmAgentsList"
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px"
+            >
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+
+          <!-- Section: Wallpapers & Backgrounds -->
+          <div id="sec-wallpapers" class="s-section">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 12px;
+              "
+            >
+              <h3 style="font-size: 28px; font-weight: 600">Desktop Wallpapers & Backgrounds</h3>
+              <button
+                onclick="openWallpaperPicker()"
+                class="s-save"
+                style="margin: 0; padding: 8px 20px; font-size: 13px"
+              >
+                Open Full Selector
+              </button>
+            </div>
+            <p style="color: var(--text-dim); margin-bottom: 28px">
+              Select from 8 pre-installed luxury backgrounds in Supergencebackgrounds or supply
+              custom image.
+            </p>
+            <div class="wallpaper-grid" id="settingsWallpaperGrid"></div>
+          </div>
+
+          <!-- Section: Setup & Tour -->
+          <div id="sec-setup" class="s-section">
+            <h3 style="font-size: 28px; font-weight: 600; margin-bottom: 12px">
+              Setup Wizard & Diagnostics Tour
+            </h3>
+            <p style="color: var(--text-dim); margin-bottom: 28px">
+              Re-launch the full guided onboarding walkthrough to configure providers and benchmark
+              system health.
+            </p>
+            <button
+              onclick="openSetupWalkthrough()"
+              class="s-save"
+              style="padding: 12px 28px; font-size: 14px"
+            >
+              ✨ Launch Guided Setup & Tests
+            </button>
+          </div>
+
+          <!-- Section: Appearance -->
+          <div id="sec-appearance" class="s-section">
+            <h3 style="font-size: 28px; font-weight: 600; margin-bottom: 12px">Appearance</h3>
+            <p style="color: var(--text-dim); margin-bottom: 40px">
+              Deep Black (#000000) is permanently enforced. No other UI options are enabled.
+            </p>
+
+            <div class="theme-grid">
+              <div
+                class="theme-card glass-morph active"
+                data-theme-id="deep-black"
+                style="cursor: default; border-color: rgba(255, 255, 255, 0.2)"
+              >
+                <div
+                  class="theme-preview"
+                  style="background: #000000; border: 2px solid #555555"
+                ></div>
+                Deep Black (#000000) [Enforced]
+              </div>
+            </div>
+          </div>
+
+          <!-- Section: Operator Account -->
+          <div id="sec-account" class="s-section">
+            <h3 style="font-size: 28px; font-weight: 600; margin-bottom: 12px">Operator Account</h3>
+            <p style="color: var(--text-dim); margin-bottom: 48px">
+              Manage your system credentials and operator identification.
+            </p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px">
+              <div>
+                <div class="s-label">Operator ID</div>
+                <input type="text" id="setUserId" class="s-input" placeholder="Operator ID" />
+              </div>
+              <div>
+                <div class="s-label">Password</div>
+                <input type="password" id="setPass" class="s-input" placeholder="Password" />
+              </div>
+              <div>
+                <div class="s-label">First Name</div>
+                <input type="text" id="setFirst" class="s-input" placeholder="First Name" />
+              </div>
+              <div>
+                <div class="s-label">Last Name</div>
+                <input type="text" id="setLast" class="s-input" placeholder="Last Name" />
+              </div>
+              <div>
+                <div class="s-label">Location</div>
+                <input
+                  type="text"
+                  id="setUserLocation"
+                  class="s-input"
+                  placeholder="e.g. London, UK"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 64px; display: flex; gap: 16px">
+            <button onclick="handleUpdateUser()" class="s-save">Save Changes</button>
+            <p
+              id="setError"
+              style="color: var(--red); font-size: 14px; align-self: center; display: none"
+            ></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <canvas id="bg"></canvas>
+    <canvas id="fx"></canvas>
+    <canvas id="agents"></canvas>
+    <div id="rpulse" class="radial-pulse"></div>
+
+    <div id="flare"></div>
+
+    <!-- DUAL INDEPENDENT PALETTES -->
+    <div class="palette-system left">
+      <div class="palette-anchor"></div>
+      <svg class="palette-threads" viewBox="0 0 400 150">
+        <path d="M200,0 Q180,50 140,110" />
+        <path d="M200,0 Q190,55 180,110" />
+        <path d="M200,0 Q200,60 200,110" />
+        <path d="M200,0 Q210,55 220,110" />
+        <path d="M200,0 Q220,50 260,110" />
+      </svg>
+      <div class="palette-tray">
+        <div class="tray-label">Creation Studio</div>
+        <button class="pbtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <polyline points="21 15 16 10 5 21" />
+          </svg>
+          <span>Vision</span>
+        </button>
+        <button class="pbtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path
+              d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"
+            />
+          </svg>
+          <span>Files</span>
+        </button>
+        <button class="pbtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+            <line x1="12" y1="19" x2="12" y2="23" />
+            <line x1="8" y1="23" x2="16" y2="23" />
+          </svg>
+          <span>Voice</span>
+        </button>
+        <button class="pbtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+            <line x1="8" y1="21" x2="16" y2="21" />
+            <line x1="12" y1="17" x2="12" y2="21" />
+          </svg>
+          <span>Screen</span>
+        </button>
+        <button class="pbtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="16 18 22 12 16 6" />
+            <polyline points="8 6 2 12 8 18" />
+          </svg>
+          <span>Code</span>
+        </button>
+        <button class="pbtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 19l7-7 3 3-7 7-3-3z" />
+            <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" />
+            <path d="M2 2l7.586 7.586" />
+            <circle cx="11" cy="11" r="2" />
+          </svg>
+          <span>Canvas</span>
+        </button>
+        <button class="pbtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="8" y1="12" x2="16" y2="12" />
+            <line x1="12" y1="8" x2="12" y2="16" />
+          </svg>
+          <span>Math</span>
+        </button>
+        <button class="pbtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+          </svg>
+          <span>Links</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="palette-system right">
+      <div class="palette-anchor"></div>
+      <svg class="palette-threads" viewBox="0 0 400 150">
+        <path d="M200,0 Q180,50 140,110" />
+        <path d="M200,0 Q190,55 180,110" />
+        <path d="M200,0 Q200,60 200,110" />
+        <path d="M200,0 Q210,55 220,110" />
+        <path d="M200,0 Q220,50 260,110" />
+      </svg>
+      <div class="palette-tray">
+        <div class="tray-label">Intelligence Hub</div>
+        <button class="pbtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <span>Search</span>
+        </button>
+        <button class="pbtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+          </svg>
+          <span>Knowledge</span>
+        </button>
+        <button class="pbtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="1" x2="12" y2="23" />
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+          </svg>
+          <span>Finance</span>
+        </button>
+        <button class="pbtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+          <span>Security</span>
+        </button>
+        <button class="pbtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="2" y1="12" x2="22" y2="12" />
+            <path
+              d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+            />
+          </svg>
+          <span>Globe</span>
+        </button>
+        <button class="pbtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 2 7 12 12 22 7 12 2" />
+            <polyline points="2 17 12 22 22 17" />
+            <polyline points="2 12 12 17 22 12" />
+          </svg>
+          <span>Layers</span>
+        </button>
+        <button class="pbtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+          </svg>
+          <span>Actions</span>
+        </button>
+        <button class="pbtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+            />
+          </svg>
+          <span>Config</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- NAV -->
+    <nav id="nav">
+      <div class="nav-col">
+        <!-- Supergence Core Workspace -->
+        <button class="nbtn on" data-v="home" title="Supergence Core">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M12 2C6.47715 2 2 6.47715 2 12C2 12.4447 2.02903 12.8826 2.0853 13.312C2.61321 17.3405 5.53889 20.6144 9.38261 21.654C10.2169 21.8796 11.0944 22 12 22C16.8786 22 20.9413 18.5064 21.8227 13.8845C21.9391 13.2742 22 12.6442 22 12C22 8.87326 20.565 6.08169 18.3176 4.24796C16.5954 2.84273 14.3961 2 12 2Z"
+              stroke="#fff"
+              stroke-width="1.5"
+            ></path>
+            <path
+              opacity="0.5"
+              d="M2.08545 13.312C2.68675 13.1097 3.33065 13 4.00015 13C7.31386 13 10.0002 15.6863 10.0002 19C10.0002 19.9529 9.77804 20.8538 9.38276 21.654"
+              stroke="#fff"
+              stroke-width="1.5"
+            ></path>
+            <path
+              opacity="0.5"
+              d="M21.8227 13.8846C19.0727 13.3375 17 10.9108 17 8.00008C17 6.58023 17.4932 5.27556 18.3176 4.24805"
+              stroke="#fff"
+              stroke-width="1.5"
+            ></path>
+            <path
+              d="M16 16C16 16.5523 15.5523 17 15 17C14.4477 17 14 16.5523 14 16C14 15.4477 14.4477 15 15 15C15.5523 15 16 15.4477 16 16Z"
+              stroke="#fff"
+              stroke-width="1.5"
+            ></path>
+            <path
+              d="M13 8.5C13 9.88071 11.8807 11 10.5 11C9.11929 11 8 9.88071 8 8.5C8 7.11929 9.11929 6 10.5 6C11.8807 6 13 7.11929 13 8.5Z"
+              stroke="#fff"
+              stroke-width="1.5"
+            ></path>
+          </svg>
+          <span class="tip">Supergence Core</span>
+        </button>
+
+        <!-- SIS Swarms Workspace -->
+        <button class="nbtn" data-v="swarms" title="SIS Swarm Workspace">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="3"></circle>
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+            ></path>
+          </svg>
+          <span class="tip">SIS Swarms</span>
+        </button>
+
+        <!-- User Memory & Rules -->
+        <button class="nbtn" data-v="rules" title="Learned Rules & Memory">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+          </svg>
+          <span class="tip">Learned Rules</span>
+        </button>
+
+        <!-- Autonomous Routines -->
+        <button class="nbtn" data-v="routines" title="Autonomous Routines">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="8" y1="21" x2="16" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+          </svg>
+          <span class="tip">Routines & Screen</span>
+        </button>
+
+        <div class="nav-sep"></div>
+
+        <!-- Settings & Power Controls -->
+        <button class="nbtn" data-v="settings" title="Settings & Core Power">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="3"></circle>
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+            ></path></svg
+          ><span class="tip">Settings</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Phoenix Modal Overlay (Legacy - Keeping for now but will be unused) -->
+    <div
+      id="phoenixModal"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(10, 10, 15, 0.8);
+        backdrop-filter: blur(10px);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+      "
+    >
+      <div
+        id="phoenixWrap"
+        style="
+          background: rgba(20, 20, 25, 0.95);
+          border: 1px solid var(--glass-border);
+          border-radius: 14px;
+          padding: 30px;
+          width: 90%;
+          max-width: 500px;
+          color: var(--text);
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+          position: relative;
+        "
+      >
+        <button
+          onclick="closePhoenixModal()"
+          style="
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text);
+            cursor: pointer;
+          "
+        >
+          ✕
+        </button>
+        <h2
+          style="margin-top: 0; margin-bottom: 20px; font-weight: 600; font-size: 24px; color: #fff"
+        >
+          Welcome to Phoenix
+        </h2>
+        <button id="phoenixStartBtn" class="nbtn" style="width: 100%">Start Onboarding</button>
+        <div id="phoenixQA" style="margin-top: 20px"></div>
+      </div>
+    </div>
+
+    <!-- INPUT -->
+
+    <!-- GRADUAL BLUR LIQUID DOCK APRON (Apple Liquid Glass Gradual Blur) -->
+    <div class="gradual-blur-dock-apron" aria-hidden="true"></div>
+
+    <div id="inputWrap" style="display: none">
+      <div class="seam"></div>
+
+      <div
+        class="fiaibar"
+        onmousemove="handleSprayMove(event)"
+        onmouseleave="handleSprayLeave(event)"
+      >
+        <div class="fiaibar-bg">
+          <div class="hazy-blob blob-1"></div>
+          <div class="hazy-blob blob-2"></div>
+          <div class="hazy-blob blob-3"></div>
+        </div>
+        <div class="fiaibar-glow-container">
+          <div class="fiaibar-glow-rotator"></div>
+        </div>
+        <div id="phoenixQuestionBar">
+          <div class="q-label">Question <span id="pIdx">1</span> of 10</div>
+          <div class="q-text" id="pText">Loading question</div>
+        </div>
+        <div id="customCaret"></div>
+        <textarea id="inp" rows="1" spellcheck="false" class="faiaiit"></textarea>
+
+        <div class="fiai-actions">
+          <!-- Left side features -->
+          <div style="display: flex; align-items: center; gap: 15px">
+            <div class="addfl">
+              <span class="button_top">
+                <svg viewBox="0 0 24 24" class="addsvg">
+                  <path fill="currentColor" d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
+                </svg>
+              </span>
+            </div>
+            <!-- Target Agent Pill (When instructing specific SIS Agent or Supergence) -->
+            <div
+              id="composerTargetPill"
+              class="composer-target-pill"
+              style="display: none"
+              onclick="clearTargetAgent()"
+              title="Click to steer Supergence directly"
+            >
+              <span class="target-dot">●</span>
+              <span id="composerTargetName">Supergence</span>
+              <span class="target-close">✕</span>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 10px">
+            <!-- Answer Mode Selector -->
+            <div class="mode-selector" id="modeSelector" style="margin-top: 0">
+              <div class="mode-current" id="modeCurrentBtn">
+                <span id="currentModeName">Finefast</span>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  class="chevron"
+                >
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </div>
+              <div class="mode-dropdown" id="modeDropdown">
+                <div class="mode-option active" data-mode="Finefast">
+                  <div class="mode-title">Finefast</div>
+                  <div class="mode-desc">It's just the basic mode of sleek.</div>
+                </div>
+                <div class="mode-option" data-mode="Melly">
+                  <div class="mode-title">Melly</div>
+                  <div class="mode-desc">Melly is a AI agent that works for you not automates.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="send" id="sendBtn">
+              <span class="button_top">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="sendsvg"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="m4.5 19.5 15-15m0 0H8.25m11.25 0v11.25"
+                  />
+                </svg>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="inp-hint">Type anywhere · / for commands · Enter to launch</div>
+      </div>
+      <button id="stopBtn" title="Stop response">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g stroke-width="0"></g>
+          <g stroke-linecap="round" stroke-linejoin="round"></g>
+          <path
+            fill-rule="evenodd"
+            clip-rule="evenodd"
+            d="M5 11V13C5 16.3137 7.68629 19 11 19H13C16.3137 19 19 16.3137 19 13V11C19 7.68629 16.3137 5 13 5H11C7.68629 5 5 7.68629 5 11Z"
+            stroke="#ffffff"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          ></path>
+          <rect
+            x="9.5"
+            y="9.5"
+            width="5"
+            height="5"
+            rx="1"
+            stroke="#ffffff"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          ></rect>
+        </svg>
+      </button>
+    </div>
+
+    <!-- SLASH -->
+    <div id="palette">
+      <div class="sl-item" data-t="research">
+        <span class="sl-dot" style="color: var(--blue)"></span><span class="sl-cmd">/research</span
+        ><span class="sl-desc">Deep research</span>
+      </div>
+      <div class="sl-item" data-t="automate">
+        <span class="sl-dot" style="color: var(--violet)"></span
+        ><span class="sl-cmd">/automate</span><span class="sl-desc">Build workflow</span>
+      </div>
+      <div class="sl-item" data-t="extract">
+        <span class="sl-dot" style="color: var(--amber)"></span><span class="sl-cmd">/extract</span
+        ><span class="sl-desc">Data extraction</span>
+      </div>
+      <div class="sl-item" data-t="synthesize">
+        <span class="sl-dot" style="color: var(--green)"></span
+        ><span class="sl-cmd">/synthesize</span><span class="sl-desc">Multi-source synthesis</span>
+      </div>
+    </div>
+
+    <!-- OUTPUT -->
+    <div id="output">
+      <div id="outContent" style="padding-bottom: 80px"></div>
+    </div>
+
+    <!-- DEEP DIVE -->
+    <div id="deepdive">
+      <button class="dd-close" onclick="closeDd()">✕</button>
+      <div class="dd-src">
+        <h3>Raw Sources</h3>
+        <div id="ddSrc"></div>
+      </div>
+      <div class="dd-ana">
+        <h3>AI Analysis</h3>
+        <div id="ddAna"></div>
+      </div>
+    </div>
+
+    <!-- KB -->
+    <div id="kb">
+      <div class="kb-head">
+        <div style="display: flex; align-items: center; gap: 20px; flex: 1">
+          <div class="kb-search-wrap">
+            <svg viewBox="0 0 24 24" class="search-icon">
+              <circle cx="11" cy="11" r="7"></circle>
+              <path d="M16 16l5 5"></path>
+            </svg>
+            <input type="text" id="kbSearchInp" placeholder="Search sessions" spellcheck="false" />
+          </div>
+        </div>
+        <button class="kb-x" onclick="closeKb()">✕</button>
+      </div>
+      <div class="kb-tags" id="kbTags"></div>
+      <div class="kb-grid" id="kbGrid"></div>
+    </div>
+
+    <!-- STATUS -->
+    <div
+      id="statusbar"
+      style="
+        box-shadow:
+          0 10px 25px -5px rgba(0, 0, 0, 0.4),
+          inset 1px 1px rgba(255, 255, 255, 0.2),
+          inset -1px 1px rgba(255, 255, 255, 0.285),
+          inset 0 -1px 1px rgba(255, 255, 255, 0.285),
+          inset 0 0 25px rgba(255, 255, 255, 0.05),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3),
+          inset 0 -20px 40px rgba(0, 0, 0, 0.4);
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: none;
+        border-radius: 50px;
+        padding: 4px 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      "
+    >
+      <span class="s-dot"></span><span id="sysStatus">SLEEK v2·Ready</span>
+    </div>
+
+    <!-- CREDITS -->
+
+    <!-- CREDITS -->
+    <div
+      id="creditUI"
+      style="
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        display: none;
+        align-items: center;
+        gap: 8px;
+        box-shadow:
+          0 10px 25px -5px rgba(0, 0, 0, 0.4),
+          inset 1px 1px rgba(255, 255, 255, 0.2),
+          inset -1px 1px rgba(255, 255, 255, 0.285),
+          inset 0 -1px 1px rgba(255, 255, 255, 0.285),
+          inset 0 0 25px rgba(255, 255, 255, 0.05),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3),
+          inset 0 -20px 40px rgba(0, 0, 0, 0.4);
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: none;
+        border-radius: 50px;
+        padding: 6px 14px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text);
+        pointer-events: auto;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      "
+    >
+      <svg
+        viewBox="0 -0.5 25 25"
+        width="18"
+        height="18"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <g stroke-width="0"></g>
+        <g stroke-linecap="round" stroke-linejoin="round"></g>
+        <path
+          d="M18.9909 7.76C18.755 6.44966 18.1503 5.23376 17.2478 4.25493C16.3453 3.27611 15.1824 2.57495 13.8955 2.23375C12.6085 1.89256 11.251 1.92547 9.98208 2.3286C8.71318 2.73173 7.58552 3.48837 6.73147 4.50975C5.87742 5.53114 5.33241 6.77485 5.1603 8.09508C4.9882 9.41531 5.19614 10.7573 5.75979 11.9635C6.32344 13.1697 7.21941 14.1901 8.34255 14.9051C9.4657 15.62 10.7695 15.9999 12.1009 16"
+          stroke="#5e3"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        ></path>
+        <path
+          d="M5.21094 16.25C5.44679 17.5603 6.05147 18.7762 6.95398 19.7551C7.85649 20.7339 9.0194 21.435 10.3063 21.7762C11.5933 22.1174 12.9508 22.0845 14.2197 21.6814C15.4886 21.2783 16.6162 20.5216 17.4703 19.5002C18.3243 18.4789 18.8694 17.2351 19.0415 15.9149C19.2136 14.5946 19.0057 13.2527 18.442 12.0465C17.8784 10.8403 16.9824 9.81988 15.8593 9.10492C14.7361 8.38996 13.4324 8.01014 12.101 8.01001"
+          stroke="#5e3"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        ></path>
+      </svg>
+      <span id="creditCount">500</span>
+
+      <!-- GLASSMORPHISM LIVE STATS DROPDOWN -->
+      <div
+        id="creditDropdown"
+        style="
+          position: absolute;
+          top: 120%;
+          right: 0;
+          width: 220px;
+          padding: 16px;
+          border-radius: 16px;
+          background: rgba(255, 255, 255, 0.08);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+          opacity: 0;
+          pointer-events: none;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transform: translateY(-10px);
+          z-index: 1010;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        "
+      >
+        <div
+          style="
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 4px;
+            font-weight: 700;
+          "
+        >
+          Live Session Stats
+        </div>
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+          "
+        >
+          <span style="color: rgba(255, 255, 255, 0.7)">Tokens Generated:</span>
+          <span id="liveTokens" style="font-family: monospace; font-weight: 700; color: #5e3"
+            >0</span
+          >
+        </div>
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+          "
+        >
+          <span style="color: rgba(255, 255, 255, 0.7)">Token Credits Cut:</span>
+          <span
+            id="liveTokenCredits"
+            style="font-family: monospace; font-weight: 700; color: #ff5252"
+            >0</span
+          >
+        </div>
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+          "
+        >
+          <span style="color: rgba(255, 255, 255, 0.7)">Base Request Cost:</span>
+          <span
+            id="liveBaseCredits"
+            style="font-family: monospace; font-weight: 700; color: #ff9800"
+            >0</span
+          >
+        </div>
+        <div
+          style="
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 4px;
+            padding-top: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            font-weight: 700;
+          "
+        >
+          <span>Total Response Cut:</span>
+          <span id="liveTotalCredits" style="font-family: monospace; color: #ff5252">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- FINANCE OVERLAY -->
+    <div id="financeOverlay">
+      <iframe id="financeFrame" src=""></iframe>
+    </div>
+
+    <input type="file" id="fileInput" accept="image/*" multiple style="display: none" />
+    <div
+      id="imagePreview"
+      style="
+        display: none;
+        position: fixed;
+        bottom: 140px;
+        left: 40px;
+        z-index: 400;
+        box-shadow:
+          0 10px 25px -5px rgba(0, 0, 0, 0.4),
+          inset 1px 1px rgba(255, 255, 255, 0.2),
+          inset -1px 1px rgba(255, 255, 255, 0.285),
+          inset 0 -1px 1px rgba(255, 255, 255, 0.285),
+          inset 0 0 25px rgba(255, 255, 255, 0.05),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3),
+          inset 0 -20px 40px rgba(0, 0, 0, 0.4);
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: none;
+        border-radius: 14px;
+        padding: 12px;
+      "
+    >
+      <div
+        id="previewList"
+        style="
+          display: flex;
+          gap: 10px;
+          align-items: center;
+          overflow-x: auto;
+          max-width: 600px;
+          padding-bottom: 5px;
+        "
+      ></div>
+      <button
+        onclick="clearImages()"
+        style="
+          position: absolute;
+          top: -10px;
+          right: -10px;
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          background: #ff4444;
+          color: white;
+          border: none;
+          cursor: pointer;
+          font-size: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 5px 15px rgba(248, 113, 113, 0.4);
+        "
+      >
+        ✕
+      </button>
+    </div>
+
+    <!-- PREVIEW MODAL -->
+    <div id="preview-overlay" onclick="if (event.target === this) closePreview();">
+      <div id="preview-window">
+        <div class="preview-header">
+          <div class="preview-title" id="preview-title">Preview</div>
+          <div class="preview-actions">
+            <button
+              class="preview-btn active"
+              id="btn-mode-preview"
+              onclick="togglePreviewMode('preview')"
+            >
+              Preview
+            </button>
+            <button class="preview-btn" id="btn-mode-code" onclick="togglePreviewMode('code')">
+              Source Code
+            </button>
+            <button class="preview-close" onclick="closePreview()">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="preview-body" id="preview-body">
+          <div id="preview-render-container" class="preview-render-container"></div>
+          <iframe id="preview-iframe" class="preview-iframe"></iframe>
+          <div id="preview-code-container" class="preview-code-container">
+            <div
+              class="code-block file-code-block"
+              style="margin: 0; border-radius: 0; box-shadow: none"
+            >
+              <pre><code id="preview-code-content"></code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="actionModalOverlay" class="action-modal-overlay">
+      <div class="action-modal glass-morph">
+        <h3>Action</h3>
+        <p></p>
+        <input type="text" spellcheck="false" />
+        <div class="action-modal-btns">
+          <button class="btn-cancel">Cancel</button>
+          <button class="btn-confirm">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIQUID GLASS OPTICAL DISPLACEMENT ENGINE (From Liquid-glass) -->
+    <svg
+      id="liquid-glass-svg-defs"
+      aria-hidden="true"
+      style="
+        position: absolute;
+        width: 0;
+        height: 0;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: -9999;
+      "
+    >
+      <defs>
+        <filter
+          id="liquid-glass-filter-bar"
+          x="-35%"
+          y="-35%"
+          width="170%"
+          height="170%"
+          color-interpolation-filters="sRGB"
+        >
+          <feImage
+            id="feimg-bar"
+            x="0"
+            y="0"
+            width="100%"
+            height="100%"
+            result="DISPLACEMENT_MAP"
+            href="data:image/jpeg;base64,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IJoJIJ2R2J0JWBUJ0JUB0XTv479dFZDYiglYigkhEgjZFQjRFQjRFQjQigFYigHYigmgEgmglYlYnQlQlYlQHQlQnQ9P/kf1yVkNiNCNkNiVENiNiViNEViNkVCVgKCViViViSCViSCVgdCViVCViVCdgVCVCdD1D+U/XBWQ2I0I2Q2JUQ2I0JWQ0I2JUQ2JUI2JUI2J0JWJWJWA2R0BWJ0I2JUJ2BUJUJ0P//EABkQAQEBAQEBAAAAAAAAAAAAAAECABEDEP/aAAgBAQABAgB1atWrVq1atWrVq1atWrVq1atWrVq1atWrVq+OrVq1atWrVq1atWrVq1atWrVq1atWrVq1atXxVppppppdWrVq1atWrVq1NNNNNNNNNNNPVWmmmmms6tWrVq1atWpppppppppppppp6q0000uc51atWrVq1ammmmmmmmmmmmmt1Vpppc5znVq1atWrVqaaaaaaaaaaaaaeqtNLnOc51atWrVq1ammmmmmmmmmmmmnqrS5znOc6tWrVq16222mmmmmmlVppp6tKuc5znOrVq1a9TbbbbTTTTTSq000qtLnOc5zq1atWrW0222200000qqqtKqrnOc5zq1atTbbbbbbbbTTTSqqqqqq5znOc6tTTTbbbbbbbbTTTSqqqqrlVznOctNNNtttttttttNNNNKqqqrqznKqrTTTTbbbbbbbbbTTTSqqqqrqznOc5aaaabbbbbbbbbaaaaVVVVVdWc5znVq1NNttttttttttNNKqqqqudWc5znVq16tbbbbbbbbbbTTSqqqq5XVnOc6tWrVrb1tttttttttNNKqqqqrWrK5VWmmm2230bbbbbbaaaXOc5zlVa1KuVVppptttt9G22222mmlzlVznK6tWVVWmmmm2222222222mlznOc5znLWppVVWmmm22222229bTWrOc5znOcq1qaaVpWmm222222229erVqznOc5znKtatStK0rTbTTbbbberXr1as5znOc5aVpppppWlabaabbbb1ta9WrVnOc5znU0rTTTTTTTTTbTTbbbTWvVq1as5znOdTTStNNNNNNNNNtNNtttN6tWvVq1ZznOrU00rTTTTTTTTTTTTTbTWvVq1atWrOc6tTTTStNNNNNNNNNtNNtNa9WrVq1Z1Z1NNNNNK1q1NNNNNNNNNNNtNatWrVq1atWrU00000rWrVq1atWrVq1alaaa1atWrVq1NNNammmmla1atWrVq1aterVq16tWrVnVqa1NK1qaaaVX/xAAWEAADAAAAAAAAAAAAAAAAAAAhgJD/2gAIAQEAAz8AaExf/8QAGhEBAQEBAQEBAAAAAAAAAAAAAQISEQADEP/aAAgBAgEBAgDx48ePHjx48ePHjx48ePHjx48ePHjx48ePHj86IiIiIiInjx48ePHjx48IiIiIj0oooooooooRERER73ve60UUUUUUVrWiiiiiihERERER73ve97ooooorRWiiiiihKERERER73ve973RRRRWtFFFFFFCIiIiIiPe973ve60UUVrRRRRRRQiIlCIiI973ve973pRRWiiiiiiiiiiiiiiihEe973ve973RRWtFFFFFFFFFFFFFFFFFFa13ve973WitaKKKKKKKKKKKKKKKKKK1rWtd1rutFa1oooooooooooosssooorWta1rWta1rRRRRRRRRZZZZZZZZZWta1rWta1rRRRRRRRRZZZZZZZZZZZZe9a1rWta1rWitaKLLLLLLLLLLLLLLLLL3rWta1rWtFbLLLLLLLLLLLLLLLLLLLL3vWta1rWita1ssssssss+hZZZZZZZZe961rWta0Vre97LLLLLLLLLLLPoWWWWWXrWta1oorWta3ssss+hZZZZ9Cyyyyyyyyiita1orWta1ve9llllllllllllllllFFa0VorWta1ve9llllllllllllllllllFFFaK1rWta1rWiyyyyyyyyyyyyiiiiiiitFFa1rWta1oosoosssssoooosoooorRRRWta1rWta0UUUUUWUUUUUUUUUUUVoooorWta1rWtaKKKKKKmiiiiiiiiiiiiiiitd73ve61oSiiipoqaKKKKKKKKKK0UUUVrve973vREREZoSihEooooorRRRRWtd73ve9EREREREoSiiiiitFllllla73ve9ERERERESiiiiiitH0PoWWWWVrXe96IiIiMoiJRRRRRRWjwlFFllllFFd6IiIiIlCUUUUUUUUUePHjx48ePCIiIiIiIiUUUUUUUUUUUePHjx48ePHjx48ePHjx48IiUUUUUUJRRRX//xAAWEQADAAAAAAAAAAAAAAAAAAABYJD/2gAIAQIBAz8AtEV7/8QAFxEBAQEBAAAAAAAAAAAAAAAAAAECEP/aAAgBAwEBAgCtNNNNNNNNNNNNNNNNNNNNNNNNNNNNNcrTTTTTTTTTTTTTTTTTTTTTTTTTTTTTXKrTTTTTTTU000000000000000000001FVpppppqampqaaaaaaaaaaaaaaaaaaaa5Vaaaaampqampqammmmmmmmmmmlaaaaaaiq0001NTU1NTU1NTTTTTTTTTTSqqtNNNcqtNNSyzU1LNTU1NTTTTTTTTTSqqq001ytNLLLLNTU1NTU1NTbbbTTTTTSqqq001ytNLLLLLNTU1NTU3NttttNNNNNKqq001KrSyyyyyzU1NTU3Nzc02220000qqqqrSqqyyyyyzU1NTU3Nzc3NttttNNNKqqqqqqssssss1NTU3Nzc3NzbbbbTTTSqqqqqqrLLLLLNTU1Nzc3Nzc22220000qqqqqqqqssss1NTU3Nzc3NzbbbbbTTSqqqqqqqqqqzU1NTc3Nzc3Nzbc22000qqqqqqqqqqqtTU3Nzc3Nzc3NtzbTTSqqqqrKqqqqqtNNzc23Nzc3Nzc3NTU1KqqqrKqqqqqtNNNNttzc3Nzc3NzU1NLLLLLKqqqqqqqq0022223Nzc3NzU1NSyyyyyyqqqqqqqrTTbbbbc3Nzc3NTU1LLLLLLKsqqqqqqrTTTTbbbc3Nzc1NTUsssssssqqqqqqrTTTTTbbbTc3NTU1NTUsssssqqqqqqqq0000222023NTU1NTUsssssqqqqqqqq000000003NTU1NTU1LLLLLNKrTSqqqqtNNNNNNtNNTU1NSzUssss00qq0qqqqrTTTTTTTTTU1NTUs1LLLNNNKrTTTSqqq00000000001NTU1LNTU0000qtNNNKqqqtNNNNNNNNTU1NTUs1NNNNNKss1NNNK00qtK0000001NTU1LNTU0000qq000001NKrStNNNNK1NNNNStNNNNNKqtNNNNNNNK0000000rU0000rTTTTTSq00000rTTTTTTTTTTTTTTTTStNNNNKr/xAAUEQEAAAAAAAAAAAAAAAAAAACg/9oACAEDAQM/AAAf/9k="
+            preserveAspectRatio="xMidYMid slice"
+          />
+          <feColorMatrix
+            in="DISPLACEMENT_MAP"
+            type="matrix"
+            values="0.3 0.3 0.3 0 0  0.3 0.3 0.3 0 0  0.3 0.3 0.3 0 0  0 0 0 1 0"
+            result="EDGE_INTENSITY"
+          />
+          <feComponentTransfer in="EDGE_INTENSITY" result="EDGE_MASK">
+            <feFuncA type="discrete" tableValues="0 0.1 1" />
+          </feComponentTransfer>
+          <feOffset in="SourceGraphic" dx="0" dy="0" result="CENTER_ORIGINAL" />
+          <feDisplacementMap
+            in="SourceGraphic"
+            in2="DISPLACEMENT_MAP"
+            scale="-55"
+            xChannelSelector="R"
+            yChannelSelector="B"
+            result="RED_DISPLACED"
+          />
+          <feColorMatrix
+            in="RED_DISPLACED"
+            type="matrix"
+            values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0"
+            result="RED_CHANNEL"
+          />
+          <feDisplacementMap
+            in="SourceGraphic"
+            in2="DISPLACEMENT_MAP"
+            scale="-48"
+            xChannelSelector="R"
+            yChannelSelector="B"
+            result="GREEN_DISPLACED"
+          />
+          <feColorMatrix
+            in="GREEN_DISPLACED"
+            type="matrix"
+            values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0"
+            result="GREEN_CHANNEL"
+          />
+          <feDisplacementMap
+            in="SourceGraphic"
+            in2="DISPLACEMENT_MAP"
+            scale="-40"
+            xChannelSelector="R"
+            yChannelSelector="B"
+            result="BLUE_DISPLACED"
+          />
+          <feColorMatrix
+            in="BLUE_DISPLACED"
+            type="matrix"
+            values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0"
+            result="BLUE_CHANNEL"
+          />
+          <feBlend in="GREEN_CHANNEL" in2="BLUE_CHANNEL" mode="screen" result="GB_COMBINED" />
+          <feBlend in="RED_CHANNEL" in2="GB_COMBINED" mode="screen" result="RGB_COMBINED" />
+          <feGaussianBlur in="RGB_COMBINED" stdDeviation="0.35" result="ABERRATED_BLURRED" />
+          <feComposite
+            in="ABERRATED_BLURRED"
+            in2="EDGE_MASK"
+            operator="in"
+            result="EDGE_ABERRATION"
+          />
+          <feComponentTransfer in="EDGE_MASK" result="INVERTED_MASK">
+            <feFuncA type="table" tableValues="1 0" />
+          </feComponentTransfer>
+          <feComposite
+            in="CENTER_ORIGINAL"
+            in2="INVERTED_MASK"
+            operator="in"
+            result="CENTER_CLEAN"
+          />
+          <feComposite in="EDGE_ABERRATION" in2="CENTER_CLEAN" operator="over" />
+        </filter>
+
+        <filter
+          id="liquid-glass-filter-card"
+          x="-35%"
+          y="-35%"
+          width="170%"
+          height="170%"
+          color-interpolation-filters="sRGB"
+        >
+          <feImage
+            id="feimg-card"
+            x="0"
+            y="0"
+            width="100%"
+            height="100%"
+            result="DISPLACEMENT_MAP"
+            href="data:image/jpeg;base64,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IJoJIJ2R2J0JWBUJ0JUB0XTv479dFZDYiglYigkhEgjZFQjRFQjRFQjQigFYigHYigmgEgmglYlYnQlQlYlQHQlQnQ9P/kf1yVkNiNCNkNiVENiNiViNEViNkVCVgKCViViViSCViSCVgdCViVCViVCdgVCVCdD1D+U/XBWQ2I0I2Q2JUQ2I0JWQ0I2JUQ2JUI2JUI2J0JWJWJWA2R0BWJ0I2JUJ2BUJUJ0P//EABkQAQEBAQEBAAAAAAAAAAAAAAECABEDEP/aAAgBAQABAgB1atWrVq1atWrVq1atWrVq1atWrVq1atWrVq+OrVq1atWrVq1atWrVq1atWrVq1atWrVq1atXxVppppppdWrVq1atWrVq1NNNNNNNNNNNPVWmmmmms6tWrVq1atWpppppppppppppp6q0000uc51atWrVq1ammmmmmmmmmmmmt1Vpppc5znVq1atWrVqaaaaaaaaaaaaaeqtNLnOc51atWrVq1ammmmmmmmmmmmmnqrS5znOc6tWrVq16222mmmmmmlVppp6tKuc5znOrVq1a9TbbbbTTTTTSq000qtLnOc5zq1atWrW0222200000qqqtKqrnOc5zq1atTbbbbbbbbTTTSqqqqqq5znOc6tTTTbbbbbbbbTTTSqqqqrlVznOctNNNtttttttttNNNNKqqqrqznKqrTTTTbbbbbbbbbTTTSqqqqrqznOc5aaaabbbbbbbbbaaaaVVVVVdWc5znVq1NNttttttttttNNKqqqqudWc5znVq16tbbbbbbbbbbTTSqqqq5XVnOc6tWrVrb1tttttttttNNKqqqqrWrK5VWmmm2230bbbbbbaaaXOc5zlVa1KuVVppptttt9G22222mmlzlVznK6tWVVWmmmm2222222222mlznOc5znLWppVVWmmm22222229bTWrOc5znOcq1qaaVpWmm222222229erVqznOc5znKtatStK0rTbTTbbbberXr1as5znOc5aVpppppWlabaabbbb1ta9WrVnOc5znU0rTTTTTTTTTbTTbbbTWvVq1as5znOdTTStNNNNNNNNNtNNtttN6tWvVq1ZznOrU00rTTTTTTTTTTTTTbTWvVq1atWrOc6tTTTStNNNNNNNNNtNNtNa9WrVq1Z1Z1NNNNNK1q1NNNNNNNNNNNtNatWrVq1atWrU00000rWrVq1atWrVq1alaaa1atWrVq1NNNammmmla1atWrVq1aterVq16tWrVnVqa1NK1qaaaVX/xAAWEAADAAAAAAAAAAAAAAAAAAAhgJD/2gAIAQEAAz8AaExf/8QAGhEBAQEBAQEBAAAAAAAAAAAAAQISEQADEP/aAAgBAgEBAgDx48ePHjx48ePHjx48ePHjx48ePHjx48ePHj86IiIiIiInjx48ePHjx48IiIiIj0oooooooooRERER73ve60UUUUUUVrWiiiiiihERERER73ve97ooooorRWiiiiihKERERER73ve973RRRRWtFFFFFFCIiIiIiPe973ve60UUVrRRRRRRQiIlCIiI973ve973pRRWiiiiiiiiiiiiiiihEe973ve973RRWtFFFFFFFFFFFFFFFFFFa13ve973WitaKKKKKKKKKKKKKKKKKK1rWtd1rutFa1oooooooooooosssooorWta1rWta1rRRRRRRRRZZZZZZZZZWta1rWta1rRRRRRRRRZZZZZZZZZZZZe9a1rWta1rWitaKLLLLLLLLLLLLLLLLL3rWta1rWtFbLLLLLLLLLLLLLLLLLLLL3vWta1rWita1ssssssss+hZZZZZZZZe961rWta0Vre97LLLLLLLLLLLPoWWWWWXrWta1oorWta3ssss+hZZZZ9Cyyyyyyyyiita1orWta1ve9llllllllllllllllFFa0VorWta1ve9llllllllllllllllllFFFaK1rWta1rWiyyyyyyyyyyyyiiiiiiitFFa1rWta1oosoosssssoooosoooorRRRWta1rWta0UUUUUWUUUUUUUUUUUVoooorWta1rWtaKKKKKKmiiiiiiiiiiiiiiitd73ve61oSiiipoqaKKKKKKKKKK0UUUVrve973vREREZoSihEooooorRRRRWtd73ve9EREREREoSiiiiitFllllla73ve9ERERERESiiiiiitH0PoWWWWVrXe96IiIiMoiJRRRRRRWjwlFFllllFFd6IiIiIlCUUUUUUUUUePHjx48ePCIiIiIiIiUUUUUUUUUUUePHjx48ePHjx48ePHjx48IiUUUUUUJRRRX//xAAWEQADAAAAAAAAAAAAAAAAAAABYJD/2gAIAQIBAz8AtEV7/8QAFxEBAQEBAAAAAAAAAAAAAAAAAAECEP/aAAgBAwEBAgCtNNNNNNNNNNNNNNNNNNNNNNNNNNNNNcrTTTTTTTTTTTTTTTTTTTTTTTTTTTTTXKrTTTTTTTU000000000000000000001FVpppppqampqaaaaaaaaaaaaaaaaaaaa5Vaaaaampqampqammmmmmmmmmmlaaaaaaiq0001NTU1NTU1NTTTTTTTTTTSqqtNNNcqtNNSyzU1LNTU1NTTTTTTTTTSqqq001ytNLLLLNTU1NTU1NTbbbTTTTTSqqq001ytNLLLLLNTU1NTU3NttttNNNNNKqq001KrSyyyyyzU1NTU3Nzc02220000qqqqrSqqyyyyyzU1NTU3Nzc3NttttNNNKqqqqqqssssss1NTU3Nzc3NzbbbbTTTSqqqqqqrLLLLLNTU1Nzc3Nzc22220000qqqqqqqqssss1NTU3Nzc3NzbbbbbTTSqqqqqqqqqqzU1NTc3Nzc3Nzbc22000qqqqqqqqqqqtTU3Nzc3Nzc3NtzbTTSqqqqrKqqqqqtNNzc23Nzc3Nzc3NTU1KqqqrKqqqqqtNNNNttzc3Nzc3NzU1NLLLLLKqqqqqqqq0022223Nzc3NzU1NSyyyyyyqqqqqqqrTTbbbbc3Nzc3NTU1LLLLLLKsqqqqqqrTTTTbbbc3Nzc1NTUsssssssqqqqqqrTTTTTbbbTc3NTU1NTUsssssqqqqqqqq0000222023NTU1NTUsssssqqqqqqqq000000003NTU1NTU1LLLLLNKrTSqqqqtNNNNNNtNNTU1NSzUssss00qq0qqqqrTTTTTTTTTU1NTUs1LLLNNNKrTTTSqqq00000000001NTU1LNTU0000qtNNNKqqqtNNNNNNNNTU1NTUs1NNNNNKss1NNNK00qtK0000001NTU1LNTU0000qq000001NKrStNNNNK1NNNNStNNNNNKqtNNNNNNNK0000000rU0000rTTTTTSq00000rTTTTTTTTTTTTTTTTStNNNNKr/xAAUEQEAAAAAAAAAAAAAAAAAAACg/9oACAEDAQM/AAAf/9k="
+            preserveAspectRatio="xMidYMid slice"
+          />
+          <feColorMatrix
+            in="DISPLACEMENT_MAP"
+            type="matrix"
+            values="0.3 0.3 0.3 0 0  0.3 0.3 0.3 0 0  0.3 0.3 0.3 0 0  0 0 0 1 0"
+            result="EDGE_INTENSITY"
+          />
+          <feComponentTransfer in="EDGE_INTENSITY" result="EDGE_MASK">
+            <feFuncA type="discrete" tableValues="0 0.11 1" />
+          </feComponentTransfer>
+          <feOffset in="SourceGraphic" dx="0" dy="0" result="CENTER_ORIGINAL" />
+          <feDisplacementMap
+            in="SourceGraphic"
+            in2="DISPLACEMENT_MAP"
+            scale="-70"
+            xChannelSelector="R"
+            yChannelSelector="B"
+            result="RED_DISPLACED"
+          />
+          <feColorMatrix
+            in="RED_DISPLACED"
+            type="matrix"
+            values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0"
+            result="RED_CHANNEL"
+          />
+          <feDisplacementMap
+            in="SourceGraphic"
+            in2="DISPLACEMENT_MAP"
+            scale="-62"
+            xChannelSelector="R"
+            yChannelSelector="B"
+            result="GREEN_DISPLACED"
+          />
+          <feColorMatrix
+            in="GREEN_DISPLACED"
+            type="matrix"
+            values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0"
+            result="GREEN_CHANNEL"
+          />
+          <feDisplacementMap
+            in="SourceGraphic"
+            in2="DISPLACEMENT_MAP"
+            scale="-54"
+            xChannelSelector="R"
+            yChannelSelector="B"
+            result="BLUE_DISPLACED"
+          />
+          <feColorMatrix
+            in="BLUE_DISPLACED"
+            type="matrix"
+            values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0"
+            result="BLUE_CHANNEL"
+          />
+          <feBlend in="GREEN_CHANNEL" in2="BLUE_CHANNEL" mode="screen" result="GB_COMBINED" />
+          <feBlend in="RED_CHANNEL" in2="GB_COMBINED" mode="screen" result="RGB_COMBINED" />
+          <feGaussianBlur in="RGB_COMBINED" stdDeviation="0.4" result="ABERRATED_BLURRED" />
+          <feComposite
+            in="ABERRATED_BLURRED"
+            in2="EDGE_MASK"
+            operator="in"
+            result="EDGE_ABERRATION"
+          />
+          <feComponentTransfer in="EDGE_MASK" result="INVERTED_MASK">
+            <feFuncA type="table" tableValues="1 0" />
+          </feComponentTransfer>
+          <feComposite
+            in="CENTER_ORIGINAL"
+            in2="INVERTED_MASK"
+            operator="in"
+            result="CENTER_CLEAN"
+          />
+          <feComposite in="EDGE_ABERRATION" in2="CENTER_CLEAN" operator="over" />
+        </filter>
+
+        <filter
+          id="liquid-text-specular"
+          x="-20%"
+          y="-20%"
+          width="140%"
+          height="140%"
+          color-interpolation-filters="sRGB"
+        >
+          <feGaussianBlur in="SourceAlpha" stdDeviation="2.2" result="BLUR" />
+          <feSpecularLighting
+            in="BLUR"
+            surfaceScale="5.5"
+            specularConstant="1.4"
+            specularExponent="24"
+            lighting-color="#ffffff"
+            result="SPEC"
+          >
+            <feDistantLight azimuth="125" elevation="52" />
+          </feSpecularLighting>
+          <feComposite in="SPEC" in2="SourceAlpha" operator="in" result="SPEC_TRIM" />
+          <feMerge>
+            <feMergeNode in="SourceGraphic" />
+            <feMergeNode in="SPEC_TRIM" />
+          </feMerge>
+        </filter>
+      </defs>
+    </svg>
+
+    <script src="./SupergenceUI.js"></script>
+  </body>
+</html>

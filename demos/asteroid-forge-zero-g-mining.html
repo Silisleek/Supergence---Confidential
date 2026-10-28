@@ -1,0 +1,1141 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Procedural asteroid field with physics, particles, and real- // SIS 3D Simulation</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        overflow: hidden;
+        background: #080b10;
+        font-family:
+          'Inter',
+          -apple-system,
+          sans-serif;
+        color: #e2e8f0;
+      }
+      #canvas-container {
+        width: 100vw;
+        height: 100vh;
+        position: absolute;
+      }
+      #hud {
+        position: absolute;
+        top: 14px;
+        left: 14px;
+        z-index: 10;
+        background: rgba(13, 17, 23, 0.88);
+        backdrop-filter: blur(14px);
+        border: 1px solid rgba(0, 240, 255, 0.35);
+        border-radius: 8px;
+        padding: 12px 16px;
+        pointer-events: auto;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+        min-width: 240px;
+      }
+      .hud-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: #00f0ff;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 3px;
+      }
+      .hud-sub {
+        font-size: 10px;
+        color: #8b949e;
+      }
+      .hud-row {
+        display: flex;
+        gap: 12px;
+        margin-top: 6px;
+        font-size: 11px;
+      }
+      .hud-score {
+        color: #84cc16;
+        font-weight: 700;
+      }
+      .hud-lives {
+        color: #ff6b6b;
+        font-weight: 700;
+      }
+      #hud-win {
+        display: none;
+        margin-top: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #ffd700;
+      }
+      #btn-restart {
+        display: none;
+        margin-top: 8px;
+        background: rgba(0, 240, 255, 0.12);
+        border: 1px solid #00f0ff;
+        color: #00f0ff;
+        padding: 5px 12px;
+        font-size: 11px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      #btn-restart:hover {
+        background: rgba(0, 240, 255, 0.3);
+        color: #fff;
+      }
+      .hud-hint {
+        margin-top: 6px;
+        font-size: 9px;
+        color: #64748b;
+      }
+      #tooltip {
+        position: absolute;
+        display: none;
+        z-index: 20;
+        background: rgba(13, 17, 23, 0.95);
+        border: 1px solid #00f0ff;
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 11px;
+        pointer-events: none;
+        color: #00f0ff;
+      }
+      /* Cinematic vignette + top glow: cheap post-processing without a post chain */
+      #vignette {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        pointer-events: none;
+        background:
+          radial-gradient(ellipse at 50% 42%, rgba(0, 0, 0, 0) 46%, rgba(0, 0, 0, 0.42) 100%),
+          linear-gradient(to bottom, rgba(0, 240, 255, 0.05), rgba(0, 0, 0, 0) 22%);
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/",
+          "three/examples/jsm/controls/OrbitControls.js": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/controls/OrbitControls.js",
+          "three/examples/jsm/postprocessing/EffectComposer.js": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/postprocessing/EffectComposer.js",
+          "three/examples/jsm/postprocessing/RenderPass.js": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/postprocessing/RenderPass.js",
+          "three/examples/jsm/postprocessing/UnrealBloomPass.js": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/postprocessing/UnrealBloomPass.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="canvas-container"></div>
+    <div id="vignette"></div>
+    <div id="hud">
+      <div class="hud-title">✦ PROCEDURAL ASTEROID FIELD WITH PHYSICS,</div>
+      <div class="hud-sub" id="hud-info">Interactive 3D Simulation | 60 FPS</div>
+      <div class="hud-row">
+        <span class="hud-score" id="hud-score">SCORE 0</span
+        ><span class="hud-lives" id="hud-lives">LIVES 3</span>
+      </div>
+      <div id="hud-win"></div>
+      <button id="btn-restart">↻ RESTART</button>
+      <div class="hud-hint">WASD / arrows to move · swipe on touch · collect 5 to win</div>
+    </div>
+    <div id="tooltip"></div>
+    <script type="module">
+      // [syntax-healed]     import * as THREE from 'three';
+      import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+      import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+      // ─── DETERMINISTIC SHELL: Scene, Camera, Renderer, Lighting ───
+      // Beauty is deterministic: IBL + shadow catcher + tuned lights ship with EVERY scene,
+      // so output quality never depends on the model remembering them.
+      const container = document.getElementById('canvas-container');
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x080b10);
+      scene.fog = new THREE.FogExp2(0x080b10, 0.022);
+
+      const camera = new THREE.PerspectiveCamera(
+        50,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        200,
+      );
+      camera.position.set(5.2, 3.4, 7.2);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.15;
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      container.appendChild(renderer.domElement);
+
+      // Image-based lighting: free studio reflections on every standard material (no network)
+      try {
+        const pmrem = new THREE.PMREMGenerator(renderer);
+        scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+        scene.environmentIntensity = 0.55;
+        pmrem.dispose();
+      } catch (e) {
+        /* IBL optional — lights alone still carry the scene */
+      }
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.target.set(0, 1, 0);
+      controls.maxPolarAngle = Math.PI / 2 - 0.06; // never dive under the floor
+      controls.minDistance = 3;
+      controls.maxDistance = 24;
+
+      // ─── PERSISTENT STYLE GUIDE: Tactical Lighting Reference Sheet ───
+      const hemiLight = new THREE.HemisphereLight(0x8fb8ff, 0x1a1410, 0.5);
+      scene.add(hemiLight);
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.35);
+      scene.add(ambientLight);
+
+      const keyLight = new THREE.DirectionalLight(0xeaf6ff, 1.6);
+      keyLight.position.set(5, 8, 5);
+      keyLight.castShadow = true;
+      keyLight.shadow.mapSize.width = 2048;
+      keyLight.shadow.mapSize.height = 2048;
+      keyLight.shadow.camera.left = -8;
+      keyLight.shadow.camera.right = 8;
+      keyLight.shadow.camera.top = 8;
+      keyLight.shadow.camera.bottom = -8;
+      keyLight.shadow.camera.far = 30;
+      keyLight.shadow.bias = -0.0004;
+      keyLight.shadow.radius = 4;
+      scene.add(keyLight);
+
+      const cyanKick = new THREE.DirectionalLight(0x00f0ff, 0.55);
+      cyanKick.position.set(5, 2, 6);
+      scene.add(cyanKick);
+
+      const fillLight = new THREE.DirectionalLight(0xa78bfa, 0.5);
+      fillLight.position.set(-4, 3, -3);
+      scene.add(fillLight);
+
+      const rimLight = new THREE.PointLight(0xff6b6b, 12, 24);
+      rimLight.position.set(0, 3, -6);
+      scene.add(rimLight);
+
+      // Shadow-catcher ground disc (invisible except for soft shadows) + grid above it
+      const groundDisc = new THREE.Mesh(
+        new THREE.CircleGeometry(14, 48),
+        new THREE.ShadowMaterial({ opacity: 0.38 }),
+      );
+      groundDisc.rotation.x = -Math.PI / 2;
+      groundDisc.position.y = 0;
+      groundDisc.receiveShadow = true;
+      scene.add(groundDisc);
+
+      const grid = new THREE.GridHelper(24, 24, 0x00f0ff, 0x1a1a2e);
+      grid.position.y = 0.002;
+      grid.material.opacity = 0.28;
+      grid.material.transparent = true;
+      scene.add(grid);
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      // ─── AI-GENERATED PART 1: Scene Objects (retopology-optimized) ───
+      function buildSceneObjects(scene, THREE) {
+        const meshes = [];
+        const palette = [0x00f0ff, 0xff007f, 0x00ff88, 0xffb300, 0x9d00ff];
+
+        function createAsteroidGeometry(radius, detail) {
+          const geo = new THREE.IcosahedronGeometry(radius, detail);
+          const pos = geo.attributes.position;
+          for (let i = 0; i < pos.count; i++) {
+            const v = new THREE.Vector3().fromBufferAttribute(pos, i);
+            const noise =
+              Math.sin(v.x * 4.3) * Math.cos(v.y * 3.7) * Math.sin(v.z * 5.1) * 0.35 + 0.65;
+            v.multiplyScalar(noise);
+            pos.setXYZ(i, v.x, v.y, v.z);
+          }
+          geo.computeVertexNormals();
+          return geo;
+        }
+
+        for (let i = 0; i < 6; i++) {
+          const r = 3 + Math.random() * 7;
+          const geo = createAsteroidGeometry(r, 2);
+          const mat = new THREE.MeshStandardMaterial({
+            color: palette[Math.floor(Math.random() * palette.length)],
+            emissive: palette[Math.floor(Math.random() * palette.length)],
+            emissiveIntensity: 0.3 + Math.random() * 0.4,
+            metalness: 0.2,
+            roughness: 0.8,
+            flatShading: true,
+          });
+          const mesh = new THREE.Mesh(geo, mat);
+          mesh.position.set(
+            (Math.random() - 0.5) * 120,
+            (Math.random() - 0.5) * 60,
+            (Math.random() - 0.5) * 120,
+          );
+          mesh.rotation.set(
+            Math.random() * Math.PI,
+            Math.random() * Math.PI,
+            Math.random() * Math.PI,
+          );
+          mesh.scale.setScalar(0.8 + Math.random() * 0.6);
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
+          mesh.userData = {
+            type: 'asteroid',
+            health: 100,
+            ore: Math.floor(10 + Math.random() * 40),
+            velocity: new THREE.Vector3(),
+            angularVelocity: new THREE.Vector3(
+              (Math.random() - 0.5) * 0.01,
+              (Math.random() - 0.5) * 0.01,
+              (Math.random() - 0.5) * 0.01,
+            ),
+          };
+          scene.add(mesh);
+          meshes.push(mesh);
+        }
+
+        const shipGeo = new THREE.ConeGeometry(1.2, 4, 4);
+        shipGeo.rotateX(-Math.PI / 2);
+        const shipMat = new THREE.MeshStandardMaterial({
+          color: 0x00f0ff,
+          emissive: 0x00f0ff,
+          emissiveIntensity: 0.8,
+          metalness: 0.9,
+          roughness: 0.1,
+        });
+        const ship = new THREE.Mesh(shipGeo, shipMat);
+        ship.position.set(0, 0, 20);
+        ship.castShadow = true;
+        ship.userData = {
+          type: 'player',
+          velocity: new THREE.Vector3(),
+          fuel: 100,
+          ore: 0,
+          score: 0,
+        };
+        scene.add(ship);
+        meshes.push(ship);
+
+        const cockpitGeo = new THREE.SphereGeometry(0.7, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+        const cockpitMat = new THREE.MeshStandardMaterial({
+          color: 0xffffff,
+          emissive: 0x00f0ff,
+          emissiveIntensity: 1.2,
+          metalness: 0.1,
+          roughness: 0.05,
+          transparent: true,
+          opacity: 0.4,
+        });
+        const cockpit = new THREE.Mesh(cockpitGeo, cockpitMat);
+        cockpit.position.set(0, 0.8, 0);
+        cockpit.castShadow = true;
+        ship.add(cockpit);
+        meshes.push(cockpit);
+
+        const engineGeo = new THREE.CylinderGeometry(0.3, 0.6, 1.2, 8);
+        const engineMat = new THREE.MeshStandardMaterial({
+          color: 0xff007f,
+          emissive: 0xff007f,
+          emissiveIntensity: 1.5,
+          metalness: 0.5,
+          roughness: 0.2,
+        });
+        const engine = new THREE.Mesh(engineGeo, engineMat);
+        engine.position.set(0, -1.5, 0);
+        engine.rotation.x = Math.PI / 2;
+        engine.castShadow = true;
+        ship.add(engine);
+        meshes.push(engine);
+
+        const laserGeo = new THREE.CylinderGeometry(0.08, 0.08, 30, 6, 1, true);
+        const laserMat = new THREE.MeshStandardMaterial({
+          color: 0xff007f,
+          emissive: 0xff007f,
+          emissiveIntensity: 3,
+          transparent: true,
+          opacity: 0.7,
+          side: THREE.DoubleSide,
+        });
+        const laser = new THREE.Mesh(laserGeo, laserMat);
+        laser.position.set(0, 0, -15);
+        laser.rotation.x = Math.PI / 2;
+        laser.visible = false;
+        laser.castShadow = true;
+        ship.add(laser);
+        meshes.push(laser);
+
+        const gravityWellGeo = new THREE.TorusGeometry(8, 0.5, 12, 20);
+        const gravityWellMat = new THREE.MeshStandardMaterial({
+          color: 0x9d00ff,
+          emissive: 0x9d00ff,
+          emissiveIntensity: 1.2,
+          metalness: 0.3,
+          roughness: 0.4,
+          transparent: true,
+          opacity: 0.5,
+        });
+        const gravityWell = new THREE.Mesh(gravityWellGeo, gravityWellMat);
+        gravityWell.position.set(-40, 10, -30);
+        gravityWell.castShadow = true;
+        gravityWell.userData = { type: 'gravityWell', strength: 150, radius: 40 };
+        scene.add(gravityWell);
+        meshes.push(gravityWell);
+
+        const gravityWell2 = new THREE.Mesh(gravityWellGeo, gravityWellMat.clone());
+        gravityWell2.position.set(50, -5, 40);
+        gravityWell2.scale.setScalar(1.5);
+        gravityWell2.castShadow = true;
+        gravityWell2.userData = { type: 'gravityWell', strength: 200, radius: 60 };
+        scene.add(gravityWell2);
+        meshes.push(gravityWell2);
+
+        const particleGeo = new THREE.BufferGeometry();
+        const particleCount = 500;
+        const positions = new Float32Array(particleCount * 3);
+        const colors = new Float32Array(particleCount * 3);
+        const sizes = new Float32Array(particleCount);
+        for (let i = 0; i < particleCount; i++) {
+          positions[i * 3] = (Math.random() - 0.5) * 200;
+          positions[i * 3 + 1] = (Math.random() - 0.5) * 100;
+          positions[i * 3 + 2] = (Math.random() - 0.5) * 200;
+          const c = new THREE.Color(palette[Math.floor(Math.random() * palette.length)]);
+          colors[i * 3] = c.r;
+          colors[i * 3 + 1] = c.g;
+          colors[i * 3 + 2] = c.b;
+          sizes[i] = Math.random() * 2 + 0.5;
+        }
+        particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        particleGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        particleGeo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+        const particleMat = new THREE.PointsMaterial({
+          size: 1,
+          vertexColors: true,
+          transparent: true,
+          opacity: 0.8,
+          sizeAttenuation: true,
+        });
+        const particles = new THREE.Points(particleGeo, particleMat);
+        particles.userData = {
+          type: 'nebulaParticles',
+          velocities: new Float32Array(particleCount * 3),
+        };
+        for (let i = 0; i < particleCount * 3; i++) {
+          particles.userData.velocities[i] = (Math.random() - 0.5) * 0.02;
+        }
+        scene.add(particles);
+        meshes.push(particles);
+
+        const miningParticlesGeo = new THREE.BufferGeometry();
+        const miningCount = 200;
+        const miningPositions = new Float32Array(miningCount * 3);
+        const miningColors = new Float32Array(miningCount * 3);
+        const miningSizes = new Float32Array(miningCount);
+        const miningLife = new Float32Array(miningCount);
+        for (let i = 0; i < miningCount; i++) {
+          miningPositions[i * 3] = 0;
+          miningPositions[i * 3 + 1] = 0;
+          miningPositions[i * 3 + 2] = 0;
+          miningColors[i * 3] = 1;
+          miningColors[i * 3 + 1] = 0.5;
+          miningColors[i * 3 + 2] = 0;
+          miningSizes[i] = 0;
+          miningLife[i] = 0;
+        }
+        miningParticlesGeo.setAttribute('position', new THREE.BufferAttribute(miningPositions, 3));
+        miningParticlesGeo.setAttribute('color', new THREE.BufferAttribute(miningColors, 3));
+        miningParticlesGeo.setAttribute('size', new THREE.BufferAttribute(miningSizes, 1));
+        miningParticlesGeo.setAttribute('life', new THREE.BufferAttribute(miningLife, 1));
+        const miningMat = new THREE.PointsMaterial({
+          size: 0.3,
+          vertexColors: true,
+          transparent: true,
+          opacity: 1,
+          sizeAttenuation: true,
+          blending: THREE.AdditiveBlending,
+        });
+        const miningParticles = new THREE.Points(miningParticlesGeo, miningMat);
+        miningParticles.userData = { type: 'miningParticles', active: false };
+        scene.add(miningParticles);
+        meshes.push(miningParticles);
+
+        const energyBurstGeo = new THREE.SphereGeometry(1, 16, 12);
+        const energyBurstMat = new THREE.MeshStandardMaterial({
+          color: 0x00ff88,
+          emissive: 0x00ff88,
+          emissiveIntensity: 2,
+          transparent: true,
+          opacity: 0.6,
+          side: THREE.BackSide,
+        });
+        const energyBurst = new THREE.Mesh(energyBurstGeo, energyBurstMat);
+        energyBurst.scale.setScalar(0.01);
+        energyBurst.visible = false;
+        energyBurst.castShadow = true;
+        energyBurst.userData = { type: 'energyBurst', life: 0 };
+        scene.add(energyBurst);
+        meshes.push(energyBurst);
+
+        const oreGeo = new THREE.OctahedronGeometry(0.5, 0);
+        const oreMat = new THREE.MeshStandardMaterial({
+          color: 0xffb300,
+          emissive: 0xffb300,
+          emissiveIntensity: 0.8,
+          metalness: 0.8,
+          roughness: 0.2,
+        });
+        const orePickup = new THREE.Mesh(oreGeo, oreMat);
+        orePickup.position.set(10, 5, -10);
+        orePickup.castShadow = true;
+        orePickup.userData = { type: 'orePickup', value: 25, rotationSpeed: 0.02 };
+        scene.add(orePickup);
+        meshes.push(orePickup);
+
+        const fuelGeo = new THREE.BoxGeometry(1, 1.5, 1);
+        const fuelMat = new THREE.MeshStandardMaterial({
+          color: 0x00f0ff,
+          emissive: 0x00f0ff,
+          emissiveIntensity: 1,
+          metalness: 0.5,
+          roughness: 0.3,
+        });
+        const fuelPickup = new THREE.Mesh(fuelGeo, fuelMat);
+        fuelPickup.position.set(-15, 3, 20);
+        fuelPickup.castShadow = true;
+        fuelPickup.userData = { type: 'fuelPickup', value: 30, rotationSpeed: 0.015 };
+        scene.add(fuelPickup);
+        meshes.push(fuelPickup);
+
+        const stationGeo = new THREE.Group();
+        const stationBase = new THREE.Mesh(
+          new THREE.CylinderGeometry(5, 5, 2, 8),
+          new THREE.MeshStandardMaterial({
+            color: 0x444466,
+            emissive: 0x00f0ff,
+            emissiveIntensity: 0.3,
+            metalness: 0.7,
+            roughness: 0.3,
+          }),
+        );
+        stationBase.position.y = 1;
+        stationBase.castShadow = true;
+        stationGeo.add(stationBase);
+        const stationCore = new THREE.Mesh(
+          new THREE.SphereGeometry(2, 16, 12),
+          new THREE.MeshStandardMaterial({
+            color: 0x9d00ff,
+            emissive: 0x9d00ff,
+            emissiveIntensity: 1.5,
+            metalness: 0.2,
+            roughness: 0.1,
+          }),
+        );
+        stationCore.position.y = 3;
+        stationCore.castShadow = true;
+        stationGeo.add(stationCore);
+        const stationRing = new THREE.Mesh(
+          new THREE.TorusGeometry(7, 0.3, 8, 20),
+          new THREE.MeshStandardMaterial({
+            color: 0x00ff88,
+            emissive: 0x00ff88,
+            emissiveIntensity: 1,
+            metalness: 0.5,
+            roughness: 0.2,
+          }),
+        );
+        stationRing.rotation.x = Math.PI / 2;
+        stationRing.position.y = 3;
+        stationRing.castShadow = true;
+        stationGeo.add(stationRing);
+        stationGeo.position.set(0, 0, -80);
+        stationGeo.userData = { type: 'station', oreStored: 0 };
+        scene.add(stationGeo);
+        meshes.push(stationGeo);
+
+        return meshes;
+      }
+
+      // ─── AI-GENERATED PART 2: Animation Logic ───
+      function animateScene(meshes, clock, THREE) {
+        if (!Array.isArray(meshes) || meshes.length === 0) return;
+        const t = clock.getElapsedTime();
+        const dt = clock.getDelta();
+
+        for (let i = 0; i < meshes.length; i++) {
+          const m = meshes[i];
+          if (!m) continue;
+
+          if (m.userData?.type === 'asteroid') {
+            if (m.userData.rotationSpeed) {
+              m.rotation.x += m.userData.rotationSpeed.x * dt;
+              m.rotation.y += m.userData.rotationSpeed.y * dt;
+              m.rotation.z += m.userData.rotationSpeed.z * dt;
+            }
+            if (m.userData.velocity) {
+              m.position.addScaledVector(m.userData.velocity, dt);
+              if (m.userData.gravityWell) {
+                const gw = m.userData.gravityWell;
+                const dir = new THREE.Vector3().subVectors(gw.position, m.position);
+                const dist = dir.length();
+                if (dist > 0.1) {
+                  dir.normalize();
+                  const force = (gw.mass / (dist * dist)) * 0.5;
+                  m.userData.velocity.addScaledVector(dir, force * dt);
+                }
+              }
+            }
+            if (m.userData.bobOffset !== undefined) {
+              m.position.y += Math.sin(t * 0.5 + m.userData.bobOffset) * 0.002;
+            }
+          }
+
+          if (m.userData?.type === 'player') {
+            m.rotation.y += Math.sin(t * 0.1) * 0.02;
+            m.position.y += Math.sin(t * 0.7) * 0.005;
+            if (m.userData.engineGlow) {
+              m.userData.engineGlow.material.opacity = 0.5 + Math.sin(t * 10) * 0.2;
+              m.userData.engineGlow.scale.setScalar(1 + Math.sin(t * 15) * 0.1);
+            }
+          }
+
+          if (m.userData?.type === 'particleSystem') {
+            if (m.material?.uniforms?.uTime) m.material.uniforms.uTime.value = t;
+            if (m.material?.uniforms?.uDelta) m.material.uniforms.uDelta.value = dt;
+            if (m.userData.lifetime !== undefined) {
+              m.userData.lifetime -= dt;
+              if (m.userData.lifetime <= 0) {
+                m.visible = false;
+              }
+            }
+          }
+
+          if (m.userData?.type === 'miningLaser') {
+            if (m.material?.uniforms?.uTime) m.material.uniforms.uTime.value = t;
+            m.scale.z = m.userData.maxLength * (0.5 + Math.sin(t * 30) * 0.3);
+          }
+
+          if (m.userData?.type === 'energyBurst') {
+            m.scale.multiplyScalar(1 + dt * 5);
+            if (m.material) m.material.opacity = Math.max(0, m.material.opacity - dt * 2);
+            if (m.material?.uniforms?.uTime) m.material.uniforms.uTime.value = t;
+          }
+
+          if (m.userData?.type === 'nebulaSkybox') {
+            m.rotation.y += 0.0001;
+            if (m.material?.uniforms?.uTime) m.material.uniforms.uTime.value = t;
+          }
+
+          if (m.userData?.type === 'dynamicLight') {
+            m.intensity =
+              m.userData.baseIntensity +
+              Math.sin(t * m.userData.pulseSpeed) * m.userData.pulseAmount;
+            if (m.userData.colorShift) {
+              const hue = (Math.sin(t * 0.1) + 1) * 0.5;
+              m.color.setHSL(hue * 0.1 + 0.05, 0.5, 0.5);
+            }
+          }
+
+          if (m.userData?.type === 'oreCrystal') {
+            m.rotation.y += dt * 0.5;
+            m.position.y += Math.sin(t * 2 + m.userData.bobOffset) * 0.01;
+            m.material.emissiveIntensity = 0.5 + Math.sin(t * 3 + m.userData.bobOffset) * 0.3;
+          }
+
+          if (m.userData?.type === 'uiElement') {
+            if (m.userData.pulse) {
+              m.scale.setScalar(1 + Math.sin(t * 5) * 0.05);
+            }
+            if (m.userData.updateText && m.userData.value !== undefined) {
+              m.text = m.userData.prefix + Math.floor(m.userData.value);
+            }
+          }
+
+          if (m.userData?.type === 'debris') {
+            m.position.addScaledVector(m.userData.velocity, dt);
+            m.userData.velocity.y -= 9.8 * dt * 0.1;
+            m.userData.lifetime -= dt;
+            if (m.material)
+              m.material.opacity = Math.max(0, m.userData.lifetime / m.userData.maxLifetime);
+            if (m.userData.lifetime <= 0) m.visible = false;
+          }
+        }
+
+        if (meshes[0]?.userData?.physicsWorld) {
+          meshes[0].userData.physicsWorld.step(dt);
+        }
+      }
+
+      // ─── AI-GENERATED PART 2b: Game Logic (single mechanic + win) ───
+      function buildGameLogic(scene, meshes, THREE) {
+        // Interactive 3D game logic for: "Procedural asteroid field with physics, particles, and real-time controls. Three.js r128 from CDN. Single HTML file. Features: 1) Procedural asteroid generation with varied shapes, sizes, and rotation 2) Realistic physics with gravity wells and collisions 3) Particle effects for mining laser and energy burst 4) First-person controls with WASD + mouse look 5) Interactive mining mechanics with ore collection 6) Dynamic lighting with nebula skybox 7) UI overlay showing score, fuel, and ore count 8) Sound effects for immersion. Architecture: Custom physics engine integrated with Three.js, particle system using shader materials, procedural asteroid mesh generation using Voronoi noise, and resource management system.".
+        // IMPORTANT: Output ONLY valid executable JavaScript code. NO conversational reasoning or outlines.
+        // meshes[0] is player (drive with WASD / Arrow keys).
+        // Return object: { update(dt), getScore(), getLives(), hasWon(), hasLost(), reset() }.
+        var score = 0,
+          lives = 3,
+          won = false,
+          lost = false;
+        var fuel = 100,
+          ore = 0,
+          oreGoal = 25;
+        var running = true;
+        var rngSeed = (Math.random() * 0xffffffff) >>> 0;
+        function rnd() {
+          rngSeed = (rngSeed * 1664525 + 1013904223) >>> 0;
+          return rngSeed / 4294967296;
+        }
+
+        var player = meshes && meshes[0] ? meshes[0] : null;
+
+        // ---------- Noise (value noise + fBm, with Voronoi for crater features) ----------
+        function hash3(i, j, k) {
+          var n = i * 374761393 + j * 668265263 + k * 2147483647;
+          n = (n ^ (n >> 13)) * 1274126177;
+          return ((n ^ (n >> 16)) >>> 0) / 4294967295;
+        }
+        function smooth(t) {
+          return t * t * (3 - 2 * t);
+        }
+        function vnoise(x, y, z) {
+          var xi = Math.floor(x),
+            yi = Math.floor(y),
+            zi = Math.floor(z);
+          var xf = smooth(x - xi),
+            yf = smooth(y - yi),
+            zf = smooth(z - zi);
+          var c000 = hash3(xi, yi, zi),
+            c100 = hash3(xi + 1, yi, zi);
+          var c010 = hash3(xi, yi + 1, zi),
+            c110 = hash3(xi + 1, yi + 1, zi);
+          var c001 = hash3(xi, yi, zi + 1),
+            c101 = hash3(xi + 1, yi, zi + 1);
+          var c011 = hash3(xi, yi + 1, zi + 1),
+            c111 = hash3(xi + 1, yi + 1, zi + 1);
+          var x00 = c000 + (c100 - c000) * xf,
+            x10 = c010 + (c110 - c010) * xf;
+          var x01 = c001 + (c101 - c001) * xf,
+            x11 = c011 + (c111 - c011) * xf;
+          var y0 = x00 + (x10 - x00) * yf,
+            y1 = x01 + (x11 - x01) * yf;
+          return y0 + (y1 - y0) * zf;
+        }
+        function fbm(x, y, z, oct) {
+          var a = 0.5,
+            f = 1,
+            s = 0;
+          for (var i = 0; i < oct; i++) {
+            s += a * vnoise(x * f, y * f, z * f);
+            a *= 0.5;
+            f *= 2.03;
+          }
+          return s;
+        }
+        // Voronoi cell distance field -> crater-ish displacement
+        function voronoi(x, y, z) {
+          var xi = Math.floor(x),
+            yi = Math.floor(y),
+            zi = Math.floor(z);
+          var d1 = 1e9;
+          for (var dx = -1; dx <= 1; dx++)
+            for (var dy = -1; dy <= 1; dy++)
+              for (var dz = -1; dz <= 1; dz++) {
+                var cx = xi + dx,
+                  cy = yi + dy,
+                  cz = zi + dz;
+                var px = cx + hash3(cx, cy, cz);
+                var py = cy + hash3(cx + 31, cy + 17, cz + 5);
+                var pz = cz + hash3(cx + 71, cy + 41, cz + 9);
+                var d = Math.sqrt((px - x) * (px - x) + (py - y) * (py - y) + (pz - z) * (pz - z));
+                if (d < d1) d1 = d;
+              }
+          return d1;
+        }
+
+        // ---------- Audio (procedural, created lazily on first gesture/interaction) ----------
+        var actx = null,
+          master = null,
+          audioReady = false;
+        function initAudio() {
+          if (audioReady) return;
+          try {
+            var AC = window.AudioContext || window.webkitAudioContext;
+            if (!AC) return;
+            actx = new AC();
+            master = actx.createGain();
+            master.gain.value = 0.18;
+            master.connect(actx.destination);
+            audioReady = true;
+          } catch (e) {
+            /* audio unsupported */
+          }
+        }
+        function beep(freq, dur, type, vol, slideTo) {
+          if (!audioReady || !actx) return;
+          try {
+            var t0 = actx.currentTime;
+            var o = actx.createOscillator(),
+              g = actx.createGain();
+            o.type = type || 'sine';
+            o.frequency.setValueAtTime(freq, t0);
+            if (slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(20, slideTo), t0 + dur);
+            g.gain.setValueAtTime(0.0001, t0);
+            g.gain.exponentialRampToValueAtTime(vol || 0.3, t0 + 0.01);
+            g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+            o.connect(g);
+            g.connect(master);
+            o.start(t0);
+            o.stop(t0 + dur + 0.02);
+          } catch (e) {
+            /* ignore */
+          }
+        }
+        function noiseBurst(dur, vol) {
+          if (!audioReady || !actx) return;
+          try {
+            var len = Math.floor(actx.sampleRate * dur);
+            var buf = actx.createBuffer(1, len, actx.sampleRate);
+            var data = buf.getChannelData(0);
+            for (var i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
+            var src = actx.createBufferSource();
+            src.buffer = buf;
+            var g = actx.createGain();
+            g.gain.value = vol || 0.25;
+            var f = actx.createBiquadFilter();
+            f.type = 'lowpass';
+            f.frequency.value = 900;
+            src.connect(f);
+            f.connect(g);
+            g.connect(master);
+            src.start(actx.currentTime);
+          } catch (e) {
+            /* ignore */
+          }
+        }
+
+        // ---------- Skybox: procedural nebula on a canvas -> CubeTexture-ish equirect-ish mapping ----------
+        function buildNebulaSkybox() {
+          var size = 256;
+          var c = document.createElement('canvas');
+          c.width = c.height = size;
+          var ctx = c.getContext('2d');
+          var img = ctx.createImageData(size, size);
+          var d = img.data;
+          for (var y = 0; y < size; y++) {
+            for (var x = 0; x < size; x++) {
+              var u = x / size,
+                v = y / size;
+              var nx = u * 8,
+                ny = v * 8;
+              var n = fbm(nx, ny, 3.7, 5);
+              var neb = Math.pow(Math.max(0, n - 0.35), 1.6) * 3.2;
+              var stars = hash3(x * 3, y * 7, 11) > 0.9965 ? 1 : 0;
+              var i = (y * size + x) * 4;
+              d[i] = Math.min(255, (neb * 60 + neb * neb * 190) * 0.9 + stars * 255);
+              d[i + 1] = Math.min(255, (neb * 30 + neb * neb * 90) * 1.1 + stars * 230);
+              d[i + 2] = Math.min(255, (neb * 120 + neb * neb * 230) * 1.2 + stars * 255);
+              d[i + 3] = 255;
+            }
+          }
+          ctx.putImageData(img, 0, 0);
+          var tex = new THREE.CanvasTexture(c);
+          tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+          if (THREE.sRGBEncoding !== undefined) tex.encoding = THREE.sRGBEncoding;
+          var geo = new THREE.SphereGeometry(4000, 32, 24);
+          var mat = new THREE.MeshBasicMaterial({
+            map: tex,
+            side: THREE.BackSide,
+            depthWrite: false,
+          });
+          var sky = new THREE.Mesh(geo, mat);
+          sky.name = 'nebulaSkybox';
+          if (scene) scene.add(sky);
+          return sky;
+        }
+
+        // ---------- Procedural asteroid mesh via Voronoi/fBm displacement ----------
+        function makeAsteroidGeometry(radius, detail, seedOff) {
+          var geo = new THREE.IcosahedronGeometry(radius, detail);
+          var pos = geo.attributes.position;
+          var v = new THREE.Vector3();
+          var sx = rnd() * 40 + seedOff,
+            sy = rnd() * 40 + seedOff,
+            sz = rnd() * 40 + seedOff;
+          for (var i = 0; i < pos.count; i++) {
+            v.fromBufferAttribute(pos, i);
+            var len = v.length() || 1;
+            var nx = v.x / len,
+              ny = v.y / len,
+              nz = v.z / len;
+            var base = fbm(nx * 1.6 + sx, ny * 1.6 + sy, nz * 1.6 + sz, 4);
+            var vor = voronoi(nx * 2.4 + sx, ny * 2.4 + sy, nz * 2.4 + sz);
+            var crater = Math.max(0, 0.55 - vor) * 0.9;
+            var disp = 1 + (base - 0.5) * 0.65 - crater * 0.55;
+            v.set(nx * radius * disp, ny * radius * disp, nz * radius * disp);
+            pos.setXYZ(i, v.x, v.y, v.z);
+          }
+          geo.computeVertexNormals();
+          return geo;
+        }
+
+        function makeAsteroidMesh(radius, oreType) {
+          var detail = radius > 9 ? 2 : radius > 4 ? 1 : 0;
+          var geo = makeAsteroidGeometry(radius, detail, rnd() * 100);
+          var color;
+          if (oreType === 3) color = 0x2;
+        }
+      }
+
+      // ─── DETERMINISTIC: Execute Parts & Render Loop ───
+      let sceneMeshes = [];
+      try {
+        if (typeof buildSceneObjects === 'function') {
+          const result = buildSceneObjects(scene, THREE);
+          sceneMeshes = Array.isArray(result) ? result : [];
+        }
+      } catch (e) {
+        console.warn('[SIS 3D] Object generation error:', e);
+      }
+
+      // Safety Fallback: Guarantee vibrant, high-fidelity 3D objects if AI objects are thin or failed
+      if (!sceneMeshes || sceneMeshes.length < 3) {
+        console.warn(
+          '[SIS 3D] AI scene objects thin or empty — activating procedural safety mesh generation.',
+        );
+        const palette = [0x00f0ff, 0xff007f, 0x00ff88, 0xffb300, 0x9d00ff, 0x00e5ff];
+        const mainMat = new THREE.MeshStandardMaterial({
+          color: 0x14161a,
+          metalness: 0.85,
+          roughness: 0.25,
+        });
+        const glowMat = new THREE.MeshStandardMaterial({
+          color: 0x00f0ff,
+          emissive: 0x00f0ff,
+          emissiveIntensity: 2.5,
+        });
+
+        // Core Hero Mesh
+        const heroGeo = new THREE.BoxGeometry(2.4, 0.8, 4.2);
+        const hero = new THREE.Mesh(heroGeo, mainMat);
+        hero.name = 'Hero Vessel [Command Core]';
+        hero.position.set(0, 0.8, 0);
+        hero.castShadow = true;
+        scene.add(hero);
+        sceneMeshes.push(hero);
+
+        // Hero Glow Core / Wing Accents
+        const wingGeo = new THREE.BoxGeometry(5.2, 0.2, 1.8);
+        const wings = new THREE.Mesh(wingGeo, glowMat);
+        wings.name = 'Plasma Wings';
+        wings.position.set(0, 0.7, -0.4);
+        wings.castShadow = true;
+        scene.add(wings);
+        sceneMeshes.push(wings);
+
+        // Cockpit / Bridge
+        const bridgeGeo = new THREE.ConeGeometry(0.7, 2.2, 8);
+        const bridge = new THREE.Mesh(
+          bridgeGeo,
+          new THREE.MeshStandardMaterial({
+            color: 0x00f0ff,
+            metalness: 0.9,
+            roughness: 0.1,
+            transparent: true,
+            opacity: 0.75,
+          }),
+        );
+        bridge.name = 'Cockpit Canopy';
+        bridge.rotation.x = Math.PI / 2;
+        bridge.position.set(0, 1.2, 0.8);
+        scene.add(bridge);
+        sceneMeshes.push(bridge);
+
+        // Escort / Swarm / Collectible Units
+        for (let i = 0; i < 6; i++) {
+          const angle = (i / 6) * Math.PI * 2;
+          const dist = 6 + (i % 2) * 3;
+          const escortMat = new THREE.MeshStandardMaterial({
+            color: palette[i % palette.length],
+            emissive: palette[i % palette.length],
+            emissiveIntensity: 1.2,
+            metalness: 0.8,
+            roughness: 0.2,
+          });
+          const geo =
+            i % 2 === 0
+              ? new THREE.OctahedronGeometry(0.8, 0)
+              : new THREE.DodecahedronGeometry(0.7, 0);
+          const escort = new THREE.Mesh(geo, escortMat);
+          escort.name = 'Squadron Unit #' + (i + 1);
+          escort.position.set(
+            Math.cos(angle) * dist,
+            0.8 + Math.sin(angle * 2) * 1.5,
+            Math.sin(angle) * dist,
+          );
+          escort.castShadow = true;
+          scene.add(escort);
+          sceneMeshes.push(escort);
+        }
+
+        // Tactical Orbit Ring
+        const ringGeo = new THREE.TorusGeometry(12, 0.08, 8, 36);
+        const ring = new THREE.Mesh(
+          ringGeo,
+          new THREE.MeshStandardMaterial({
+            color: 0x00f0ff,
+            emissive: 0x00f0ff,
+            emissiveIntensity: 2.0,
+          }),
+        );
+        ring.name = 'Tactical Orbit Grid';
+        ring.rotation.x = Math.PI / 2;
+        ring.position.set(0, 0.1, 0);
+        scene.add(ring);
+        sceneMeshes.push(ring);
+      }
+
+      // Wire game logic if present (SIS integration step — never AI-assembled)
+      let game = null;
+      try {
+        if (typeof buildGameLogic === 'function' && sceneMeshes.length > 0) {
+          game = buildGameLogic(scene, sceneMeshes, THREE);
+        }
+      } catch (e) {
+        console.warn('[SIS 3D] Game-logic init error (scene still renders):', e);
+      }
+
+      // Safety Fallback Game Controller (WASD/arrows + collision + score)
+      if (!game && sceneMeshes.length > 0) {
+        let score = 0,
+          lives = 3,
+          won = false,
+          lost = false;
+        const keys = {};
+        window.addEventListener('keydown', (e) => {
+          keys[e.key.toLowerCase()] = true;
+        });
+        window.addEventListener('keyup', (e) => {
+          keys[e.key.toLowerCase()] = false;
+        });
+        game = {
+          update(dt) {
+            if (won || lost) return;
+            const player = sceneMeshes[0];
+            if (!player) return;
+            const spd = 6.0 * dt;
+            if (keys['w'] || keys['arrowup']) player.position.z -= spd;
+            if (keys['s'] || keys['arrowdown']) player.position.z += spd;
+            if (keys['a'] || keys['arrowleft']) player.position.x -= spd;
+            if (keys['d'] || keys['arrowright']) player.position.x += spd;
+            for (let i = 1; i < sceneMeshes.length; i++) {
+              const m = sceneMeshes[i];
+              if (m && m.visible && player.position.distanceTo(m.position) < 1.6) {
+                m.visible = false;
+                score++;
+                if (score >= 5) won = true;
+              }
+            }
+          },
+          getScore: () => score,
+          getLives: () => lives,
+          hasWon: () => won,
+          hasLost: () => lost,
+          reset: () => {
+            score = 0;
+            lives = 3;
+            won = false;
+            lost = false;
+            sceneMeshes.forEach((m) => (m.visible = true));
+            if (sceneMeshes[0]) sceneMeshes[0].position.set(0, 0.8, 0);
+          },
+        };
+      }
+
+      // Raycasting hover tooltip
+      const raycaster = new THREE.Raycaster();
+      const pointer = new THREE.Vector2();
+      const tooltip = document.getElementById('tooltip');
+      renderer.domElement.addEventListener('pointermove', (e) => {
+        pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+        pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(pointer, camera);
+        const hits = raycaster.intersectObjects(sceneMeshes, false);
+        if (hits.length > 0) {
+          const name = hits[0].object.name || hits[0].object.geometry?.type || 'Object';
+          tooltip.style.display = 'block';
+          tooltip.style.left = e.clientX + 12 + 'px';
+          tooltip.style.top = e.clientY + 12 + 'px';
+          tooltip.textContent = name;
+        } else {
+          tooltip.style.display = 'none';
+        }
+      });
+
+      const clock = new THREE.Clock();
+      const hudInfo = document.getElementById('hud-info');
+      const hudScore = document.getElementById('hud-score');
+      const hudLives = document.getElementById('hud-lives');
+      const hudWin = document.getElementById('hud-win');
+      const btnRestart = document.getElementById('btn-restart');
+      const optNote = ' | Retopo: 4 clamped';
+      if (hudInfo)
+        hudInfo.textContent = `Objects: ${sceneMeshes.length}${game ? ' | GAME: 1 mechanic' : ''} | Interactive 3D | 60 FPS${optNote}`;
+      if (btnRestart)
+        btnRestart.addEventListener('click', () => {
+          try {
+            if (game && typeof game.reset === 'function') game.reset();
+          } catch (e) {}
+          if (hudWin) hudWin.style.display = 'none';
+          btnRestart.style.display = 'none';
+        });
+
+      function animate() {
+        requestAnimationFrame(animate);
+        const dt = Math.min(clock.getDelta(), 0.05);
+        try {
+          if (typeof animateScene === 'function') {
+            animateScene(sceneMeshes, clock, THREE);
+          } else if (sceneMeshes.length > 0) {
+            for (let i = 1; i < sceneMeshes.length; i++) {
+              sceneMeshes[i].rotation.y += 0.015;
+            }
+          }
+        } catch (e) {
+          /* animation error — scene still renders */
+        }
+        try {
+          if (game && typeof game.update === 'function') {
+            game.update(dt);
+            const score = typeof game.getScore === 'function' ? game.getScore() : 0;
+            const lives = typeof game.getLives === 'function' ? game.getLives() : 3;
+            const won = typeof game.hasWon === 'function' && game.hasWon();
+            const lost = typeof game.hasLost === 'function' && game.hasLost();
+            if (hudScore) hudScore.textContent = `SCORE ${score}/5`;
+            if (hudLives) hudLives.textContent = `LIVES ${lives}`;
+            if ((won || lost) && hudWin) {
+              hudWin.style.display = 'block';
+              hudWin.textContent = won ? '★ YOU WIN ★' : '✖ GAME OVER';
+              hudWin.style.color = won ? '#FFD700' : '#FF6B6B';
+              if (btnRestart) btnRestart.style.display = 'inline-block';
+            }
+            if (hudInfo) hudInfo.textContent = `Objects: ${sceneMeshes.length} | 60 FPS${optNote}`;
+          }
+        } catch (e) {
+          /* game-logic error — scene still renders */
+        }
+        controls.update();
+        renderer.render(scene, camera);
+      }
+      animate();
+    </script>
+  </body>
+  <!-- SIS-QUALITY score=0.84 passed=true meshes=38 -->
+</html>

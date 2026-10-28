@@ -1,0 +1,67 @@
+.access-trigger,
+.access-button {
+  border: 0;
+  border-radius: 7px;
+  background: var(--shell-hover);
+  color: var(--shell-text-secondary);
+  padding: 7px 10px;
+  font: 11px var(--font-ui);
+  cursor: pointer;
+}
+.access-trigger {
+  background: transparent;
+  color: var(--shell-muted);
+}
+.access-trigger:hover,
+.access-button:hover {
+  color: var(--shell-text);
+  background: var(--shell-surface);
+}
+.access-note {
+  font: 12px/1.65 var(--font-ui);
+  color: var(--shell-muted);
+}
+.access-dialog select {
+  width: 100%;
+  padding: 10px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--shell-text);
+  background: var(--shell-hover);
+  font: 12px var(--font-ui);
+}
+.access-dialog {
+  max-width: min(520px, calc(100vw - 24px));
+}
+.workspace-approvals {
+  display: grid;
+  gap: 8px;
+  max-height: 220px;
+  overflow: auto;
+  padding-bottom: 12px;
+}
+.workspace-approvals[hidden] {
+  display: none;
+}
+.access-approval {
+  border-radius: 10px;
+  padding: 12px;
+  background: color-mix(in srgb, var(--shell-accent) 10%, var(--shell-surface));
+  font: 12px/1.5 var(--font-ui);
+  color: var(--shell-text);
+}
+.access-approval pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 110px;
+  overflow: auto;
+  font: 11px/1.5 var(--font-mono);
+}
+.access-approval summary {
+  color: var(--shell-muted);
+  cursor: pointer;
+  margin: 5px 0;
+}
+.access-approval button {
+  margin-right: 7px;
+}

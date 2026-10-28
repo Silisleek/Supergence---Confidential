@@ -1,0 +1,101 @@
+@font-face {
+  font-family: 'Manrope';
+  src: url('/fonts/Manrope-Variable.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Instrument Serif';
+  src: url('/fonts/InstrumentSerif-Regular.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Instrument Serif';
+  src: url('/fonts/InstrumentSerif-Italic.ttf') format('truetype');
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+}
+/* Deep dark working surfaces framed by warm brown navigation. */
+:root {
+  color-scheme: dark;
+  --shell-page: #211a16;
+  --shell-panel: #0b0c0c;
+  --shell-sidebar: #211a16;
+  --shell-surface: #191b1b;
+  --shell-border: transparent;
+  --shell-text: #f5eee7;
+  --shell-muted: #adb2ae;
+  --shell-accent: #e0b38c;
+  --shell-accent-hover: #f0cca9;
+  --shell-accent-ink: #2a1b11;
+  --shell-text-secondary: #d3d7d2;
+  --shell-subtle: #969e98;
+  --shell-hover: #222525;
+  --shell-selected: #303532;
+  --shell-code: #080909;
+  --shell-raised: #191b1b;
+  --shell-success: #b6c7a2;
+  --shell-warning: #e6b88c;
+  --shell-error: #eea497;
+  --shell-backdrop: #0d0805d9;
+  --shell-rail: 64px;
+  --shell-history: 264px;
+  --font-ui: 'Manrope', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+:root {
+  --font-display: var(--font-ui);
+  --font-editorial: 'Instrument Serif', Georgia, serif;
+}
+
+/* Theme keys stay compatible with saved preferences. */
+body.sis-workspace-ui[data-theme='warm'] {
+  color-scheme: dark;
+  --shell-page: #2a2019;
+  --shell-panel: #0c0b0a;
+  --shell-sidebar: #231912;
+  --shell-surface: #1c1b19;
+  --shell-border: transparent;
+  --shell-text: #f7eee5;
+  --shell-text-secondary: #e1cebb;
+  --shell-muted: #bda48f;
+  --shell-subtle: #b49983;
+  --shell-hover: #242321;
+  --shell-selected: #443024;
+  --shell-code: #080807;
+  --shell-raised: #1c1b19;
+  --shell-accent: #e9b98f;
+  --shell-accent-hover: #f5cfaa;
+  --shell-accent-ink: #2a1b11;
+  --shell-success: #becaa0;
+  --shell-warning: #edba83;
+  --shell-error: #efa28e;
+  --shell-backdrop: #100905d9;
+}
+
+body.sis-workspace-ui[data-theme='midnight'] {
+  --shell-page: #1a1613;
+  --shell-panel: #080909;
+  --shell-sidebar: #14110f;
+  --shell-surface: #171818;
+  --shell-border: transparent;
+  --shell-text: #f2eae3;
+  --shell-text-secondary: #cebeb2;
+  --shell-muted: #b2a092;
+  --shell-subtle: #a28e80;
+  --shell-hover: #202121;
+  --shell-selected: #33281f;
+  --shell-code: #050606;
+  --shell-raised: #171818;
+  --shell-accent: #cfa98c;
+  --shell-accent-hover: #e8c7ae;
+  --shell-accent-ink: #271b14;
+  --shell-success: #aebe9f;
+  --shell-warning: #d8af88;
+  --shell-error: #e29d8b;
+  --shell-backdrop: #080504d9;
+}

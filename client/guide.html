@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Supergence — AI workspace for research, coding &amp; creation</title>
+    <meta
+      name="description"
+      content="Supergence is an AI workspace that can research unfamiliar tasks, learn new workflows, and create useful results with its browser, files and terminal."
+    />
+    <link rel="icon" type="image/png" href="/images/supergence-logo.png" />
+    <link rel="stylesheet" href="/styles/supergence-tokens.css" />
+    <link rel="stylesheet" href="/styles/supergence-guide.css" />
+    <link rel="stylesheet" href="/styles/supergence-motion.css" />
+    <script type="module" src="/scripts/supergence-guide.js"></script>
+  </head>
+  <body class="sis-workspace-ui sg-guide">
+    <a class="guide-skip" href="#main">Skip to content</a>
+    <header class="guide-header">
+      <a class="guide-brand" href="/" aria-label="Supergence workspace">
+        <img src="/images/supergence-logo.png" width="34" height="34" alt="" />
+        <span
+          >Supergence <span class="guide-brand-divider">/</span>
+          <span class="guide-brand-sub">Guide</span></span
+        >
+      </a>
+      <div class="guide-header-actions">
+        <a class="guide-button guide-button-primary" href="/" aria-label="Open workspace"
+          ><span class="guide-open-label">Open workspace</span
+          ><span data-sg-icon="diagonal" aria-hidden="true"></span
+        ></a>
+      </div>
+    </header>
+    <div class="guide-layout">
+      <aside class="guide-sidebar">
+        <p class="guide-eyebrow">IN THIS GUIDE</p>
+        <nav aria-label="On this page" id="guideNav">
+          <a href="#about" aria-current="location">Meet Supergence</a>
+          <a href="#start">Your first task</a>
+          <a href="#brief">The useful brief</a>
+          <a href="#prompts">Prompt library</a>
+          <a href="#builder">Make it yours</a>
+          <a href="#iterate">Review &amp; refine</a>
+        </nav>
+      </aside>
+      <main id="main">
+        <section class="guide-hero guide-section" id="about" aria-labelledby="heroTitle">
+          <div class="guide-eyebrow">
+            <span class="guide-dot"></span> SUPERGENCE · YOUR AI WORKSPACE
+          </div>
+          <div class="guide-hero-top">
+            <div class="guide-hero-copy">
+              <h1 id="heroTitle">AI that learns.<br /><em>Builds. Creates.</em></h1>
+              <p class="guide-lead">
+                Give Supergence a goal—even an unfamiliar one. It can research, learn new workflows,
+                and put its browser, files and terminal to work.
+              </p>
+              <ul class="guide-outcomes" aria-label="Examples of tasks you can start with">
+                <li><span data-sg-icon="layers" aria-hidden="true"></span>Websites &amp; apps</li>
+                <li>
+                  <span data-sg-icon="compass" aria-hidden="true"></span>Research &amp; writing
+                </li>
+                <li><span data-sg-icon="spark" aria-hidden="true"></span>3D scenes &amp; assets</li>
+              </ul>
+              <p class="guide-outcomes-note">These are starting points. Bring your own task.</p>
+              <div class="guide-hero-actions">
+                <a class="guide-button guide-button-primary" href="/"
+                  >Open Supergence <span data-sg-icon="diagonal" aria-hidden="true"></span></a
+                ><a class="guide-text-link" href="#prompts"
+                  >See example prompts <span data-sg-icon="arrow" aria-hidden="true"></span
+                ></a>
+              </div>
+            </div>
+            <figure class="guide-orb-figure" aria-label="Decorative copper orbital motion graphic">
+              <div class="guide-orb-caption">
+                <span data-sg-icon="spark" aria-hidden="true"></span>From a task to a result you can
+                use.
+              </div>
+              <svg class="guide-orb" viewBox="0 0 360 360" fill="none" aria-hidden="true">
+                <defs>
+                  <radialGradient id="orb-halo">
+                    <stop stop-color="#d49b6c" stop-opacity=".3" />
+                    <stop offset="1" stop-color="#d49b6c" stop-opacity="0" />
+                  </radialGradient>
+                  <radialGradient id="orb-core" cx=".32" cy=".28">
+                    <stop stop-color="#a77652" stop-opacity=".38" />
+                    <stop offset=".65" stop-color="#513521" stop-opacity=".14" />
+                    <stop offset="1" stop-color="#24170f" stop-opacity="0" />
+                  </radialGradient>
+                  <linearGradient
+                    id="orb-thread"
+                    x1="25"
+                    y1="60"
+                    x2="340"
+                    y2="290"
+                    gradientUnits="userSpaceOnUse"
+                  >
+                    <stop stop-color="#f7dfc0" />
+                    <stop offset=".4" stop-color="#d09866" />
+                    <stop offset="1" stop-color="#8b5937" stop-opacity=".15" />
+                  </linearGradient>
+                  <filter id="orb-soft"><feGaussianBlur stdDeviation="10" /></filter>
+                </defs>
+                <circle cx="180" cy="180" r="178" fill="url(#orb-halo)" class="orb-breath" />
+                <circle cx="180" cy="180" r="112" fill="url(#orb-core)" />
+                <g class="orb-shell" stroke="url(#orb-thread)" stroke-width=".65">
+                  <ellipse cx="180" cy="180" rx="127" ry="127" opacity=".25" />
+                  <ellipse cx="180" cy="180" rx="127" ry="48" transform="rotate(-35 180 180)" />
+                  <ellipse
+                    cx="180"
+                    cy="180"
+                    rx="127"
+                    ry="48"
+                    transform="rotate(25 180 180)"
+                    opacity=".7"
+                  />
+                  <ellipse
+                    cx="180"
+                    cy="180"
+                    rx="127"
+                    ry="48"
+                    transform="rotate(85 180 180)"
+                    opacity=".45"
+                  />
+                  <ellipse
+                    cx="180"
+                    cy="180"
+                    rx="127"
+                    ry="89"
+                    transform="rotate(25 180 180)"
+                    opacity=".6"
+                  />
+                  <ellipse
+                    cx="180"
+                    cy="180"
+                    rx="127"
+                    ry="89"
+                    transform="rotate(85 180 180)"
+                    opacity=".4"
+                  />
+                </g>
+                <g class="orb-satellite">
+                  <circle
+                    cx="307"
+                    cy="180"
+                    r="12"
+                    fill="#f5cda3"
+                    opacity=".3"
+                    filter="url(#orb-soft)"
+                  />
+                  <circle cx="307" cy="180" r="3" fill="#f5d6b5" />
+                </g>
+                <g class="orb-satellite orb-satellite-reverse">
+                  <circle cx="180" cy="64" r="2" fill="#ce9a72" />
+                  <circle cx="180" cy="296" r="2.5" fill="#e9bf97" />
+                </g>
+                <g fill="#e4bd98">
+                  <circle cx="51" cy="111" r="1.5" />
+                  <circle cx="294" cy="89" r="1" />
+                  <circle cx="102" cy="304" r="1.5" />
+                  <circle cx="324" cy="244" r="1" />
+                </g>
+              </svg>
+              <figcaption>
+                <span data-sg-icon="compass" aria-hidden="true"></span>Research<span
+                  class="orb-caption-dot"
+                ></span
+                ><span data-sg-icon="layers" aria-hidden="true"></span>Build<span
+                  class="orb-caption-dot"
+                ></span
+                ><span data-sg-icon="check" aria-hidden="true"></span>Deliver
+              </figcaption>
+            </figure>
+          </div>
+          <div class="guide-intro-grid">
+            <div class="guide-about-copy">
+              <h2>Bring the task. It can learn the workflow.</h2>
+              <p>
+                Ask a question, share context, or describe an outcome. When the tools are enabled,
+                Supergence can work with workspace files, run commands, use its browser, and create
+                artifacts alongside the conversation.
+              </p>
+              <p>
+                The examples here are starting points. For an unfamiliar task, Supergence can find
+                relevant instructions, try an approach, check the result, and retain useful
+                knowledge for future work. What it can execute depends on the connected model,
+                available tools, and access settings.
+              </p>
+            </div>
+            <article class="guide-example guide-hero-example">
+              <div class="guide-card-top">
+                <span class="guide-eyebrow">AN EXAMPLE, READY TO ADAPT</span
+                ><span data-sg-icon="diagonal" aria-hidden="true"></span>
+              </div>
+              <p class="guide-example-title">Give it an outcome, not just a topic.</p>
+              <blockquote>
+                “Build a small portfolio for my photography. Use clean typography and large images.
+                Include a gallery, an about section, and a contact link. Make it work on mobile,
+                test the links, and give me the source files and a preview.”
+              </blockquote>
+              <a class="guide-text-link" href="#brief"
+                >See why this works <span data-sg-icon="arrow" aria-hidden="true"></span
+              ></a>
+            </article>
+          </div>
+        </section>
+
+        <section class="guide-section" id="start" aria-labelledby="startTitle">
+          <div class="guide-section-heading">
+            <span class="guide-section-number">01 / GET YOUR BEARINGS</span>
+            <h2 id="startTitle">From an idea to a first result.</h2>
+            <p>
+              You do not need a perfect prompt. Start with what you need, then add the details that
+              will change the answer.
+            </p>
+          </div>
+          <ol class="guide-steps">
+            <li>
+              <span class="guide-step-number">1</span>
+              <div>
+                <h3>Start a conversation</h3>
+                <p>
+                  Use the <strong>+</strong> beside Conversations for a new task. Keep follow-ups in
+                  the same conversation when they build on the same work.
+                </p>
+                <kbd>Ctrl / Cmd Shift O</kbd>
+              </div>
+            </li>
+            <li>
+              <span class="guide-step-number">2</span>
+              <div>
+                <h3>Give it the material</h3>
+                <p>
+                  Describe the goal and audience. Name the relevant workspace files, point to
+                  references, or paste the passage or error that matters.
+                </p>
+                <span class="guide-step-hint">A file path beats “that file.”</span>
+              </div>
+            </li>
+            <li>
+              <span class="guide-step-number">3</span>
+              <div>
+                <h3>Choose how it can act</h3>
+                <p>
+                  The access control beside the composer manages browser, terminal and file tools.
+                  For a project, the composer’s <strong>+</strong> menu opens Creation studio.
+                </p>
+                <span class="guide-step-hint">Tools must be enabled to execute.</span>
+              </div>
+            </li>
+            <li>
+              <span class="guide-step-number">4</span>
+              <div>
+                <h3>Open and check the result</h3>
+                <p>
+                  Read the response and tool details. Open the actual preview or files, try the
+                  important actions, and give specific feedback on what needs another pass.
+                </p>
+                <span class="guide-step-hint">Ask for evidence of the checks.</span>
+              </div>
+            </li>
+          </ol>
+          <details class="guide-details">
+            <summary>Know your way around the workspace <span aria-hidden="true">+</span></summary>
+            <div class="guide-detail-body">
+              <p>
+                <strong>Conversations</strong> holds recent tasks. Search with
+                <kbd>Ctrl / Cmd K</kbd>. <strong>Open Browser</strong> opens the shared browsing
+                surface; name the page and action you want. <strong>Open Files</strong> helps
+                inspect project files. The <strong>Learning library</strong> is a place to carry
+                knowledge forward; ask Supergence to read relevant material rather than assuming it
+                knows every previous conversation.
+              </p>
+              <p>
+                <strong>Enter</strong> sends a message; <strong>Shift Enter</strong> adds a line.
+                The microphone supports dictation when microphone access is available. The
+                question-mark button opens Help &amp; shortcuts, including this guide.
+              </p>
+            </div>
+          </details>
+        </section>
+
+        <section class="guide-section" id="brief" aria-labelledby="briefTitle">
+          <div class="guide-section-heading">
+            <span class="guide-section-number">02 / WRITE WITH INTENT</span>
+            <h2 id="briefTitle">Four things that make a useful brief.</h2>
+            <p>
+              Plain language works. Tell Supergence what matters; it can help you work out the rest.
+            </p>
+          </div>
+          <div class="guide-brief-grid">
+            <article>
+              <span class="guide-small-number">01</span>
+              <h3>The outcome</h3>
+              <p>What should exist when the task is finished?</p>
+              <span class="guide-example-line">“A two-page proposal for a school garden.”</span>
+            </article>
+            <article>
+              <span class="guide-small-number">02</span>
+              <h3>The context</h3>
+              <p>Who is it for, and what should it work from?</p>
+              <span class="guide-example-line"
+                >“For the headteacher. Use the attached budget.”</span
+              >
+            </article>
+            <article>
+              <span class="guide-small-number">03</span>
+              <h3>The boundaries</h3>
+              <p>What must it include, preserve, or work within?</p>
+              <span class="guide-example-line">“Under ₹20,000. Keep maintenance simple.”</span>
+            </article>
+            <article>
+              <span class="guide-small-number">04</span>
+              <h3>The finish line</h3>
+              <p>What format and checks make the result useful?</p>
+              <span class="guide-example-line"
+                >“Include costs, a timeline, and open questions.”</span
+              >
+            </article>
+          </div>
+          <div class="guide-refinement">
+            <span class="guide-eyebrow">MAKE THE ASK MORE CONCRETE</span>
+            <div class="guide-comparison">
+              <div>
+                <span class="guide-muted-label">A loose starting point</span>
+                <p>“Make this website better.”</p>
+              </div>
+              <span class="guide-comparison-arrow" data-sg-icon="arrow" aria-hidden="true"></span>
+              <div>
+                <span class="guide-accent-label">A direction it can act on</span>
+                <p>
+                  “Improve the mobile navigation on this site. Keep the existing colors and content.
+                  Make the menu usable with a keyboard and check it at 390px and 1440px.”
+                </p>
+              </div>
+            </div>
+          </div>
+          <p class="guide-inline-note">
+            For a simple question, just ask it. For a large project, add milestones and agree on
+            what the first version should do. A longer prompt helps only when its details are
+            relevant.
+          </p>
+        </section>
+
+        <section class="guide-section" id="prompts" aria-labelledby="promptsTitle">
+          <div class="guide-section-heading">
+            <span class="guide-section-number">03 / BORROW A STARTING POINT</span>
+            <h2 id="promptsTitle">A prompt for the work at hand.</h2>
+            <p>
+              These are editable examples, not promises about a result. Replace the brackets, copy
+              one, and make it your own.
+            </p>
+          </div>
+          <div class="guide-library-controls">
+            <div class="guide-filters" role="group" aria-label="Prompt categories">
+              <button type="button" data-category="all" aria-pressed="true">All prompts</button
+              ><button type="button" data-category="everyday" aria-pressed="false">Everyday</button
+              ><button type="button" data-category="research" aria-pressed="false">Research</button
+              ><button type="button" data-category="code" aria-pressed="false">Code</button
+              ><button type="button" data-category="design" aria-pressed="false">
+                Design &amp; 3D</button
+              ><button type="button" data-category="writing" aria-pressed="false">Writing</button
+              ><button type="button" data-category="data" aria-pressed="false">Data</button>
+            </div>
+            <label class="guide-search"
+              ><span class="guide-sr-only">Search prompts</span
+              ><svg
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                aria-hidden="true"
+              >
+                <circle cx="10.5" cy="10.5" r="6.5" />
+                <path d="m16 16 5 5" /></svg
+              ><input id="promptSearch" type="search" placeholder="Find a prompt…"
+            /></label>
+          </div>
+          <p id="promptCount" class="guide-result-count" role="status"></p>
+          <div id="promptCards" class="guide-prompt-grid"></div>
+          <p id="promptEmpty" class="guide-empty" hidden>
+            No matching prompts. Try a different search or choose All prompts.
+          </p>
+          <noscript
+            ><p>
+              Enable JavaScript to browse and copy the prompt library. The four-part brief above
+              works on its own, too.
+            </p></noscript
+          >
+        </section>
+
+        <section class="guide-section" id="builder" aria-labelledby="builderTitle">
+          <div class="guide-section-heading">
+            <span class="guide-section-number">04 / MAKE IT YOURS</span>
+            <h2 id="builderTitle">Turn your idea into a task brief.</h2>
+            <p>
+              Fill in what you know. This assembles your words into a prompt locally in your
+              browser; it does not send a request to a model.
+            </p>
+          </div>
+          <div class="guide-builder">
+            <form id="briefForm">
+              <label for="briefGoal"
+                >What do you want to get done? <span class="guide-required">Required</span></label
+              ><textarea
+                id="briefGoal"
+                name="goal"
+                rows="3"
+                required
+                maxlength="4000"
+                placeholder="Create a weekly meal plan for two people…"
+              ></textarea
+              ><label for="briefContext">What should Supergence know?</label
+              ><textarea
+                id="briefContext"
+                name="context"
+                rows="2"
+                maxlength="4000"
+                placeholder="Audience, relevant files, references, or what you already tried…"
+              ></textarea
+              ><label for="briefConstraints">What needs to stay within bounds?</label
+              ><textarea
+                id="briefConstraints"
+                name="constraints"
+                rows="2"
+                maxlength="4000"
+                placeholder="Budget, style, tools, time, or things to preserve…"
+              ></textarea
+              ><label for="briefDone">What does a good result include?</label
+              ><textarea
+                id="briefDone"
+                name="done"
+                rows="2"
+                maxlength="4000"
+                placeholder="Output format, deliverables, and how it should be checked…"
+              ></textarea
+              ><button class="guide-button guide-button-primary" type="submit">
+                Build my prompt <span data-sg-icon="arrow" aria-hidden="true"></span>
+              </button>
+            </form>
+            <div class="guide-builder-result">
+              <span class="guide-eyebrow">YOUR STARTING POINT</span>
+              <div id="briefPlaceholder">
+                <span class="guide-result-mark" aria-hidden="true">“</span>
+                <h3>A little context goes a long way.</h3>
+                <p>
+                  Your assembled prompt will appear here. Review it, then copy it into Supergence
+                  when you are ready.
+                </p>
+              </div>
+              <div id="briefResult" hidden>
+                <label for="briefOutput" class="guide-sr-only">Your assembled prompt</label
+                ><textarea id="briefOutput" readonly rows="15"></textarea
+                ><button class="guide-button" type="button" id="copyBrief">
+                  Copy my prompt <span data-sg-icon="copy" aria-hidden="true"></span>
+                </button>
+                <p class="guide-result-note">Nothing is sent automatically.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="guide-section" id="iterate" aria-labelledby="iterateTitle">
+          <div class="guide-section-heading">
+            <span class="guide-section-number">05 / GET TO A BETTER RESULT</span>
+            <h2 id="iterateTitle">Give feedback the work can use.</h2>
+            <p>
+              The first response is something to review. Point to the gap, keep what works, and ask
+              for the next specific improvement.
+            </p>
+          </div>
+          <div class="guide-feedback-grid">
+            <article>
+              <h3>When the answer is too broad</h3>
+              <p>
+                “Focus on [part]. Use [specific source or file]. Give me [format] for [audience],
+                and label anything you cannot verify.”
+              </p>
+            </article>
+            <article>
+              <h3>When something does not work</h3>
+              <p>
+                “In [file or preview], doing [steps] causes [actual result]. It should [expected
+                result]. Fix the cause, keep [working behavior], and rerun that check.”
+              </p>
+            </article>
+            <article>
+              <h3>When the design is not there yet</h3>
+              <p>
+                “Keep [what works]. Improve [lighting, spacing, materials, or hierarchy] toward
+                [reference]. Show a close view and explain what changed.”
+              </p>
+            </article>
+            <article>
+              <h3>When the task is getting large</h3>
+              <p>
+                “Finish [milestone] first. Keep the original requirements. Save the source and a
+                short progress note with completed checks and remaining work.”
+              </p>
+            </article>
+          </div>
+          <div class="guide-checklist">
+            <div>
+              <span class="guide-eyebrow">BEFORE YOU CALL IT DONE</span>
+              <h3>Open it. Try it. Check the evidence.</h3>
+              <p>
+                For factual work, inspect the sources and uncertain claims. For code, run the
+                relevant behavior. For a visual, inspect the actual pixels and important views. Ask
+                which checks were run and which remain unverified.
+              </p>
+            </div>
+            <ul>
+              <li>A useful file, preview, or answer</li>
+              <li>Evidence for the important claims</li>
+              <li>Working critical interactions</li>
+              <li>A clear account of remaining limits</li>
+            </ul>
+          </div>
+          <details class="guide-details">
+            <summary>A few questions worth asking <span aria-hidden="true">+</span></summary>
+            <div class="guide-detail-body">
+              <h3>Do I have to know the right technical words?</h3>
+              <p>
+                No. Describe what you want someone to see, do, or understand. Examples, screenshots,
+                filenames, and real errors are often more useful than jargon.
+              </p>
+              <h3>Should I ask for a plan or the finished thing?</h3>
+              <p>
+                Say which you want. “Help me compare approaches” invites discussion. “Build this,
+                test it, and give me the files” asks for execution when the necessary tools are
+                enabled.
+              </p>
+              <h3>What if it says it cannot use a tool?</h3>
+              <p>
+                Check the access control and available connections. Ask it to try the relevant
+                installed tool and report the actual error. A prompt cannot supply a missing
+                connection, permission, or model capability.
+              </p>
+              <h3>Does a better prompt guarantee a perfect result?</h3>
+              <p>
+                No. Clear instructions make the goal easier to assess. Complex work can still need
+                several passes, testing, and judgment.
+              </p>
+            </div>
+          </details>
+        </section>
+        <footer class="guide-footer">
+          <div>
+            <a class="guide-brand" href="/"
+              ><img src="/images/supergence-logo.png" width="26" height="26" alt="" /><span
+                >Supergence</span
+              ></a
+            >
+            <p>A workspace for ideas, research, and building.</p>
+          </div>
+          <div>
+            <a href="#about">Back to the top <span data-sg-icon="up" aria-hidden="true"></span></a>
+          </div>
+        </footer>
+      </main>
+    </div>
+    <div id="copyStatus" class="guide-toast" role="status" aria-live="polite"></div>
+  </body>
+</html>

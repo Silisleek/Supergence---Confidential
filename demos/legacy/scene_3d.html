@@ -1,0 +1,818 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3D Interactive Scene // SIS 3D Simulation</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        overflow: hidden;
+        background: #080b10;
+        font-family:
+          'Inter',
+          -apple-system,
+          sans-serif;
+        color: #e2e8f0;
+      }
+      #canvas-container {
+        width: 100vw;
+        height: 100vh;
+        position: absolute;
+      }
+      #hud {
+        position: absolute;
+        top: 14px;
+        left: 14px;
+        z-index: 10;
+        background: rgba(13, 17, 23, 0.88);
+        backdrop-filter: blur(14px);
+        border: 1px solid rgba(0, 240, 255, 0.35);
+        border-radius: 8px;
+        padding: 12px 16px;
+        pointer-events: auto;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+        min-width: 240px;
+      }
+      .hud-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: #00f0ff;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 3px;
+      }
+      .hud-sub {
+        font-size: 10px;
+        color: #8b949e;
+      }
+      .hud-row {
+        display: flex;
+        gap: 12px;
+        margin-top: 6px;
+        font-size: 11px;
+      }
+      .hud-score {
+        color: #84cc16;
+        font-weight: 700;
+      }
+      .hud-lives {
+        color: #ff6b6b;
+        font-weight: 700;
+      }
+      #hud-win {
+        display: none;
+        margin-top: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #ffd700;
+      }
+      #btn-restart {
+        display: none;
+        margin-top: 8px;
+        background: rgba(0, 240, 255, 0.12);
+        border: 1px solid #00f0ff;
+        color: #00f0ff;
+        padding: 5px 12px;
+        font-size: 11px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      #btn-restart:hover {
+        background: rgba(0, 240, 255, 0.3);
+        color: #fff;
+      }
+      .hud-hint {
+        margin-top: 6px;
+        font-size: 9px;
+        color: #64748b;
+      }
+      #tooltip {
+        position: absolute;
+        display: none;
+        z-index: 20;
+        background: rgba(13, 17, 23, 0.95);
+        border: 1px solid #00f0ff;
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 11px;
+        pointer-events: none;
+        color: #00f0ff;
+      }
+      /* Cinematic vignette + top glow: cheap post-processing without a post chain */
+      #vignette {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        pointer-events: none;
+        background:
+          radial-gradient(ellipse at 50% 42%, rgba(0, 0, 0, 0) 46%, rgba(0, 0, 0, 0.42) 100%),
+          linear-gradient(to bottom, rgba(0, 240, 255, 0.05), rgba(0, 0, 0, 0) 22%);
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/",
+          "three/examples/jsm/controls/OrbitControls.js": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/controls/OrbitControls.js",
+          "three/examples/jsm/postprocessing/EffectComposer.js": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/postprocessing/EffectComposer.js",
+          "three/examples/jsm/postprocessing/RenderPass.js": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/postprocessing/RenderPass.js",
+          "three/examples/jsm/postprocessing/UnrealBloomPass.js": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/postprocessing/UnrealBloomPass.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="canvas-container"></div>
+    <div id="vignette"></div>
+    <div id="hud">
+      <div class="hud-title">✦ 3D INTERACTIVE SCENE</div>
+      <div class="hud-sub" id="hud-info">Interactive 3D Simulation | 60 FPS</div>
+    </div>
+    <div id="tooltip"></div>
+    <script type="module">
+      // [syntax-healed]     import * as THREE from 'three';
+      import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+      import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+      // ─── DETERMINISTIC SHELL: Scene, Camera, Renderer, Lighting ───
+      // Beauty is deterministic: IBL + shadow catcher + tuned lights ship with EVERY scene,
+      // so output quality never depends on the model remembering them.
+      const container = document.getElementById('canvas-container');
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x080b10);
+      scene.fog = new THREE.FogExp2(0x080b10, 0.022);
+
+      const camera = new THREE.PerspectiveCamera(
+        50,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        200,
+      );
+      camera.position.set(5.2, 3.4, 7.2);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.15;
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      container.appendChild(renderer.domElement);
+
+      // Image-based lighting: free studio reflections on every standard material (no network)
+      try {
+        const pmrem = new THREE.PMREMGenerator(renderer);
+        scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+        scene.environmentIntensity = 0.55;
+        pmrem.dispose();
+      } catch (e) {
+        /* IBL optional — lights alone still carry the scene */
+      }
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.target.set(0, 1, 0);
+      controls.maxPolarAngle = Math.PI / 2 - 0.06; // never dive under the floor
+      controls.minDistance = 3;
+      controls.maxDistance = 24;
+
+      // ─── PERSISTENT STYLE GUIDE: Tactical Lighting Reference Sheet ───
+      const hemiLight = new THREE.HemisphereLight(0x8fb8ff, 0x1a1410, 0.5);
+      scene.add(hemiLight);
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.35);
+      scene.add(ambientLight);
+
+      const keyLight = new THREE.DirectionalLight(0xeaf6ff, 1.6);
+      keyLight.position.set(5, 8, 5);
+      keyLight.castShadow = true;
+      keyLight.shadow.mapSize.width = 2048;
+      keyLight.shadow.mapSize.height = 2048;
+      keyLight.shadow.camera.left = -8;
+      keyLight.shadow.camera.right = 8;
+      keyLight.shadow.camera.top = 8;
+      keyLight.shadow.camera.bottom = -8;
+      keyLight.shadow.camera.far = 30;
+      keyLight.shadow.bias = -0.0004;
+      keyLight.shadow.radius = 4;
+      scene.add(keyLight);
+
+      const cyanKick = new THREE.DirectionalLight(0x00f0ff, 0.55);
+      cyanKick.position.set(5, 2, 6);
+      scene.add(cyanKick);
+
+      const fillLight = new THREE.DirectionalLight(0xa78bfa, 0.5);
+      fillLight.position.set(-4, 3, -3);
+      scene.add(fillLight);
+
+      const rimLight = new THREE.PointLight(0xff6b6b, 12, 24);
+      rimLight.position.set(0, 3, -6);
+      scene.add(rimLight);
+
+      // Shadow-catcher ground disc (invisible except for soft shadows) + grid above it
+      const groundDisc = new THREE.Mesh(
+        new THREE.CircleGeometry(14, 48),
+        new THREE.ShadowMaterial({ opacity: 0.38 }),
+      );
+      groundDisc.rotation.x = -Math.PI / 2;
+      groundDisc.position.y = 0;
+      groundDisc.receiveShadow = true;
+      scene.add(groundDisc);
+
+      const grid = new THREE.GridHelper(24, 24, 0x00f0ff, 0x1a1a2e);
+      grid.position.y = 0.002;
+      grid.material.opacity = 0.28;
+      grid.material.transparent = true;
+      scene.add(grid);
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      // ─── AI-GENERATED PART 1: Scene Objects (retopology-optimized) ───
+      function buildSceneObjects(scene, THREE) {
+        const meshes = [];
+        const palette = [0x00f0ff, 0xff007f, 0x00ff88, 0xffb300, 0x9d00ff];
+
+        const randomColor = () => palette[Math.floor(Math.random() * palette.length)];
+        const randomRoughness = () => 0.2 + Math.random() * 0.6; // 0.2-0.8
+        const randomMetalness = () => Math.random(); // 0-1
+
+        // 1. Chassis - Box
+        const chassisGeom = new THREE.BoxGeometry(4, 1, 6);
+        const chassisMat = new THREE.MeshStandardMaterial({
+          color: randomColor(),
+          roughness: randomRoughness(),
+          metalness: randomMetalness(),
+        });
+        const chassis = new THREE.Mesh(chassisGeom, chassisMat);
+        chassis.position.set(0, 0.5, 0);
+        chassis.castShadow = true;
+        scene.add(chassis);
+        meshes.push(chassis);
+
+        // 2. Structure - Cylinder
+        const structureGeom = new THREE.CylinderGeometry(1, 1, 8, 20);
+        const structureMat = new THREE.MeshStandardMaterial({
+          color: randomColor(),
+          roughness: randomRoughness(),
+          metalness: randomMetalness(),
+        });
+        const structure = new THREE.Mesh(structureGeom, structureMat);
+        structure.position.set(5, 4, 0);
+        structure.castShadow = true;
+        scene.add(structure);
+        meshes.push(structure);
+
+        // 3. Glow Element - Sphere with emissive
+        const glowGeom = new THREE.SphereGeometry(1.5, 16, 12);
+        const glowMat = new THREE.MeshStandardMaterial({
+          color: randomColor(),
+          emissive: 0xffffff,
+          emissiveIntensity: 0.5,
+          roughness: randomRoughness(),
+          metalness: randomMetalness(),
+        });
+        const glow = new THREE.Mesh(glowGeom, glowMat);
+        glow.position.set(-5, 3, 2);
+        glow.castShadow = true;
+        scene.add(glow);
+        meshes.push(glow);
+
+        // 4. Terrain - Plane
+        const terrainGeom = new THREE.PlaneGeometry(50, 50, 10, 10);
+        const terrainMat = new THREE.MeshStandardMaterial({
+          color: 0x556b2f,
+          roughness: 0.7,
+          metalness: 0.1,
+        });
+        const terrain = new THREE.Mesh(terrainGeom, terrainMat);
+        terrain.rotation.x = -Math.PI / 2;
+        terrain.position.y = -0.5;
+        terrain.castShadow = true;
+        scene.add(terrain);
+        meshes.push(terrain);
+
+        // 5. Obstacle 1 - Box
+        const obsBoxGeom = new THREE.BoxGeometry(2, 2, 2);
+        const obsBoxMat = new THREE.MeshStandardMaterial({
+          color: randomColor(),
+          roughness: randomRoughness(),
+          metalness: randomMetalness(),
+        });
+        const obsBox = new THREE.Mesh(obsBoxGeom, obsBoxMat);
+        obsBox.position.set(10, 1, -5);
+        obsBox.castShadow = true;
+        scene.add(obsBox);
+        meshes.push(obsBox);
+
+        // 6. Obstacle 2 - Sphere
+        const obsSphereGeom = new THREE.SphereGeometry(1.5, 16, 12);
+        const obsSphereMat = new THREE.MeshStandardMaterial({
+          color: randomColor(),
+          roughness: randomRoughness(),
+          metalness: randomMetalness(),
+        });
+        const obsSphere = new THREE.Mesh(obsSphereGeom, obsSphereMat);
+        obsSphere.position.set(-8, 1.5, 4);
+        obsSphere.castShadow = true;
+        scene.add(obsSphere);
+        meshes.push(obsSphere);
+
+        // 7. Obstacle 3 - Torus
+        const obsTorusGeom = new THREE.TorusGeometry(1.5, 0.4, 12, 20);
+        const obsTorusMat = new THREE.MeshStandardMaterial({
+          color: randomColor(),
+          roughness: randomRoughness(),
+          metalness: randomMetalness(),
+        });
+        const obsTorus = new THREE.Mesh(obsTorusGeom, obsTorusMat);
+        obsTorus.position.set(3, 1.5, -10);
+        obsTorus.castShadow = true;
+        scene.add(obsTorus);
+        meshes.push(obsTorus);
+
+        // 8. Interactive Element 1 - Cone
+        const intConeGeom = new THREE.ConeGeometry(1, 3, 32);
+        const intConeMat = new THREE.MeshStandardMaterial({
+          color: randomColor(),
+          roughness: randomRoughness(),
+          metalness: randomMetalness(),
+        });
+        const intCone = new THREE.Mesh(intConeGeom, intConeMat);
+        intCone.position.set(-12, 1.5, -3);
+        intCone.castShadow = true;
+        scene.add(intCone);
+        meshes.push(intCone);
+
+        // 9. Interactive Element 2 - Cylinder
+        const intCylinderGeom = new THREE.CylinderGeometry(0.8, 0.8, 4, 20);
+        const intCylinderMat = new THREE.MeshStandardMaterial({
+          color: randomColor(),
+          roughness: randomRoughness(),
+          metalness: randomMetalness(),
+        });
+        const intCylinder = new THREE.Mesh(intCylinderGeom, intCylinderMat);
+        intCylinder.position.set(7, 2, 8);
+        intCylinder.castShadow = true;
+        scene.add(intCylinder);
+        meshes.push(intCylinder);
+
+        // 10. Interactive Element 3 - Torus Knot
+        const intKnotGeom = new THREE.TorusKnotGeometry(1, 0.3, 100, 16);
+        const intKnotMat = new THREE.MeshStandardMaterial({
+          color: randomColor(),
+          roughness: randomRoughness(),
+          metalness: randomMetalness(),
+        });
+        const intKnot = new THREE.Mesh(intKnotGeom, intKnotMat);
+        intKnot.position.set(-4, 3, 12);
+        intKnot.castShadow = true;
+        scene.add(intKnot);
+        meshes.push(intKnot);
+
+        // 11. Decorative Element - Plane
+        const decoPlaneGeom = new THREE.PlaneGeometry(3, 3, 1, 1);
+        const decoPlaneMat = new THREE.MeshStandardMaterial({
+          color: randomColor(),
+          roughness: randomRoughness(),
+          metalness: randomMetalness(),
+          side: THREE.DoubleSide,
+        });
+        const decoPlane = new THREE.Mesh(decoPlaneGeom, decoPlaneMat);
+        decoPlane.position.set(0, 5, -15);
+        decoPlane.rotation.x = Math.PI / 2;
+        decoPlane.castShadow = true;
+        scene.add(decoPlane);
+        meshes.push(decoPlane);
+
+        // 12. Decorative Element - Ring
+        const decoRingGeom = new THREE.RingGeometry(1, 1.5, 32);
+        const decoRingMat = new THREE.MeshStandardMaterial({
+          color: randomColor(),
+          roughness: randomRoughness(),
+          metalness: randomMetalness(),
+          side: THREE.DoubleSide,
+        });
+        const decoRing = new THREE.Mesh(decoRingGeom, decoRingMat);
+        decoRing.position.set(15, 2, -5);
+        decoRing.rotation.y = Math.PI / 4;
+        decoRing.castShadow = true;
+        scene.add(decoRing);
+        meshes.push(decoRing);
+
+        return meshes;
+      }
+
+      // ─── AI-GENERATED PART 2: Animation Logic ───
+      function animateScene(meshes, clock, THREE) {
+        // Animate meshes for: "3D Interactive Scene".
+        // IMPORTANT: Output ONLY valid executable JavaScript code. NO conversational reasoning or outlines.
+        // Animate using clock.getElapsedTime() and Math.sin/Math.cos.
+        // Subtle smooth idle motion: rotate hero slowly (<=0.4 rad/s), pulse glow, bob.
+        // Guard every mesh index: if(meshes[i]). No new object allocations.
+        if (!Array.isArray(meshes) || meshes.length === 0) return;
+        const t = clock.getElapsedTime();
+
+        // Compute delta time between frames
+        if (typeof animateScene.prevTime === 'undefined') animateScene.prevTime = t;
+        const delta = t - animateScene.prevTime;
+        animateScene.prevTime = t;
+
+        const rotationSpeed = 0.2; // rad/s, <=0.4
+        const bobAmplitude = 0.05; // meters
+        const bobFrequency = 2; // Hz
+        const glowAmplitude = 0.5; // intensity variation
+        const glowFrequency = 1.5; // Hz
+        const scaleAmplitude = 0.02; // scale variation
+        const scaleFrequency = 2; // Hz
+
+        for (let i = 0; i < meshes.length; i++) {
+          if (!meshes[i]) continue;
+          const mesh = meshes[i];
+
+          // Rotate slowly
+          mesh.rotation.y += rotationSpeed * delta;
+
+          // Bob up and down
+          if (!mesh.userData.baseY) mesh.userData.baseY = mesh.position.y;
+          mesh.position.y =
+            mesh.userData.baseY + bobAmplitude * Math.sin(t * bobFrequency * Math.PI * 2);
+
+          // Pulse glow (if material supports emissive)
+          if (mesh.material && mesh.material.emissive) {
+            const glow = glowAmplitude + glowAmplitude * Math.sin(t * glowFrequency * Math.PI * 2);
+            if ('emissiveIntensity' in mesh.material) {
+              mesh.material.emissiveIntensity = glow;
+            } else {
+              // Fallback: modulate emissive color brightness
+              const baseColor = mesh.material.emissive.clone();
+              mesh.material.emissive.r = baseColor.r * glow;
+              mesh.material.emissive.g = baseColor.g * glow;
+              mesh.material.emissive.b = baseColor.b * glow;
+            }
+          }
+
+          // Subtle scale pulse
+          const scaleFactor = 1 + scaleAmplitude * Math.sin(t * scaleFrequency * Math.PI * 2);
+          mesh.scale.x = scaleFactor;
+          mesh.scale.y = scaleFactor;
+          mesh.scale.z = scaleFactor;
+        }
+      }
+
+      // ─── AI-GENERATED PART 2b: Game Logic (single mechanic + win) ───
+
+      // ─── DETERMINISTIC: Execute Parts & Render Loop ───
+      let sceneMeshes = [];
+      try {
+        if (typeof buildSceneObjects === 'function') {
+          const result = buildSceneObjects(scene, THREE);
+          sceneMeshes = Array.isArray(result) ? result : [];
+        }
+      } catch (e) {
+        console.warn('[SIS 3D] Object generation error:', e);
+      }
+
+      // Safety Fallback: Semantic, intent-aware procedural generation (Never a hardcoded spaceship for a park or dog!)
+      if (!sceneMeshes || sceneMeshes.length < 3) {
+        console.warn(
+          '[SIS 3D] AI scene objects thin or empty — activating semantic procedural mesh generation for: "' +
+            sceneTitle +
+            '".',
+        );
+        const promptLower = sceneTitle.toLowerCase();
+
+        if (/dog|boy|puppy|park|animal|pet|cat|nature|tree/i.test(promptLower)) {
+          // ── 1. PARK, CHARACTER & DOG SCENE ──
+          const hillMat = new THREE.MeshStandardMaterial({ color: 0x2e7d32, roughness: 0.85 });
+          const hill = new THREE.Mesh(new THREE.CylinderGeometry(14, 16, 0.4, 32), hillMat);
+          hill.name = 'Park Lawn Ground';
+          hill.position.set(0, -0.2, 0);
+          hill.receiveShadow = true;
+          scene.add(hill);
+          sceneMeshes.push(hill);
+
+          // Boy character group
+          const boyMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.5 });
+          const boyHeadMat = new THREE.MeshStandardMaterial({ color: 0xfcd34d, roughness: 0.4 });
+          const boyBody = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.4, 1.2, 16), boyMat);
+          boyBody.name = 'Boy [Character Torso]';
+          boyBody.position.set(-3.5, 1.2, 0);
+          boyBody.castShadow = true;
+          scene.add(boyBody);
+          sceneMeshes.push(boyBody);
+
+          const boyHead = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 12), boyHeadMat);
+          boyHead.name = 'Boy [Head]';
+          boyHead.position.set(-3.5, 2.1, 0);
+          boyHead.castShadow = true;
+          scene.add(boyHead);
+          sceneMeshes.push(boyHead);
+
+          // Golden retriever dog group
+          const dogMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.65 });
+          const dogBody = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.8, 0.9), dogMat);
+          dogBody.name = 'Golden Retriever [Body]';
+          dogBody.position.set(2.5, 0.8, 0);
+          dogBody.castShadow = true;
+          scene.add(dogBody);
+          sceneMeshes.push(dogBody);
+
+          const dogHead = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.6, 0.7), dogMat);
+          dogHead.name = 'Golden Retriever [Head]';
+          dogHead.position.set(3.4, 1.25, 0);
+          dogHead.castShadow = true;
+          scene.add(dogHead);
+          sceneMeshes.push(dogHead);
+
+          // Dynamic Flying Frisbee
+          const frisbeeMat = new THREE.MeshStandardMaterial({
+            color: 0xef4444,
+            emissive: 0xef4444,
+            emissiveIntensity: 0.6,
+            roughness: 0.3,
+          });
+          const frisbee = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.6, 0.6, 0.08, 24),
+            frisbeeMat,
+          );
+          frisbee.name = 'Aerodynamic Frisbee Disc';
+          frisbee.position.set(-0.5, 2.6, 0);
+          frisbee.rotation.z = 0.2;
+          frisbee.castShadow = true;
+          scene.add(frisbee);
+          sceneMeshes.push(frisbee);
+
+          // Park Trees
+          for (let t = 0; t < 4; t++) {
+            const tx = (t % 2 === 0 ? -1 : 1) * (6 + t * 2);
+            const tz = t < 2 ? -6 : 6;
+            const trunkMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.9 });
+            const foliageMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.8 });
+            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.35, 2.5, 12), trunkMat);
+            trunk.position.set(tx, 1.25, tz);
+            trunk.castShadow = true;
+            scene.add(trunk);
+            sceneMeshes.push(trunk);
+
+            const canopy = new THREE.Mesh(new THREE.ConeGeometry(1.8, 3.2, 12), foliageMat);
+            canopy.name = 'Park Foliage Tree #' + (t + 1);
+            canopy.position.set(tx, 3.6, tz);
+            canopy.castShadow = true;
+            scene.add(canopy);
+            sceneMeshes.push(canopy);
+          }
+        } else if (/car|vehicle|drive|traffic|race|highway/i.test(promptLower)) {
+          // ── 2. SPORTS VEHICLE SCENE ──
+          const carMat = new THREE.MeshStandardMaterial({
+            color: 0xef4444,
+            metalness: 0.85,
+            roughness: 0.2,
+          });
+          const chassis = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.9, 2.2), carMat);
+          chassis.name = 'Sports Vehicle Chassis';
+          chassis.position.set(0, 0.8, 0);
+          chassis.castShadow = true;
+          scene.add(chassis);
+          sceneMeshes.push(chassis);
+
+          const cabin = new THREE.Mesh(
+            new THREE.ConeGeometry(1.4, 1.8, 4),
+            new THREE.MeshStandardMaterial({
+              color: 0x1e293b,
+              metalness: 0.9,
+              roughness: 0.1,
+              transparent: true,
+              opacity: 0.8,
+            }),
+          );
+          cabin.name = 'Aerodynamic Windshield Canopy';
+          cabin.rotation.y = Math.PI / 4;
+          cabin.position.set(-0.2, 1.7, 0);
+          cabin.castShadow = true;
+          scene.add(cabin);
+          sceneMeshes.push(cabin);
+
+          const wheelMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.8 });
+          const wheelPos = [
+            [-1.4, 0.45, 1.15],
+            [1.4, 0.45, 1.15],
+            [-1.4, 0.45, -1.15],
+            [1.4, 0.45, -1.15],
+          ];
+          wheelPos.forEach((wp, idx) => {
+            const wheel = new THREE.Mesh(
+              new THREE.CylinderGeometry(0.45, 0.45, 0.35, 16),
+              wheelMat,
+            );
+            wheel.name = 'Pneumatic Wheel #' + (idx + 1);
+            wheel.rotation.x = Math.PI / 2;
+            wheel.position.set(...wp);
+            wheel.castShadow = true;
+            scene.add(wheel);
+            sceneMeshes.push(wheel);
+          });
+        } else {
+          // ── 3. ARCHITECTURAL / SCI-FI INSTALLATION ──
+          const palette = [0x00f0ff, 0xff007f, 0x00ff88, 0xffb300, 0x9d00ff];
+          const mainMat = new THREE.MeshStandardMaterial({
+            color: 0x14161a,
+            metalness: 0.85,
+            roughness: 0.25,
+          });
+          const glowMat = new THREE.MeshStandardMaterial({
+            color: 0x00f0ff,
+            emissive: 0x00f0ff,
+            emissiveIntensity: 2.5,
+          });
+
+          const core = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.4, 2.4), mainMat);
+          core.name = 'Central Architecture Core';
+          core.position.set(0, 1.4, 0);
+          core.castShadow = true;
+          scene.add(core);
+          sceneMeshes.push(core);
+
+          const glowSpire = new THREE.Mesh(new THREE.ConeGeometry(0.8, 3.2, 8), glowMat);
+          glowSpire.name = 'Energy Beacon Spire';
+          glowSpire.position.set(0, 4.0, 0);
+          glowSpire.castShadow = true;
+          scene.add(glowSpire);
+          sceneMeshes.push(glowSpire);
+
+          for (let i = 0; i < 4; i++) {
+            const ang = (i / 4) * Math.PI * 2;
+            const pylon = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 3.0, 12), mainMat);
+            pylon.name = 'Support Pylon #' + (i + 1);
+            pylon.position.set(Math.cos(ang) * 4.5, 1.5, Math.sin(ang) * 4.5);
+            pylon.castShadow = true;
+            scene.add(pylon);
+            sceneMeshes.push(pylon);
+          }
+        }
+      }
+
+      // Tactical Orbit Ring
+      const ringGeo = new THREE.TorusGeometry(12, 0.08, 8, 36);
+      const ring = new THREE.Mesh(
+        ringGeo,
+        new THREE.MeshStandardMaterial({
+          color: 0x00f0ff,
+          emissive: 0x00f0ff,
+          emissiveIntensity: 2.0,
+        }),
+      );
+      ring.name = 'Tactical Orbit Grid';
+      ring.rotation.x = Math.PI / 2;
+      ring.position.set(0, 0.1, 0);
+      scene.add(ring);
+      sceneMeshes.push(ring);
+      // [syntax-healed]     }
+
+      // Wire game logic if present (SIS integration step — never AI-assembled)
+      let game = null;
+      try {
+        if (typeof buildGameLogic === 'function' && sceneMeshes.length > 0) {
+          game = buildGameLogic(scene, sceneMeshes, THREE);
+        }
+      } catch (e) {
+        console.warn('[SIS 3D] Game-logic init error (scene still renders):', e);
+      }
+
+      // Safety Fallback Game Controller (WASD/arrows + collision + score)
+      if (!game && sceneMeshes.length > 0) {
+        let score = 0,
+          lives = 3,
+          won = false,
+          lost = false;
+        const keys = {};
+        window.addEventListener('keydown', (e) => {
+          keys[e.key.toLowerCase()] = true;
+        });
+        window.addEventListener('keyup', (e) => {
+          keys[e.key.toLowerCase()] = false;
+        });
+        game = {
+          update(dt) {
+            if (won || lost) return;
+            const player = sceneMeshes[0];
+            if (!player) return;
+            const spd = 6.0 * dt;
+            if (keys['w'] || keys['arrowup']) player.position.z -= spd;
+            if (keys['s'] || keys['arrowdown']) player.position.z += spd;
+            if (keys['a'] || keys['arrowleft']) player.position.x -= spd;
+            if (keys['d'] || keys['arrowright']) player.position.x += spd;
+            for (let i = 1; i < sceneMeshes.length; i++) {
+              const m = sceneMeshes[i];
+              if (m && m.visible && player.position.distanceTo(m.position) < 1.6) {
+                m.visible = false;
+                score++;
+                if (score >= 5) won = true;
+              }
+            }
+          },
+          getScore: () => score,
+          getLives: () => lives,
+          hasWon: () => won,
+          hasLost: () => lost,
+          reset: () => {
+            score = 0;
+            lives = 3;
+            won = false;
+            lost = false;
+            sceneMeshes.forEach((m) => (m.visible = true));
+            if (sceneMeshes[0]) sceneMeshes[0].position.set(0, 0.8, 0);
+          },
+        };
+      }
+
+      // Raycasting hover tooltip
+      const raycaster = new THREE.Raycaster();
+      const pointer = new THREE.Vector2();
+      const tooltip = document.getElementById('tooltip');
+      renderer.domElement.addEventListener('pointermove', (e) => {
+        pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+        pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(pointer, camera);
+        const hits = raycaster.intersectObjects(sceneMeshes, false);
+        if (hits.length > 0) {
+          const name = hits[0].object.name || hits[0].object.geometry?.type || 'Object';
+          tooltip.style.display = 'block';
+          tooltip.style.left = e.clientX + 12 + 'px';
+          tooltip.style.top = e.clientY + 12 + 'px';
+          tooltip.textContent = name;
+        } else {
+          tooltip.style.display = 'none';
+        }
+      });
+
+      const clock = new THREE.Clock();
+      const hudInfo = document.getElementById('hud-info');
+      const hudScore = document.getElementById('hud-score');
+      const hudLives = document.getElementById('hud-lives');
+      const hudWin = document.getElementById('hud-win');
+      const btnRestart = document.getElementById('btn-restart');
+      const optNote = ' | Retopo: 5 clamped';
+      if (hudInfo)
+        hudInfo.textContent = `Objects: ${sceneMeshes.length}${game ? ' | GAME: 1 mechanic' : ''} | Interactive 3D | 60 FPS${optNote}`;
+      if (btnRestart)
+        btnRestart.addEventListener('click', () => {
+          try {
+            if (game && typeof game.reset === 'function') game.reset();
+          } catch (e) {}
+          if (hudWin) hudWin.style.display = 'none';
+          btnRestart.style.display = 'none';
+        });
+
+      function animate() {
+        requestAnimationFrame(animate);
+        const dt = Math.min(clock.getDelta(), 0.05);
+        try {
+          if (typeof animateScene === 'function') {
+            animateScene(sceneMeshes, clock, THREE);
+          } else if (sceneMeshes.length > 0) {
+            for (let i = 1; i < sceneMeshes.length; i++) {
+              sceneMeshes[i].rotation.y += 0.015;
+            }
+          }
+        } catch (e) {
+          /* animation error — scene still renders */
+        }
+        try {
+          if (game && typeof game.update === 'function') {
+            game.update(dt);
+            const score = typeof game.getScore === 'function' ? game.getScore() : 0;
+            const lives = typeof game.getLives === 'function' ? game.getLives() : 3;
+            const won = typeof game.hasWon === 'function' && game.hasWon();
+            const lost = typeof game.hasLost === 'function' && game.hasLost();
+            if (hudScore) hudScore.textContent = `SCORE ${score}/5`;
+            if (hudLives) hudLives.textContent = `LIVES ${lives}`;
+            if ((won || lost) && hudWin) {
+              hudWin.style.display = 'block';
+              hudWin.textContent = won ? '★ YOU WIN ★' : '✖ GAME OVER';
+              hudWin.style.color = won ? '#FFD700' : '#FF6B6B';
+              if (btnRestart) btnRestart.style.display = 'inline-block';
+            }
+            if (hudInfo) hudInfo.textContent = `Objects: ${sceneMeshes.length} | 60 FPS${optNote}`;
+          }
+        } catch (e) {
+          /* game-logic error — scene still renders */
+        }
+        controls.update();
+        renderer.render(scene, camera);
+      }
+      animate();
+    </script>
+  </body>
+  <!-- SIS-QUALITY score=0.59 passed=false meshes=53 -->
+</html>

@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A 100% real simulation of a supermassive black hole with acc // SIS 3D Simulation</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        overflow: hidden;
+        background: #080b10;
+        font-family:
+          'Inter',
+          -apple-system,
+          sans-serif;
+        color: #e2e8f0;
+      }
+      #canvas-container {
+        width: 100vw;
+        height: 100vh;
+        position: absolute;
+      }
+      #hud {
+        position: absolute;
+        top: 14px;
+        left: 14px;
+        z-index: 10;
+        background: rgba(13, 17, 23, 0.88);
+        backdrop-filter: blur(14px);
+        border: 1px solid rgba(0, 240, 255, 0.35);
+        border-radius: 8px;
+        padding: 12px 16px;
+        pointer-events: auto;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+        min-width: 240px;
+      }
+      .hud-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: #00f0ff;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 3px;
+      }
+      .hud-sub {
+        font-size: 10px;
+        color: #8b949e;
+      }
+      .hud-row {
+        display: flex;
+        gap: 12px;
+        margin-top: 6px;
+        font-size: 11px;
+      }
+      .hud-score {
+        color: #84cc16;
+        font-weight: 700;
+      }
+      .hud-lives {
+        color: #ff6b6b;
+        font-weight: 700;
+      }
+      #hud-win {
+        display: none;
+        margin-top: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #ffd700;
+      }
+      #btn-restart {
+        display: none;
+        margin-top: 8px;
+        background: rgba(0, 240, 255, 0.12);
+        border: 1px solid #00f0ff;
+        color: #00f0ff;
+        padding: 5px 12px;
+        font-size: 11px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      #btn-restart:hover {
+        background: rgba(0, 240, 255, 0.3);
+        color: #fff;
+      }
+      .hud-hint {
+        margin-top: 6px;
+        font-size: 9px;
+        color: #64748b;
+      }
+      #tooltip {
+        position: absolute;
+        display: none;
+        z-index: 20;
+        background: rgba(13, 17, 23, 0.95);
+        border: 1px solid #00f0ff;
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 11px;
+        pointer-events: none;
+        color: #00f0ff;
+      }
+      /* Cinematic vignette + top glow: cheap post-processing without a post chain */
+      #vignette {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        pointer-events: none;
+        background:
+          radial-gradient(ellipse at 50% 42%, rgba(0, 0, 0, 0) 46%, rgba(0, 0, 0, 0.42) 100%),
+          linear-gradient(to bottom, rgba(0, 240, 255, 0.05), rgba(0, 0, 0, 0) 22%);
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="canvas-container"></div>
+    <div id="vignette"></div>
+    <div id="hud">
+      <div class="hud-title">✦ A 100% REAL SIMULATION OF A SUPERMASSIVE</div>
+      <div class="hud-sub" id="hud-info">Interactive 3D Simulation | 60 FPS</div>
+    </div>
+    <div id="tooltip"></div>
+    <script type="module">
+          import * as THREE from 'three';
+          import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+          import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+          // ─── DETERMINISTIC SHELL: Scene, Camera, Renderer, Lighting ───
+          // Beauty is deterministic: IBL + shadow catcher + tuned lights ship with EVERY scene,
+          // so output quality never depends on the model remembering them.
+          const container = document.getElementById('canvas-container');
+          const scene = new THREE.Scene();
+          scene.background = new THREE.Color(0x080B10);
+          scene.fog = new THREE.FogExp2(0x080B10, 0.022);
+
+          const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
+          camera.position.set(5.2, 3.4, 7.2);
+
+          const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+          renderer.setSize(window.innerWidth, window.innerHeight);
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+          renderer.toneMapping = THREE.ACESFilmicToneMapping;
+          renderer.toneMappingExposure = 1.15;
+          renderer.shadowMap.enabled = true;
+          renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+          container.appendChild(renderer.domElement);
+
+          // Image-based lighting: free studio reflections on every standard material (no network)
+          try {
+            const pmrem = new THREE.PMREMGenerator(renderer);
+            scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+            scene.environmentIntensity = 0.55;
+            pmrem.dispose();
+          } catch (e) { /* IBL optional — lights alone still carry the scene */ }
+
+          const controls = new OrbitControls(camera, renderer.domElement);
+          controls.enableDamping = true;
+          controls.dampingFactor = 0.05;
+          controls.target.set(0, 1, 0);
+          controls.maxPolarAngle = Math.PI / 2 - 0.06; // never dive under the floor
+          controls.minDistance = 3;
+          controls.maxDistance = 24;
+
+          // ─── PERSISTENT STYLE GUIDE: Tactical Lighting Reference Sheet ───
+          const hemiLight = new THREE.HemisphereLight(0x8FB8FF, 0x1A1410, 0.5);
+          scene.add(hemiLight);
+
+          const ambientLight = new THREE.AmbientLight(0xffffff, 0.35);
+          scene.add(ambientLight);
+
+          const keyLight = new THREE.DirectionalLight(0xEAF6FF, 1.6);
+          keyLight.position.set(5, 8, 5);
+          keyLight.castShadow = true;
+          keyLight.shadow.mapSize.width = 2048;
+          keyLight.shadow.mapSize.height = 2048;
+          keyLight.shadow.camera.left = -8;
+          keyLight.shadow.camera.right = 8;
+          keyLight.shadow.camera.top = 8;
+          keyLight.shadow.camera.bottom = -8;
+          keyLight.shadow.camera.far = 30;
+          keyLight.shadow.bias = -0.0004;
+          keyLight.shadow.radius = 4;
+          scene.add(keyLight);
+
+          const cyanKick = new THREE.DirectionalLight(0x00F0FF, 0.55);
+          cyanKick.position.set(5, 2, 6);
+          scene.add(cyanKick);
+
+          const fillLight = new THREE.DirectionalLight(0xA78BFA, 0.5);
+          fillLight.position.set(-4, 3, -3);
+          scene.add(fillLight);
+
+          const rimLight = new THREE.PointLight(0xFF6B6B, 12, 24);
+          rimLight.position.set(0, 3, -6);
+          scene.add(rimLight);
+
+          // Shadow-catcher ground disc (invisible except for soft shadows) + grid above it
+          const groundDisc = new THREE.Mesh(
+            new THREE.CircleGeometry(14, 48),
+            new THREE.ShadowMaterial({ opacity: 0.38 })
+          );
+          groundDisc.rotation.x = -Math.PI / 2;
+          groundDisc.position.y = 0;
+          groundDisc.receiveShadow = true;
+          scene.add(groundDisc);
+
+          const grid = new THREE.GridHelper(24, 24, 0x00F0FF, 0x1A1A2E);
+          grid.position.y = 0.002;
+          grid.material.opacity = 0.28;
+          grid.material.transparent = true;
+          scene.add(grid);
+
+          window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+          });
+
+          // ─── AI-GENERATED PART 1: Scene Objects (retopology-optimized) ───
+          // [auto-healed] Here's a thinking process:
+
+      // [auto-healed] 1.  **Analyze User Request:**
+      // [auto-healed]    - Need a complete JavaScript function `buildSceneObjects(scene, THREE)`
+      // [auto-healed]    - Creates 3D objects for a "suermassive black hole with accretion disk, relativistic jet, gravitational lensing, and orbiting test particles"
+      // [auto-healed]    - But the style system describes a "sleek, multi-part, high-detail model" with automotive/vehicular elements (hood, canopy, intakes, wings, thrusters, headlights, underglow)
+      // [auto-healed]    - There's a conflict: the scene description is astronomical, but the style system is clearly for a terrestrial/high-tech vehicle model
+      // [auto-healed]    - The "RETRY WITH HARDER CONSTRAINTS" note says: "previous output had only 0 meshes. You MUST create at least 7 meshes with distinct geometries and positions."
+      // [auto-healed]    - Mandatory rules: 12-20 distinct sub-meshes, name every mesh, explicit position/rotation/scale, add to scene, castShadow, ground y=0 or support, return array
+         - Geometry restrictions: only built-in Three.js geometries
+         - Palette colors only from specified list
+         - Materials: MeshStandardMaterial, specific metalness/roughness, emissive trim
+         - No animations, no event listeners, no render loop
+         - Performance: smooth segment counts, reuse materials, ≤24 sub-meshes
+
+      // [commentary]    Wait, the user is mixing two different scenarios. The initial prompt describes a black hole simulation, but the style system and "RETRY WITH HARDER CONSTRAINTS" clearly indicate a vehicle/hero model (chassis, hood, canopy, intakes, wing, thrusters, headlights, underglow). The "previous output had only 0 meshes" suggests I need to output actual meshes this time.
+
+      // [commentary]    Let me re-read carefully: "Write a COMPLETE JavaScript function: function buildSceneObjects(scene, THREE) { ... } The function must create all 3D objects for this scene: "A 100% real simulation of a supermassive black hole with accretion disk, relativistic jet, gravitational lensing, and orbiting test particles...""
+
+         But then: "STYLE & HIGH-FIDELITY DESIGN SYSTEM (apply to every mesh, no crude boxy stubs): Palette: Sleek metallic carbon (#14161A), titanium slate (#2C3E50), cyber cyan (#00F0FF), neon magenta (#FF007F), warm gold (#D4AC0D), ice blue (#AED6F1), crimson red (#C0392B). Materials: MeshStandardMaterial only. Hero body parts get high metalness (0.75-0.90) and low roughness (0.12-0.30) for glossy clearcoat finish. Glass/canopies get opacity 0.55-0.70 with transparent: true. Emissive Trim: Accent trim strips, thruster rings, and headlights MUST use explicit emissive colors (#00F0FF, #FF007F, #00FFCC) with emissiveIntensity 2.5-4.0. COMPOSITION: Build a SLEEK, MULTI-PART, HIGH-DETAIL model with 10-20 articulated sub-meshes (chassis, sloped hood, canopy, side intakes, wings/spoilers, vector thrusters, headlights, underglow ring). NEVER output crude single-box stubs. Lighting: Hemisphere + IBL environment + cyan key light (shadows enabled) + magenta fill light + crimson point rim light."
+
+         Then: "SCOPE & QUALITY MANDATES: Build a stunning, professional AAA-grade 3D simulation. 10-20 distinct articulated sub-meshes. Name EVERY mesh: mesh.name = 'descriptive-name'. Explicit position.set(x, y, z), rotation.set(rx, ry, rz), and scale.set(sx, sy, sz) on every sub-mesh. Grounding: Main hero object sits naturally on a pedestal/platform or hovers slightly over a glowing cybernetic ring (y: 0.2 to 0.5). No placeholders, no TODOs, no conversational text — only clean, complete executable code."
+
+         "PERFORMANCE & GEOMETRY BOUNDS (60 FPS target): Use smooth, balanced segment counts: Sphere (16x12), Cylinder (16-20), Torus (12x20), Box, Cone, Ring. Reuse materials where appropriate to minimize draw calls. Total sub-meshes ≤ 24. Return array of created meshes: return [mesh1, mesh2, ...];"
+
+         "MANDATORY RULES: 1. Use ONLY Three.js built-in geometries... 2. Colors ONLY from the style sheet palette. Name EVERY mesh: mesh.name = 'descriptive-name'. 3. EVERY mesh MUST be added to scene via scene.add(mesh) AND castShadow = true (large ground pieces: receiveShadow = true). 4. Position all objects with explicit .position.set(x, y, z) calls. 5. Create 12-20 distinct sub-meshes to build a sleek, highly detailed, professional hero model (main chassis, sloped hood, tinted canopy glass, twin side-pod air intakes, rear wing spoiler, 4x vector thruster pods with emissive rings, twin laser headlights, underglow ring, and fine trim panels). Details separate premium from bland. 6. GROUNDING: compute each mesh's footprint so its lowest point rests at y=0 or exactly on its support. A floating object is an automatic failure unless the scene is explicitly airborne. 7. NO placeholders, NO TODO comments, NO conversational text. 8. Return an array of all created meshes: return [mesh1, mesh2, ...]; 9. Output ONLY the raw function code inside ```javascript and ```."
+
+         "SCOPE CONSTRAINT: GEOMETRY AND MATERIALS ONLY. No animations, no event listeners, no render loop."
+
+         "RETRY WITH HARDER CONSTRAINTS: previous output had only 0 meshes. You MUST create at least 7 meshes with distinct geometries and positions."
+
+         Okay, the conflict is: the scene is described as a black hole, but the style/system requirements are clearly for a terrestrial vehicle (chassis, hood, canopy, intakes, wing, thrusters, headlights, underglow). The "RETRY WITH HARDER CONSTRAINTS" explicitly says "previous output had only 0 meshes. You MUST create at least 7 meshes with distinct geometries and positions." This suggests the user wants me to output a vehicle model, not a black hole, despite the initial description. Perhaps the black hole description is just a thematic wrapper, but the actual constraints dictate a vehicle model. Given the extremely detailed style system (palette, materials, emissive trim, chassis, hood, canopy, etc.), I should build a sleek vehicle/hero model as specified in the style system.
+
+      // [commentary]    Let me check: "Create 12-20 distinct sub-meshes to build a sleek, highly detailed, professional hero model (main chassis, sloped hood, tinted canopy glass, twin side-pod air intakes, rear wing spoiler, 4x vector thruster pods with emissive rings, twin laser headlights, underglow ring, and fine trim panels)." This is unambiguously a vehicle.
+
+         The black hole part might be a mis-prompt or the user wants me to follow the style/system constraints which override or reinterpret the scene. I'll follow the explicit constraints: 12-20 sub-meshes, vehicle model, palette, materials, grounding y=0, return array, etc.
+
+         I need to create a function `buildSceneObjects(scene, THREE)` that returns an array of meshes. I'll create a sleek futuristic vehicle (like a concept car or sci-fi hover vehicle) with 12-20 sub-meshes. I'll use only built-in Three.js geometries. I'll name each mesh descriptively. I'll set position, rotation, scale explicitly. I'll ensure grounding (lowest point at y=0 or on support). I'll use MeshStandardMaterial with correct metalness/roughness/emissive. I'll use palette colors. I'll add each to scene. I'll castShadow/receiveShadow as required. I'll return the array.
+
+      // [commentary]    Let me plan the 12 sub-meshes:
+         1. main chassis body (base frame) - box or custom shape, color titanium slate #2C3E50
+         2. sloped hood - box or cone, color sleek metallic carbon #14161A
+         3. tinted canopy glass - transparent cylinder/torus, color ice blue #AED6F1 with opacity
+         4. twin side-pod air intakes - cylinder or torus openings, color cyber cyan #00F0FF
+         5. rear wing spoiler - box or cone, color neon magenta #FF007F
+         6. 4x vector thruster pods with emissive rings - each pod: cone + ring, color warm gold #D4AC0D with emissive #FF007F or #00F0FF
+         7. twin laser headlights - cone or sphere with emissive, color crimson red #C0392B with emissive #00FFCC
+         8. underglow ring - torus, color cyber cyan #00F0FF with emissive
+         9. fine trim panel 1 - small box, color warm gold #D4AC0D
+         10. fine trim panel 2 - small box, color ice blue #AED6F1
+         11. accent stripe - cylinder or ring, color neon magenta #FF007F
+         12. maybe a pedestal or base - ring or cylinder, color titanium slate
+
+      // [commentary]    Wait, grounding: "Main hero object sits naturally on a pedestal/platform or hovers slightly over a glowing cybernetic ring (y: 0.2 to 0.5)." and "compute each mesh's footprint so its lowest point rests at y=0 or exactly on its support." So all meshes must have their bottom at y=0 or supported. I'll position them accordingly. The main vehicle will hover over a ring, or sit on a pedestal. I'll make a pedestal ring and the vehicle hovers slightly above y=0.2 to 0.5. Actually, "Grounding: compute each mesh's footprint so its lowest point rests at y=0 or exactly on its support. A floating object is an automatic failure unless the scene is explicitly airborne." This is strict. Every mesh must have its lowest point at y=0. That means I need to position each mesh such that its geometry's bottom is at y=0. For example, if a box has height h, its y position should be -h/2 if center-based, or 0 if bottom-aligned. Three.js geometries are typically centered at (0,0,0), so I need to set position.y = -geometryRadius/2 or similar to sit on y=0.
+
+      // [commentary]    Let me recall: Three.js BoxGeometry(width, height, depth) center is at origin. So bottom is at -height/2. To sit on y=0, set position.y = height/2. Wait, no: if geometry center is at (0,0,0), and I want the bottom face at y=0, then the center should be at y = height/2. So position.y = height/2. Similarly for cylinders, etc. I'll compute per mesh.
+
+      // [commentary]    Actually, the rule: "compute each mesh's footprint so its lowest point rests at y=0 or exactly on its support." I'll just position each mesh's bottom at y=0. I'll make sure by setting position.y appropriately based on geometry dimensions.
+
+      // [commentary]    Let me design 12 meshes with explicit positions such that bottoms are at y=0. I'll use a common base plane at y=0 for reference, but meshes must rest on y=0.
+
+         I'll create a vehicle that sits on a base ring. The vehicle's main body will have its bottom at y=0. The thruster pods, headlights, etc., will be parts of the vehicle, also positioned relative to the main body, but all must have their lowest point at y=0 or on support. If they're parts of the vehicle mounted above the base, their lowest point might be above y=0. To satisfy "lowest point rests at y=0 or exactly on its support", I could make the whole vehicle sit on a base ring at y=0, and all other meshes are above it, but then their lowest point would be >0. That would violate the rule unless "or exactly on its support" means they rest on something else. Perhaps the rule means each mesh, when considered alone with its position, has its geometry's bottom at y=0. I'll interpret it as: position each mesh so its bottom face touches y=0. For parts that are inherently above the base (like headlights sticking out), I'll position them such that their base sits on the main body which itself sits on y=0. But to be safe, I'll design the whole thing as a single unit where all meshes have their bottom at y=0 when positioned individually, but that's impossible for connected parts. Maybe I should make the entire vehicle hover as a single entity, but the rule says "A floating object is an automatic failure unless the scene is explicitly airborne." and "Main hero object sits naturally on a pedestal/platform or hovers slightly over a glowing cybernetic ring (y: 0.2 to 0.5)." So the main hero can hover at y 0.2 to 0.5. That means the main object's bottom is at y=0.2 to 0.5 above ground? Actually "hovers slightly over a glowing cybernetic ring (y: 0.2 to 0.5)" likely means the hover height is y=0.2 to 0.5. And "Grounding: compute each mesh's footprint so its lowest point rests at y=0 or exactly on its support." might mean that for each mesh, its lowest point should be at y=0 if it's on the ground, or if it's part of the hovering main object, its lowest point should be on the support (the ring). This is confusing.
+
+      // [commentary]    Let me re-read: "GROUNDING: compute each mesh's footprint so its lowest point rests at y=0 or exactly on its support. A floating object is an automatic failure unless the scene is explicitly airborne." and "Main hero object sits naturally on a pedestal/platform or hovers slightly over a glowing cybernetic ring (y: 0.2 to 0.5)."
+
+         I think the intent is: the main hero object sits on a pedestal or hovers over a ring at y=0.2 to 0.5. For meshes that are part of the main hero, their positioning should respect that they are either on the ground (y=0) or on the support ring at y=0.2-0.5. The "compute each mesh's footprint" means I should position them so their bottom is exactly at the ground level. Since the main hero hovers at y=0.2 to 0.5, I'll set the main body's bottom at y=0.3 (within 0.2-0.5), and other meshes attached to it will have their bottoms at y=0.3 or higher, but then they'd be floating relative to y=0. To satisfy "lowest point rests at y=0 or exactly on its support", maybe I should have a ground support ring at y=0, and the main hero sits on it at y=0.3. Then the main hero's bottom meshes rest on the ring at y=0.3, which is "exactly on its support". Other meshes that are part of the hero but extend downward might need to touch y=0.
+
+         To simplify and satisfy all, I'll make the entire scene: a base ring at y=0 (thick ring), and the main vehicle hovers just above it, with its lowest points (e.g., the bottom of the chassis) at y=0.3. All other sub-meshes are part of the vehicle and their bottommost points are at y=0.3 or above, but they are supported by the chassis which rests on the ring. The rule "compute each mesh's footprint so its lowest point rests at y=0 or exactly on its support" - I'll ensure each mesh's position is set such that its geometry's minimum y (in world space) equals either 0 or the support height of the main object. I'll just make all meshes have their bottom at y=0.3, sitting on an invisible support, or I'll add a base ring mesh at y=0 that they rest on. Actually, I'll create a base ring at y=0 with some thickness, and set the vehicle's bottom meshes to sit exactly on top of it, so their bottom y = ring's top y. If ring height is, say, 0.3, then bottom meshes at y=0.15 if ring sits on y=0? Let's do: base ring radius, thickness 0.3, sits on y=0, so its top is at y=0.3. Vehicle chassis bottom sits at y=0.3. Then the chassis's lowest point rests exactly on its support (the ring). Other meshes attached to chassis will have bottoms >0.3, but they are supported by chassis. The rule might be satisfied if I ensure each mesh's bottom is at the support level of what it rests on. To be safe, I'll make all 12 meshes have their bottom at y=0.3, but positioned at different x,z locations, all resting on the same base ring at y=0 with height 0.3. That way, each mesh's lowest point is at y=0.3, which is "exactly on its support" (the ring). I'll make the base ring a visible part of the 12 meshes, or maybe the base ring is one of the 12, and the vehicle parts are arranged around it sitting on top.
+
+      // [commentary]    Actually, the return array should have all meshes. I'll make 12 meshes total, including a base ring, and all other meshes sit on it. But the vehicle parts need to be distinct and positioned. I'll design: a central base ring (thin torus) at y=0, height negligible, and all other meshes sit on y=0? No, "hovers slightly over a glowing cybernetic ring (y: 0.2 to 0.5)" suggests the vehicle is at y=0.2-0.5 above some ground, or the ring itself is at y=0.2-0.5. Let me interpret: the main hero object hovers over a glowing cybernetic ring, and the hover height is y=0.2 to 0.5. So the vehicle's bottom is at y=0.3 (midpoint). The ring might be at y=0, glowing, and vehicle at y=0.3. I'll make a glowing ring at y=0 (one of the meshes), and the vehicle meshes positioned at y=0.3, resting on the ring implicitly. But to satisfy grounding, I'll set each vehicle mesh's position.y such that its bottom is at y=0.3. Since Three.js geometry center is at origin, I'll compute height/2 and set position.y = 0.3 + height/2? Wait, if I want bottom at y=0.3, and geometry center at 0, then bottom is at position.y - height/2. So position.y - height/2 = 0.3 => position.y = 0.3 + height/2. But then the bottom is at 0.3, which is above the ring at y=0. That's fine, it's hovering at y=0.3.
+
+      // [commentary]    Let me just set all meshes to have their bottom at y=0.3 by adjusting position.y accordingly. I'll define each geometry's dimensions and set position.y = 0.3 + (height/2 or appropriate offset). For cylinders, bottom is at -radius if standing? Actually CylinderGeometry radiusTop, radiusBottom, height, segments. If radiusTop = radiusBottom, it's a cylinder standing on its base, center at origin, bottom at -height/2? No, for a cylinder with equal radii, it's symmetric, bottom at -height/2, top at +height/2. If it's lying down, different. I'll use boxes and adjust.
+
+         To avoid overcomplicating, I'll make all meshes "sit" on y=0 by setting position.y = size/2 for boxes, etc., but then they'd be at y=0 bottom. The rule says hover at y:0.2 to 0.5. I'll set the whole vehicle to hover at y=0.35. I'll position each mesh such that its lowest point is at y=0.35. I'll just add a constant offset.
+
+         Given the complexity, I'll simplify: I'll create 12 meshes, each will be a box or cylinder positioned with explicit .position.set(x, y, z). I'll set y such that the mesh appears to hover/stand on a ground plane at y=0, but I'll offset everything to y=0.3 to satisfy "hovers slightly over a glowing cybernetic ring (y: 0.2 to 0.5)". I'll also add a ring mesh at y=0 that glows, and set the main meshes' bottom y = 0.3. I'll compute per mesh.
+
+      // [commentary]    Let me just output the code. I'll make 12 meshes:
+         1. baseRing - torus at y=0, thin, glowing cybernetic ring
+         2. chassisBody - box, main body, sits on ring at y=0.3
+         3. slopedHood - box or cone, angled, sits on chassis
+         4. tintedCanopy - transparent cylinder, sits on hood
+         5. sideIntakeL - cylinder, left intake
+         6. sideIntakeR - cylinder, right intake
+         7. rearSpoiler - box, neon magenta
+         8. vectorThrusterFL - cone + ring, vector thruster
+         9. vectorThrusterFR - cone + ring
+         10. vectorThrusterRL - cone + ring
+         11. vectorThrusterRR - cone + ring
+         12. headlightL - cone with emissive
+         13. headlightR - cone with emissive
+         That's 13, I'll combine or drop some. I need 12-20. I'll do 13 meshes.
+
+      // [commentary]    Actually, the rule: "Create 12-20 distinct sub-meshes to build a sleek, highly detailed, professional hero model (main chassis, sloped hood, tinted canopy glass, twin side-pod air intakes, rear wing spoiler, 4x vector thruster pods with emissive rings, twin laser headlights, underglow ring, and fine trim panels)." So the vehicle has: main chassis, sloped hood, tinted canopy, twin side-pod intakes (2), rear wing spoiler (1), 4x vector thruster pods with emissive rings (4), twin laser headlights (2), underglow ring (1), fine trim panels (maybe 2). That's 1+1+1+2+1+4+2+1+2 = 15 meshes. Plus maybe a base/platform. I'll aim for 15.
+
+      // [commentary]    Let me list exactly 15 meshes with names and geometries:
+         1. baseRing - RingGeometry, glowing cybernetic ring at y=0
+         2. chassisBody - BoxGeometry, main frame, sits on baseRing at y=0.3
+         3. slopedHood - BoxGeometry, sloped front, sits on chassis
+         4. tintedCanopy - CylinderGeometry, transparent glass, sits on hood
+         5. sideIntakeL - CylinderGeometry, left side pod intake
+         6. sideIntakeR - CylinderGeometry, right side pod intake
+         7. rearSpoiler - BoxGeometry, rear wing, neon magenta
+         8. thrusterPodL - CylinderGeometry with emissive ring, left vector thruster
+         9. thrusterPodR - CylinderGeometry with emissive ring, right vector thruster (maybe 4 separate, but I'll do 2 for brevity, or 4)
+         10. thrusterPodFL - ConeGeometry, front-left vector thruster
+         11. thrusterPodFR - ConeGeometry, front-right vector thruster
+         12. headlightL - ConeGeometry, laser headlight left
+         13. headlightR - ConeGeometry, laser headlight right
+         14. underglowRing - RingGeometry, under vehicle, cyber cyan emissive
+         15. trimPanel1 - BoxGeometry, fine trim, warm gold
+         16. trimPanel2 - BoxGeometry, fine trim, ice blue
+
+         That's 16. I'll stick to 15 or 16. The rule says 12-20, so fine.
+
+         Now, palette colors in hex:
+         - Sleek metallic carbon: #14161A
+         - Titanium slate: #2C3E50
+         - Cyber cyan: #00F0FF
+         - Neon magenta: #FF007F
+         - Warm gold: #D4AC0D
+         - Ice blue: #AED6F1
+         - Crimson red: #C0392B
+
+         I'll use these for materials. MeshStandardMaterial with map or color. I'll set color via hex integer from palette. For emissive, I'll use the specified colors with intensity 3.0.
+
+         Grounding: I'll set each mesh's position.y such that its bottom is at y=0.3 (hover height). For BoxGeometry(w,h,d), bottom at -h/2, so position.y = 0.3 + h/2. For CylinderGeometry, if standing, bottom at -h/2, same. For ConeGeometry, bottom at -h/2 if base down. I'll compute.
+
+      // [commentary]    Actually, to simplify and ensure I don't mess up, I'll position all meshes with y=0.3 as the "center" or I'll just set position.y = 0.3 for all, and make geometries that sit on y=0 when center is at 0? No, if I set position.y = 0.3, and geometry center at 0, the bottom will be at 0.3 - height/2, which could be negative (below y=0). That would penetrate ground. I need to ensure bottom >= 0.3? The rule: "lowest point rests at y=0 or exactly on its support." and "Main hero object sits naturally on a pedestal/platform or hovers
+
+          // ─── AI-GENERATED PART 2: Animation Logic ───
+          function animateScene(scene, pieces) {
+      Here
+      }
+
+          // ─── AI-GENERATED PART 2b: Game Logic (single mechanic + win) ───
+
+
+          // ─── DETERMINISTIC: Execute Parts & Render Loop ───
+          let sceneMeshes = [];
+          try {
+            if (typeof buildSceneObjects === 'function') {
+              const result = buildSceneObjects(scene, THREE);
+              sceneMeshes = Array.isArray(result) ? result : [];
+            }
+          } catch (e) {
+            console.warn('[SIS 3D] Object generation error:', e);
+          }
+
+          // Wire game logic if present (SIS integration step — never AI-assembled)
+          let game = null;
+          try {
+            if (typeof buildGameLogic === 'function' && sceneMeshes.length > 0) {
+              game = buildGameLogic(scene, sceneMeshes, THREE);
+            }
+          } catch (e) {
+            console.warn('[SIS 3D] Game-logic init error (scene still renders):', e);
+          }
+
+          // Raycasting hover tooltip
+          const raycaster = new THREE.Raycaster();
+          const pointer = new THREE.Vector2();
+          const tooltip = document.getElementById('tooltip');
+          renderer.domElement.addEventListener('pointermove', (e) => {
+            pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+            pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(pointer, camera);
+            const hits = raycaster.intersectObjects(sceneMeshes, false);
+            if (hits.length > 0) {
+              const name = hits[0].object.name || hits[0].object.geometry?.type || 'Object';
+              tooltip.style.display = 'block';
+              tooltip.style.left = e.clientX + 12 + 'px';
+              tooltip.style.top = e.clientY + 12 + 'px';
+              tooltip.textContent = name;
+            } else {
+              tooltip.style.display = 'none';
+            }
+          });
+
+          const clock = new THREE.Clock();
+          const hudInfo = document.getElementById('hud-info');
+          const hudScore = document.getElementById('hud-score');
+          const hudLives = document.getElementById('hud-lives');
+          const hudWin = document.getElementById('hud-win');
+          const btnRestart = document.getElementById('btn-restart');
+          const optNote = "";
+          if (hudInfo) hudInfo.textContent = `Objects: ${sceneMeshes.length}${game ? ' | GAME: 1 mechanic' : ''} | Interactive 3D | 60 FPS${optNote}`;
+          if (btnRestart) btnRestart.addEventListener('click', () => {
+            try { if (game && typeof game.reset === 'function') game.reset(); } catch (e) {}
+            if (hudWin) hudWin.style.display = 'none';
+            btnRestart.style.display = 'none';
+          });
+
+          function animate() {
+            requestAnimationFrame(animate);
+            const dt = Math.min(clock.getDelta(), 0.05);
+            try {
+              if (typeof animateScene === 'function') {
+                animateScene(sceneMeshes, clock, THREE);
+              }
+            } catch (e) { /* animation error — scene still renders */ }
+            try {
+              if (game && typeof game.update === 'function') {
+                game.update(dt);
+                const score = typeof game.getScore === 'function' ? game.getScore() : 0;
+                const lives = typeof game.getLives === 'function' ? game.getLives() : 3;
+                const won = typeof game.hasWon === 'function' && game.hasWon();
+                const lost = typeof game.hasLost === 'function' && game.hasLost();
+                if (hudScore) hudScore.textContent = `SCORE ${score}/5`;
+                if (hudLives) hudLives.textContent = `LIVES ${lives}`;
+                if ((won || lost) && hudWin) {
+                  hudWin.style.display = 'block';
+                  hudWin.textContent = won ? '★ YOU WIN ★' : '✖ GAME OVER';
+                  hudWin.style.color = won ? '#FFD700' : '#FF6B6B';
+                  if (btnRestart) btnRestart.style.display = 'inline-block';
+                }
+                if (hudInfo) hudInfo.textContent = `Objects: ${sceneMeshes.length} | 60 FPS${optNote}`;
+              }
+            } catch (e) { /* game-logic error — scene still renders */ }
+            controls.update();
+            renderer.render(scene, camera);
+          }
+          animate();
+    </script>
+  </body>
+  <!-- SIS-QUALITY score=0.46 passed=false meshes=1 -->
+</html>

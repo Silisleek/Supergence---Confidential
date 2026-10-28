@@ -1,0 +1,1253 @@
+/* Maintained SIS workspace shell. Structural styles live in workspace.css;
+   this file defines the calm, neutral application surface and its states. */
+/* Shared tokens: supergence-tokens.css. */
+
+body.sis-workspace-ui {
+  background: var(--shell-page);
+  color: var(--shell-text);
+  font-family: var(--font-ui);
+}
+
+.sis-workspace-ui button,
+.sis-workspace-ui input,
+.sis-workspace-ui textarea {
+  font: inherit;
+}
+
+.sis-workspace-ui button {
+  cursor: pointer;
+}
+.sis-workspace-ui button:disabled {
+  cursor: default;
+}
+.sis-workspace-ui button:focus-visible,
+.sis-workspace-ui a:focus-visible,
+.sis-workspace-ui input:focus-visible {
+  outline: 2px solid var(--shell-accent);
+  outline-offset: 3px;
+}
+.sis-workspace-ui [hidden] {
+  display: none !important;
+}
+.shell-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.sis-workspace-ui .supergence-workspace {
+  background: var(--shell-page);
+  padding: 0 8px 8px var(--shell-rail);
+  transition: none;
+}
+
+.workspace-rail {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--shell-rail);
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  padding: 13px 8px 14px;
+  gap: 25px;
+  background: var(--shell-page);
+  z-index: 140;
+}
+.shell-brand {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  background: transparent;
+}
+.shell-brand img,
+.shell-assistant-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.shell-rail-main,
+.shell-rail-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+.shell-rail-bottom {
+  margin-top: auto;
+}
+.shell-rail-button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--shell-muted);
+  transition:
+    background 150ms ease,
+    color 150ms ease;
+}
+.shell-rail-button svg {
+  width: 21px;
+  height: 21px;
+}
+.shell-rail-button:hover,
+.shell-rail-button.is-active {
+  color: var(--shell-text);
+  background: var(--shell-surface);
+}
+.shell-tooltip {
+  position: absolute;
+  z-index: 150;
+  left: 49px;
+  background: var(--shell-raised);
+  color: var(--shell-text);
+  border: 0;
+  padding: 7px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+  border-radius: 7px;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-3px);
+  transition:
+    opacity 100ms ease,
+    transform 100ms ease;
+}
+.shell-rail-button:hover .shell-tooltip,
+.shell-rail-button:focus-visible .shell-tooltip {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.sis-workspace-ui .enterprise-header {
+  display: grid;
+  grid-template-columns: var(--shell-history) minmax(0, 1fr) auto;
+  gap: 0;
+  height: 56px;
+  padding: 0 16px 0 0;
+  border: 0;
+  background: var(--shell-page);
+  backdrop-filter: none;
+}
+.sis-workspace-ui .workspace-left-nav {
+  gap: 10px;
+  padding: 0 16px;
+  min-width: 0;
+  width: auto;
+}
+.shell-workspace-name {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  font-weight: 550;
+  white-space: nowrap;
+}
+.shell-workspace-orb {
+  width: 9px;
+  height: 9px;
+  background: var(--shell-success);
+  border-radius: 50%;
+}
+.shell-label {
+  color: var(--shell-subtle);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  margin-left: 8px;
+}
+.sis-workspace-ui .workspace-brand-pill {
+  padding-left: 22px;
+  gap: 9px;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--shell-text-secondary);
+  overflow: hidden;
+}
+.shell-assistant-mark {
+  display: grid;
+  place-items: center;
+  background: var(--shell-surface);
+  color: var(--shell-text-secondary);
+  width: 23px;
+  height: 23px;
+  border-radius: 7px;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 650;
+}
+#activeWorkspaceTitleDisplay {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 650px;
+}
+.sis-workspace-ui .workspace-right-actions {
+  gap: 14px;
+  overflow: visible;
+  padding: 0;
+  max-width: none;
+}
+.sis-workspace-ui .enterprise-model-pill {
+  gap: 8px;
+  background: none;
+  border: 0;
+  color: var(--shell-muted);
+  font-size: 12px;
+  padding: 0;
+}
+.enterprise-model-pill svg {
+  width: 16px;
+  height: 16px;
+}
+.shell-header-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--shell-border);
+}
+.shell-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  flex-shrink: 0;
+  color: var(--shell-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  transition:
+    background 150ms ease,
+    color 150ms ease;
+}
+.shell-icon-button svg {
+  width: 19px;
+  height: 19px;
+}
+.shell-icon-button:hover {
+  background: var(--shell-border);
+  color: var(--shell-text);
+}
+.sis-workspace-ui .enterprise-action-pill.active {
+  color: var(--shell-accent);
+  background: var(--shell-selected);
+  border: 0;
+}
+
+.sis-workspace-ui .workspace-columns-viewport {
+  border: 0;
+  border-radius: 13px;
+  background: var(--shell-panel);
+  min-height: 0;
+}
+.sis-workspace-ui .workspace-conversations-sidebar {
+  width: var(--shell-history);
+  min-width: var(--shell-history);
+  max-width: var(--shell-history);
+  background: var(--shell-sidebar);
+  border-color: var(--shell-surface);
+  padding: 0;
+}
+.shell-sidebar-heading {
+  height: 58px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 15px 0 20px;
+  color: var(--shell-text-secondary);
+  font-size: 13px;
+  font-weight: 550;
+}
+.sis-workspace-ui .sidebar-search-box {
+  margin: 0 14px 22px;
+  position: relative;
+  color: var(--shell-muted);
+}
+.sis-workspace-ui .sidebar-search-box svg {
+  width: 15px;
+  height: 15px;
+  top: 12px;
+  left: 12px;
+}
+.sis-workspace-ui .sidebar-search-box input {
+  width: 100%;
+  height: 39px;
+  background: var(--shell-surface);
+  border: 0;
+  color: var(--shell-text-secondary);
+  border-radius: 8px;
+  padding: 8px 53px 8px 36px;
+  font-size: 12px;
+  outline: none;
+}
+.sis-workspace-ui .sidebar-search-box input:focus {
+  border-color: var(--shell-border);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--shell-accent) 22%, transparent);
+}
+.sidebar-search-box kbd {
+  position: absolute;
+  right: 10px;
+  top: 13px;
+  color: var(--shell-subtle);
+  font: 10px var(--font-ui);
+  pointer-events: none;
+}
+.shell-sidebar-section {
+  padding: 0 20px 11px;
+  font-size: 10px;
+  color: var(--shell-subtle);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.sis-workspace-ui .sidebar-conv-list {
+  padding: 0 9px 12px;
+}
+.sis-workspace-ui .sidebar-conv-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  margin: 0 0 5px;
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+  color: var(--shell-text-secondary);
+  min-height: 58px;
+}
+.sis-workspace-ui .sidebar-conv-item:hover {
+  background: var(--shell-hover);
+  border-color: transparent;
+}
+.sis-workspace-ui .sidebar-conv-item.active {
+  background: var(--shell-surface);
+  border-color: var(--shell-border);
+}
+.shell-conv-select {
+  width: 100%;
+  min-width: 0;
+  background: none;
+  color: inherit;
+  border: 0;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  gap: 11px;
+  border-radius: inherit;
+}
+.shell-conv-icon {
+  width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border: 0;
+  color: var(--shell-muted);
+  border-radius: 9px;
+  background: var(--shell-surface);
+}
+.shell-conv-icon svg {
+  width: 15px;
+  height: 15px;
+}
+.sidebar-conv-item.active .shell-conv-icon {
+  color: var(--shell-text-secondary);
+  background: var(--shell-selected);
+  border-color: var(--shell-border);
+}
+.shell-conv-content {
+  min-width: 0;
+  flex: 1;
+}
+.shell-conv-top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+.sis-workspace-ui .sidebar-conv-item .conv-title {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--shell-text-secondary);
+  padding: 0;
+  margin: 0;
+  flex: 1;
+}
+.sis-workspace-ui .sidebar-conv-item.active .conv-title {
+  color: var(--shell-text);
+}
+.shell-conv-date {
+  color: var(--shell-subtle);
+  font-size: 10px;
+  flex-shrink: 0;
+}
+.sis-workspace-ui .sidebar-conv-item .conv-meta {
+  font-size: 11px;
+  color: var(--shell-muted);
+  line-height: 1.3;
+}
+.sis-workspace-ui .sidebar-conv-item .conv-delete-btn {
+  right: 8px;
+  top: 29px;
+  transform: none;
+  background: var(--shell-surface);
+  border: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  font-size: 12px;
+}
+.shell-history-empty {
+  color: var(--shell-muted);
+  font-size: 12px;
+  padding: 24px 12px;
+  text-align: center;
+  line-height: 1.7;
+}
+.shell-sidebar-footer {
+  margin-top: auto;
+  border: 0;
+  padding: 17px 17px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--shell-subtle);
+}
+.shell-connection {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.shell-connection > span:first-child {
+  height: 5px;
+  width: 5px;
+  border-radius: 50%;
+  background: var(--shell-subtle);
+}
+.shell-connection[data-state='connected'] > span:first-child {
+  background: var(--shell-success);
+}
+.shell-shortcut-link {
+  border: 0;
+  background: transparent;
+  color: var(--shell-muted);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px !important;
+}
+.shell-shortcut-link svg {
+  height: 12px;
+  width: 12px;
+}
+
+.sis-workspace-ui .workspace-main-column {
+  flex: 1 1 0;
+  min-width: 0;
+  background: var(--shell-panel);
+  border: 0;
+}
+.sis-workspace-ui .chat-scroll-container {
+  padding: 40px 48px 22px;
+  min-height: 0;
+  scroll-padding: 25px;
+  background: transparent;
+}
+.sis-workspace-ui .chat-turns-stream {
+  max-width: 790px;
+  width: 100%;
+  margin: 0 auto;
+  gap: 42px;
+}
+.sis-workspace-ui .chat-turn-item {
+  gap: 28px;
+  padding-bottom: 32px;
+  border-bottom: 0;
+}
+.sis-workspace-ui .user-query-pill-wrap {
+  justify-content: flex-end;
+}
+.sis-workspace-ui .user-query-pill {
+  max-width: 82%;
+  width: fit-content;
+  padding: 12px 18px;
+  border-radius: 16px;
+  border: 0;
+  background: var(--shell-surface);
+  color: var(--shell-text);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.6;
+  box-shadow: none;
+  text-align: left;
+  user-select: text;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.sis-workspace-ui .response-synthesis-card {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  box-shadow: none;
+  min-width: 0;
+}
+.sis-workspace-ui .response-agent-header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 15px;
+  font-size: 12px;
+  color: var(--shell-text-secondary);
+}
+.sis-workspace-ui .resp-agent-indicator {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: url('/images/supergence-logo.png') center / cover no-repeat;
+  box-shadow: none;
+  animation: none;
+}
+.sis-workspace-ui .resp-agent-indicator::after {
+  content: none;
+}
+.sis-workspace-ui .resp-agent-name {
+  font-size: 12px;
+  font-weight: 550;
+  letter-spacing: 0;
+  color: var(--shell-text-secondary);
+}
+.sis-workspace-ui .response-body-markdown {
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--shell-text-secondary);
+  user-select: text;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.sis-workspace-ui .response-body-markdown h1,
+.sis-workspace-ui .response-body-markdown h2,
+.sis-workspace-ui .response-body-markdown h3 {
+  color: var(--shell-text);
+  font-size: 17px;
+  font-weight: 580;
+  letter-spacing: -0.02em;
+  margin: 26px 0 12px;
+}
+.sis-workspace-ui .response-body-markdown p {
+  margin: 0 0 17px;
+}
+.sis-workspace-ui .response-body-markdown strong {
+  font-weight: 600;
+  color: var(--shell-text);
+}
+.sis-workspace-ui .response-body-markdown a {
+  color: var(--shell-accent);
+  text-decoration-color: var(--shell-accent);
+  text-underline-offset: 4px;
+}
+.sis-workspace-ui .response-body-markdown code {
+  background: var(--shell-surface);
+  color: var(--shell-text-secondary);
+  border-radius: 4px;
+}
+.sis-workspace-ui .response-body-markdown blockquote {
+  margin: 18px 0;
+  padding: 16px 20px;
+  background: var(--shell-hover);
+  border: 0;
+  border-radius: 10px;
+  color: var(--shell-text-secondary);
+}
+.chat-table-wrap {
+  overflow-x: auto;
+  margin: 22px 0;
+  border-radius: 10px;
+  background: var(--shell-panel);
+}
+.chat-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 12px;
+}
+.chat-table th,
+.chat-table td {
+  padding: 12px 16px;
+  vertical-align: top;
+}
+.chat-table th {
+  color: var(--shell-text-secondary);
+  font-weight: 550;
+  background: var(--shell-selected);
+}
+.chat-table tbody tr:nth-child(even) {
+  background: var(--shell-hover);
+}
+.sis-workspace-ui .response-body-markdown pre {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 0;
+  background: var(--shell-code);
+  border-radius: 10px;
+}
+.sis-workspace-ui .work-tree-section {
+  background: var(--shell-panel);
+  border: 0;
+  border-radius: 9px;
+}
+.sis-workspace-ui .work-tree-title {
+  color: var(--shell-muted) !important;
+  font-size: 12px !important;
+}
+.sis-workspace-ui .workspace-artifact-chip {
+  border-color: var(--shell-border) !important;
+  background: var(--shell-surface) !important;
+}
+.sis-workspace-ui .workspace-artifact-chip span {
+  color: var(--shell-text-secondary) !important;
+}
+
+.sis-workspace-ui .workspace-composer-wrap {
+  padding: 15px 36px 15px;
+  background: var(--shell-panel);
+  border: 0;
+  backdrop-filter: none;
+}
+.sis-workspace-ui .workspace-composer-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  max-width: 830px;
+  margin: 0 auto;
+  padding: 14px 14px 10px;
+  background: var(--shell-surface);
+  border: 0;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px #00000012;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+.sis-workspace-ui .workspace-composer-inner:focus-within {
+  border-color: var(--shell-border);
+  box-shadow: 0 8px 32px #00000018;
+}
+.sis-workspace-ui .workspace-textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 36px;
+  max-height: 180px;
+  outline: none;
+  font-size: 14px;
+  color: var(--shell-text);
+  line-height: 1.6;
+  padding: 0 3px;
+  background: none;
+  border: 0;
+  resize: none;
+}
+.sis-workspace-ui .workspace-textarea::placeholder {
+  color: var(--shell-muted);
+}
+.shell-composer-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+.shell-composer-leading {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.shell-composer-context {
+  color: var(--shell-muted);
+  font-size: 11px;
+}
+.sis-workspace-ui .workspace-composer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sis-workspace-ui .workspace-send-btn {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--shell-subtle);
+  color: var(--shell-accent-ink);
+  box-shadow: none;
+  transition: background 120ms ease;
+}
+.sis-workspace-ui .workspace-send-btn svg {
+  width: 18px;
+  height: 18px;
+}
+.sis-workspace-ui .workspace-send-btn.is-ready {
+  background: var(--shell-accent);
+}
+.sis-workspace-ui .workspace-send-btn:hover {
+  background: var(--shell-accent-hover);
+  transform: none;
+}
+.sis-workspace-ui .workspace-send-btn:disabled {
+  opacity: 0.45 !important;
+}
+.shell-composer-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 830px;
+  margin: 10px auto 0;
+  padding: 0 4px;
+  color: var(--shell-subtle);
+  font-size: 10px;
+  line-height: 1.5;
+}
+.shell-composer-hint kbd {
+  font: inherit;
+  color: var(--shell-subtle);
+}
+.shell-hint-divider {
+  color: var(--shell-subtle);
+  margin: 0 5px;
+}
+.shell-tools-menu {
+  position: absolute;
+  left: 12px;
+  bottom: 53px;
+  min-width: 215px;
+  border-radius: 11px;
+  padding: 6px;
+  border: 0;
+  background: var(--shell-surface);
+  box-shadow: 0 12px 40px #0005;
+  z-index: 20;
+}
+.shell-tools-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  width: 100%;
+  font-size: 12px;
+  text-align: left;
+  background: none;
+  color: var(--shell-text-secondary);
+  border: 0;
+  border-radius: 6px;
+}
+.shell-tools-menu button:hover {
+  background: var(--shell-hover);
+}
+.shell-tools-menu svg {
+  width: 16px;
+  height: 16px;
+  color: var(--shell-muted);
+}
+.shell-dictate {
+  position: relative;
+}
+.shell-dictate.is-listening {
+  color: var(--shell-text-secondary);
+  background: var(--shell-selected);
+}
+.shell-dictate .sbt-mic-meter {
+  position: absolute;
+  bottom: 1px;
+  left: 6px;
+  right: 6px;
+  height: 2px;
+  background: transparent;
+  overflow: hidden;
+}
+.shell-dictate .sbt-mic-meter-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--shell-success);
+}
+
+.sis-workspace-ui .chat-scroll-container:has(.shell-empty) {
+  justify-content: center;
+}
+.shell-empty {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 32px 15px 70px;
+  text-align: center;
+}
+.shell-empty-mark {
+  display: block;
+  margin: 0 auto 25px;
+  width: 84px;
+  height: 84px;
+  border: 0;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.shell-empty .shell-eyebrow {
+  color: var(--shell-muted);
+  margin-bottom: 14px;
+}
+.shell-empty h1 {
+  color: var(--shell-text);
+  font-size: clamp(28px, 2.7vw, 38px);
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.04em;
+  margin: 0 0 13px;
+}
+.shell-empty p {
+  max-width: 340px;
+  margin: 0 auto;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--shell-muted);
+}
+.shell-starters {
+  margin-top: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.shell-starters button {
+  padding: 8px 12px;
+  background: var(--shell-hover);
+  border: 0;
+  border-radius: 20px;
+  color: var(--shell-text-secondary);
+  font-size: 11px;
+}
+.shell-starters button:hover {
+  border-color: var(--shell-border);
+  background: var(--shell-hover);
+}
+
+.sis-workspace-ui .workspace-side-browser-pane {
+  background: var(--shell-panel);
+  border-color: var(--shell-border);
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.sis-workspace-ui .side-browser-header {
+  background: var(--shell-raised);
+  border-color: var(--shell-border);
+}
+.sis-workspace-ui .side-browser-action-btn {
+  background: var(--shell-surface);
+  color: var(--shell-text-secondary);
+  border-color: var(--shell-border);
+}
+.sis-workspace-ui #codeStudioPre {
+  background: var(--shell-code) !important;
+  color: var(--shell-text-secondary) !important;
+}
+.sis-workspace-ui #codeStudioTerminalDrawer {
+  background: var(--shell-code) !important;
+  border-color: var(--shell-border) !important;
+}
+.sis-workspace-ui #codeStudioTerminalOutput {
+  color: var(--shell-text-secondary) !important;
+}
+.sis-workspace-ui #codeStudioTerminalStatus {
+  color: var(--shell-success) !important;
+}
+
+.shell-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(440px, calc(100vw - 32px));
+  max-height: 85dvh;
+  border: 0;
+  border-radius: 16px;
+  padding: 27px;
+  color: var(--shell-text);
+  background: var(--shell-raised);
+  box-shadow: 0 20px 100px #0008;
+}
+.shell-dialog::backdrop {
+  background: var(--shell-backdrop);
+  backdrop-filter: blur(4px);
+}
+.shell-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+.shell-dialog h2 {
+  font-size: 21px;
+  font-weight: 550;
+  letter-spacing: -0.03em;
+  margin: 4px 0 0;
+}
+.shell-eyebrow {
+  display: block;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  color: var(--shell-muted);
+}
+.shell-dialog-description {
+  font-size: 13px;
+  color: var(--shell-muted);
+  margin-bottom: 25px;
+}
+.shell-guide-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  margin-top: 16px;
+  border-radius: 8px;
+  color: var(--shell-text);
+  background: var(--shell-surface);
+  text-decoration: none;
+}
+.shell-guide-link:hover {
+  color: var(--shell-accent);
+  background: var(--shell-selected);
+}
+.shell-preference {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+  padding: 17px 0;
+  border: 0;
+  cursor: pointer;
+}
+.shell-preference strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+}
+.shell-preference small {
+  display: block;
+  color: var(--shell-muted);
+  margin-top: 7px;
+  font-size: 11px;
+}
+.shell-preference input {
+  appearance: none;
+  position: relative;
+  width: 34px;
+  height: 18px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--shell-selected);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.shell-preference input::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--shell-muted);
+  transition: transform 150ms ease;
+}
+.shell-preference input:checked {
+  background: var(--shell-accent);
+  border-color: var(--shell-accent);
+}
+.shell-preference input:checked::before {
+  background: var(--shell-text);
+  transform: translateX(16px);
+}
+
+/* Retain the existing artifact and inspection views while matching the shell. */
+.sis-workspace-ui .create-agent-modal-card,
+.sis-workspace-ui .agent-browsers-modal-card,
+.sis-workspace-ui .workspace-tree-modal-card,
+.sis-workspace-ui .fifty-modal-card {
+  background: var(--shell-panel);
+  border: 0;
+  border-radius: 16px;
+  box-shadow: 0 24px 90px #0007;
+}
+.sis-workspace-ui .fifty-card {
+  background: var(--shell-surface);
+  border-color: var(--shell-border);
+  box-shadow: none;
+}
+.sis-workspace-ui .fifty-launch-btn {
+  background: var(--shell-selected);
+  border-color: var(--shell-border);
+  box-shadow: none;
+}
+.sis-workspace-ui .fifty-launch-btn:hover {
+  background: var(--shell-accent-hover);
+  border-color: var(--shell-border);
+  box-shadow: none;
+}
+.sis-workspace-ui .fifty-first-badge {
+  color: var(--shell-text-secondary);
+  background: var(--shell-selected);
+  border-color: var(--shell-border);
+}
+.sis-workspace-ui .fifty-status-banner {
+  background: var(--shell-panel);
+}
+.sis-workspace-ui .workspace-tree-modal-card .memory-kpi-card {
+  background: var(--shell-surface);
+  border-color: var(--shell-border);
+}
+.sis-workspace-ui .workspace-history-drawer {
+  background: var(--shell-panel);
+  border-color: var(--shell-border);
+}
+.sis-workspace-ui .workspace-history-drawer .drawer-history-item.active {
+  background: var(--shell-hover);
+  border-color: var(--shell-border);
+}
+.shell-preference-note {
+  color: var(--shell-muted);
+  font-size: 10px;
+  line-height: 1.7;
+  margin-top: 20px;
+}
+.shell-shortcut-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  font-size: 12px;
+  padding: 15px 0;
+  border: 0;
+}
+.shell-shortcut-row kbd {
+  font-size: 10px;
+  color: var(--shell-text-secondary);
+  padding: 5px 7px;
+  border: 0;
+  border-radius: 5px;
+  background: var(--shell-surface);
+}
+.sis-workspace-ui[data-compact='true'] .chat-turns-stream {
+  gap: 23px;
+}
+.sis-workspace-ui[data-compact='true'] .chat-turn-item {
+  gap: 18px;
+  padding-bottom: 17px;
+}
+
+@media (max-width: 1100px) and (min-width: 801px) {
+  :root {
+    --shell-history: 250px;
+    --shell-rail: 56px;
+  }
+  .sis-workspace-ui .chat-scroll-container {
+    padding: 30px 28px;
+  }
+  .shell-label {
+    display: none;
+  }
+  .sis-workspace-ui .workspace-brand-pill {
+    padding-left: 15px;
+  }
+}
+
+@media (max-width: 800px) {
+  :root {
+    --shell-rail: 50px;
+  }
+  .workspace-rail {
+    padding: 12px 4px;
+    gap: 22px;
+  }
+  .shell-rail-button {
+    width: 38px;
+    height: 38px;
+  }
+  .shell-rail-main {
+    gap: 8px;
+  }
+  .shell-tooltip {
+    display: none;
+  }
+  .sis-workspace-ui .supergence-workspace {
+    padding: 0 5px 5px var(--shell-rail);
+  }
+  .sis-workspace-ui .enterprise-header {
+    display: flex;
+    height: 52px;
+    min-height: 52px;
+    flex-wrap: nowrap;
+    padding: 0 7px;
+    gap: 8px;
+  }
+  .sis-workspace-ui .workspace-left-nav {
+    width: auto;
+    padding: 0;
+  }
+  .shell-workspace-name {
+    display: none;
+  }
+  .sis-workspace-ui .workspace-brand-pill {
+    flex: 1;
+    padding: 0;
+    font-size: 12px;
+  }
+  .shell-assistant-mark {
+    display: none;
+  }
+  .sis-workspace-ui .enterprise-model-pill,
+  .shell-header-divider {
+    display: none;
+  }
+  .sis-workspace-ui .workspace-right-actions {
+    width: auto;
+    flex-shrink: 0;
+  }
+  .sis-workspace-ui .workspace-conversations-sidebar {
+    width: min(288px, calc(100vw - 57px));
+    min-width: 0;
+    max-width: none;
+  }
+  .sis-workspace-ui .workspace-conversations-sidebar.mobile-open {
+    background: var(--shell-panel);
+    border: 0;
+    box-shadow: 12px 0 50px #0008;
+  }
+  .sis-workspace-ui .chat-scroll-container {
+    padding: 25px 17px 15px;
+  }
+  .sis-workspace-ui .chat-turn-item {
+    gap: 22px;
+    padding-bottom: 22px;
+  }
+  .sis-workspace-ui .user-query-pill {
+    max-width: 94%;
+    font-size: 13px;
+    padding: 10px 13px;
+  }
+  .sis-workspace-ui .response-body-markdown {
+    font-size: 13px;
+  }
+  .sis-workspace-ui .workspace-composer-wrap {
+    padding: 10px 10px 12px;
+  }
+  .sis-workspace-ui .workspace-composer-inner {
+    padding: 12px 10px 9px;
+    border-radius: 13px;
+  }
+  .sis-workspace-ui .workspace-textarea {
+    font-size: 16px;
+  }
+  .shell-composer-hint {
+    justify-content: center;
+    font-size: 9px;
+  }
+  .shell-composer-hint > span:last-child {
+    display: none;
+  }
+  .shell-empty {
+    padding: 20px 0 35px;
+  }
+  .shell-empty h1 {
+    font-size: 26px;
+  }
+  .shell-empty p {
+    font-size: 12px;
+  }
+  .shell-starters {
+    gap: 7px;
+    margin-top: 22px;
+  }
+  .shell-starters button {
+    font-size: 10px;
+    padding: 8px 10px;
+  }
+  .sis-workspace-ui .workspace-side-browser-pane {
+    border-left: 0;
+    border: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sis-workspace-ui *,
+  .sis-workspace-ui *::before,
+  .sis-workspace-ui *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* Generated source cards inherit the same borderless reading surface. */
+.sis-workspace-ui .pro-code-card {
+  border: 0 !important;
+  background: var(--shell-code) !important;
+  box-shadow: none !important;
+  border-radius: 12px !important;
+  white-space: normal;
+  padding: 0;
+}
+.sis-workspace-ui .pro-code-card > div {
+  background: var(--shell-panel) !important;
+  border: 0 !important;
+  color: var(--shell-text-secondary) !important;
+}
+.sis-workspace-ui .pro-code-card > div span {
+  color: var(--shell-text-secondary) !important;
+}
+.sis-workspace-ui .pro-code-card pre {
+  background: var(--shell-code) !important;
+  border: 0 !important;
+  white-space: pre;
+}
+.sis-workspace-ui .pro-code-card code {
+  background: transparent !important;
+}
+.sis-workspace-ui .pro-code-card button {
+  background: var(--shell-surface) !important;
+  color: var(--shell-text-secondary) !important;
+  border: 0 !important;
+}
+.sis-workspace-ui .shell-assistant-mark {
+  background: transparent;
+  border-radius: 50%;
+}
+.sis-workspace-ui .conv-avatar {
+  border: 0;
+  color: var(--shell-text-secondary);
+  background: var(--shell-surface);
+}
+.sis-workspace-ui .shell-header-divider {
+  background: transparent;
+}

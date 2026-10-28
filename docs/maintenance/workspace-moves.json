@@ -1,0 +1,1407 @@
+{
+  "createdAt": "2026-10-22T11:15:25.579Z",
+  "snapshot": "archives/workspace-cleanup-2026-10-22T11-15-11-813Z",
+  "moves": [
+    {
+      "from": ".tmp_probe.cjs",
+      "to": "tests/legacy/workspace-probe.cjs"
+    },
+    {
+      "from": "brain.md",
+      "to": "docs/architecture/brain.md"
+    },
+    {
+      "from": "CLAUDE_SIS_INTEGRATION_SPEC.md",
+      "to": "docs/architecture/CLAUDE_SIS_INTEGRATION_SPEC.md"
+    },
+    {
+      "from": "debug_turn.js",
+      "to": "tests/legacy/debug_turn.js"
+    },
+    {
+      "from": "dna_workspace_turn_verified.png",
+      "to": "test-results/legacy/root/dna_workspace_turn_verified.png"
+    },
+    {
+      "from": "jarvis-ui.html",
+      "to": "demos/legacy/jarvis-ui.html"
+    },
+    {
+      "from": "newfrontend.html",
+      "to": "demos/legacy/newfrontend.html"
+    },
+    {
+      "from": "run_playwright_verification.js",
+      "to": "tests/legacy/run_playwright_verification.js"
+    },
+    {
+      "from": "scene_3d.html",
+      "to": "demos/legacy/scene_3d.html"
+    },
+    {
+      "from": "sis_projects_showcase_verified.png",
+      "to": "test-results/legacy/root/sis_projects_showcase_verified.png"
+    },
+    {
+      "from": "SIS_SUPERINTELLIGENCE_BLUEPRINT.md",
+      "to": "docs/architecture/SIS_SUPERINTELLIGENCE_BLUEPRINT.md"
+    },
+    {
+      "from": "SUPERGENCE_EXPLAINED.md",
+      "to": "docs/architecture/SUPERGENCE_EXPLAINED.md"
+    },
+    {
+      "from": "systemfaces.html",
+      "to": "demos/legacy/systemfaces.html"
+    },
+    {
+      "from": "task_evaluation_results.json",
+      "to": "test-results/legacy/root/task_evaluation_results.json"
+    },
+    {
+      "from": "test_20_tasks.mjs",
+      "to": "tests/legacy/test_20_tasks.mjs"
+    },
+    {
+      "from": "test_check_frames.js",
+      "to": "tests/legacy/test_check_frames.js"
+    },
+    {
+      "from": "test_direct_game.png",
+      "to": "test-results/legacy/root/test_direct_game.png"
+    },
+    {
+      "from": "test_dots_chat_interface.mjs",
+      "to": "tests/legacy/test_dots_chat_interface.mjs"
+    },
+    {
+      "from": "test_dots_grok_perfect_capabilities.mjs",
+      "to": "tests/legacy/test_dots_grok_perfect_capabilities.mjs"
+    },
+    {
+      "from": "test_iframe_debug.js",
+      "to": "tests/legacy/test_iframe_debug.js"
+    },
+    {
+      "from": "test_iframe_nav.js",
+      "to": "tests/legacy/test_iframe_nav.js"
+    },
+    {
+      "from": "test_mastery_out.log",
+      "to": "test-results/legacy/root/test_mastery_out.log"
+    },
+    {
+      "from": "test_page_errors.js",
+      "to": "tests/legacy/test_page_errors.js"
+    },
+    {
+      "from": "test_root.html",
+      "to": "demos/legacy/test_root.html"
+    },
+    {
+      "from": "test_supergence_master_excellence_live.js",
+      "to": "tests/legacy/test_supergence_master_excellence_live.js"
+    },
+    {
+      "from": "test_supergence_startup_unlimited_live.js",
+      "to": "tests/legacy/test_supergence_startup_unlimited_live.js"
+    },
+    {
+      "from": "test_supergence_tools_and_design_capabilities.js",
+      "to": "tests/legacy/test_supergence_tools_and_design_capabilities.js"
+    },
+    {
+      "from": "test_supergence_unified.mjs",
+      "to": "tests/legacy/test_supergence_unified.mjs"
+    },
+    {
+      "from": "test_supergence_voxel_minecraft_live.js",
+      "to": "tests/legacy/test_supergence_voxel_minecraft_live.js"
+    },
+    {
+      "from": "verification.html",
+      "to": "demos/legacy/verification.html"
+    },
+    {
+      "from": "verify_dna_turn.js",
+      "to": "tests/legacy/verify_dna_turn.js"
+    },
+    {
+      "from": "verify_futuristic_designs.js",
+      "to": "tests/legacy/verify_futuristic_designs.js"
+    },
+    {
+      "from": "verify_hardware_completed.js",
+      "to": "tests/legacy/verify_hardware_completed.js"
+    },
+    {
+      "from": "verify_supergence_live.js",
+      "to": "tests/legacy/verify_supergence_live.js"
+    },
+    {
+      "from": "verify_tools_ui.mjs",
+      "to": "tests/legacy/verify_tools_ui.mjs"
+    },
+    {
+      "from": "Open UI REFERENCES",
+      "to": "references/Open UI REFERENCES"
+    },
+    {
+      "from": "Open-source-AI-Agents",
+      "to": "references/Open-source-AI-Agents"
+    },
+    {
+      "from": "Tools and apps",
+      "to": "references/Tools and apps"
+    },
+    {
+      "from": "skills-main",
+      "to": "references/skills-main"
+    },
+    {
+      "from": "system_prompts_leaks-main",
+      "to": "references/system_prompts_leaks-main"
+    },
+    {
+      "from": "extracted",
+      "to": "references/extracted"
+    },
+    {
+      "from": "UI",
+      "to": "demos/supergence-ui"
+    },
+    {
+      "from": "archive",
+      "to": "archives/legacy"
+    },
+    {
+      "from": "temp-extract",
+      "to": "archives/packaged-snapshot"
+    },
+    {
+      "from": "scripts/car_racing_loaded.png",
+      "to": "test-results/legacy/scripts/car_racing_loaded.png"
+    },
+    {
+      "from": "scripts/enterprise_ui_verified.png",
+      "to": "test-results/legacy/scripts/enterprise_ui_verified.png"
+    },
+    {
+      "from": "scripts/game_direct.png",
+      "to": "test-results/legacy/scripts/game_direct.png"
+    },
+    {
+      "from": "scripts/initial_load.png",
+      "to": "test-results/legacy/scripts/initial_load.png"
+    },
+    {
+      "from": "scripts/workspace_active.png",
+      "to": "test-results/legacy/scripts/workspace_active.png"
+    },
+    {
+      "from": "tests/chat_scrolled.png",
+      "to": "test-results/legacy/tests/chat_scrolled.png"
+    },
+    {
+      "from": "tests/comprehensive_e2e_verified.png",
+      "to": "test-results/legacy/tests/comprehensive_e2e_verified.png"
+    },
+    {
+      "from": "tests/conversation_scrolled.png",
+      "to": "test-results/legacy/tests/conversation_scrolled.png"
+    },
+    {
+      "from": "tests/project1_cyberpunk_solar_system.png",
+      "to": "test-results/legacy/tests/project1_cyberpunk_solar_system.png"
+    },
+    {
+      "from": "tests/project2_vector_space_odyssey.png",
+      "to": "test-results/legacy/tests/project2_vector_space_odyssey.png"
+    },
+    {
+      "from": "tests/project3_neural_synth_visualizer.png",
+      "to": "test-results/legacy/tests/project3_neural_synth_visualizer.png"
+    },
+    {
+      "from": "tests/sis_cockpit_artifacts_view.png",
+      "to": "test-results/legacy/tests/sis_cockpit_artifacts_view.png"
+    },
+    {
+      "from": "tests/sis_cockpit_project1_solar_system.png",
+      "to": "test-results/legacy/tests/sis_cockpit_project1_solar_system.png"
+    },
+    {
+      "from": "tests/sis_cockpit_project2_vector_space.png",
+      "to": "test-results/legacy/tests/sis_cockpit_project2_vector_space.png"
+    },
+    {
+      "from": "tests/sis_cockpit_project3_neural_synth.png",
+      "to": "test-results/legacy/tests/sis_cockpit_project3_neural_synth.png"
+    },
+    {
+      "from": "tests/sis_project1_solar_system.png",
+      "to": "test-results/legacy/tests/sis_project1_solar_system.png"
+    },
+    {
+      "from": "tests/sis_project2_vector_space.png",
+      "to": "test-results/legacy/tests/sis_project2_vector_space.png"
+    },
+    {
+      "from": "tests/sis_project3_neural_synth.png",
+      "to": "test-results/legacy/tests/sis_project3_neural_synth.png"
+    },
+    {
+      "from": "scripts/capture-all-views.mjs",
+      "to": "scripts/capture/capture-all-views.mjs"
+    },
+    {
+      "from": "scripts/capture_final_enterprise.cjs",
+      "to": "scripts/capture/capture_final_enterprise.cjs"
+    },
+    {
+      "from": "scripts/capture_rear_pose.js",
+      "to": "scripts/capture/capture_rear_pose.js"
+    },
+    {
+      "from": "scripts/capture_supergence_realism.js",
+      "to": "scripts/capture/capture_supergence_realism.js"
+    },
+    {
+      "from": "scripts/check-9router.mjs",
+      "to": "scripts/diagnostics/check-9router.mjs"
+    },
+    {
+      "from": "scripts/check-9router.py",
+      "to": "scripts/diagnostics/check-9router.py"
+    },
+    {
+      "from": "scripts/check_9router.py",
+      "to": "scripts/diagnostics/check_9router.py"
+    },
+    {
+      "from": "scripts/check_9router_db.py",
+      "to": "scripts/diagnostics/check_9router_db.py"
+    },
+    {
+      "from": "scripts/check_active_providers.py",
+      "to": "scripts/diagnostics/check_active_providers.py"
+    },
+    {
+      "from": "scripts/check_combos.py",
+      "to": "scripts/diagnostics/check_combos.py"
+    },
+    {
+      "from": "scripts/check_freeapi_db.cjs",
+      "to": "scripts/diagnostics/check_freeapi_db.cjs"
+    },
+    {
+      "from": "scripts/check_freeapi_keys.cjs",
+      "to": "scripts/diagnostics/check_freeapi_keys.cjs"
+    },
+    {
+      "from": "scripts/check_freeapi_models.cjs",
+      "to": "scripts/diagnostics/check_freeapi_models.cjs"
+    },
+    {
+      "from": "scripts/check_freeapi_settings.cjs",
+      "to": "scripts/diagnostics/check_freeapi_settings.cjs"
+    },
+    {
+      "from": "scripts/check_game_direct.cjs",
+      "to": "scripts/diagnostics/check_game_direct.cjs"
+    },
+    {
+      "from": "scripts/check_health.mjs",
+      "to": "scripts/diagnostics/check_health.mjs"
+    },
+    {
+      "from": "scripts/check_hud_speed.cjs",
+      "to": "scripts/diagnostics/check_hud_speed.cjs"
+    },
+    {
+      "from": "scripts/check_iframe.cjs",
+      "to": "scripts/diagnostics/check_iframe.cjs"
+    },
+    {
+      "from": "scripts/check_keys.py",
+      "to": "scripts/diagnostics/check_keys.py"
+    },
+    {
+      "from": "scripts/check_models.py",
+      "to": "scripts/diagnostics/check_models.py"
+    },
+    {
+      "from": "scripts/check_non_spam.mjs",
+      "to": "scripts/diagnostics/check_non_spam.mjs"
+    },
+    {
+      "from": "scripts/check_requests.py",
+      "to": "scripts/diagnostics/check_requests.py"
+    },
+    {
+      "from": "scripts/check_successful_models.cjs",
+      "to": "scripts/diagnostics/check_successful_models.cjs"
+    },
+    {
+      "from": "scripts/cols.py",
+      "to": "scripts/diagnostics/cols.py"
+    },
+    {
+      "from": "scripts/debug-playwright.mjs",
+      "to": "scripts/diagnostics/debug-playwright.mjs"
+    },
+    {
+      "from": "scripts/debug-split-generation.mjs",
+      "to": "scripts/diagnostics/debug-split-generation.mjs"
+    },
+    {
+      "from": "scripts/debug_app_mount_investigation.js",
+      "to": "scripts/diagnostics/debug_app_mount_investigation.js"
+    },
+    {
+      "from": "scripts/debug_hero_mount.js",
+      "to": "scripts/diagnostics/debug_hero_mount.js"
+    },
+    {
+      "from": "scripts/debug_iframe_mount.js",
+      "to": "scripts/diagnostics/debug_iframe_mount.js"
+    },
+    {
+      "from": "scripts/debug_iframe_network.js",
+      "to": "scripts/diagnostics/debug_iframe_network.js"
+    },
+    {
+      "from": "scripts/debug_scan.cjs",
+      "to": "scripts/diagnostics/debug_scan.cjs"
+    },
+    {
+      "from": "scripts/debug_sidebar_convs.cjs",
+      "to": "scripts/diagnostics/debug_sidebar_convs.cjs"
+    },
+    {
+      "from": "scripts/diagnose-syntax.mjs",
+      "to": "scripts/diagnostics/diagnose-syntax.mjs"
+    },
+    {
+      "from": "scripts/diagnose_html.mjs",
+      "to": "scripts/diagnostics/diagnose_html.mjs"
+    },
+    {
+      "from": "scripts/fix_opus_combo.py",
+      "to": "scripts/diagnostics/fix_opus_combo.py"
+    },
+    {
+      "from": "scripts/inspect_conversation.mjs",
+      "to": "scripts/diagnostics/inspect_conversation.mjs"
+    },
+    {
+      "from": "scripts/inspect_frame.js",
+      "to": "scripts/diagnostics/inspect_frame.js"
+    },
+    {
+      "from": "scripts/inspect_liquid_glass.mjs",
+      "to": "scripts/diagnostics/inspect_liquid_glass.mjs"
+    },
+    {
+      "from": "scripts/inspect_platform_ui.cjs",
+      "to": "scripts/diagnostics/inspect_platform_ui.cjs"
+    },
+    {
+      "from": "scripts/inspect_sandbox_raw.mjs",
+      "to": "scripts/diagnostics/inspect_sandbox_raw.mjs"
+    },
+    {
+      "from": "scripts/inspect_test3.js",
+      "to": "scripts/diagnostics/inspect_test3.js"
+    },
+    {
+      "from": "scripts/inspect_v6_scene.js",
+      "to": "scripts/diagnostics/inspect_v6_scene.js"
+    },
+    {
+      "from": "scripts/inspect_workspace.cjs",
+      "to": "scripts/diagnostics/inspect_workspace.cjs"
+    },
+    {
+      "from": "scripts/list_all_freellmapi_models.cjs",
+      "to": "scripts/diagnostics/list_all_freellmapi_models.cjs"
+    },
+    {
+      "from": "scripts/prototype_realistic_zebra.js",
+      "to": "demos/generators/prototype_realistic_zebra.js"
+    },
+    {
+      "from": "scripts/prototype_realistic_zebra_v2.js",
+      "to": "demos/generators/prototype_realistic_zebra_v2.js"
+    },
+    {
+      "from": "scripts/prototype_realistic_zebra_v3.js",
+      "to": "demos/generators/prototype_realistic_zebra_v3.js"
+    },
+    {
+      "from": "scripts/prototype_realistic_zebra_v4.js",
+      "to": "demos/generators/prototype_realistic_zebra_v4.js"
+    },
+    {
+      "from": "scripts/prototype_realistic_zebra_v5.js",
+      "to": "demos/generators/prototype_realistic_zebra_v5.js"
+    },
+    {
+      "from": "scripts/prototype_realistic_zebra_v6.js",
+      "to": "demos/generators/prototype_realistic_zebra_v6.js"
+    },
+    {
+      "from": "scripts/prototype_realistic_zebra_v7.js",
+      "to": "demos/generators/prototype_realistic_zebra_v7.js"
+    },
+    {
+      "from": "scripts/run_autonomous_opus46_supergence_test.js",
+      "to": "tests/manual/tools/run_autonomous_opus46_supergence_test.js"
+    },
+    {
+      "from": "scripts/test-clean-quantum.mjs",
+      "to": "tests/manual/tools/test-clean-quantum.mjs"
+    },
+    {
+      "from": "scripts/test-cloth-perfectionist.mjs",
+      "to": "tests/manual/tools/test-cloth-perfectionist.mjs"
+    },
+    {
+      "from": "scripts/test-dynamic-perfectionist.mjs",
+      "to": "tests/manual/tools/test-dynamic-perfectionist.mjs"
+    },
+    {
+      "from": "scripts/test-extract.mjs",
+      "to": "tests/manual/tools/test-extract.mjs"
+    },
+    {
+      "from": "scripts/test-fluid-perfectionist.mjs",
+      "to": "tests/manual/tools/test-fluid-perfectionist.mjs"
+    },
+    {
+      "from": "scripts/test-modular-split.mjs",
+      "to": "tests/manual/tools/test-modular-split.mjs"
+    },
+    {
+      "from": "scripts/test-perfectionist-3stage.mjs",
+      "to": "tests/manual/tools/test-perfectionist-3stage.mjs"
+    },
+    {
+      "from": "scripts/test-perfectionist-obsidian.mjs",
+      "to": "tests/manual/tools/test-perfectionist-obsidian.mjs"
+    },
+    {
+      "from": "scripts/test-perfectionist-pipeline.mjs",
+      "to": "tests/manual/tools/test-perfectionist-pipeline.mjs"
+    },
+    {
+      "from": "scripts/test-stream-verify.mjs",
+      "to": "tests/manual/tools/test-stream-verify.mjs"
+    },
+    {
+      "from": "scripts/test-supergence-elite-benchmark.mjs",
+      "to": "tests/manual/tools/test-supergence-elite-benchmark.mjs"
+    },
+    {
+      "from": "scripts/test-synth-perfectionist.mjs",
+      "to": "tests/manual/tools/test-synth-perfectionist.mjs"
+    },
+    {
+      "from": "scripts/test-turing-perfectionist.mjs",
+      "to": "tests/manual/tools/test-turing-perfectionist.mjs"
+    },
+    {
+      "from": "scripts/test_anatomical_geometry.js",
+      "to": "tests/manual/tools/test_anatomical_geometry.js"
+    },
+    {
+      "from": "scripts/test_assemble_micro_contracts.js",
+      "to": "tests/manual/tools/test_assemble_micro_contracts.js"
+    },
+    {
+      "from": "scripts/test_autoheal.mjs",
+      "to": "tests/manual/tools/test_autoheal.mjs"
+    },
+    {
+      "from": "scripts/test_autonomous_synthesis.js",
+      "to": "tests/manual/tools/test_autonomous_synthesis.js"
+    },
+    {
+      "from": "scripts/test_boot_imports.cjs",
+      "to": "tests/manual/tools/test_boot_imports.cjs"
+    },
+    {
+      "from": "scripts/test_callai_maxtokens.js",
+      "to": "tests/manual/tools/test_callai_maxtokens.js"
+    },
+    {
+      "from": "scripts/test_call_ai_direct.mjs",
+      "to": "tests/manual/tools/test_call_ai_direct.mjs"
+    },
+    {
+      "from": "scripts/test_call_opus.js",
+      "to": "tests/manual/tools/test_call_opus.js"
+    },
+    {
+      "from": "scripts/test_coding_capabilities.mjs",
+      "to": "tests/manual/tools/test_coding_capabilities.mjs"
+    },
+    {
+      "from": "scripts/test_content_mount.js",
+      "to": "tests/manual/tools/test_content_mount.js"
+    },
+    {
+      "from": "scripts/test_context_leak.mjs",
+      "to": "tests/manual/tools/test_context_leak.mjs"
+    },
+    {
+      "from": "scripts/test_dynamic_iframe.js",
+      "to": "tests/manual/tools/test_dynamic_iframe.js"
+    },
+    {
+      "from": "scripts/test_extract.js",
+      "to": "tests/manual/tools/test_extract.js"
+    },
+    {
+      "from": "scripts/test_freellmapi_call.cjs",
+      "to": "tests/manual/tools/test_freellmapi_call.cjs"
+    },
+    {
+      "from": "scripts/test_geometry_prompt.js",
+      "to": "tests/manual/tools/test_geometry_prompt.js"
+    },
+    {
+      "from": "scripts/test_hero_canvas.js",
+      "to": "tests/manual/tools/test_hero_canvas.js"
+    },
+    {
+      "from": "scripts/test_hud_screenshot.mjs",
+      "to": "tests/manual/tools/test_hud_screenshot.mjs"
+    },
+    {
+      "from": "scripts/test_iframe_visibility.cjs",
+      "to": "tests/manual/tools/test_iframe_visibility.cjs"
+    },
+    {
+      "from": "scripts/test_join_blocks.mjs",
+      "to": "tests/manual/tools/test_join_blocks.mjs"
+    },
+    {
+      "from": "scripts/test_kinematics_call.js",
+      "to": "tests/manual/tools/test_kinematics_call.js"
+    },
+    {
+      "from": "scripts/test_live_user_turn.cjs",
+      "to": "tests/manual/tools/test_live_user_turn.cjs"
+    },
+    {
+      "from": "scripts/test_load_conv.cjs",
+      "to": "tests/manual/tools/test_load_conv.cjs"
+    },
+    {
+      "from": "scripts/test_longest_block.mjs",
+      "to": "tests/manual/tools/test_longest_block.mjs"
+    },
+    {
+      "from": "scripts/test_mesh_gen.mjs",
+      "to": "tests/manual/tools/test_mesh_gen.mjs"
+    },
+    {
+      "from": "scripts/test_micro_contracts.js",
+      "to": "tests/manual/tools/test_micro_contracts.js"
+    },
+    {
+      "from": "scripts/test_model_raw.mjs",
+      "to": "tests/manual/tools/test_model_raw.mjs"
+    },
+    {
+      "from": "scripts/test_no_preamble.js",
+      "to": "tests/manual/tools/test_no_preamble.js"
+    },
+    {
+      "from": "scripts/test_opus_prompt_variations.js",
+      "to": "tests/manual/tools/test_opus_prompt_variations.js"
+    },
+    {
+      "from": "scripts/test_opus_subsystems.js",
+      "to": "tests/manual/tools/test_opus_subsystems.js"
+    },
+    {
+      "from": "scripts/test_page_logs.cjs",
+      "to": "tests/manual/tools/test_page_logs.cjs"
+    },
+    {
+      "from": "scripts/test_parse_spsc.mjs",
+      "to": "tests/manual/tools/test_parse_spsc.mjs"
+    },
+    {
+      "from": "scripts/test_prefill_or_maxtokens.js",
+      "to": "tests/manual/tools/test_prefill_or_maxtokens.js"
+    },
+    {
+      "from": "scripts/test_raw_iframe.js",
+      "to": "tests/manual/tools/test_raw_iframe.js"
+    },
+    {
+      "from": "scripts/test_realistic_textures.js",
+      "to": "tests/manual/tools/test_realistic_textures.js"
+    },
+    {
+      "from": "scripts/test_replacechild.js",
+      "to": "tests/manual/tools/test_replacechild.js"
+    },
+    {
+      "from": "scripts/test_spread_fix.mjs",
+      "to": "tests/manual/tools/test_spread_fix.mjs"
+    },
+    {
+      "from": "scripts/test_srcdoc_mount.js",
+      "to": "tests/manual/tools/test_srcdoc_mount.js"
+    },
+    {
+      "from": "scripts/test_tab_switching.cjs",
+      "to": "tests/manual/tools/test_tab_switching.cjs"
+    },
+    {
+      "from": "scripts/test_task1_fix.mjs",
+      "to": "tests/manual/tools/test_task1_fix.mjs"
+    },
+    {
+      "from": "scripts/test_unified_coding_turn.mjs",
+      "to": "tests/manual/tools/test_unified_coding_turn.mjs"
+    },
+    {
+      "from": "scripts/test_vault_modal.js",
+      "to": "tests/manual/tools/test_vault_modal.js"
+    },
+    {
+      "from": "scripts/verify-black-hole-game.mjs",
+      "to": "tests/manual/tools/verify-black-hole-game.mjs"
+    },
+    {
+      "from": "scripts/verify-bottom-deck.mjs",
+      "to": "tests/manual/tools/verify-bottom-deck.mjs"
+    },
+    {
+      "from": "scripts/verify-desktop-app.mjs",
+      "to": "tests/manual/tools/verify-desktop-app.mjs"
+    },
+    {
+      "from": "scripts/verify-elite-coding-ui.mjs",
+      "to": "tests/manual/tools/verify-elite-coding-ui.mjs"
+    },
+    {
+      "from": "scripts/verify-golden-gate-browser.mjs",
+      "to": "tests/manual/tools/verify-golden-gate-browser.mjs"
+    },
+    {
+      "from": "scripts/verify-obsidian-perfect.mjs",
+      "to": "tests/manual/tools/verify-obsidian-perfect.mjs"
+    },
+    {
+      "from": "scripts/verify-package.mjs",
+      "to": "tests/manual/tools/verify-package.mjs"
+    },
+    {
+      "from": "scripts/verify-packaged-app.mjs",
+      "to": "tests/manual/tools/verify-packaged-app.mjs"
+    },
+    {
+      "from": "scripts/verify-packaged-runtime.mjs",
+      "to": "tests/manual/tools/verify-packaged-runtime.mjs"
+    },
+    {
+      "from": "scripts/verify-perfectionist-live.mjs",
+      "to": "tests/manual/tools/verify-perfectionist-live.mjs"
+    },
+    {
+      "from": "scripts/verify-playwright-full.mjs",
+      "to": "tests/manual/tools/verify-playwright-full.mjs"
+    },
+    {
+      "from": "scripts/verify-settings.cjs",
+      "to": "tests/manual/tools/verify-settings.cjs"
+    },
+    {
+      "from": "scripts/verify-studio-simulation.mjs",
+      "to": "tests/manual/tools/verify-studio-simulation.mjs"
+    },
+    {
+      "from": "scripts/verify-three-preview.cjs",
+      "to": "tests/manual/tools/verify-three-preview.cjs"
+    },
+    {
+      "from": "scripts/verify_agent_naming.mjs",
+      "to": "tests/manual/tools/verify_agent_naming.mjs"
+    },
+    {
+      "from": "scripts/verify_agent_roster_response.mjs",
+      "to": "tests/manual/tools/verify_agent_roster_response.mjs"
+    },
+    {
+      "from": "scripts/verify_app_frontier_rsi.mjs",
+      "to": "tests/manual/tools/verify_app_frontier_rsi.mjs"
+    },
+    {
+      "from": "scripts/verify_app_mounted.js",
+      "to": "tests/manual/tools/verify_app_mounted.js"
+    },
+    {
+      "from": "scripts/verify_app_surface.mjs",
+      "to": "tests/manual/tools/verify_app_surface.mjs"
+    },
+    {
+      "from": "scripts/verify_artifacts_tab.js",
+      "to": "tests/manual/tools/verify_artifacts_tab.js"
+    },
+    {
+      "from": "scripts/verify_code_turn_ui.cjs",
+      "to": "tests/manual/tools/verify_code_turn_ui.cjs"
+    },
+    {
+      "from": "scripts/verify_enterprise_ui.cjs",
+      "to": "tests/manual/tools/verify_enterprise_ui.cjs"
+    },
+    {
+      "from": "scripts/verify_liquid_glass_ui.mjs",
+      "to": "tests/manual/tools/verify_liquid_glass_ui.mjs"
+    },
+    {
+      "from": "scripts/verify_liquid_glass_visuals.mjs",
+      "to": "tests/manual/tools/verify_liquid_glass_visuals.mjs"
+    },
+    {
+      "from": "scripts/verify_main_app_agent_roster.mjs",
+      "to": "tests/manual/tools/verify_main_app_agent_roster.mjs"
+    },
+    {
+      "from": "scripts/verify_model_unavailable_fixed.mjs",
+      "to": "tests/manual/tools/verify_model_unavailable_fixed.mjs"
+    },
+    {
+      "from": "scripts/verify_multi_cards_artifacts.mjs",
+      "to": "tests/manual/tools/verify_multi_cards_artifacts.mjs"
+    },
+    {
+      "from": "scripts/verify_racing_game.mjs",
+      "to": "tests/manual/tools/verify_racing_game.mjs"
+    },
+    {
+      "from": "scripts/verify_root_url.mjs",
+      "to": "tests/manual/tools/verify_root_url.mjs"
+    },
+    {
+      "from": "scripts/verify_supergence_self_knowledge.mjs",
+      "to": "tests/manual/tools/verify_supergence_self_knowledge.mjs"
+    },
+    {
+      "from": "tests/capture-vault-noodles.mjs",
+      "to": "tests/manual/capture-vault-noodles.mjs"
+    },
+    {
+      "from": "tests/capture-visual-states.js",
+      "to": "tests/manual/capture-visual-states.js"
+    },
+    {
+      "from": "tests/capture_auto_healer_screenshot.mjs",
+      "to": "tests/manual/capture_auto_healer_screenshot.mjs"
+    },
+    {
+      "from": "tests/capture_chat_focus_badge.mjs",
+      "to": "tests/manual/capture_chat_focus_badge.mjs"
+    },
+    {
+      "from": "tests/cdp-cpu-profile.mjs",
+      "to": "tests/manual/cdp-cpu-profile.mjs"
+    },
+    {
+      "from": "tests/check-console-canvas.js",
+      "to": "tests/manual/check-console-canvas.js"
+    },
+    {
+      "from": "tests/check-network-timing.js",
+      "to": "tests/manual/check-network-timing.js"
+    },
+    {
+      "from": "tests/check-network-turn.js",
+      "to": "tests/manual/check-network-turn.js"
+    },
+    {
+      "from": "tests/check-syntax.mjs",
+      "to": "tests/manual/check-syntax.mjs"
+    },
+    {
+      "from": "tests/comprehensive-e2e-scroll-and-survival.js",
+      "to": "tests/manual/comprehensive-e2e-scroll-and-survival.js"
+    },
+    {
+      "from": "tests/debug-browser-turn.js",
+      "to": "tests/manual/debug-browser-turn.js"
+    },
+    {
+      "from": "tests/debug_walkable_airport.mjs",
+      "to": "tests/manual/debug_walkable_airport.mjs"
+    },
+    {
+      "from": "tests/diag-direct-games.mjs",
+      "to": "tests/manual/diag-direct-games.mjs"
+    },
+    {
+      "from": "tests/diag-inspect-center-stage.mjs",
+      "to": "tests/manual/diag-inspect-center-stage.mjs"
+    },
+    {
+      "from": "tests/diagnose-chat-iframe.mjs",
+      "to": "tests/manual/diagnose-chat-iframe.mjs"
+    },
+    {
+      "from": "tests/diagnose-frames.mjs",
+      "to": "tests/manual/diagnose-frames.mjs"
+    },
+    {
+      "from": "tests/find-app-preview.js",
+      "to": "tests/manual/find-app-preview.js"
+    },
+    {
+      "from": "tests/find-chat-elements.js",
+      "to": "tests/manual/find-chat-elements.js"
+    },
+    {
+      "from": "tests/find-client-api.js",
+      "to": "tests/manual/find-client-api.js"
+    },
+    {
+      "from": "tests/find-execute-calls.js",
+      "to": "tests/manual/find-execute-calls.js"
+    },
+    {
+      "from": "tests/find-fetches.js",
+      "to": "tests/manual/find-fetches.js"
+    },
+    {
+      "from": "tests/find-iframes.js",
+      "to": "tests/manual/find-iframes.js"
+    },
+    {
+      "from": "tests/find-inp-listeners.js",
+      "to": "tests/manual/find-inp-listeners.js"
+    },
+    {
+      "from": "tests/find-inp-scripts.js",
+      "to": "tests/manual/find-inp-scripts.js"
+    },
+    {
+      "from": "tests/find-inp-usage.js",
+      "to": "tests/manual/find-inp-usage.js"
+    },
+    {
+      "from": "tests/find-inp-usage2.js",
+      "to": "tests/manual/find-inp-usage2.js"
+    },
+    {
+      "from": "tests/find-submit-fns.js",
+      "to": "tests/manual/find-submit-fns.js"
+    },
+    {
+      "from": "tests/find-ui.js",
+      "to": "tests/manual/find-ui.js"
+    },
+    {
+      "from": "tests/find-unified-route.js",
+      "to": "tests/manual/find-unified-route.js"
+    },
+    {
+      "from": "tests/inspect-breakthrough-video.js",
+      "to": "tests/manual/inspect-breakthrough-video.js"
+    },
+    {
+      "from": "tests/inspect-center-pane.js",
+      "to": "tests/manual/inspect-center-pane.js"
+    },
+    {
+      "from": "tests/inspect-deck.js",
+      "to": "tests/manual/inspect-deck.js"
+    },
+    {
+      "from": "tests/inspect-execute-turn.js",
+      "to": "tests/manual/inspect-execute-turn.js"
+    },
+    {
+      "from": "tests/inspect-execute-turn2.js",
+      "to": "tests/manual/inspect-execute-turn2.js"
+    },
+    {
+      "from": "tests/inspect-execute-turn3.js",
+      "to": "tests/manual/inspect-execute-turn3.js"
+    },
+    {
+      "from": "tests/inspect-execute-turn4.js",
+      "to": "tests/manual/inspect-execute-turn4.js"
+    },
+    {
+      "from": "tests/inspect-inp.js",
+      "to": "tests/manual/inspect-inp.js"
+    },
+    {
+      "from": "tests/inspect-layout.js",
+      "to": "tests/manual/inspect-layout.js"
+    },
+    {
+      "from": "tests/inspect-line-6680.js",
+      "to": "tests/manual/inspect-line-6680.js"
+    },
+    {
+      "from": "tests/inspect-open-workspace.js",
+      "to": "tests/manual/inspect-open-workspace.js"
+    },
+    {
+      "from": "tests/inspect-sis-conv.js",
+      "to": "tests/manual/inspect-sis-conv.js"
+    },
+    {
+      "from": "tests/inspect-unified-turn-client.js",
+      "to": "tests/manual/inspect-unified-turn-client.js"
+    },
+    {
+      "from": "tests/inspect-unified-turn-client2.js",
+      "to": "tests/manual/inspect-unified-turn-client2.js"
+    },
+    {
+      "from": "tests/inspect-user-turn-full.js",
+      "to": "tests/manual/inspect-user-turn-full.js"
+    },
+    {
+      "from": "tests/live-prompt-test.mjs",
+      "to": "tests/manual/live-prompt-test.mjs"
+    },
+    {
+      "from": "tests/master-benchmark.js",
+      "to": "tests/manual/master-benchmark.js"
+    },
+    {
+      "from": "tests/profile-browser-perf.mjs",
+      "to": "tests/manual/profile-browser-perf.mjs"
+    },
+    {
+      "from": "tests/reproduce-user-black-screen.js",
+      "to": "tests/manual/reproduce-user-black-screen.js"
+    },
+    {
+      "from": "tests/test-9router-models.js",
+      "to": "tests/manual/test-9router-models.js"
+    },
+    {
+      "from": "tests/test-9router-top-models.js",
+      "to": "tests/manual/test-9router-top-models.js"
+    },
+    {
+      "from": "tests/test-actual-turn-render.js",
+      "to": "tests/manual/test-actual-turn-render.js"
+    },
+    {
+      "from": "tests/test-agent-browser.mjs",
+      "to": "tests/manual/test-agent-browser.mjs"
+    },
+    {
+      "from": "tests/test-ai-eval.js",
+      "to": "tests/manual/test-ai-eval.js"
+    },
+    {
+      "from": "tests/test-all-9router.js",
+      "to": "tests/manual/test-all-9router.js"
+    },
+    {
+      "from": "tests/test-backend-agent-browser.mjs",
+      "to": "tests/manual/test-backend-agent-browser.mjs"
+    },
+    {
+      "from": "tests/test-backend-subsystems.mjs",
+      "to": "tests/manual/test-backend-subsystems.mjs"
+    },
+    {
+      "from": "tests/test-browser-3-projects.js",
+      "to": "tests/manual/test-browser-3-projects.js"
+    },
+    {
+      "from": "tests/test-browser.cjs",
+      "to": "tests/manual/test-browser.cjs"
+    },
+    {
+      "from": "tests/test-candidates.js",
+      "to": "tests/manual/test-candidates.js"
+    },
+    {
+      "from": "tests/test-chat-execution.mjs",
+      "to": "tests/manual/test-chat-execution.mjs"
+    },
+    {
+      "from": "tests/test-coding-expert-and-racer.js",
+      "to": "tests/manual/test-coding-expert-and-racer.js"
+    },
+    {
+      "from": "tests/test-coding-expert-engine.mjs",
+      "to": "tests/manual/test-coding-expert-engine.mjs"
+    },
+    {
+      "from": "tests/test-coding-turn.mjs",
+      "to": "tests/manual/test-coding-turn.mjs"
+    },
+    {
+      "from": "tests/test-coding-verification-suite.mjs",
+      "to": "tests/manual/test-coding-verification-suite.mjs"
+    },
+    {
+      "from": "tests/test-compare-models.js",
+      "to": "tests/manual/test-compare-models.js"
+    },
+    {
+      "from": "tests/test-debug-safeai.js",
+      "to": "tests/manual/test-debug-safeai.js"
+    },
+    {
+      "from": "tests/test-diagnose-json.js",
+      "to": "tests/manual/test-diagnose-json.js"
+    },
+    {
+      "from": "tests/test-e2e-dynamic-unlocked-tool.js",
+      "to": "tests/manual/test-e2e-dynamic-unlocked-tool.js"
+    },
+    {
+      "from": "tests/test-e2e-talk-scenario.js",
+      "to": "tests/manual/test-e2e-talk-scenario.js"
+    },
+    {
+      "from": "tests/test-endpoint-unified-turn.js",
+      "to": "tests/manual/test-endpoint-unified-turn.js"
+    },
+    {
+      "from": "tests/test-events.mjs",
+      "to": "tests/manual/test-events.mjs"
+    },
+    {
+      "from": "tests/test-extract-json.js",
+      "to": "tests/manual/test-extract-json.js"
+    },
+    {
+      "from": "tests/test-frame-inner.mjs",
+      "to": "tests/manual/test-frame-inner.mjs"
+    },
+    {
+      "from": "tests/test-hero-iframe.mjs",
+      "to": "tests/manual/test-hero-iframe.mjs"
+    },
+    {
+      "from": "tests/test-hud-integration.js",
+      "to": "tests/manual/test-hud-integration.js"
+    },
+    {
+      "from": "tests/test-json-newline.js",
+      "to": "tests/manual/test-json-newline.js"
+    },
+    {
+      "from": "tests/test-json-repair.js",
+      "to": "tests/manual/test-json-repair.js"
+    },
+    {
+      "from": "tests/test-launch-fighter.js",
+      "to": "tests/manual/test-launch-fighter.js"
+    },
+    {
+      "from": "tests/test-live-talk-eval.js",
+      "to": "tests/manual/test-live-talk-eval.js"
+    },
+    {
+      "from": "tests/test-live-theory-gen.js",
+      "to": "tests/manual/test-live-theory-gen.js"
+    },
+    {
+      "from": "tests/test-load-timing.mjs",
+      "to": "tests/manual/test-load-timing.mjs"
+    },
+    {
+      "from": "tests/test-network-iframe.mjs",
+      "to": "tests/manual/test-network-iframe.mjs"
+    },
+    {
+      "from": "tests/test-probe-full.js",
+      "to": "tests/manual/test-probe-full.js"
+    },
+    {
+      "from": "tests/test-quickai-opus.js",
+      "to": "tests/manual/test-quickai-opus.js"
+    },
+    {
+      "from": "tests/test-sdk-direct.js",
+      "to": "tests/manual/test-sdk-direct.js"
+    },
+    {
+      "from": "tests/test-simple-iframe.mjs",
+      "to": "tests/manual/test-simple-iframe.mjs"
+    },
+    {
+      "from": "tests/test-speed.js",
+      "to": "tests/manual/test-speed.js"
+    },
+    {
+      "from": "tests/test-supergence-coding-capabilities.mjs",
+      "to": "tests/manual/test-supergence-coding-capabilities.mjs"
+    },
+    {
+      "from": "tests/test-system-prompt.js",
+      "to": "tests/manual/test-system-prompt.js"
+    },
+    {
+      "from": "tests/test-theory-ai.mjs",
+      "to": "tests/manual/test-theory-ai.mjs"
+    },
+    {
+      "from": "tests/test-theory-synth.js",
+      "to": "tests/manual/test-theory-synth.js"
+    },
+    {
+      "from": "tests/test-tool-fix.mjs",
+      "to": "tests/manual/test-tool-fix.mjs"
+    },
+    {
+      "from": "tests/test-which-line.mjs",
+      "to": "tests/manual/test-which-line.mjs"
+    },
+    {
+      "from": "tests/test-workspace-flow.js",
+      "to": "tests/manual/test-workspace-flow.js"
+    },
+    {
+      "from": "tests/test_10_visual_polishes.mjs",
+      "to": "tests/manual/test_10_visual_polishes.mjs"
+    },
+    {
+      "from": "tests/test_15_core_pillars.mjs",
+      "to": "tests/manual/test_15_core_pillars.mjs"
+    },
+    {
+      "from": "tests/test_20_brain_roots.mjs",
+      "to": "tests/manual/test_20_brain_roots.mjs"
+    },
+    {
+      "from": "tests/test_autopreview_on_update.mjs",
+      "to": "tests/manual/test_autopreview_on_update.mjs"
+    },
+    {
+      "from": "tests/test_auto_healer.mjs",
+      "to": "tests/manual/test_auto_healer.mjs"
+    },
+    {
+      "from": "tests/test_chat_focus_and_blank_preview.mjs",
+      "to": "tests/manual/test_chat_focus_and_blank_preview.mjs"
+    },
+    {
+      "from": "tests/test_chat_focus_gating.mjs",
+      "to": "tests/manual/test_chat_focus_gating.mjs"
+    },
+    {
+      "from": "tests/test_click_enter.mjs",
+      "to": "tests/manual/test_click_enter.mjs"
+    },
+    {
+      "from": "tests/test_dynamic_zero_hardcoding.mjs",
+      "to": "tests/manual/test_dynamic_zero_hardcoding.mjs"
+    },
+    {
+      "from": "tests/test_fallback_leak_prevention.mjs",
+      "to": "tests/manual/test_fallback_leak_prevention.mjs"
+    },
+    {
+      "from": "tests/test_human_behavior_roots.mjs",
+      "to": "tests/manual/test_human_behavior_roots.mjs"
+    },
+    {
+      "from": "tests/test_human_identity_cognition.mjs",
+      "to": "tests/manual/test_human_identity_cognition.mjs"
+    },
+    {
+      "from": "tests/test_human_inventive_instinct.mjs",
+      "to": "tests/manual/test_human_inventive_instinct.mjs"
+    },
+    {
+      "from": "tests/test_live_build_and_render.mjs",
+      "to": "tests/manual/test_live_build_and_render.mjs"
+    },
+    {
+      "from": "tests/test_mobile_remote_experience.mjs",
+      "to": "tests/manual/test_mobile_remote_experience.mjs"
+    },
+    {
+      "from": "tests/test_preview_html_click.mjs",
+      "to": "tests/manual/test_preview_html_click.mjs"
+    },
+    {
+      "from": "tests/test_self_correction_and_task_resilience.mjs",
+      "to": "tests/manual/test_self_correction_and_task_resilience.mjs"
+    },
+    {
+      "from": "tests/test_teleport_view.mjs",
+      "to": "tests/manual/test_teleport_view.mjs"
+    },
+    {
+      "from": "tests/test_think_and_talk_no_build.mjs",
+      "to": "tests/manual/test_think_and_talk_no_build.mjs"
+    },
+    {
+      "from": "tests/verify-3d-game-coding-expert.js",
+      "to": "tests/manual/verify-3d-game-coding-expert.js"
+    },
+    {
+      "from": "tests/verify-50-methods-and-tools.js",
+      "to": "tests/manual/verify-50-methods-and-tools.js"
+    },
+    {
+      "from": "tests/verify-agent-personal-browsers.mjs",
+      "to": "tests/manual/verify-agent-personal-browsers.mjs"
+    },
+    {
+      "from": "tests/verify-agent-tabs-home.mjs",
+      "to": "tests/manual/verify-agent-tabs-home.mjs"
+    },
+    {
+      "from": "tests/verify-all-mastery.js",
+      "to": "tests/manual/verify-all-mastery.js"
+    },
+    {
+      "from": "tests/verify-all-system-upgrades.mjs",
+      "to": "tests/manual/verify-all-system-upgrades.mjs"
+    },
+    {
+      "from": "tests/verify-apex-ambition-browser.mjs",
+      "to": "tests/manual/verify-apex-ambition-browser.mjs"
+    },
+    {
+      "from": "tests/verify-boy-dog-and-artifacts-vault.mjs",
+      "to": "tests/manual/verify-boy-dog-and-artifacts-vault.mjs"
+    },
+    {
+      "from": "tests/verify-coding-chrome-e2e.mjs",
+      "to": "tests/manual/verify-coding-chrome-e2e.mjs"
+    },
+    {
+      "from": "tests/verify-conscious-subconscious-evolution.js",
+      "to": "tests/manual/verify-conscious-subconscious-evolution.js"
+    },
+    {
+      "from": "tests/verify-continuous-web-research.js",
+      "to": "tests/manual/verify-continuous-web-research.js"
+    },
+    {
+      "from": "tests/verify-conversation-dataset-mining.js",
+      "to": "tests/manual/verify-conversation-dataset-mining.js"
+    },
+    {
+      "from": "tests/verify-conversation-scroll.js",
+      "to": "tests/manual/verify-conversation-scroll.js"
+    },
+    {
+      "from": "tests/verify-dynamic-learning-engine.js",
+      "to": "tests/manual/verify-dynamic-learning-engine.js"
+    },
+    {
+      "from": "tests/verify-golden-gate-mastery.mjs",
+      "to": "tests/manual/verify-golden-gate-mastery.mjs"
+    },
+    {
+      "from": "tests/verify-learning-and-performance.js",
+      "to": "tests/manual/verify-learning-and-performance.js"
+    },
+    {
+      "from": "tests/verify-learning-system.js",
+      "to": "tests/manual/verify-learning-system.js"
+    },
+    {
+      "from": "tests/verify-login-reply.mjs",
+      "to": "tests/manual/verify-login-reply.mjs"
+    },
+    {
+      "from": "tests/verify-man-eating-noodles.mjs",
+      "to": "tests/manual/verify-man-eating-noodles.mjs"
+    },
+    {
+      "from": "tests/verify-multi-sis-systems.js",
+      "to": "tests/manual/verify-multi-sis-systems.js"
+    },
+    {
+      "from": "tests/verify-no-hardcoding-and-full-access.js",
+      "to": "tests/manual/verify-no-hardcoding-and-full-access.js"
+    },
+    {
+      "from": "tests/verify-possap-predictor.js",
+      "to": "tests/manual/verify-possap-predictor.js"
+    },
+    {
+      "from": "tests/verify-reactive-persona-toggle.js",
+      "to": "tests/manual/verify-reactive-persona-toggle.js"
+    },
+    {
+      "from": "tests/verify-rsi-system.js",
+      "to": "tests/manual/verify-rsi-system.js"
+    },
+    {
+      "from": "tests/verify-safety-and-error-handling.js",
+      "to": "tests/manual/verify-safety-and-error-handling.js"
+    },
+    {
+      "from": "tests/verify-scheduler-and-theories.js",
+      "to": "tests/manual/verify-scheduler-and-theories.js"
+    },
+    {
+      "from": "tests/verify-search-click-human.mjs",
+      "to": "tests/manual/verify-search-click-human.mjs"
+    },
+    {
+      "from": "tests/verify-stage6-e2e.mjs",
+      "to": "tests/manual/verify-stage6-e2e.mjs"
+    },
+    {
+      "from": "tests/verify-supergence-generative-mastery.mjs",
+      "to": "tests/manual/verify-supergence-generative-mastery.mjs"
+    },
+    {
+      "from": "tests/verify-supergence-workbench.mjs",
+      "to": "tests/manual/verify-supergence-workbench.mjs"
+    },
+    {
+      "from": "tests/verify-survival-api-and-brain.js",
+      "to": "tests/manual/verify-survival-api-and-brain.js"
+    },
+    {
+      "from": "tests/verify-survival-dom.js",
+      "to": "tests/manual/verify-survival-dom.js"
+    },
+    {
+      "from": "tests/verify-survival-system.js",
+      "to": "tests/manual/verify-survival-system.js"
+    },
+    {
+      "from": "tests/verify-universal-amazon-search.mjs",
+      "to": "tests/manual/verify-universal-amazon-search.mjs"
+    },
+    {
+      "from": "tests/verify-user-focus-tracker.js",
+      "to": "tests/manual/verify-user-focus-tracker.js"
+    },
+    {
+      "from": "tests/verify-user-turn-full-flow.mjs",
+      "to": "tests/manual/verify-user-turn-full-flow.mjs"
+    },
+    {
+      "from": "tests/verify-user-workspace-noodle-video.mjs",
+      "to": "tests/manual/verify-user-workspace-noodle-video.mjs"
+    },
+    {
+      "from": "tests/verify-zero-hardcoding.js",
+      "to": "tests/manual/verify-zero-hardcoding.js"
+    },
+    {
+      "from": "tests/verify_blank_preview_and_explicit_click.mjs",
+      "to": "tests/manual/verify_blank_preview_and_explicit_click.mjs"
+    }
+  ],
+  "previousSnapshots": ["archives/workspace-cleanup-2026-10-22T10-49-13-381Z"]
+}

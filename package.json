@@ -1,0 +1,129 @@
+{
+  "name": "sis-1.0",
+  "version": "1.0.0",
+  "description": "Superintelligence System — Brain-like AI orchestration",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "server": "node server/index.js",
+    "client": "vite --host",
+    "build": "node scripts/build.mjs",
+    "test": "npm run test:unit && npm run test:integration",
+    "test:integration": "node tests/verify-claude-sis-integration.mjs",
+    "icons": "node scripts/generate-icons.js",
+    "desktop:dev": "electron .",
+    "desktop:portable": "electron-builder --win portable --x64",
+    "desktop:build": "electron-builder --win nsis --x64",
+    "desktop:dist": "electron-builder --win --x64",
+    "lint": "eslint client server electron scripts/maintenance scripts/build.mjs scripts/dev.mjs tests/unit tests/browser vite.config.js eslint.config.js --max-warnings 0",
+    "format": "prettier --write client server electron scripts tests docs wiki demos *.md *.json *.js --ignore-unknown",
+    "format:check": "prettier --check client server electron scripts tests docs wiki demos *.md *.json *.js --ignore-unknown",
+    "test:unit": "node --test tests/unit/*.test.mjs",
+    "test:browser": "node tests/browser/workspace-smoke.mjs",
+    "check": "npm run lint && npm run format:check && npm run test:unit && npm run build",
+    "test:ui": "node tests/browser/workspace-ui.mjs",
+    "test:artifacts": "node tests/browser/chat-artifacts.mjs",
+    "test:learning-ui": "node tests/browser/learning-workspace.mjs",
+    "test:knowledge-ui": "node tests/browser/knowledge-library.mjs && node tests/browser/knowledge-context.mjs",
+    "test:evolution-ui": "node tests/browser/evolution-studio.mjs",
+    "test:memory-ui": "node tests/browser/conversation-memory.mjs",
+    "test:workspace-browser": "node tests/browser/workspace-browser.mjs",
+    "test:login": "node tests/browser/workspace-login.mjs",
+    "test:runtime": "node tests/browser/workspace-runtime.mjs",
+    "test:collaboration": "node tests/browser/workspace-collaboration.mjs",
+    "test:quality": "node scripts/benchmarks/creative-quality.mjs"
+  },
+  "dependencies": {
+    "acorn": "8.19.0",
+    "archiver": "^7.0.1",
+    "cheerio": "^1.0.0",
+    "chokidar": "^4.0.0",
+    "concurrently": "^9.0.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "esbuild": "0.25.12",
+    "express": "^4.21.0",
+    "fflate": "0.8.3",
+    "node-fetch": "^3.3.2",
+    "openai": "^4.67.0",
+    "pdfjs-dist": "6.4.299",
+    "playwright-core": "^1.63.0",
+    "sharp": "^0.33.5",
+    "three": "^0.186.0",
+    "uuid": "^10.0.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "electron": "^40.9.3",
+    "electron-builder": "^26.15.3",
+    "eslint": "^10.13.0",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10",
+    "tsx": "^4.23.15",
+    "vite": "^6.0.0"
+  },
+  "build": {
+    "appId": "com.supergence.sis",
+    "productName": "Supergence",
+    "copyright": "Copyright © 2026 Supergence",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "client/**/*",
+      "dist/**/*",
+      "server/**/*",
+      "electron/**/*",
+      "resources/**/*",
+      "package.json",
+      "demos/**/*"
+    ],
+    "extraResources": [
+      "resources/**/*"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "**/node_modules/sharp/**/*",
+      "**/node_modules/@img/**/*",
+      "**/node_modules/esbuild/**/*",
+      "**/node_modules/@esbuild/**/*"
+    ],
+    "win": {
+      "icon": "resources/icon.ico",
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Supergence SIS 1.0",
+      "uninstallDisplayName": "Supergence SIS 1.0",
+      "deleteAppDataOnUninstall": false,
+      "runAfterFinish": true,
+      "include": "build/installer.nsh"
+    },
+    "portable": {
+      "artifactName": "${productName}-Portable-${version}.${ext}"
+    }
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  }
+}

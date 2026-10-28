@@ -1,0 +1,62 @@
+[
+  {
+    "name": "astro-invasion-fps.html",
+    "success": false,
+    "error": "Unexpected non-whitespace character after JSON at position 46065 (line 1 column 46066)",
+    "prompt": "Create a complete Three.js r128 FPS: Astro Invasion. Spacecraft cockpit, enemy UFO waves, laser weapons, shield energy, particle explosions, 3D models, HUD showing health/ammo/score/radar. Single HTML file. No explanation - just working code."
+  },
+  {
+    "name": "physics-sandbox.html",
+    "success": false,
+    "error": "All retries exhausted",
+    "prompt": "Create a complete Three.js r128 physics sandbox. Interactive objects (boxes, spheres, cylinders), gravity slider, friction controls, collision detection, soft-body cloth sim, real-time physics stats. CDN Three.js r128. Single file. No explanation."
+  },
+  {
+    "name": "procedural-terrain.html",
+    "success": false,
+    "error": "All retries exhausted",
+    "prompt": "Three.js r128 procedural terrain: heightmap chunks, biome coloring, water, day/night, weather (rain/fog/snow), trees/rocks, first-person controls. Single HTML file. No explanation."
+  },
+  {
+    "name": "web-adventure.html",
+    "success": false,
+    "error": "All retries exhausted",
+    "prompt": "Three.js r128 fantasy adventure: dungeon exploration, inventory, NPC dialogue, puzzles, quests, torch lighting, sound zones. Single HTML file. No explanation."
+  },
+  {
+    "name": "space-simulator.html",
+    "success": false,
+    "error": "All retries exhausted",
+    "prompt": "Three.js r128 space sim: procedural planets, orbital mechanics, ship controls, asteroid mining, resources, stars, warp drive. Single HTML file. No explanation."
+  },
+  {
+    "name": "voxel-world.html",
+    "success": false,
+    "error": "All retries exhausted",
+    "prompt": "Three.js r128 voxel world: block terrain, day/night, weather, crafting, mining/building, caves, trees, inventory. Single HTML file. No explanation."
+  },
+  {
+    "name": "puzzle-platformer.html",
+    "success": false,
+    "error": "All retries exhausted",
+    "prompt": "Three.js r128 puzzle platformer: character movement, jumping, moving platforms, collectibles, levels, checkpoints, particles. Single HTML file. No explanation."
+  },
+  {
+    "name": "racing-game.html",
+    "success": false,
+    "error": "All retries exhausted",
+    "prompt": "Three.js r128 racing: anti-gravity cars, looping track, speed boosts, particle trails, lap timing, neon aesthetic. Single HTML file. No explanation."
+  },
+  {
+    "name": "tower-defense.html",
+    "success": false,
+    "error": "All retries exhausted",
+    "prompt": "Three.js r128 tower defense: curved path, laser/cannon/missile towers, enemy waves, upgrades, particles. Single HTML file. No explanation."
+  },
+  {
+    "name": "survival-horror.html",
+    "success": false,
+    "error": "All retries exhausted",
+    "prompt": "Three.js r128 horror: first-person, flashlight, fog, chasing enemy AI, heartbeat sounds, jump scares. Single HTML file. No explanation."
+  }
+]

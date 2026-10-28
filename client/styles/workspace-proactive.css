@@ -1,0 +1,139 @@
+.proactive-open {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary, #c5b8ac);
+  cursor: pointer;
+  border-radius: 12px;
+}
+.proactive-open:hover {
+  background: #2b211b;
+}
+.proactive-open span {
+  position: absolute;
+  right: 0;
+  top: 0;
+  background: #b88c69;
+  color: #080706;
+  border-radius: 50%;
+  font-size: 10px;
+  padding: 2px 5px;
+}
+.proactive-dialog {
+  margin: auto;
+  inset: 0;
+  background: #10100f;
+  color: #e8dfd5;
+  border: 0;
+  border-radius: 24px;
+  max-width: 640px;
+  width: calc(100% - 32px);
+  max-height: 85vh;
+  padding: 28px;
+  font-family: Manrope, system-ui, sans-serif;
+  box-shadow: 0 30px 100px #0009;
+}
+.proactive-settings {
+  margin-top: 20px;
+}
+.proactive-settings summary {
+  cursor: pointer;
+  color: #d7b697;
+  padding: 12px 0;
+}
+.proactive-dialog::backdrop {
+  background: #000a;
+  backdrop-filter: blur(10px);
+}
+.proactive-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.proactive-heading h2 {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 32px;
+  font-weight: 400;
+  margin: 0;
+}
+.proactive-dialog button,
+.proactive-dialog select {
+  border: 0;
+  background: #30251d;
+  color: #e4c5aa;
+  padding: 10px 15px;
+  border-radius: 12px;
+  cursor: pointer;
+  font: inherit;
+}
+.proactive-dialog p {
+  line-height: 1.65;
+  color: #bdb1a6;
+  font-size: 13px;
+}
+.proactive-dialog label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+.proactive-dialog input {
+  accent-color: #bd9472;
+}
+.proactive-dialog fieldset {
+  border: 0;
+  margin: 15px 0;
+  padding: 15px;
+  background: #181614;
+  border-radius: 16px;
+}
+.proactive-dialog small {
+  display: block;
+  width: 100%;
+  color: #9e9084;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.proactive-dialog label small {
+  padding-left: 24px;
+}
+.proactive-actions {
+  display: flex;
+  gap: 10px;
+}
+.proactive-dialog article {
+  background: #1c1815;
+  border-radius: 18px;
+  padding: 20px;
+  margin: 14px 0;
+}
+.proactive-dialog article h3 {
+  font-size: 16px;
+  margin: 0;
+}
+.proactive-dialog article button {
+  margin-top: 14px;
+}
+.task-progress-control {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  color: #baab9d;
+  font-size: 12px;
+  margin: 14px 0;
+}
+.task-progress-control button {
+  border: 0;
+  border-radius: 10px;
+  background: #30251d;
+  color: #e4c5aa;
+  padding: 7px 12px;
+  cursor: pointer;
+}

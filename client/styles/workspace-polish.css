@@ -1,0 +1,660 @@
+/*
+ * Workspace polish — supplied macOS Tahoe cursors, motion, modern colour, and
+ * resizable panels. This file is referenced by client/index.html; if it is ever
+ * removed the browser will fall back to an HTML 404 page for a CSS request and
+ * report a stray `<!DOCTYPE html>` parse error.
+ */
+
+/* ── Supplied cursors ─────────────────────────────────────────────────────── */
+:root {
+  --cursor-default: url('/images/cursors/default.cur') 2 3, default;
+  --cursor-text: url('/images/cursors/text.cur') 15 15, text;
+  --cursor-pointer: url('/images/cursors/pointer.cur') 6 3, pointer;
+  --cursor-help: url('/images/cursors/help.cur') 14 14, help;
+  --cursor-move: url('/images/cursors/move.cur') 10 10, move;
+  --cursor-unavailable: url('/images/cursors/unavailable.cur') 2 2, not-allowed;
+  --cursor-crosshair: url('/images/cursors/crosshair.cur') 15 15, crosshair;
+  --cursor-resize-h: url('/images/cursors/resize-horizontal.cur') 8 13, ew-resize;
+  --cursor-resize-v: url('/images/cursors/resize-vertical.cur') 11 10, ns-resize;
+}
+
+html,
+body,
+.sis-workspace-ui {
+  cursor: var(--cursor-default);
+}
+
+a,
+button,
+summary,
+label,
+select,
+[role='button'],
+.clickable,
+.nbtn,
+.shell-icon-button,
+.wb-sections button,
+.sidechat-button,
+.sg-profiles-trigger {
+  cursor: var(--cursor-pointer);
+}
+
+input,
+textarea,
+[contenteditable='true'],
+.workspace-textarea,
+.wb-address,
+.sidechat-input {
+  cursor: var(--cursor-text);
+}
+
+input[type='range'],
+.wb-stage {
+  cursor: var(--cursor-crosshair);
+}
+
+[data-cursor='help'],
+.access-trigger[data-mode='ask-before-executing'] {
+  cursor: var(--cursor-help);
+}
+
+:disabled,
+[aria-disabled='true'],
+.sidechat-button:disabled,
+button:disabled {
+  cursor: var(--cursor-unavailable);
+}
+
+/* ── Resizable panels ─────────────────────────────────────────────────────── */
+.sg-resize-handle {
+  position: relative;
+  flex: 0 0 7px;
+  width: 7px;
+  align-self: stretch;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  z-index: 60;
+  touch-action: none;
+}
+.sg-resize-handle::after {
+  content: '';
+  position: absolute;
+  inset: 0 3px;
+  border-radius: 999px;
+  background: transparent;
+  transition:
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+.sg-resize-handle:hover::after,
+.sg-resize-handle:focus-visible::after,
+.sg-resize-handle[data-dragging='true']::after {
+  background: var(--shell-accent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--shell-accent) 55%, transparent);
+}
+.sg-resize-handle:focus-visible {
+  outline: 2px solid var(--shell-accent);
+  outline-offset: -2px;
+}
+.sg-resize-handle[hidden] {
+  display: none;
+}
+.sg-resize-handle[data-edge='left'] {
+  cursor: var(--cursor-resize-h);
+}
+.sg-resize-handle[data-edge='right'] {
+  cursor: var(--cursor-resize-h);
+}
+body.sg-resizing {
+  user-select: none;
+}
+body.sg-resizing .workspace-conversations-sidebar {
+  transition: none !important;
+}
+body.sg-resizing * {
+  cursor: var(--cursor-resize-h) !important;
+}
+
+/* The browser panel takes a caller-controlled width once a divider is dragged. */
+.workspace-browser-panel[data-user-width='true'] {
+  flex: 0 0 var(--wb-user-width, clamp(410px, 38vw, 640px));
+  width: var(--wb-user-width, clamp(410px, 38vw, 640px));
+}
+
+/* ── Activity dock above the composer ─────────────────────────────────────── */
+.workspace-activity-dock {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  max-height: 168px;
+  margin: 0 0 8px;
+  padding: 9px 11px;
+  overflow: hidden auto;
+  scrollbar-width: thin;
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--shell-surface) 72%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--shell-border) 60%, transparent);
+  animation: sg-dock-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.workspace-activity-dock[hidden] {
+  display: none;
+}
+.workspace-activity-dock::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--shell-accent), transparent);
+  opacity: 0.7;
+}
+.sg-dock-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 18px;
+  color: var(--shell-muted);
+  font: 10px/1.4 var(--font-ui);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.sg-dock-head strong {
+  color: var(--shell-text-secondary);
+  font-weight: 550;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  font-size: 11px;
+}
+.sg-dock-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--shell-accent);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--shell-accent) 65%, transparent);
+  animation: sg-dock-ring 1.8s ease-out infinite;
+}
+.sg-dock-list {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sg-dock-row {
+  display: grid;
+  grid-template-columns: 13px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 4px;
+  border-radius: 6px;
+  color: var(--shell-muted);
+  font: 11px/1.5 var(--font-ui);
+  animation: sg-dock-row-in 180ms ease-out both;
+}
+.sg-dock-row[data-phase='call'] {
+  color: var(--shell-text-secondary);
+}
+.sg-dock-row[data-phase='result'] {
+  color: var(--shell-subtle);
+}
+.sg-dock-row[data-state='error'] {
+  color: var(--shell-error);
+}
+.sg-dock-row::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  margin-left: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.55;
+}
+.sg-dock-row[data-phase='call']::before {
+  background: var(--shell-accent);
+  opacity: 1;
+  animation: sg-dock-blink 1s ease-in-out infinite;
+}
+.sg-dock-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sg-dock-meta {
+  color: var(--shell-subtle);
+  font: 10px/1 var(--font-ui);
+  font-variant-numeric: tabular-nums;
+}
+.sg-dock-details {
+  grid-column: 2 / -1;
+  min-width: 0;
+}
+.sg-dock-details summary {
+  cursor: var(--cursor-pointer);
+  font-size: 10px;
+  color: var(--shell-muted);
+}
+.sg-dock-details pre {
+  font: 10px/1.5 var(--font-mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 160px;
+  overflow: auto;
+  color: var(--shell-text-secondary);
+}
+.sg-dock-toggle {
+  margin-left: auto;
+  padding: 2px 7px;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--shell-hover) 80%, transparent);
+  color: var(--shell-muted);
+  font: 10px var(--font-ui);
+  cursor: var(--cursor-pointer);
+}
+.sg-dock-toggle:hover {
+  color: var(--shell-text);
+  background: var(--shell-hover);
+}
+.workspace-activity-dock[data-collapsed='true'] .sg-dock-list {
+  display: none;
+}
+
+/* The per-turn trace stays in state; the dock above the composer is the visible
+   surface so the conversation itself carries only chat messages. */
+.chat-turn-item .work-tree-section,
+.chat-turns-stream .work-tree-section {
+  display: none !important;
+}
+
+/* ── Modern colour and motion ─────────────────────────────────────────────── */
+.sis-workspace-ui .workspace-columns-viewport {
+  background: var(--shell-panel);
+}
+
+.sis-workspace-ui .workspace-composer-inner {
+  position: relative;
+  border-radius: 16px;
+  background: var(--shell-raised);
+  box-shadow: none;
+  transition: background 150ms ease;
+}
+.sis-workspace-ui .workspace-composer-inner:focus-within {
+  box-shadow: none;
+  background: var(--shell-surface);
+}
+
+[data-agent-working='true'] .sis-workspace-ui .workspace-composer-inner,
+body[data-agent-working='true'] .workspace-composer-inner {
+  box-shadow: none;
+}
+
+/* Breathing accent while the agent works. */
+body[data-agent-working='true'] .shell-workspace-orb {
+  animation: sg-orb-breathe 1.7s ease-in-out infinite;
+}
+
+.chat-turn-item {
+  animation: sg-turn-in 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.user-query-pill {
+  animation: sg-pill-in 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition: box-shadow 200ms ease;
+}
+.user-query-pill:hover {
+  box-shadow: none;
+}
+
+.response-body-markdown {
+  transition: color 200ms ease;
+}
+
+/* Thinking / loading shimmer on the placeholder line. */
+.chat-working,
+.workspace-thinking,
+.chatgpt-thinking-dots {
+  display: inline-block;
+  background: linear-gradient(
+    92deg,
+    var(--shell-subtle) 0%,
+    var(--shell-text) 42%,
+    var(--shell-subtle) 78%
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: sg-shimmer 1.9s linear infinite;
+}
+
+/* Reply arrives with a soft accent sweep. */
+.response-synthesis-card {
+  position: relative;
+}
+.response-synthesis-card::after {
+  content: none;
+  position: absolute;
+  inset: -1px auto auto -1px;
+  width: 32px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--shell-accent), transparent);
+  opacity: 0;
+  animation: sg-reply-sweep 620ms ease-out;
+}
+body[data-agent-working='true'] .response-synthesis-card::after {
+  opacity: 0;
+}
+
+.wb-sections button {
+  transition:
+    color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+.wb-sections button:hover {
+  transform: translateY(-1px);
+}
+.wb-sections [aria-pressed='true'] {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--shell-accent) 22%, transparent);
+}
+
+.shell-icon-button,
+.access-button,
+.sidechat-button {
+  transition:
+    color 150ms ease,
+    background 150ms ease,
+    transform 150ms ease,
+    box-shadow 150ms ease;
+}
+.shell-icon-button:active,
+.access-button:active,
+.sidechat-button:active {
+  transform: scale(0.96);
+}
+
+.sidechat-message[data-sender='agent'] {
+  animation: sg-turn-in 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.sg-mascot img {
+  transition:
+    filter 260ms ease,
+    transform 260ms ease;
+}
+.sg-mascot[data-mascot-state='working'] img {
+  animation: sg-mascot-work 1.15s ease-in-out infinite;
+}
+.sg-mascot[data-mascot-state='replying'] img {
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--mascot-color, #b7bbdf) 55%, transparent));
+}
+
+/* Queue chip: follow-ups typed while a turn runs. */
+.sg-queue-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--shell-accent) 12%, transparent);
+  color: var(--shell-text-secondary);
+  font: 10px/1.4 var(--font-ui);
+  animation: sg-turn-in 200ms ease-out both;
+}
+
+@keyframes sg-shimmer {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -120% 0;
+  }
+}
+@keyframes sg-turn-in {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes sg-pill-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes sg-dock-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes sg-dock-row-in {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes sg-dock-ring {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--shell-accent) 60%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 7px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+@keyframes sg-dock-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+@keyframes sg-orb-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--shell-success) 55%, transparent);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 5px transparent;
+    transform: scale(1.28);
+  }
+}
+@keyframes sg-reply-sweep {
+  from {
+    opacity: 0.9;
+    width: 32px;
+  }
+  to {
+    opacity: 0;
+    width: 100%;
+  }
+}
+@keyframes sg-mascot-work {
+  0%,
+  100% {
+    transform: scale(1.42) rotate(0deg);
+  }
+  35% {
+    transform: scale(1.46) rotate(-3deg);
+  }
+  70% {
+    transform: scale(1.44) rotate(3deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-turn-item,
+  .user-query-pill,
+  .workspace-activity-dock,
+  .sg-dock-row,
+  .sg-dock-pulse,
+  .sidechat-message[data-sender='agent'],
+  .sg-mascot img,
+  body[data-agent-working='true'] .shell-workspace-orb {
+    animation: none !important;
+  }
+  .chat-working,
+  .workspace-thinking,
+  .chatgpt-thinking-dots {
+    animation: none !important;
+    color: var(--shell-muted);
+    background: none;
+    -webkit-text-fill-color: currentColor;
+  }
+  .response-synthesis-card::after {
+    display: none;
+  }
+}
+
+@media (max-width: 800px) {
+  .workspace-browser-panel[data-user-width='true'] {
+    width: 100%;
+    flex-basis: 100%;
+  }
+  .workspace-conversations-sidebar.mobile-open {
+    width: min(86vw, 360px) !important;
+    max-width: min(86vw, 360px) !important;
+    min-width: 0 !important;
+  }
+  .sg-resize-handle {
+    display: none;
+  }
+  .workspace-activity-dock {
+    max-height: 120px;
+  }
+}
+.chat-turn-item[data-queued='true'] .response-synthesis-card {
+  display: none !important;
+}
+
+/* Supplied animated wait cursor (16 frames from BusyS.ani), cycling while a
+   turn is running. Chromium animates the cursor property; other engines keep
+   the progress fallback. Only the root and its inert chrome animate — applying
+   animation-name to every descendant would cancel the shimmer, mascot, dock and
+   turn animations that make loading legible. */
+body[data-agent-working='true'],
+body[data-agent-working='true']
+  :is(
+    .sis-workspace-ui,
+    .workspace-columns-viewport,
+    .chat-scroll-container,
+    .workspace-composer-wrap
+  ) {
+  animation-name: sg-busy-cursor;
+  animation-duration: 1.44s;
+  animation-timing-function: steps(1, end);
+  animation-iteration-count: infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  body[data-agent-working='true'],
+  body[data-agent-working='true'] * {
+    animation-name: none !important;
+  }
+}
+@keyframes sg-busy-cursor {
+  0% {
+    cursor:
+      url('/images/cursors/busy-0.cur') 1 1,
+      progress;
+  }
+  6.25% {
+    cursor:
+      url('/images/cursors/busy-1.cur') 1 1,
+      progress;
+  }
+  12.5% {
+    cursor:
+      url('/images/cursors/busy-2.cur') 1 1,
+      progress;
+  }
+  18.75% {
+    cursor:
+      url('/images/cursors/busy-3.cur') 1 1,
+      progress;
+  }
+  25% {
+    cursor:
+      url('/images/cursors/busy-4.cur') 1 1,
+      progress;
+  }
+  31.25% {
+    cursor:
+      url('/images/cursors/busy-5.cur') 1 1,
+      progress;
+  }
+  37.5% {
+    cursor:
+      url('/images/cursors/busy-6.cur') 1 1,
+      progress;
+  }
+  43.75% {
+    cursor:
+      url('/images/cursors/busy-7.cur') 1 1,
+      progress;
+  }
+  50% {
+    cursor:
+      url('/images/cursors/busy-8.cur') 1 1,
+      progress;
+  }
+  56.25% {
+    cursor:
+      url('/images/cursors/busy-9.cur') 1 1,
+      progress;
+  }
+  62.5% {
+    cursor:
+      url('/images/cursors/busy-10.cur') 1 1,
+      progress;
+  }
+  68.75% {
+    cursor:
+      url('/images/cursors/busy-11.cur') 1 1,
+      progress;
+  }
+  75% {
+    cursor:
+      url('/images/cursors/busy-12.cur') 1 1,
+      progress;
+  }
+  81.25% {
+    cursor:
+      url('/images/cursors/busy-13.cur') 1 1,
+      progress;
+  }
+  87.5% {
+    cursor:
+      url('/images/cursors/busy-14.cur') 1 1,
+      progress;
+  }
+  93.75% {
+    cursor:
+      url('/images/cursors/busy-15.cur') 1 1,
+      progress;
+  }
+}

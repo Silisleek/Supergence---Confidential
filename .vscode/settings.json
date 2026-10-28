@@ -1,0 +1,17 @@
+{
+  "liveServer.settings.ignoreFiles": [
+    "**/workspace/**",
+    "**/data/**",
+    "**/scratch/**",
+    "**/.git/**",
+    "**/node_modules/**",
+    "**/*.log",
+    "**/*.json",
+    "**/*.md",
+    "**/.sandbox/**",
+    "**/theories/**",
+    "**/inventions/**"
+  ],
+  "liveServer.settings.donotShowInfoMsg": true,
+  "liveServer.settings.wait": 2000
+}

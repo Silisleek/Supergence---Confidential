@@ -1,0 +1,2615 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Supergence | SIS Workspace</title>
+    <link rel="icon" href="data:," />
+    <meta
+      name="description"
+      content="Supergence — Unified Superintelligent AI System powered by the SIS System, combining Hermes, OpenClaw, OpenDots, OpenBot and scientific domain swarms."
+    />
+    <script src="/scripts/reload-guard.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
+      media="print"
+      onload="this.media = 'all'"
+    />
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+
+    <!-- Importmap for Three.js ES Modules -->
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "/vendor/three/build/three.module.js",
+          "three/addons/": "/vendor/three/examples/jsm/"
+        }
+      }
+    </script>
+
+    <link rel="stylesheet" href="/styles/workspace.css" />
+    <link rel="stylesheet" href="/styles/supergence-tokens.css" />
+    <link rel="stylesheet" href="/styles/supergence-motion.css" />
+    <link rel="stylesheet" href="/styles/workspace-shell.css" />
+    <link rel="stylesheet" href="/styles/chat-artifacts.css" />
+    <link rel="stylesheet" href="/styles/workspace-theme.css" />
+    <link rel="stylesheet" href="/styles/workspace-learning.css" />
+    <link rel="stylesheet" href="/styles/workspace-browser.css" />
+    <link rel="stylesheet" href="/styles/workspace-cockpit.css" />
+    <link rel="stylesheet" href="/styles/workspace-access.css" />
+    <link rel="stylesheet" href="/styles/workspace-chat-files.css" />
+    <link rel="stylesheet" href="/styles/workspace-proactive.css" />
+    <link rel="stylesheet" href="/styles/workspace-styles-window.css" />
+    <link rel="stylesheet" href="/styles/workspace-polish.css" />
+    <link rel="stylesheet" href="/styles/workspace-agent-profiles.css" />
+    <link rel="stylesheet" href="/styles/workspace-sidechat.css" />
+    <link rel="icon" type="image/png" href="/images/supergence-logo.png" />
+  </head>
+
+  <body class="sis-workspace-ui">
+    <div id="supergenceWorkspace" class="supergence-workspace active">
+      <nav class="workspace-rail" aria-label="Workspace navigation">
+        <button
+          class="shell-brand"
+          data-shell-action="focus-chat"
+          aria-label="Supergence workspace"
+          title="Supergence"
+        >
+          <img src="/images/supergence-logo.png" alt="" />
+        </button>
+        <div class="shell-rail-main">
+          <button
+            id="railConversations"
+            type="button"
+            class="shell-rail-button is-active"
+            data-shell-action="conversations"
+            aria-label="Conversations"
+            title="Conversations"
+            aria-current="page"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path
+                d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H5l-3 3V11.5A7.5 7.5 0 0 1 9.5 4h3A7.5 7.5 0 0 1 20 11.5Z"
+              />
+              <path d="M7 10h8M7 14h5" /></svg
+            ><span class="shell-tooltip">Conversations</span>
+          </button>
+          <button
+            id="railAgents"
+            type="button"
+            class="shell-rail-button"
+            data-shell-action="agents"
+            aria-label="Agent browsers"
+            title="Agent browsers"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="5" y="6" width="14" height="14" rx="4" />
+              <path d="M12 3v3M2 12h3m14 0h3M9 11v3m6-3v3m-6 3h6" /></svg
+            ><span class="shell-tooltip">Agent browsers</span>
+          </button>
+          <button
+            id="railMemory"
+            type="button"
+            class="shell-rail-button"
+            data-shell-action="memory"
+            aria-label="Memory and reasoning"
+            title="Memory and reasoning"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="5" r="2.5" />
+              <circle cx="5" cy="18" r="2.5" />
+              <circle cx="19" cy="18" r="2.5" />
+              <path d="M12 7.5v4m0 0-7 4m7-4 7 4" /></svg
+            ><span class="shell-tooltip">Memory and reasoning</span>
+          </button>
+          <button
+            id="workspaceBtnArtifactsVault"
+            type="button"
+            class="shell-rail-button"
+            data-shell-action="artifacts"
+            aria-label="Artifacts"
+            title="Artifacts"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="4" y="7" width="16" height="13" rx="2" />
+              <path d="M3 7h18V4H3v3m6 5h6" /></svg
+            ><span class="shell-tooltip">Artifacts</span>
+          </button>
+          <button
+            id="workspaceBtnMastery"
+            type="button"
+            class="shell-rail-button"
+            data-shell-action="mastery"
+            aria-label="Mastery ledger"
+            title="Mastery ledger"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path
+                d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"
+              /></svg
+            ><span class="shell-tooltip">Mastery ledger</span>
+          </button>
+          <button
+            id="railFeatures"
+            type="button"
+            class="shell-rail-button"
+            data-shell-action="features"
+            aria-label="Feature catalogue"
+            title="Feature catalogue"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="4" y="4" width="6" height="6" rx="1.5" />
+              <rect x="14" y="4" width="6" height="6" rx="1.5" />
+              <rect x="4" y="14" width="6" height="6" rx="1.5" />
+              <rect x="14" y="14" width="6" height="6" rx="1.5" /></svg
+            ><span class="shell-tooltip">Feature catalogue</span>
+          </button>
+        </div>
+        <div class="shell-rail-bottom">
+          <button
+            id="railHelp"
+            type="button"
+            class="shell-rail-button"
+            data-shell-action="help"
+            aria-label="Help and guide"
+            title="Help and guide"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="9" />
+              <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 2-2.5 2-2.5 4m0 3h.01" /></svg
+            ><span class="shell-tooltip">Help and guide</span>
+          </button>
+          <button
+            id="railStylesWindow"
+            type="button"
+            class="shell-rail-button"
+            data-shell-action="styles"
+            aria-label="Styles and Settings"
+            title="Styles and Settings"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 2v20M2 12h20M7 7l10 10M17 7 7 17" /></svg
+            ><span class="shell-tooltip">Styles &amp; Settings</span>
+          </button>
+          <button
+            id="railPreferences"
+            type="button"
+            class="shell-rail-button"
+            data-shell-action="preferences"
+            aria-label="Preferences"
+            title="Preferences"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path
+                d="m9 4 1-2h4l1 2 2 1 2-.2 2 3.4-1.2 1.8v2l1.2 1.8-2 3.4-2-.2-2 1-1 2h-4l-1-2-2-1-2 .2-2-3.4 1.2-1.8v-2L3 8.2l2-3.4L7 5l2-1Z"
+              />
+              <circle cx="12" cy="11" r="3" /></svg
+            ><span class="shell-tooltip">Preferences</span>
+          </button>
+        </div>
+      </nav>
+      <header class="workspace-top-bar enterprise-header">
+        <div class="workspace-left-nav">
+          <button
+            id="sidebarToggleBtn"
+            type="button"
+            class="shell-icon-button"
+            onclick="toggleConversationsSidebar()"
+            aria-label="Toggle conversation sidebar"
+            aria-controls="workspaceConversationsSidebar"
+            title="Toggle sidebar"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="3" y="4" width="18" height="16" rx="2" />
+              <path d="M14 4v16" />
+            </svg>
+          </button>
+          <div class="shell-workspace-name">
+            <span class="shell-workspace-orb" aria-hidden="true"></span>Local workspace<span
+              class="shell-label"
+              >SIS</span
+            >
+          </div>
+        </div>
+        <div class="workspace-brand-pill">
+          <span class="shell-assistant-mark" aria-hidden="true"
+            ><img src="/images/supergence-logo.png" alt="" /></span
+          ><span id="activeWorkspaceTitleDisplay">New conversation</span>
+        </div>
+        <div class="workspace-right-actions">
+          <div
+            class="enterprise-model-pill"
+            title="Model routing is managed by the connected SIS server"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="5" y="6" width="14" height="14" rx="4" />
+              <path d="M12 3v3M2 12h3m14 0h3M9 11v3m6-3v3m-6 3h6" /></svg
+            ><span id="enterpriseModelLabel">Server managed</span>
+          </div>
+          <span class="shell-header-divider"></span>
+          <button
+            id="workspaceBtnSideBrowser"
+            type="button"
+            class="shell-icon-button enterprise-action-pill"
+            onclick="toggleWorkspaceSideBrowser()"
+            aria-label="Toggle preview panel"
+            title="Toggle preview panel"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="3" y="4" width="18" height="16" rx="2" />
+              <path d="M14 4v16" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Workspace Main Multi-Column Split -->
+      <div class="workspace-columns-viewport">
+        <!-- Enterprise Left Conversations Sidebar -->
+
+        <aside
+          class="workspace-conversations-sidebar"
+          id="workspaceConversationsSidebar"
+          aria-label="Conversation history"
+        >
+          <div class="shell-sidebar-heading">
+            <span>Conversations</span
+            ><button
+              id="shellNewConversation"
+              type="button"
+              class="shell-icon-button"
+              data-shell-action="new-chat"
+              aria-label="New conversation"
+              title="New conversation (Ctrl+Shift+O)"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+            </button>
+          </div>
+          <div class="sidebar-search-box">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="10.5" cy="10.5" r="6.5" />
+              <path d="m16 16 4 4" /></svg
+            ><input
+              type="search"
+              id="sidebarConvSearch"
+              placeholder="Search conversations"
+              aria-label="Search conversations"
+              oninput="filterSidebarConversations(this.value)"
+            /><kbd>Ctrl K</kbd>
+          </div>
+          <div class="shell-sidebar-section">Recent</div>
+          <div class="sidebar-conv-list" id="sidebarConvList">
+            <p class="shell-history-empty">Loading conversations&hellip;</p>
+          </div>
+          <div class="shell-sidebar-footer">
+            <span class="shell-connection" id="shellConnection" role="status"
+              ><span></span><span id="shellConnectionLabel">Connecting</span></span
+            ><button
+              class="shell-shortcut-link"
+              data-shell-action="help"
+              aria-label="Show keyboard shortcuts"
+            >
+              Shortcuts
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="9" />
+                <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 2-2.5 2-2.5 4m0 3h.01" />
+              </svg>
+            </button>
+          </div>
+        </aside>
+
+        <!-- Primary Conversation & Work Tree Column -->
+        <div class="workspace-main-column" id="mainWorkspaceColumn">
+          <div class="chat-scroll-container" id="chatScrollContainer">
+            <div id="chatTurnsStream" class="chat-turns-stream">
+              <div class="chat-turn-item" id="turn-active-root">
+                <!-- User Query Pill -->
+                <div class="user-query-pill-wrap" style="display: none">
+                  <div class="user-query-pill" id="userQueryPill"></div>
+                </div>
+
+                <div class="work-tree-section collapsed" id="workTreeSection" style="display: none">
+                  <div class="work-tree-header" id="workTreeToggle">
+                    <span
+                      class="work-tree-title"
+                      style="font-weight: 500; font-size: 12px; color: #94a3b8"
+                      >Execution Trace</span
+                    >
+                    <svg
+                      class="work-tree-chevron"
+                      id="workTreeChevron"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                  </div>
+
+                  <div class="work-tree-body" id="workTreeBody"></div>
+                </div>
+
+                <!-- Synthesized Response Markdown Area -->
+                <div class="response-synthesis-card" id="responseSynthesisCard">
+                  <div class="response-agent-header">
+                    <span class="resp-agent-indicator"></span>
+                    <span class="resp-agent-name" id="mainRespAgentName">Supergence</span>
+                  </div>
+                  <div class="response-body-markdown" id="mainResponseBody">
+                    Welcome to Supergence. Ready for instructions.
+                  </div>
+                  <!-- Multi-Card Artifact & Schematic Suite in Workspace -->
+                  <div class="workspace-deck-slot" id="workspaceDeckSlot"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="workspace-composer-wrap">
+            <div class="workspace-composer-inner">
+              <label class="shell-sr-only" for="workspaceInp">Message Supergence</label>
+              <textarea
+                id="workspaceInp"
+                class="workspace-textarea"
+                placeholder="Message Supergence..."
+                rows="1"
+              ></textarea>
+              <div class="shell-composer-toolbar">
+                <div class="shell-composer-leading">
+                  <button
+                    id="composerToolsButton"
+                    type="button"
+                    class="shell-icon-button"
+                    aria-label="Conversation tools"
+                    aria-expanded="false"
+                    aria-controls="composerToolsMenu"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.6"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
+                  </button>
+                  <span class="shell-composer-context">Supergence</span>
+                </div>
+                <div class="workspace-composer-actions">
+                  <button
+                    id="sbt-btn-dictate"
+                    type="button"
+                    class="shell-icon-button shell-dictate"
+                    aria-label="Dictate a message"
+                    aria-pressed="false"
+                    title="Dictate a message"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.6"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <rect x="9" y="3" width="6" height="12" rx="3" />
+                      <path d="M6 11v1a6 6 0 0 0 12 0v-1m-6 7v3m-3 0h6" /></svg
+                    ><span id="sbt-dictate-label" class="shell-sr-only">Dictate</span
+                    ><span class="sbt-mic-meter"><span class="sbt-mic-meter-fill"></span></span>
+                  </button>
+                  <button
+                    id="workspaceSendBtn"
+                    type="button"
+                    class="workspace-send-btn"
+                    aria-label="Send message"
+                    title="Send message"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.6"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M12 19V5m-6 6 6-6 6 6" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div id="composerToolsMenu" class="shell-tools-menu" hidden>
+                <button data-shell-action="creation-studio">
+                  Creation studio · local projects & textures
+                </button>
+                <button data-shell-action="new-chat">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 5v14M5 12h14" /></svg
+                  >New conversation
+                </button>
+                <button data-shell-action="agents">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <rect x="5" y="6" width="14" height="14" rx="4" />
+                    <path d="M12 3v3M2 12h3m14 0h3M9 11v3m6-3v3m-6 3h6" /></svg
+                  >Agent browsers
+                </button>
+                <button data-shell-action="artifacts">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <rect x="4" y="7" width="16" height="13" rx="2" />
+                    <path d="M3 7h18V4H3v3m6 5h6" /></svg
+                  >Browse artifacts
+                </button>
+                <button data-shell-action="memory">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <circle cx="12" cy="5" r="2.5" />
+                    <circle cx="5" cy="18" r="2.5" />
+                    <circle cx="19" cy="18" r="2.5" />
+                    <path d="M12 7.5v4m0 0-7 4m7-4 7 4" /></svg
+                  >Memory and reasoning
+                </button>
+                <button data-shell-action="styles">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 2v20M2 12h20M7 7l10 10M17 7 7 17" /></svg
+                  >Styles &amp; settings
+                </button>
+              </div>
+            </div>
+            <div class="shell-composer-hint">
+              <span id="shellComposerStatus" role="status"
+                >A workspace for ideas, research, and building.</span
+              ><span
+                ><kbd>Enter</kbd> to send <span class="shell-hint-divider">/</span>
+                <kbd>Shift Enter</kbd> for a new line</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <div class="workspace-side-browser-pane collapsed" id="workspaceSideBrowserPane">
+          <!-- CENTER STAGE DUAL-MODE LUXURY HEADER -->
+          <div class="side-browser-header">
+            <div style="display: flex; align-items: center; gap: 10px; min-width: 0">
+              <div
+                class="stage-nav-pill-group"
+                style="
+                  display: flex;
+                  gap: 3px;
+                  background: rgba(0, 0, 0, 0.5);
+                  padding: 3px;
+                  border-radius: 8px;
+                  border: 1px solid rgba(255, 255, 255, 0.08);
+                  flex-shrink: 0;
+                "
+              >
+                <button
+                  id="stageBtnArtifact"
+                  class="stage-mode-btn active"
+                  onclick="switchCenterStageMode('artifact')"
+                  style="
+                    background: rgba(16, 185, 129, 0.2);
+                    color: #34d399;
+                    border: 1px solid rgba(16, 185, 129, 0.4);
+                    border-radius: 6px;
+                    padding: 3px 10px;
+                    font-size: 11px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                  "
+                >
+                  <span
+                    class="status-pulse-dot"
+                    style="width: 6px; height: 6px; background: #10b981"
+                  ></span>
+                  <span>Stage</span>
+                </button>
+                <button
+                  id="stageBtnBrowser"
+                  class="stage-mode-btn"
+                  onclick="switchCenterStageMode('browser')"
+                  style="
+                    background: transparent;
+                    color: #94a3b8;
+                    border: 1px solid transparent;
+                    border-radius: 6px;
+                    padding: 3px 10px;
+                    font-size: 11px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                  "
+                >
+                  <span>🌐 Swarm</span>
+                </button>
+              </div>
+              <span
+                id="heroArtifactBadge"
+                style="
+                  font-size: 9.5px;
+                  font-weight: 700;
+                  color: #38bdf8;
+                  background: rgba(56, 189, 248, 0.1);
+                  border: 1px solid rgba(56, 189, 248, 0.25);
+                  padding: 2px 8px;
+                  border-radius: 4px;
+                  flex-shrink: 0;
+                "
+              >
+                STANDBY
+              </span>
+              <span
+                id="centerStageTitleText"
+                style="
+                  font-size: 12px;
+                  font-weight: 600;
+                  color: #f8fafc;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+                "
+                >Supergence Stage</span
+              >
+              <span id="heroArtifactFileName" style="display: none"></span>
+              <span id="heroArtifactMetric" style="display: none"></span>
+            </div>
+            <div
+              class="side-browser-actions"
+              style="display: flex; align-items: center; gap: 6px; flex-shrink: 0"
+            >
+              <button
+                id="stageBtnReloadArtifact"
+                class="side-browser-action-btn"
+                onclick="reloadCenterStageArtifact()"
+                title="Reload Active Artifact"
+              >
+                ↻ Reload
+              </button>
+              <button
+                id="stageBtnPopoutArtifact"
+                class="side-browser-action-btn"
+                onclick="popoutCenterStageArtifact()"
+                title="Open in Dedicated Tab"
+              >
+                ↗ Popout
+              </button>
+              <a id="heroStageOpenExternalBtn" href="#" target="_blank" style="display: none"></a>
+              <a
+                id="heroStageDownloadBtn"
+                href="#"
+                download
+                class="side-browser-action-btn"
+                style="text-decoration: none"
+                title="Download Artifact"
+                >⬇ Save</a
+              >
+              <button
+                class="side-browser-action-btn"
+                onclick="toggleExpandSideBrowser()"
+                title="Expand / Shrink Viewport Width"
+              >
+                ⛶ Expand
+              </button>
+              <button
+                class="side-browser-action-btn"
+                onclick="toggleWorkspaceSideBrowser(false)"
+                title="Hide Stage"
+              >
+                ✕
+              </button>
+              <span id="heroStageFooterStatus" style="display: none"></span>
+            </div>
+          </div>
+
+          <!-- ======================================================================
+             MODE A: HERO ARTIFACT VIEWPORT (SIMULATIONS, 3D WORLDS, WEBSITES, CANVAS)
+             ====================================================================== -->
+          <div
+            id="stageArtifactView"
+            style="
+              display: flex;
+              flex-direction: column;
+              flex: 1;
+              min-height: 0;
+              overflow: hidden;
+              background: #020408;
+            "
+          >
+            <!-- THE LIVE HERO IFRAME STAGE (NO BLACK SCREEN) -->
+            <div
+              style="
+                position: relative;
+                flex: 1;
+                min-height: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+              "
+            >
+              <!-- Active simulation iframe (for 3D Games, WebGL, HTML artifacts) -->
+              <iframe
+                id="sideHeroArtifactIframe"
+                src="about:blank"
+                style="
+                  width: 100%;
+                  height: 100%;
+                  flex: 1;
+                  min-height: 0;
+                  border: none;
+                  display: none;
+                "
+                allow="autoplay; fullscreen; camera; microphone"
+              ></iframe>
+
+              <!-- Pro Code Studio Stage (for C++, Python, TS/JS, Rust, Systems & Algorithms) -->
+              <div
+                id="sideHeroCodeStudio"
+                style="
+                  display: none;
+                  flex-direction: column;
+                  width: 100%;
+                  height: 100%;
+                  background: #070c16;
+                  color: #e2e8f0;
+                  font-family: var(--font-mono, monospace);
+                  overflow: hidden;
+                  z-index: 5;
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 6px 14px;
+                    background: rgba(15, 23, 42, 0.95);
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+                    flex-shrink: 0;
+                  "
+                >
+                  <div
+                    id="codeStudioTabs"
+                    style="display: flex; gap: 6px; align-items: center; overflow-x: auto"
+                  ></div>
+                  <div style="display: flex; gap: 8px; align-items: center">
+                    <button
+                      id="codeStudioRunBtn"
+                      onclick="runCurrentStudioFile()"
+                      style="
+                        background: rgba(16, 185, 129, 0.18);
+                        border: 1px solid rgba(16, 185, 129, 0.4);
+                        color: #34d399;
+                        padding: 4px 10px;
+                        border-radius: 5px;
+                        font-size: 11px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        gap: 5px;
+                      "
+                    >
+                      <span>▷</span> Run
+                    </button>
+                    <button
+                      id="codeStudioCopyBtn"
+                      onclick="copyCurrentStudioCode()"
+                      style="
+                        background: rgba(255, 255, 255, 0.06);
+                        border: 1px solid rgba(255, 255, 255, 0.12);
+                        color: #f8fafc;
+                        padding: 4px 10px;
+                        border-radius: 5px;
+                        font-size: 11px;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        gap: 5px;
+                      "
+                    >
+                      <span>📋</span> Copy
+                    </button>
+                    <button
+                      id="codeStudioDownloadBtn"
+                      onclick="downloadCurrentStudioFile()"
+                      style="
+                        background: rgba(255, 255, 255, 0.06);
+                        border: 1px solid rgba(255, 255, 255, 0.12);
+                        color: #94a3b8;
+                        padding: 4px 10px;
+                        border-radius: 5px;
+                        font-size: 11px;
+                        cursor: pointer;
+                      "
+                    >
+                      💾 Download
+                    </button>
+                  </div>
+                </div>
+                <div
+                  style="
+                    flex: 1;
+                    min-height: 0;
+                    display: flex;
+                    overflow: hidden;
+                    position: relative;
+                  "
+                >
+                  <div
+                    id="codeStudioLineNumbers"
+                    style="
+                      padding: 14px 10px 14px 14px;
+                      text-align: right;
+                      color: #475569;
+                      font-size: 12px;
+                      line-height: 1.6;
+                      user-select: none;
+                      border-right: 1px solid rgba(255, 255, 255, 0.06);
+                      background: #050912;
+                      min-width: 44px;
+                    "
+                  >
+                    1
+                  </div>
+                  <pre
+                    id="codeStudioPre"
+                    style="
+                      flex: 1;
+                      margin: 0;
+                      padding: 14px 18px;
+                      font-size: 12.5px;
+                      line-height: 1.6;
+                      overflow: auto;
+                      white-space: pre;
+                      background: #070c16;
+                      color: #f1f5f9;
+                      font-family: 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace;
+                    "
+                  ><code id="codeStudioCode"></code></pre>
+                </div>
+                <div
+                  id="codeStudioTerminalDrawer"
+                  style="
+                    height: 140px;
+                    flex-shrink: 0;
+                    border-top: 1px solid rgba(255, 255, 255, 0.08);
+                    background: #03060c;
+                    display: flex;
+                    flex-direction: column;
+                  "
+                >
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      align-items: center;
+                      padding: 4px 14px;
+                      background: rgba(15, 23, 42, 0.8);
+                      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                      font-size: 10px;
+                      font-weight: 700;
+                      letter-spacing: 0.05em;
+                      color: #94a3b8;
+                    "
+                  >
+                    <span style="display: flex; align-items: center; gap: 6px">
+                      <span
+                        style="
+                          width: 6px;
+                          height: 6px;
+                          border-radius: 50%;
+                          background: #10b981;
+                          display: inline-block;
+                        "
+                      ></span>
+                      EXECUTION TERMINAL & BENCHMARK HARNESS
+                    </span>
+                    <span id="codeStudioTerminalStatus" style="color: #10b981"
+                      >STATUS: 0 ERRORS • READY</span
+                    >
+                  </div>
+                  <pre
+                    id="codeStudioTerminalOutput"
+                    style="
+                      flex: 1;
+                      margin: 0;
+                      padding: 10px 14px;
+                      overflow: auto;
+                      font-size: 11.5px;
+                      line-height: 1.5;
+                      color: #38bdf8;
+                      font-family: 'JetBrains Mono', monospace;
+                      white-space: pre-wrap;
+                    "
+                  ></pre>
+                </div>
+              </div>
+
+              <!-- Synthesizing state / active progress HUD -->
+              <div
+                id="sideHeroSynthesizingPlaceholder"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: center;
+                  text-align: center;
+                  padding: 30px;
+                  width: 100%;
+                  height: 100%;
+                  background: #040711;
+                "
+              >
+                <div
+                  style="
+                    width: 52px;
+                    height: 52px;
+                    border-radius: 12px;
+                    background: rgba(37, 99, 235, 0.1);
+                    border: 1px solid rgba(37, 99, 235, 0.25);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 24px;
+                    margin-bottom: 14px;
+                    color: #38bdf8;
+                  "
+                >
+                  ⚡
+                </div>
+                <div
+                  id="heroSynthTitle"
+                  style="
+                    font-size: 15px;
+                    font-weight: 600;
+                    color: #f8fafc;
+                    margin-bottom: 6px;
+                    letter-spacing: 0.01em;
+                  "
+                >
+                  Supergence Interactive Stage
+                </div>
+                <div
+                  id="heroSynthDesc"
+                  style="font-size: 12px; color: #64748b; max-width: 380px; line-height: 1.5"
+                >
+                  Every requested 3D simulation, WebGL engine, web app, or code artifact
+                  materializes here automatically in real time at 60 FPS.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ======================================================================
+             MODE B: LIVE BROWSER SWARM VIEWPORT (PLAYWRIGHT & CDP CURSOR)
+             ====================================================================== -->
+          <div
+            id="stageBrowserView"
+            style="display: none; flex-direction: column; flex: 1; min-height: 0; overflow: hidden"
+          >
+            <!-- AGENT SWARM SELECTOR RIBBON -->
+            <div
+              class="agent-browser-ribbon"
+              id="sideAgentBrowserRibbon"
+              style="
+                padding: 6px 10px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+                gap: 6px;
+              "
+            >
+              <!-- Dynamically populated chips for every agent with colored pulse dots -->
+            </div>
+
+            <!-- CHROME MULTI-TAB STRIP -->
+            <div class="agent-browser-tab-strip" id="sideAgentBrowserTabStrip">
+              <!-- Dynamically populated Chrome tabs -->
+            </div>
+
+            <!-- BROWSER CHROME TOOLBAR -->
+            <div class="agent-browser-toolbar">
+              <button class="browser-btn" onclick="agentBrowserNavIndex('back')" title="Back">
+                ⮜
+              </button>
+              <button class="browser-btn" onclick="agentBrowserNavIndex('forward')" title="Forward">
+                ⮞
+              </button>
+              <button class="browser-btn" onclick="agentBrowserNavIndex('reload')" title="Reload">
+                ↻
+              </button>
+              <button class="browser-btn" onclick="agentBrowserNavIndex('home')" title="Agent Home">
+                🏠
+              </button>
+              <div class="browser-url-bar">
+                <span style="font-size: 11px; color: #10b981">🔒</span>
+                <input
+                  type="text"
+                  id="sideBrowserUrlInput"
+                  class="browser-url-input"
+                  placeholder="Enter URL or search term..."
+                  onkeydown="handleSideBrowserUrlKey(event)"
+                />
+                <button class="browser-go-btn" onclick="submitSideBrowserUrl()">Go</button>
+              </div>
+              <div style="display: flex; align-items: center; gap: 2px">
+                <button
+                  class="browser-btn"
+                  style="width: 20px; font-size: 10px"
+                  onclick="sendAgentScrollIndex(-350)"
+                  title="Scroll Page Up"
+                >
+                  ▲
+                </button>
+                <button
+                  class="browser-btn"
+                  style="width: 20px; font-size: 10px"
+                  onclick="sendAgentScrollIndex(350)"
+                  title="Scroll Page Down"
+                >
+                  ▼
+                </button>
+                <button
+                  class="browser-btn"
+                  style="width: 19px; font-size: 10px"
+                  onclick="setAgentBrowserZoomIndex(-0.15)"
+                  title="Zoom Out"
+                >
+                  −
+                </button>
+                <span
+                  id="sideZoomLabel"
+                  style="
+                    font-family: var(--font-mono);
+                    font-size: 9.5px;
+                    color: rgba(244, 240, 224, 0.6);
+                    min-width: 28px;
+                    text-align: center;
+                  "
+                  >100%</span
+                >
+                <button
+                  class="browser-btn"
+                  style="width: 19px; font-size: 10px"
+                  onclick="setAgentBrowserZoomIndex(0.15)"
+                  title="Zoom In"
+                >
+                  +
+                </button>
+              </div>
+              <button
+                class="browser-btn"
+                onclick="launchAgentInNativeChromeIndex()"
+                style="
+                  color: #38bdf8;
+                  font-weight: 700;
+                  width: auto;
+                  padding: 0 8px;
+                  font-size: 10px;
+                  border-color: rgba(56, 189, 248, 0.4);
+                  background: rgba(56, 189, 248, 0.15);
+                "
+                title="Open Real Native Desktop Google Chrome"
+              >
+                ↗ Real Chrome
+              </button>
+            </div>
+
+            <!-- LIVE VIEWPORT STAGE & CHATGPT-DOTS VIRTUAL CURSOR -->
+            <div
+              class="agent-browser-viewport-card"
+              style="flex: 1; display: flex; flex-direction: column; overflow: hidden"
+            >
+              <div
+                class="agent-browser-stage"
+                id="sideBrowserStage"
+                onwheel="handleAgentViewportWheelIndex(event)"
+                onclick="handleSideBrowserClick(event)"
+                oncontextmenu="
+                  handleSideBrowserContextMenu(event);
+                  return false;
+                "
+                onmousedown="handleSideBrowserMouseDown(event)"
+                onmouseup="handleSideBrowserMouseUp(event)"
+                onmousemove="handleSideBrowserMouseMove(event)"
+                style="flex: 1; min-height: 280px"
+              >
+                <img
+                  id="sideBrowserImg"
+                  class="agent-browser-frame-img"
+                  src=""
+                  alt="Agent Browser"
+                  style="display: none; width: 100%; height: 100%; object-fit: contain"
+                />
+                <div
+                  id="sideBrowserPlaceholder"
+                  style="
+                    font-size: 12px;
+                    color: rgba(244, 240, 224, 0.6);
+                    text-align: center;
+                    padding: 30px;
+                  "
+                >
+                  <div style="font-size: 36px; margin-bottom: 10px">🌐</div>
+                  <div
+                    id="sideBrowserPlaceholderName"
+                    style="font-weight: 700; color: #fff; margin-bottom: 4px; font-size: 14px"
+                  >
+                    Connecting to Personal Browser...
+                  </div>
+                  <div style="font-size: 11px; color: rgba(244, 240, 224, 0.4)">
+                    Live Playwright session streaming side-by-side with chat
+                  </div>
+                </div>
+
+                <!-- CHATGPT DOTS / GROKBOT VIRTUAL CURSOR OVERLAY -->
+                <div class="agent-cursor-layer" id="sideCursorLayer">
+                  <div class="agent-cursor-orb" id="sideCursorOrb" style="left: 50%; top: 50%">
+                    <div class="agent-cursor-pupil"></div>
+                    <div class="agent-cursor-badge" id="sideCursorBadge">Agent ✦</div>
+                    <div class="agent-cursor-ripple" id="sideCursorRipple"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- VIEWPORT STATUS & COORDINATES HUD -->
+              <div class="screen-card-label" style="padding: 4px 10px; font-size: 10px">
+                <span
+                  id="sideBrowserStatusLabel"
+                  style="
+                    font-weight: 600;
+                    color: #fff;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                  "
+                >
+                  <span
+                    id="sideActiveStatusDot"
+                    style="
+                      width: 7px;
+                      height: 7px;
+                      border-radius: 50%;
+                      background: #10b981;
+                      display: inline-block;
+                    "
+                  ></span>
+                  <span id="sideActiveTitleText">Agent Tab</span>
+                </span>
+                <span
+                  id="sideCursorCoordsHUD"
+                  style="
+                    font-family: var(--font-mono);
+                    font-size: 10px;
+                    color: rgba(244, 240, 224, 0.5);
+                  "
+                  >X: 640 | Y: 400</span
+                >
+              </div>
+            </div>
+
+            <!-- HUMAN ACTION CONTROLS DECK -->
+            <div class="agent-browser-deck" style="padding: 6px 10px; gap: 5px; flex-shrink: 0">
+              <div class="deck-row">
+                <span class="deck-label" style="font-size: 10px">Mouse:</span>
+                <div class="deck-mode-group">
+                  <button
+                    class="deck-mode-btn active"
+                    onclick="setAgentMouseModeIndex('left', this)"
+                  >
+                    🖱️ Left
+                  </button>
+                  <button class="deck-mode-btn" onclick="setAgentMouseModeIndex('right', this)">
+                    🔘 Right
+                  </button>
+                  <button class="deck-mode-btn" onclick="setAgentMouseModeIndex('double', this)">
+                    ⚡ 2x Click
+                  </button>
+                  <button class="deck-mode-btn" onclick="setAgentMouseModeIndex('drag', this)">
+                    👈 Drag
+                  </button>
+                </div>
+                <span class="deck-label" style="font-size: 10px; margin-left: 6px">Keys:</span>
+                <div class="deck-keys-group">
+                  <button class="deck-key-btn" onclick="sendAgentKeyIndex('Enter')">Enter ↵</button>
+                  <button class="deck-key-btn" onclick="sendAgentKeyIndex('Tab')">Tab ⇥</button>
+                  <button class="deck-key-btn" onclick="sendAgentKeyIndex('Backspace')">
+                    ⌫ Del
+                  </button>
+                </div>
+              </div>
+              <div class="deck-row" style="margin-top: 2px">
+                <input
+                  type="text"
+                  id="sideDirectTypeInput"
+                  class="deck-type-input"
+                  placeholder="Type text directly into focused element..."
+                  onkeydown="if (event.key === 'Enter') sendSideDirectText();"
+                />
+                <button class="deck-type-btn" onclick="sendSideDirectText()">Send Text</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dynamic Side-by-Side Agent Columns Container -->
+        <div class="side-agents-container" id="sideAgentsContainer">
+          <!-- Opened SIS System specialist columns mount here side-by-side -->
+        </div>
+
+        <!-- Right Sidebar (Progress + All SIS System Agents) matching reference image -->
+        <aside class="workspace-sidebar collapsed" id="workspaceSidebar">
+          <!-- Section 1: Progress (Past tasks & current plan) -->
+          <div class="sidebar-section">
+            <div class="sidebar-section-title">Progress</div>
+            <div class="progress-tasks-list" id="progressTasksList">
+              <div class="progress-task-item">
+                <span class="progress-task-icon">✓</span>
+                <span>Initialized Supergence neural architecture</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: SIS Systems (All specialized agents) -->
+          <div class="sidebar-section">
+            <div class="sidebar-section-header">
+              <div>
+                <div class="sidebar-section-title" style="margin-bottom: 2px">SIS Systems</div>
+                <div class="sidebar-section-subtitle">Click to open side-by-side</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px">
+                <button
+                  id="sidebarToggleBtnIndex"
+                  class="icon-add-btn"
+                  onclick="toggleSidebarCollapseIndex()"
+                  title="Collapse / Expand Sidebar"
+                >
+                  ⮜
+                </button>
+                <button
+                  id="sidebarCreateAgentBtn"
+                  class="icon-add-btn"
+                  title="Create New SIS Agent"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div class="sis-agents-list" id="sisAgentsList">
+              <!-- Dynamically populated agents with their authentic faces & names -->
+            </div>
+
+            <button id="sidebarCreateAgentBtnFull" class="create-agent-sidebar-btn">
+              <span>+</span>
+              <span>Create New SIS Agent</span>
+            </button>
+          </div>
+
+          <!-- Section 3: Routines & Continuous Tasks (Teach-a-Task) -->
+          <div class="sidebar-section" style="margin-top: 16px">
+            <div class="sidebar-section-header">
+              <div>
+                <div class="sidebar-section-title" style="margin-bottom: 2px">
+                  Routines & Continuous Tasks
+                </div>
+                <div class="sidebar-section-subtitle">Teach-a-Task record & replay</div>
+              </div>
+              <button
+                id="sidebarTeachTaskBtnIndex"
+                class="icon-add-btn"
+                onclick="openAppTeachTaskModal()"
+                title="Teach a Task"
+              >
+                +
+              </button>
+            </div>
+            <div class="progress-tasks-list" id="appRoutinesList">
+              <!-- Dynamically populated routines -->
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- ==========================================================================
+       CREATE NEW SIS AGENT MODAL
+       ========================================================================== -->
+    <div id="createAgentModal" class="create-agent-modal-overlay">
+      <div class="create-agent-modal-card">
+        <div class="modal-card-header">
+          <div>
+            <span class="modal-title">Create New SIS System Agent</span>
+            <span class="modal-subtitle"
+              >Define custom domain specialization, research rules & tasks</span
+            >
+          </div>
+          <button id="closeCreateAgentModalBtn" class="modal-close-btn">✕</button>
+        </div>
+
+        <form id="createAgentForm" class="modal-form">
+          <div class="form-group">
+            <label>Agent Name</label>
+            <input
+              type="text"
+              id="newAgentName"
+              placeholder="e.g. Quantum Cryptography Specialist"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Specialized Domain & Field</label>
+            <input
+              type="text"
+              id="newAgentDomain"
+              placeholder="e.g. Post-Quantum Algorithms, Lattice Cryptography"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Custom Instructions & Autonomous Tasks</label>
+            <textarea
+              id="newAgentPrompt"
+              rows="3"
+              placeholder="Describe the specific objectives, research instructions, rules, and specialized tasks for this agent..."
+              required
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Organism Aura Color</label>
+            <div class="color-picker-row">
+              <label class="color-radio"
+                ><input type="radio" name="agentColor" value="#34D399" checked /><span
+                  style="background: #34d399"
+                ></span
+              ></label>
+              <label class="color-radio"
+                ><input type="radio" name="agentColor" value="#38BDF8" /><span
+                  style="background: #38bdf8"
+                ></span
+              ></label>
+              <label class="color-radio"
+                ><input type="radio" name="agentColor" value="#9F7CEF" /><span
+                  style="background: #9f7cef"
+                ></span
+              ></label>
+              <label class="color-radio"
+                ><input type="radio" name="agentColor" value="#FBBF24" /><span
+                  style="background: #fbbf24"
+                ></span
+              ></label>
+              <label class="color-radio"
+                ><input type="radio" name="agentColor" value="#F87171" /><span
+                  style="background: #f87171"
+                ></span
+              ></label>
+              <label class="color-radio"
+                ><input type="radio" name="agentColor" value="#F1CDE2" /><span
+                  style="background: #f1cde2"
+                ></span
+              ></label>
+              <label class="color-radio"
+                ><input type="radio" name="agentColor" value="#C6CD85" /><span
+                  style="background: #c6cd85"
+                ></span
+              ></label>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" id="cancelCreateAgentBtn" class="btn-secondary">Cancel</button>
+            <button type="submit" id="submitCreateAgentBtn" class="btn-primary">
+              Awaken & Specialize Agent
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ==========================================================================
+       AGENT PERSONAL BROWSERS SWARM MODAL (CHATGPT DOTS & GROKBOT VIRTUAL CURSORS)
+       ========================================================================== -->
+    <div id="agentBrowsersModal" class="agent-browsers-modal-overlay">
+      <div class="agent-browsers-modal-card">
+        <div class="modal-card-header">
+          <div>
+            <span class="modal-title" style="display: flex; align-items: center; gap: 8px">
+              <span>🌐</span>
+              <span>Agent Swarm Personal Browsers</span>
+              <span
+                style="
+                  font-size: 10px;
+                  background: rgba(16, 185, 129, 0.2);
+                  color: #10b981;
+                  border: 1px solid rgba(16, 185, 129, 0.4);
+                  padding: 2px 8px;
+                  border-radius: 999px;
+                  font-weight: 700;
+                "
+                >LIVE BROWSING ACTIVE</span
+              >
+            </span>
+            <span class="modal-subtitle"
+              >Dedicated Playwright Chromium Instances · Real-Time Screencast Stream · ChatGPT Dots
+              & Grokbot Virtual Cursors</span
+            >
+          </div>
+          <button
+            id="closeAgentBrowsersModalBtn"
+            class="modal-close-btn"
+            onclick="closeAgentBrowsersModal()"
+            style="font-size: 20px; padding: 4px 8px; cursor: pointer"
+          >
+            ✕
+          </button>
+        </div>
+
+        <!-- AGENT SWARM SELECTOR RIBBON -->
+        <div class="agent-browser-ribbon" id="agentBrowserRibbonIndex">
+          <!-- Dynamically populated chips for every agent with colored pulse dots -->
+        </div>
+
+        <!-- CHROME MULTI-TAB STRIP -->
+        <div class="agent-browser-tab-strip" id="agentBrowserTabStripIndex">
+          <!-- Dynamically populated Chrome tabs -->
+        </div>
+
+        <!-- BROWSER CHROME TOOLBAR -->
+        <div class="agent-browser-toolbar">
+          <button class="browser-btn" onclick="agentBrowserNavIndex('back')" title="Back">⮜</button>
+          <button class="browser-btn" onclick="agentBrowserNavIndex('forward')" title="Forward">
+            ⮞
+          </button>
+          <button class="browser-btn" onclick="agentBrowserNavIndex('reload')" title="Reload">
+            ↻
+          </button>
+          <button class="browser-btn" onclick="agentBrowserNavIndex('home')" title="Agent Home">
+            🏠
+          </button>
+          <div class="browser-url-bar">
+            <span style="font-size: 11px; color: #10b981">🔒</span>
+            <input
+              type="text"
+              id="agentBrowserUrlInputIndex"
+              class="browser-url-input"
+              placeholder="Enter URL or search term..."
+              onkeydown="handleAgentBrowserUrlKeyIndex(event)"
+            />
+            <button class="browser-go-btn" onclick="submitAgentBrowserUrlIndex()">Go</button>
+          </div>
+          <!-- Scroll & Zoom Controls -->
+          <div style="display: flex; align-items: center; gap: 2px">
+            <button
+              class="browser-btn"
+              style="width: 20px; font-size: 10px"
+              onclick="sendAgentScrollIndex(-350)"
+              title="Scroll Page Up"
+            >
+              ▲
+            </button>
+            <button
+              class="browser-btn"
+              style="width: 20px; font-size: 10px"
+              onclick="sendAgentScrollIndex(350)"
+              title="Scroll Page Down"
+            >
+              ▼
+            </button>
+            <button
+              class="browser-btn"
+              style="width: 19px; font-size: 10px"
+              onclick="setAgentBrowserZoomIndex(-0.15)"
+              title="Zoom Out"
+            >
+              −
+            </button>
+            <span
+              id="agentZoomLabelIndex"
+              style="
+                font-family: var(--font-mono);
+                font-size: 9.5px;
+                color: rgba(244, 240, 224, 0.6);
+                min-width: 28px;
+                text-align: center;
+              "
+              >100%</span
+            >
+            <button
+              class="browser-btn"
+              style="width: 19px; font-size: 10px"
+              onclick="setAgentBrowserZoomIndex(0.15)"
+              title="Zoom In"
+            >
+              +
+            </button>
+          </div>
+          <!-- Multimodal Vision Inspector Button -->
+          <button
+            class="browser-btn browser-vision-btn"
+            id="btnToggleVisionIndex"
+            onclick="toggleAgentVisionDrawerIndex()"
+            title="Multimodal Screen Vision Inspector"
+          >
+            👁️ Vision
+          </button>
+          <!-- Launch Real Chrome Button -->
+          <button
+            class="browser-btn"
+            id="btnLaunchNativeChromeIndex"
+            onclick="launchAgentInNativeChromeIndex()"
+            style="
+              color: #38bdf8;
+              font-weight: 700;
+              width: auto;
+              padding: 0 8px;
+              font-size: 10px;
+              border-color: rgba(56, 189, 248, 0.4);
+              background: rgba(56, 189, 248, 0.15);
+            "
+            title="Open Real Native Desktop Google Chrome"
+          >
+            ↗ Real Chrome
+          </button>
+          <!-- Expand / Resize Browser Window -->
+          <button
+            class="browser-btn"
+            id="btnExpandBrowserPaneIndex"
+            onclick="toggleExpandBrowserPaneIndex()"
+            style="width: 24px; font-size: 11px"
+            title="Expand / Maximize Browser Window"
+          >
+            ⛶
+          </button>
+        </div>
+
+        <!-- LIVE VIEWPORT STAGE & CHATGPT-DOTS VIRTUAL CURSOR -->
+        <div class="agent-browser-viewport-card">
+          <div
+            class="agent-browser-stage"
+            id="agentBrowserStageIndex"
+            onwheel="handleAgentViewportWheelIndex(event)"
+            onclick="handleAgentViewportClickIndex(event)"
+            oncontextmenu="
+              handleAgentViewportContextMenuIndex(event);
+              return false;
+            "
+            onmousedown="handleAgentViewportMouseDownIndex(event)"
+            onmouseup="handleAgentViewportMouseUpIndex(event)"
+            onmousemove="handleAgentViewportHoverIndex(event)"
+          >
+            <img
+              id="agentBrowserImgIndex"
+              class="agent-browser-frame-img"
+              src=""
+              alt="Agent Browser"
+              style="display: none"
+            />
+            <div
+              id="agentBrowserPlaceholderIndex"
+              style="
+                font-size: 12px;
+                color: rgba(244, 240, 224, 0.6);
+                text-align: center;
+                padding: 30px;
+              "
+            >
+              <div style="font-size: 36px; margin-bottom: 10px">🌐</div>
+              <div
+                id="agentBrowserPlaceholderNameIndex"
+                style="font-weight: 700; color: #fff; margin-bottom: 4px; font-size: 14px"
+              >
+                Connecting to Personal Browser...
+              </div>
+              <div style="font-size: 11px; color: rgba(244, 240, 224, 0.4)">
+                Dedicated isolated Playwright session with personal cursor
+              </div>
+            </div>
+
+            <!-- CHATGPT DOTS / GROKBOT VIRTUAL CURSOR OVERLAY -->
+            <div class="agent-cursor-layer" id="agentCursorLayerIndex">
+              <div class="agent-cursor-orb" id="agentCursorOrbIndex" style="left: 50%; top: 50%">
+                <div class="agent-cursor-pupil"></div>
+                <div class="agent-cursor-badge" id="agentCursorBadgeIndex">Agent ✦</div>
+                <div class="agent-cursor-ripple" id="agentCursorRippleIndex"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- VIEWPORT STATUS & COORDINATES HUD -->
+          <div class="screen-card-label">
+            <span
+              id="agentBrowserStatusLabelIndex"
+              style="font-weight: 600; color: #fff; display: flex; align-items: center; gap: 6px"
+            >
+              <span
+                id="agentActiveStatusDotIndex"
+                style="
+                  width: 7px;
+                  height: 7px;
+                  border-radius: 50%;
+                  background: #10b981;
+                  display: inline-block;
+                "
+              ></span>
+              <span id="agentActiveTitleTextIndex">Agent Tab</span>
+            </span>
+            <span
+              id="agentCursorCoordsHUDIndex"
+              style="
+                font-family: var(--font-mono);
+                font-size: 10px;
+                color: rgba(244, 240, 224, 0.5);
+              "
+              >X: 640 | Y: 400</span
+            >
+          </div>
+        </div>
+
+        <!-- PROFESSIONAL HUMAN ACTION CONTROLS DECK -->
+        <div class="agent-browser-deck">
+          <!-- Row 1: Mouse Modes -->
+          <div class="deck-row">
+            <span class="deck-label">Mouse:</span>
+            <div class="deck-mode-group">
+              <button
+                class="deck-mode-btn active"
+                id="btnModeClickIndex"
+                onclick="setAgentMouseModeIndex('click')"
+              >
+                🖱️ Left
+              </button>
+              <button
+                class="deck-mode-btn"
+                id="btnModeRightIndex"
+                onclick="setAgentMouseModeIndex('right-click')"
+              >
+                🔘 Right Click
+              </button>
+              <button
+                class="deck-mode-btn"
+                id="btnModeDblIndex"
+                onclick="setAgentMouseModeIndex('dblclick')"
+              >
+                ⚡ 2x Click
+              </button>
+              <button
+                class="deck-mode-btn"
+                id="btnModeDragIndex"
+                onclick="setAgentMouseModeIndex('drag')"
+              >
+                🤏 Drag Mode
+              </button>
+            </div>
+          </div>
+          <!-- Row 2: Keystroke Bar -->
+          <div class="deck-row">
+            <span class="deck-label">Keys:</span>
+            <button class="deck-key-pill" onclick="sendAgentKeyIndex('Enter')">Enter ↵</button>
+            <button class="deck-key-pill" onclick="sendAgentKeyIndex('Tab')">Tab ⇥</button>
+            <button class="deck-key-pill" onclick="sendAgentKeyIndex('Backspace')">⌫ Del</button>
+            <button class="deck-key-pill" onclick="sendAgentKeyIndex('Control+a')">Ctrl+A</button>
+            <button class="deck-key-pill" onclick="sendAgentKeyIndex('Escape')">Esc</button>
+            <button class="deck-key-pill" onclick="sendAgentScrollIndex(350)">▼ Scroll</button>
+            <button class="deck-key-pill" onclick="sendAgentScrollIndex(-350)">▲ Up</button>
+          </div>
+          <!-- Row 3: Live Typing Input -->
+          <div class="deck-row">
+            <span class="deck-label">Type:</span>
+            <input
+              type="text"
+              id="agentTypeInputIndex"
+              class="deck-type-input"
+              placeholder="Type text directly into focused element..."
+              onkeydown="if (event.key === 'Enter') sendAgentTypingIndex();"
+            />
+            <button class="deck-type-btn" onclick="sendAgentTypingIndex()">Send Text</button>
+          </div>
+        </div>
+
+        <!-- MULTIMODAL VISION INSPECTOR DRAWER -->
+        <div class="agent-vision-drawer" id="agentVisionDrawerIndex">
+          <div class="vision-header">
+            <div style="display: flex; align-items: center; gap: 8px">
+              <span style="font-size: 14px">👁️</span>
+              <strong style="color: #c084fc; font-size: 12px; letter-spacing: 0.02em"
+                >Multimodal Vision Inspector</strong
+              >
+              <span
+                id="agentVisionStatusBadgeIndex"
+                style="
+                  font-size: 9.5px;
+                  background: rgba(159, 124, 239, 0.15);
+                  border: 1px solid rgba(159, 124, 239, 0.4);
+                  color: #c084fc;
+                  padding: 1px 6px;
+                  border-radius: 999px;
+                "
+                >Grounded</span
+              >
+            </div>
+            <button
+              onclick="toggleAgentVisionDrawerIndex()"
+              style="
+                background: transparent;
+                border: none;
+                color: rgba(244, 240, 224, 0.6);
+                cursor: pointer;
+                font-size: 14px;
+              "
+            >
+              ✕
+            </button>
+          </div>
+          <div class="vision-query-row">
+            <input
+              type="text"
+              id="agentVisionQueryInputIndex"
+              class="vision-query-input"
+              placeholder="Ask what's on this screen or specify inspection target..."
+              onkeydown="if (event.key === 'Enter') runAgentVisionAnalysisIndex();"
+            />
+            <button
+              class="vision-inspect-btn"
+              id="btnRunVisionAnalysisIndex"
+              onclick="runAgentVisionAnalysisIndex()"
+            >
+              🔍 Inspect
+            </button>
+          </div>
+          <div class="vision-grid" id="agentVisionGridIndex">
+            <div class="vision-card" style="grid-column: 1 / -1">
+              <div class="vision-card-title"><span>👁️</span> Visual Perception Summary</div>
+              <div
+                id="visionSummaryTextIndex"
+                style="color: rgba(244, 240, 224, 0.7); line-height: 1.4"
+              >
+                Click "Inspect" or give an autonomous mission to perceive real-time visual UI
+                layout.
+              </div>
+            </div>
+            <div class="vision-card">
+              <div class="vision-card-title"><span>🎯</span> Detected Interactive Targets</div>
+              <div
+                id="visionTargetsBoxIndex"
+                style="color: rgba(244, 240, 224, 0.5); font-size: 10px"
+              >
+                Targets will appear with coordinates (click any to navigate cursor directly there).
+              </div>
+            </div>
+            <div class="vision-card">
+              <div class="vision-card-title"><span>📝</span> Optical OCR Readout</div>
+              <div
+                id="visionOcrBoxIndex"
+                style="
+                  color: rgba(244, 240, 224, 0.5);
+                  font-size: 10px;
+                  max-height: 80px;
+                  overflow-y: auto;
+                "
+              >
+                Visual text excerpts detected on screen.
+              </div>
+            </div>
+            <div class="vision-card" style="grid-column: 1 / -1">
+              <div class="vision-card-title"><span>💡</span> Recommended Agent Next Actions</div>
+              <div
+                id="visionSuggestionsBoxIndex"
+                style="color: rgba(244, 240, 224, 0.7); font-size: 10.5px"
+              >
+                Pending vision inspection...
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AUTONOMOUS WEB EXPLORER MISSION BOX -->
+        <div class="agent-mission-box">
+          <div class="agent-mission-title">
+            <span>🚀 Launch Autonomous Internet Mission</span>
+            <span
+              id="agentAutonomousBadgeIndex"
+              style="font-size: 9.5px; color: #10b981; text-transform: uppercase"
+              >AI Agent Active</span
+            >
+          </div>
+          <div class="agent-mission-input-row">
+            <input
+              type="text"
+              id="agentMissionInputIndex"
+              class="agent-mission-input"
+              placeholder="Give this agent an autonomous web browsing mission (e.g. 'Search latest breakthroughs in CRISPR and summarize')..."
+              onkeydown="if (event.key === 'Enter') launchAgentAutonomousTaskIndex();"
+            />
+            <button class="agent-mission-btn" onclick="launchAgentAutonomousTaskIndex()">
+              Launch Mission
+            </button>
+          </div>
+          <div
+            id="agentMissionStatusFeedIndex"
+            style="
+              margin-top: 8px;
+              font-size: 11px;
+              font-family: var(--font-mono);
+              color: #38bdf8;
+              display: none;
+              max-height: 80px;
+              overflow-y: auto;
+              line-height: 1.4;
+              padding: 6px 10px;
+              background: rgba(0, 0, 0, 0.4);
+              border-radius: 6px;
+              border: 1px solid rgba(56, 189, 248, 0.2);
+            "
+          ></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEACH-A-TASK MODAL (MAIN APP DELIVERABLE) -->
+    <div id="appTeachTaskModal" class="create-agent-modal-overlay">
+      <div class="create-agent-modal-card" style="max-width: 540px">
+        <div class="modal-card-header">
+          <div>
+            <span class="modal-title" style="display: flex; align-items: center; gap: 8px">
+              <span>⚡</span>
+              <span>Teach-a-Task Workflow</span>
+            </span>
+            <span class="modal-subtitle"
+              >Record & replay autonomous routines for specialist Dots</span
+            >
+          </div>
+          <button class="modal-close-btn" onclick="closeAppTeachTaskModal()">✕</button>
+        </div>
+
+        <div style="padding: 16px 20px; display: flex; flex-direction: column; gap: 12px">
+          <div>
+            <label
+              style="
+                font-size: 11px;
+                font-weight: 600;
+                text-transform: uppercase;
+                color: rgba(244, 240, 224, 0.6);
+                display: block;
+                margin-bottom: 4px;
+              "
+              >Routine Name</label
+            >
+            <input
+              type="text"
+              id="appTeachTaskName"
+              placeholder="e.g. Host Telemetry Audit & Memory Sync"
+              style="
+                width: 100%;
+                padding: 8px 12px;
+                background: rgba(0, 0, 0, 0.3);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                border-radius: 8px;
+                color: #fff;
+                font-family: var(--font-sans);
+                font-size: 13px;
+              "
+            />
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
+            <div>
+              <label
+                style="
+                  font-size: 11px;
+                  font-weight: 600;
+                  text-transform: uppercase;
+                  color: rgba(244, 240, 224, 0.6);
+                  display: block;
+                  margin-bottom: 4px;
+                "
+                >Assign Dot Agent</label
+              >
+              <select
+                id="appTeachTaskAgent"
+                style="
+                  width: 100%;
+                  padding: 8px 12px;
+                  background: rgba(14, 20, 32, 0.9);
+                  border: 1px solid rgba(255, 255, 255, 0.15);
+                  border-radius: 8px;
+                  color: #fff;
+                  font-family: var(--font-sans);
+                  font-size: 12px;
+                "
+              >
+                <option value="agent-supergence">Supergence Master</option>
+                <option value="agent-cs">Nova-Dev (Systems/Code)</option>
+                <option value="agent-biology">Bio-SIS (Life Sciences)</option>
+                <option value="agent-cybernetics">Claw-Cybernetics (OS Execution)</option>
+                <option value="agent-knowledge">Alexandria (Knowledge/Memory)</option>
+                <option value="agent-risk">Aegis-Risk (Security)</option>
+              </select>
+            </div>
+            <div>
+              <label
+                style="
+                  font-size: 11px;
+                  font-weight: 600;
+                  text-transform: uppercase;
+                  color: rgba(244, 240, 224, 0.6);
+                  display: block;
+                  margin-bottom: 4px;
+                "
+                >Schedule</label
+              >
+              <select
+                id="appTeachTaskSchedule"
+                style="
+                  width: 100%;
+                  padding: 8px 12px;
+                  background: rgba(14, 20, 32, 0.9);
+                  border: 1px solid rgba(255, 255, 255, 0.15);
+                  border-radius: 8px;
+                  color: #fff;
+                  font-family: var(--font-sans);
+                  font-size: 12px;
+                "
+              >
+                <option value="Manual Trigger">Manual On-Demand</option>
+                <option value="Continuous 15s auto-poll">Continuous 15s</option>
+                <option value="Every 1 hour">Hourly</option>
+                <option value="Every day at 8:00 AM">Daily 8:00 AM</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label
+              style="
+                font-size: 11px;
+                font-weight: 600;
+                text-transform: uppercase;
+                color: rgba(244, 240, 224, 0.6);
+                display: block;
+                margin-bottom: 4px;
+              "
+              >Workflow Steps / Instructions</label
+            >
+            <textarea
+              id="appTeachTaskSteps"
+              rows="3"
+              placeholder="1. Scan workspace for modifications&#10;2. Run test benchmark&#10;3. Consolidate memory"
+              style="
+                width: 100%;
+                padding: 8px 12px;
+                background: rgba(0, 0, 0, 0.3);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                border-radius: 8px;
+                color: #fff;
+                font-family: var(--font-sans);
+                font-size: 12px;
+                resize: vertical;
+              "
+            ></textarea>
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px">
+            <button
+              onclick="closeAppTeachTaskModal()"
+              class="btn-secondary"
+              style="padding: 8px 16px"
+            >
+              Cancel
+            </button>
+            <button
+              onclick="submitAppTeachTask()"
+              id="btnSaveAppTeachTask"
+              class="btn-primary"
+              style="padding: 8px 18px"
+            >
+              Save Routine
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECURE FORM / HUMAN CHECKPOINT MODAL (MAIN APP DELIVERABLE) -->
+    <div id="appSecureFormModal" class="create-agent-modal-overlay">
+      <div
+        class="create-agent-modal-card"
+        style="
+          max-width: 520px;
+          border-color: rgba(239, 68, 68, 0.4);
+          box-shadow:
+            0 25px 65px rgba(0, 0, 0, 0.9),
+            0 0 40px rgba(239, 68, 68, 0.2);
+        "
+      >
+        <div class="modal-card-header">
+          <div>
+            <span class="modal-title" style="display: flex; align-items: center; gap: 8px">
+              <span>🛡️</span>
+              <span id="appSecureFormTitle">Human Checkpoint Authorization</span>
+            </span>
+            <span
+              class="modal-subtitle"
+              id="appSecureFormRisk"
+              style="color: #ef4444; font-weight: 700"
+              >HIGH RISK OS ACTION</span
+            >
+          </div>
+          <button class="modal-close-btn" onclick="closeAppSecureFormModal()">✕</button>
+        </div>
+
+        <div style="padding: 16px 20px">
+          <p
+            id="appSecureFormDesc"
+            style="
+              font-size: 12.5px;
+              color: rgba(244, 240, 224, 0.85);
+              line-height: 1.5;
+              margin-bottom: 16px;
+            "
+          >
+            Supergence Dot requires your explicit verification before executing this sensitive
+            operation.
+          </p>
+          <div
+            id="appSecureFormFieldsContainer"
+            style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px"
+          ></div>
+          <div style="display: flex; justify-content: flex-end; gap: 10px">
+            <button
+              onclick="respondAppCheckpoint(activeAppCheckpointId, 'REJECT')"
+              style="
+                padding: 9px 18px;
+                background: rgba(239, 68, 68, 0.15);
+                border: 1px solid rgba(239, 68, 68, 0.4);
+                border-radius: 8px;
+                color: #f87171;
+                font-weight: 600;
+                cursor: pointer;
+              "
+            >
+              ✕ Reject
+            </button>
+            <button
+              onclick="respondAppCheckpoint(activeAppCheckpointId, 'APPROVE')"
+              style="
+                padding: 9px 20px;
+                background: linear-gradient(
+                  135deg,
+                  rgba(16, 185, 129, 0.4) 0%,
+                  rgba(56, 189, 248, 0.4) 100%
+                );
+                border: 1px solid rgba(16, 185, 129, 0.5);
+                border-radius: 8px;
+                color: #fff;
+                font-weight: 600;
+                cursor: pointer;
+              "
+            >
+              ✓ Authorize
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==========================================================================
+       WORKSPACE MISSION HISTORY & PAST SESSIONS DRAWER
+       ========================================================================== -->
+    <div
+      id="workspaceHistoryDrawerOverlay"
+      class="drawer-overlay"
+      onclick="toggleWorkspaceHistoryDrawer(false)"
+    ></div>
+    <aside id="workspaceHistoryDrawer" class="workspace-history-drawer">
+      <div class="drawer-header">
+        <div style="display: flex; align-items: center; gap: 10px">
+          <span style="font-size: 20px">📜</span>
+          <div>
+            <div
+              style="
+                font-size: 14px;
+                font-weight: 700;
+                color: #fff;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+              "
+            >
+              <span>Mission History</span>
+              <span id="drawerSessionCountBadge" class="drawer-count-badge">0 Sessions</span>
+            </div>
+            <div style="font-size: 11px; color: rgba(244, 240, 224, 0.5)">
+              Saved Threads & Persistent Memory
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px">
+          <button
+            class="drawer-new-btn"
+            onclick="startNewWorkspaceThread()"
+            title="Start New Conversation"
+          >
+            ＋ New Thread
+          </button>
+          <button class="modal-close-btn" onclick="toggleWorkspaceHistoryDrawer(false)">✕</button>
+        </div>
+      </div>
+
+      <!-- Search filter bar -->
+      <div class="drawer-search-wrap">
+        <input
+          type="text"
+          id="drawerSearchInput"
+          class="drawer-search-input"
+          placeholder="Search conversations by title or query..."
+          oninput="filterWorkspaceHistoryList(this.value)"
+        />
+      </div>
+
+      <!-- Conversations list -->
+      <div class="drawer-history-list" id="workspaceHistoryList">
+        <div
+          style="
+            padding: 16px;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 12px;
+            text-align: center;
+          "
+        >
+          Loading mission logs...
+        </div>
+      </div>
+    </aside>
+
+    <!-- ==========================================================================
+       CONVERSATIONAL & EPISTEMIC REASONING TREE MODAL
+       ========================================================================== -->
+    <div id="workspaceTreeModal" class="workspace-tree-modal-overlay">
+      <div class="workspace-tree-modal-card">
+        <div
+          class="modal-card-header"
+          style="padding: 16px 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.08)"
+        >
+          <div>
+            <span class="modal-title" style="display: flex; align-items: center; gap: 8px">
+              <span>🌿</span>
+              <span>Conversational & Epistemic Reasoning Tree</span>
+              <span
+                style="
+                  font-size: 10px;
+                  background: rgba(56, 189, 248, 0.2);
+                  color: #38bdf8;
+                  border: 1px solid rgba(56, 189, 248, 0.4);
+                  padding: 2px 8px;
+                  border-radius: 999px;
+                  font-weight: 700;
+                "
+                >LIVE COGNITION</span
+              >
+            </span>
+            <span class="modal-subtitle"
+              >Multi-Turn Conversational Branching · Hermes Lifelong Epistemic Knowledge Graph</span
+            >
+          </div>
+          <button
+            class="modal-close-btn"
+            onclick="toggleWorkspaceTreeModal(false)"
+            style="font-size: 20px; padding: 4px 8px; cursor: pointer"
+          >
+            ✕
+          </button>
+        </div>
+
+        <!-- TABS HEADER -->
+        <div class="tree-tab-strip">
+          <button
+            id="treeTabBtnChat"
+            class="tree-tab-btn active"
+            onclick="switchTreeModalTab('chat')"
+          >
+            <span>🌿</span> <span>Conversation Branch Tree</span>
+          </button>
+          <button id="treeTabBtnMemory" class="tree-tab-btn" onclick="switchTreeModalTab('memory')">
+            <span>🧠</span> <span>Epistemic Knowledge Graph</span>
+          </button>
+        </div>
+
+        <!-- TAB 1: CONVERSATIONAL BRANCH TREE -->
+        <div id="treePaneChat" class="tree-view-pane active">
+          <!-- Interactive visual flow of conversation turns, thoughts, tools, answers -->
+        </div>
+
+        <!-- TAB 2: EPISTEMIC MEMORY KNOWLEDGE GRAPH -->
+        <div id="treePaneMemory" class="tree-view-pane">
+          <!-- Live telemetry cards, graph visualizer, filter chips, node inspector -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ==========================================================================
+       MASTERY & EVIDENCE LEDGER MODAL
+       Every figure here is read from the backend. A skill that has no
+       verification record renders as UNVERIFIED with a null score — the panel
+       never manufactures one.
+       ========================================================================== -->
+    <div id="masteryModal" class="workspace-tree-modal-overlay">
+      <div class="workspace-tree-modal-card">
+        <div
+          class="modal-card-header"
+          style="padding: 16px 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.08)"
+        >
+          <div>
+            <span class="modal-title" style="display: flex; align-items: center; gap: 8px">
+              <span>🎓</span>
+              <span>Mastery &amp; Evidence Ledger</span>
+              <span
+                style="
+                  font-size: 10px;
+                  background: rgba(52, 211, 153, 0.18);
+                  color: #34d399;
+                  border: 1px solid rgba(52, 211, 153, 0.42);
+                  padding: 2px 8px;
+                  border-radius: 999px;
+                  font-weight: 700;
+                "
+                >EVIDENCE-GRADED</span
+              >
+            </span>
+            <span class="modal-subtitle"
+              >OBSERVED = a deterministic oracle ran · INFERRED = reasoning over observations, never
+              a score · UNKNOWN = recorded with the authority that would settle it</span
+            >
+          </div>
+          <button
+            class="modal-close-btn"
+            onclick="toggleMasteryModal(false)"
+            style="font-size: 20px; padding: 4px 8px; cursor: pointer"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div class="tree-tab-strip">
+          <button
+            id="masteryTabBtnLedger"
+            class="tree-tab-btn active"
+            onclick="switchMasteryTab('ledger')"
+          >
+            <span>📋</span> <span>Evidence Ledger</span>
+          </button>
+          <button
+            id="masteryTabBtnCandidates"
+            class="tree-tab-btn"
+            onclick="switchMasteryTab('candidates')"
+          >
+            <span>🧪</span> <span>Unverified Candidates</span>
+          </button>
+          <button
+            id="masteryTabBtnLearned"
+            class="tree-tab-btn"
+            onclick="switchMasteryTab('learned')"
+          >
+            <span>✅</span> <span>Oracle-Verified Skills</span>
+          </button>
+          <button
+            id="masteryTabBtnMistakes"
+            class="tree-tab-btn"
+            onclick="switchMasteryTab('mistakes')"
+          >
+            <span>🛑</span> <span>Prevented Mistakes</span>
+          </button>
+          <button
+            class="mastery-verify-btn"
+            style="margin-left: auto"
+            onclick="refreshMasteryModal()"
+          >
+            ↻ Refresh
+          </button>
+        </div>
+
+        <div id="masteryPaneLedger" class="tree-view-pane active">
+          <!-- Populated from /api/mastery/state + /api/mastery/evidence -->
+        </div>
+        <div id="masteryPaneCandidates" class="tree-view-pane">
+          <!-- Populated from /api/mastery/skills?status=candidates -->
+        </div>
+        <div id="masteryPaneLearned" class="tree-view-pane">
+          <!-- Populated from /api/mastery/skills?status=learned -->
+        </div>
+        <div id="masteryPaneMistakes" class="tree-view-pane">
+          <!-- Populated from /api/mastery/mistakes -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ==========================================================================
+       SIS 50 NEXT-GEN AUTONOMOUS FEATURES SUITE MODAL (UNPRECEDENTED IN AI)
+       ========================================================================== -->
+    <div id="sisFiftyFeaturesModal" class="workspace-tree-modal-overlay">
+      <div class="fifty-modal-card">
+        <div
+          class="modal-card-header"
+          style="
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(15, 23, 42, 0.95);
+          "
+        >
+          <div>
+            <span class="modal-title" style="display: flex; align-items: center; gap: 8px">
+              <span>🌌</span>
+              <span>SIS 50 Next-Gen Autonomous Capabilities</span>
+              <span
+                style="
+                  font-size: 10px;
+                  background: rgba(167, 139, 250, 0.25);
+                  color: #c4b5fd;
+                  border: 1px solid rgba(167, 139, 250, 0.45);
+                  padding: 2px 8px;
+                  border-radius: 999px;
+                  font-weight: 700;
+                "
+                >50 UNPRECEDENTED FEATURES ACTIVE</span
+              >
+            </span>
+            <span class="modal-subtitle"
+              >Full-Spectrum Breakthrough Architecture: Live Playwright Browser Swarm · Ada Dynamic
+              Tool Genesis · Hermes Lifelong Epistemic Graph · OpenClaw Cybernetics</span
+            >
+          </div>
+          <button
+            class="modal-close-btn"
+            onclick="toggleFiftyFeaturesModal(false)"
+            style="font-size: 20px; padding: 4px 8px; cursor: pointer"
+          >
+            ✕
+          </button>
+        </div>
+
+        <!-- SEARCH BAR & CATEGORY STRIP -->
+        <div style="padding: 10px 20px 0; background: rgba(10, 16, 28, 0.95)">
+          <input
+            type="text"
+            id="fiftyFeaturesSearchInput"
+            class="drawer-search-input"
+            placeholder="Search 50 features by name, keyword, or architecture..."
+            oninput="filterFiftyFeatures(this.value)"
+          />
+        </div>
+        <div class="fifty-category-strip" id="fiftyCategoryStrip">
+          <button class="fifty-cat-btn active" onclick="switchFiftyCat('all', this)">
+            <span>All Features</span> <span class="fifty-num-badge">50</span>
+          </button>
+          <button class="fifty-cat-btn" onclick="switchFiftyCat('browser', this)">
+            <span>🌐 Browser Swarm</span> <span class="fifty-num-badge">10</span>
+          </button>
+          <button class="fifty-cat-btn" onclick="switchFiftyCat('tools', this)">
+            <span>⚡ Dynamic Tool Genesis</span> <span class="fifty-num-badge">8</span>
+          </button>
+          <button class="fifty-cat-btn" onclick="switchFiftyCat('memory', this)">
+            <span>🧠 Hermes Epistemic Memory</span> <span class="fifty-num-badge">8</span>
+          </button>
+          <button class="fifty-cat-btn" onclick="switchFiftyCat('swarm', this)">
+            <span>👥 Multi-Agent Swarm</span> <span class="fifty-num-badge">8</span>
+          </button>
+          <button class="fifty-cat-btn" onclick="switchFiftyCat('branching', this)">
+            <span>🌿 Branching & Time-Travel</span> <span class="fifty-num-badge">8</span>
+          </button>
+          <button class="fifty-cat-btn" onclick="switchFiftyCat('os', this)">
+            <span>⚙️ Cybernetic OS Sandbox</span> <span class="fifty-num-badge">8</span>
+          </button>
+        </div>
+
+        <!-- 50 FEATURES GRID VIEWPORT -->
+        <div class="fifty-grid-viewport" id="fiftyGridViewport">
+          <!-- Dynamically populated 50 cards -->
+        </div>
+
+        <!-- FOOTER STATUS / FEEDBACK BANNER -->
+        <div class="fifty-status-banner" id="fiftyStatusBanner">
+          <div style="display: flex; align-items: center; gap: 8px">
+            <span
+              class="status-pulse-dot"
+              style="width: 7px; height: 7px; background: #10b981"
+            ></span>
+            <span id="fiftyFeedbackMsg"
+              >50 / 50 Next-Gen Features Operational · Grounded in Real Backend Systems (Zero Mock /
+              Zero Canned)</span
+            >
+          </div>
+          <div
+            style="font-family: var(--font-mono); font-size: 10px; color: rgba(255, 255, 255, 0.5)"
+          >
+            SIS 1.0 SUPERGENCE OS
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/scripts/workspace-task-status.js"></script>
+    <script src="/scripts/workspace-controller.js"></script>
+
+    <script src="/scripts/feature-catalog.js"></script>
+    <script src="/scripts/feature-actions.js"></script>
+    <script src="/scripts/continuous-dock.js"></script>
+
+    <dialog id="workspacePreferences" class="shell-dialog" aria-labelledby="shellPreferencesTitle">
+      <div class="shell-dialog-header">
+        <div>
+          <span class="shell-eyebrow">YOUR WORKSPACE</span>
+          <h2 id="shellPreferencesTitle">Preferences</h2>
+        </div>
+        <form method="dialog">
+          <button class="shell-icon-button" aria-label="Close preferences">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m6 6 12 12M18 6 6 18" />
+            </svg>
+          </button>
+        </form>
+      </div>
+      <p class="shell-dialog-description">Small details, set the way you work.</p>
+      <label class="shell-preference"
+        ><span
+          ><strong>Interface sounds</strong><small>Subtle feedback when you interact.</small></span
+        ><input id="shellSoundsPreference" type="checkbox" role="switch"
+      /></label>
+      <label class="shell-preference"
+        ><span
+          ><strong>Compact spacing</strong
+          ><small>Keep more of the conversation in view.</small></span
+        ><input id="shellCompactPreference" type="checkbox" role="switch"
+      /></label>
+      <label class="shell-preference"
+        ><span
+          ><strong>Ambient motion</strong
+          ><small>Particles and hover effects. Respects reduced motion.</small></span
+        ><input
+          id="shellMotionPreference"
+          class="shell-motion-preference"
+          type="checkbox"
+          role="switch"
+      /></label>
+      <label class="shell-preference"
+        ><span><strong>Appearance</strong><small>Choose a palette for your workspace.</small></span
+        ><select id="shellThemePreference" class="shell-theme-select" aria-label="Workspace theme">
+          <option value="neutral">Charcoal</option>
+          <option value="warm">Walnut</option>
+          <option value="midnight">Cocoa</option>
+        </select></label
+      >
+      <p class="shell-preference-note">Saved in this browser. Your conversations stay unchanged.</p>
+    </dialog>
+    <dialog id="workspaceShortcuts" class="shell-dialog" aria-labelledby="shellShortcutsTitle">
+      <div class="shell-dialog-header">
+        <h2 id="shellShortcutsTitle">Help &amp; shortcuts</h2>
+        <form method="dialog">
+          <button class="shell-icon-button" aria-label="Close shortcuts">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m6 6 12 12M18 6 6 18" />
+            </svg>
+          </button>
+        </form>
+      </div>
+      <p class="shell-dialog-description">
+        Supergence is an AI workspace that can research, learn new workflows and create. Explore
+        some starting points, or bring your own task.
+        <a class="shell-guide-link" href="/guide.html" target="_blank" rel="noopener">
+          Read the Supergence guide <span data-sg-icon="diagonal" aria-hidden="true"></span>
+        </a>
+      </p>
+      <div class="shell-shortcut-row"><span>Search conversations</span><kbd>Ctrl / Cmd K</kbd></div>
+      <div class="shell-shortcut-row">
+        <span>New conversation</span><kbd>Ctrl / Cmd Shift O</kbd>
+      </div>
+      <div class="shell-shortcut-row"><span>Send a message</span><kbd>Enter</kbd></div>
+      <div class="shell-shortcut-row"><span>Add a new line</span><kbd>Shift Enter</kbd></div>
+      <div class="shell-shortcut-row"><span>Close a panel or menu</span><kbd>Esc</kbd></div>
+    </dialog>
+    <script src="/scripts/chat-artifacts.js"></script>
+    <script src="/scripts/workspace-browser.js"></script>
+    <script src="/scripts/workspace-learning.js"></script>
+    <link rel="stylesheet" href="/styles/workspace-evolution.css" />
+    <script src="/scripts/workspace-evolution.js"></script>
+    <script src="/scripts/workspace-cockpit.js"></script>
+    <script src="/scripts/workspace-chat-files.js"></script>
+    <link rel="stylesheet" href="/styles/creation-studio.css" />
+    <script src="/scripts/creation-studio.js"></script>
+    <script src="/scripts/workspace-shell.js"></script>
+    <script src="/scripts/workspace-access.js"></script>
+    <script src="/scripts/workspace-proactive.js"></script>
+    <script src="/scripts/workspace-agent-profiles.js"></script>
+    <script src="/scripts/workspace-sidechat.js"></script>
+    <script src="/scripts/workspace-styles-window.js"></script>
+    <script src="/scripts/workspace-polish.js"></script>
+  </body>
+</html>

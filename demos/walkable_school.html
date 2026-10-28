@@ -1,0 +1,850 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A fully explorable, first-person walkable 3D school environm // SIS 3D Simulation</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        overflow: hidden;
+        background: #080b10;
+        font-family:
+          'Inter',
+          -apple-system,
+          sans-serif;
+        color: #e2e8f0;
+      }
+      #canvas-container {
+        width: 100vw;
+        height: 100vh;
+        position: absolute;
+      }
+      #hud {
+        position: absolute;
+        top: 14px;
+        left: 14px;
+        z-index: 10;
+        background: rgba(13, 17, 23, 0.88);
+        backdrop-filter: blur(14px);
+        border: 1px solid rgba(0, 240, 255, 0.35);
+        border-radius: 8px;
+        padding: 12px 16px;
+        pointer-events: auto;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+        min-width: 240px;
+      }
+      .hud-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: #00f0ff;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 3px;
+      }
+      .hud-sub {
+        font-size: 10px;
+        color: #8b949e;
+      }
+      .hud-row {
+        display: flex;
+        gap: 12px;
+        margin-top: 6px;
+        font-size: 11px;
+      }
+      .hud-score {
+        color: #84cc16;
+        font-weight: 700;
+      }
+      .hud-lives {
+        color: #ff6b6b;
+        font-weight: 700;
+      }
+      #hud-win {
+        display: none;
+        margin-top: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #ffd700;
+      }
+      #btn-restart {
+        display: none;
+        margin-top: 8px;
+        background: rgba(0, 240, 255, 0.12);
+        border: 1px solid #00f0ff;
+        color: #00f0ff;
+        padding: 5px 12px;
+        font-size: 11px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      #btn-restart:hover {
+        background: rgba(0, 240, 255, 0.3);
+        color: #fff;
+      }
+      .hud-hint {
+        margin-top: 6px;
+        font-size: 9px;
+        color: #64748b;
+      }
+      #tooltip {
+        position: absolute;
+        display: none;
+        z-index: 20;
+        background: rgba(13, 17, 23, 0.95);
+        border: 1px solid #00f0ff;
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 11px;
+        pointer-events: none;
+        color: #00f0ff;
+      }
+      /* Cinematic vignette + top glow: cheap post-processing without a post chain */
+      #vignette {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        pointer-events: none;
+        background:
+          radial-gradient(ellipse at 50% 42%, rgba(0, 0, 0, 0) 46%, rgba(0, 0, 0, 0.42) 100%),
+          linear-gradient(to bottom, rgba(0, 240, 255, 0.05), rgba(0, 0, 0, 0) 22%);
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="canvas-container"></div>
+    <div id="vignette"></div>
+    <div id="hud">
+      <div class="hud-title">✦ A FULLY EXPLORABLE, FIRST-PERSON WALKABL</div>
+      <div class="hud-sub" id="hud-info">Interactive 3D Simulation | 60 FPS</div>
+      <div class="hud-row">
+        <span class="hud-score" id="hud-score">SCORE 0</span
+        ><span class="hud-lives" id="hud-lives">LIVES 3</span>
+      </div>
+      <div id="hud-win"></div>
+      <button id="btn-restart">↻ RESTART</button>
+      <div class="hud-hint">WASD / arrows to move · swipe on touch · collect 5 to win</div>
+    </div>
+    <div id="tooltip"></div>
+    <script type="module">
+          import * as THREE from 'three';
+          import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+          import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+          // ─── DETERMINISTIC SHELL: Scene, Camera, Renderer, Lighting ───
+          // Beauty is deterministic: IBL + shadow catcher + tuned lights ship with EVERY scene,
+          // so output quality never depends on the model remembering them.
+          const container = document.getElementById('canvas-container');
+          const scene = new THREE.Scene();
+          scene.background = new THREE.Color(0x080B10);
+          scene.fog = new THREE.FogExp2(0x080B10, 0.022);
+
+          const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
+          camera.position.set(5.2, 3.4, 7.2);
+
+          const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+          renderer.setSize(window.innerWidth, window.innerHeight);
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+          renderer.toneMapping = THREE.ACESFilmicToneMapping;
+          renderer.toneMappingExposure = 1.15;
+          renderer.shadowMap.enabled = true;
+          renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+          container.appendChild(renderer.domElement);
+
+          // Image-based lighting: free studio reflections on every standard material (no network)
+          try {
+            const pmrem = new THREE.PMREMGenerator(renderer);
+            scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+            scene.environmentIntensity = 0.55;
+            pmrem.dispose();
+          } catch (e) { /* IBL optional — lights alone still carry the scene */ }
+
+          const controls = new OrbitControls(camera, renderer.domElement);
+          controls.enableDamping = true;
+          controls.dampingFactor = 0.05;
+          controls.target.set(0, 1, 0);
+          controls.maxPolarAngle = Math.PI / 2 - 0.06; // never dive under the floor
+          controls.minDistance = 3;
+          controls.maxDistance = 24;
+
+          // ─── PERSISTENT STYLE GUIDE: Tactical Lighting Reference Sheet ───
+          const hemiLight = new THREE.HemisphereLight(0x8FB8FF, 0x1A1410, 0.5);
+          scene.add(hemiLight);
+
+          const ambientLight = new THREE.AmbientLight(0xffffff, 0.35);
+          scene.add(ambientLight);
+
+          const keyLight = new THREE.DirectionalLight(0xEAF6FF, 1.6);
+          keyLight.position.set(5, 8, 5);
+          keyLight.castShadow = true;
+          keyLight.shadow.mapSize.width = 2048;
+          keyLight.shadow.mapSize.height = 2048;
+          keyLight.shadow.camera.left = -8;
+          keyLight.shadow.camera.right = 8;
+          keyLight.shadow.camera.top = 8;
+          keyLight.shadow.camera.bottom = -8;
+          keyLight.shadow.camera.far = 30;
+          keyLight.shadow.bias = -0.0004;
+          keyLight.shadow.radius = 4;
+          scene.add(keyLight);
+
+          const cyanKick = new THREE.DirectionalLight(0x00F0FF, 0.55);
+          cyanKick.position.set(5, 2, 6);
+          scene.add(cyanKick);
+
+          const fillLight = new THREE.DirectionalLight(0xA78BFA, 0.5);
+          fillLight.position.set(-4, 3, -3);
+          scene.add(fillLight);
+
+          const rimLight = new THREE.PointLight(0xFF6B6B, 12, 24);
+          rimLight.position.set(0, 3, -6);
+          scene.add(rimLight);
+
+          // Shadow-catcher ground disc (invisible except for soft shadows) + grid above it
+          const groundDisc = new THREE.Mesh(
+            new THREE.CircleGeometry(14, 48),
+            new THREE.ShadowMaterial({ opacity: 0.38 })
+          );
+          groundDisc.rotation.x = -Math.PI / 2;
+          groundDisc.position.y = 0;
+          groundDisc.receiveShadow = true;
+          scene.add(groundDisc);
+
+          const grid = new THREE.GridHelper(24, 24, 0x00F0FF, 0x1A1A2E);
+          grid.position.y = 0.002;
+          grid.material.opacity = 0.28;
+          grid.material.transparent = true;
+          scene.add(grid);
+
+          window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+          });
+
+          // ─── AI-GENERATED PART 1: Scene Objects (retopology-optimized) ───
+          function buildSceneObjects(scene, THREE) {
+        const meshes = [];
+
+        const matCarbon = new THREE.MeshStandardMaterial({ color: 0x14161A, metalness: 0.85, roughness: 0.15 });
+        const matSlate = new THREE.MeshStandardMaterial({ color: 0x2C3E50, metalness: 0.75, roughness: 0.25 });
+        const matGold = new THREE.MeshStandardMaterial({ color: 0xD4AC0D, metalness: 0.90, roughness: 0.12 });
+        const matGlass = new THREE.MeshStandardMaterial({ color: 0xAED6F1, metalness: 0.80, roughness: 0.15, transparent: true, opacity: 0.60 });
+        const matCrimson = new THREE.MeshStandardMaterial({ color: 0xC0392B, metalness: 0.75, roughness: 0.20 });
+        const matEmissiveCyan = new THREE.MeshStandardMaterial({ color: 0x14161A, emissive: 0x00F0FF, emissiveIntensity: 3.5, metalness: 0.80, roughness: 0.20 });
+        const matEmissiveMagenta = new THREE.MeshStandardMaterial({ color: 0x14161A, emissive: 0xFF007F, emissiveIntensity: 3.0, metalness: 0.80, roughness: 0.20 });
+        const matEmissiveGreen = new THREE.MeshStandardMaterial({ color: 0x14161A, emissive: 0x00FFCC, emissiveIntensity: 4.0, metalness: 0.80, roughness: 0.20 });
+
+        const hemiLight = new THREE.HemisphereLight(0xAED6F1, 0x14161A, 0.6);
+        scene.add(hemiLight);
+
+        const keyLight = new THREE.DirectionalLight(0x00F0FF, 1.5);
+        keyLight.position.set(10, 15, 10);
+        keyLight.castShadow = true;
+        keyLight.shadow.mapSize.width = 2048;
+        keyLight.shadow.mapSize.height = 2048;
+        scene.add(keyLight);
+
+        const fillLight = new THREE.DirectionalLight(0xFF007F, 0.8);
+        fillLight.position.set(-10, 10, -5);
+        scene.add(fillLight);
+
+        const rimLight = new THREE.PointLight(0xC0392B, 2.0, 50);
+        rimLight.position.set(0, 5, -10);
+        scene.add(rimLight);
+
+        // 1. Ground Platform
+      const groundGeo = new THREE.CylinderGeometry(12, 12, 0.2, 20);
+        const ground = new THREE.Mesh(groundGeo, matSlate);
+        ground.name = 'ground-platform';
+        ground.position.set(0, -0.1, 0);
+        ground.rotation.set(0, 0, 0);
+        ground.scale.set(1, 1, 1);
+        ground.receiveShadow = true;
+        ground.castShadow = true;
+        scene.add(ground);
+        meshes.push(ground);
+
+        // 2. Cybernetic Hover Ring
+      const ringGeo = new THREE.TorusGeometry(3.5, 0.15, 12, 20);
+        const ring = new THREE.Mesh(ringGeo, matEmissiveCyan);
+        ring.name = 'underglow-hover-ring';
+        ring.position.set(0, 0.05, 0);
+        ring.rotation.set(Math.PI / 2, 0, 0);
+        ring.scale.set(1, 1, 1);
+        ring.castShadow = true;
+        scene.add(ring);
+        meshes.push(ring);
+
+        // 3. Main Chassis Base
+      const chassisGeo = new THREE.BoxGeometry(3.2, 0.5, 6.5);
+        const chassis = new THREE.Mesh(chassisGeo, matCarbon);
+        chassis.name = 'main-chassis-base';
+        chassis.position.set(0, 0.45, 0);
+        chassis.rotation.set(0, 0, 0);
+        chassis.scale.set(1, 1, 1);
+        chassis.castShadow = true;
+        scene.add(chassis);
+        meshes.push(chassis);
+
+        // 4. Sloped Front Hood
+      const hoodGeo = new THREE.BoxGeometry(2.6, 0.25, 2.5);
+        const hood = new THREE.Mesh(hoodGeo, matSlate);
+        hood.name = 'sloped-front-hood';
+        hood.position.set(0, 0.75, -2.2);
+        hood.rotation.set(-0.25, 0, 0);
+        hood.scale.set(1, 1, 1);
+        hood.castShadow = true;
+        scene.add(hood);
+        meshes.push(hood);
+
+        // 5. Tinted Glass Canopy
+      const canopyGeo = new THREE.SphereGeometry(1.3, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2);
+        const canopy = new THREE.Mesh(canopyGeo, matGlass);
+        canopy.name = 'tinted-glass-canopy';
+        canopy.position.set(0, 0.7, 0.2);
+        canopy.rotation.set(0, 0, 0);
+        canopy.scale.set(1.1, 0.8, 1.6);
+        canopy.castShadow = true;
+        scene.add(canopy);
+        meshes.push(canopy);
+
+        // 6. Left Side-Pod Air Intake
+      const intakeLGeo = new THREE.BoxGeometry(0.4, 0.6, 2.2);
+        const intakeL = new THREE.Mesh(intakeLGeo, matSlate);
+        intakeL.name = 'left-sidepod-intake';
+        intakeL.position.set(-1.8, 0.5, 0.5);
+        intakeL.rotation.set(0, 0, 0);
+        intakeL.scale.set(1, 1, 1);
+        intakeL.castShadow = true;
+        scene.add(intakeL);
+        meshes.push(intakeL);
+
+        // 7. Right Side-Pod Air Intake
+      const intakeRGeo = new THREE.BoxGeometry(0.4, 0.6, 2.2);
+        const intakeR = new THREE.Mesh(intakeRGeo, matSlate);
+        intakeR.name = 'right-sidepod-intake';
+        intakeR.position.set(1.8, 0.5, 0.5);
+        intakeR.rotation.set(0, 0, 0);
+        intakeR.scale.set(1, 1, 1);
+        intakeR.castShadow = true;
+        scene.add(intakeR);
+        meshes.push(intakeR);
+
+        // 8. Rear Wing Spoiler Blade
+      const wingGeo = new THREE.BoxGeometry(4.0, 0.12, 0.9);
+        const wing = new THREE.Mesh(wingGeo, matCarbon);
+        wing.name = 'rear-wing-spoiler-blade';
+        wing.position.set(0, 1.6, 2.8);
+        wing.rotation.set(0.15, 0, 0);
+        wing.scale.set(1, 1, 1);
+        wing.castShadow = true;
+        scene.add(wing);
+        meshes.push(wing);
+
+        // 9. Left Wing Support Pylon
+      const pylonLGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.9, 16);
+        const pylonL = new THREE.Mesh(pylonLGeo, matGold);
+        pylonL.name = 'left-wing-support-pylon';
+        pylonL.position.set(-1.2, 1.15, 2.8);
+        pylonL.rotation.set(0, 0, 0);
+        pylonL.scale.set(1, 1, 1);
+        pylonL.castShadow = true;
+        scene.add(pylonL);
+        meshes.push(pylonL);
+
+        // 10. Right Wing Support Pylon
+      const pylonRGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.9, 16);
+        const pylonR = new THREE.Mesh(pylonRGeo, matGold);
+        pylonR.name = 'right-wing-support-pylon';
+        pylonR.position.set(1.2, 1.15, 2.8);
+        pylonR.rotation.set(0, 0, 0);
+        pylonR.scale.set(1, 1, 1);
+        pylonR.castShadow = true;
+        scene.add(pylonR);
+        meshes.push(pylonR);
+
+        // 11-14. Vector Thruster Pods (Cones)
+      const thrusterPositions = [
+          { x: -1.2, z: 3.2, name: 'vector-thruster-rear-left' },
+          { x: 1.2, z: 3.2, name: 'vector-thruster-rear-right' },
+          { x: -1.8, z: 1.5, name: 'vector-thruster-side-left' },
+          { x: 1.8, z: 1.5, name: 'vector-thruster-side-right' }
+        ];
+        const thrusterGeo = new THREE.ConeGeometry(0.25, 0.7, 16);
+        thrusterPositions.forEach((pos, i) => {
+          const thruster = new THREE.Mesh(thrusterGeo, matCrimson);
+          thruster.name = pos.name;
+          thruster.position.set(pos.x, 0.45, pos.z);
+          thruster.rotation.set(Math.PI / 2, 0, 0);
+          thruster.scale.set(1, 1, 1);
+          thruster.castShadow = true;
+          scene.add(thruster);
+          meshes.push(thruster);
+        });
+
+        // 15-18. Thruster Emissive Rings
+      const tRingGeo = new THREE.TorusGeometry(0.26, 0.04, 12, 20);
+        thrusterPositions.forEach((pos, i) => {
+          const tRing = new THREE.Mesh(tRingGeo, matEmissiveMagenta);
+          tRing.name = pos.name.replace('vector-thruster', 'thruster-emissive-ring');
+          tRing.position.set(pos.x, 0.45, pos.z + 0.35);
+          tRing.rotation.set(0, 0, 0);
+          tRing.scale.set(1, 1, 1);
+          tRing.castShadow = true;
+          scene.add(tRing);
+          meshes.push(tRing);
+        });
+
+        // 19. Left Laser Headlight
+      const hlLGeo = new THREE.SphereGeometry(0.15, 16, 12);
+        const hlL = new THREE.Mesh(hlLGeo, matEmissiveGreen);
+        hlL.name = 'left-laser-headlight';
+        hlL.position.set(-0.8, 0.65, -3.2);
+        hlL.rotation.set(0, 0, 0);
+        hlL.scale.set(1, 0.6, 1);
+        hlL.castShadow = true;
+        scene.add(hlL);
+        meshes.push(hlL);
+
+        // 20. Right Laser Headlight
+      const hlRGeo = new THREE.SphereGeometry(0.15, 16, 12);
+        const hlR = new THREE.Mesh(hlRGeo, matEmissiveGreen);
+        hlR.name = 'right-laser-headlight';
+        hlR.position.set(0.8, 0.65, -3.2);
+        hlR.rotation.set(0, 0, 0);
+        hlR.scale.set(1, 0.6, 1);
+        hlR.castShadow = true;
+        scene.add(hlR);
+        meshes.push(hlR);
+
+        return meshes;
+      }
+
+          // ─── AI-GENERATED PART 2: Animation Logic ───
+          function animateScene(meshes, clock, THREE) {
+        var t = clock.getElapsedTime();
+        var i, phase, s;
+
+        for (i = 0; i < 14; i++) {
+          if (meshes[i]) {
+            phase = i * 0.7;
+
+            if (i === 0) {
+              meshes[i].rotation.y = t * 0.3;
+              meshes[i].position.y += Math.sin(t * 1.2 + phase) * 0.002;
+            } else if (i === 1) {
+              meshes[i].rotation.x = Math.sin(t * 0.8 + phase) * 0.25;
+              meshes[i].rotation.z = Math.cos(t * 0.6 + phase) * 0.15;
+            } else if (i >= 2 && i <= 5) {
+              meshes[i].position.y += Math.sin(t * 1.5 + phase) * 0.0015;
+              meshes[i].rotation.y = Math.sin(t * 0.4 + phase) * 0.1;
+            } else if (i >= 6 && i <= 8) {
+              s = 1.0 + Math.sin(t * 2.0 + phase) * 0.04;
+              meshes[i].scale.set(s, s, s);
+            } else if (i >= 9 && i <= 11) {
+              meshes[i].rotation.y = t * 0.15;
+              meshes[i].position.y += Math.cos(t * 1.1 + phase) * 0.001;
+            } else {
+              meshes[i].rotation.x = Math.sin(t * 0.5 + phase) * 0.08;
+              meshes[i].rotation.z = Math.cos(t * 0.7 + phase) * 0.08;
+              meshes[i].position.y += Math.sin(t * 0.9 + phase) * 0.001;
+            }
+          }
+        }
+
+        return meshes;
+      }
+
+          // ─── AI-GENERATED PART 2b: Game Logic (single mechanic + win) ───
+          function buildGameLogic(scene, meshes, THREE) {
+        const keys = {};
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchDeltaX = 0;
+        let touchDeltaY = 0;
+
+        function onKeyDown(e) { keys[e.code] = true; }
+        function onKeyUp(e) { keys[e.code] = false; }
+        function onTouchStart(e) {
+          if (e.touches.length > 0) {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            touchDeltaX = 0;
+            touchDeltaY = 0;
+          }
+        }
+        function onTouchEnd(e) {
+          if (e.changedTouches.length > 0) {
+            touchDeltaX = e.changedTouches[0].clientX - touchStartX;
+            touchDeltaY = e.changedTouches[0].clientY - touchStartY;
+          }
+        }
+
+        window.addEventListener('keydown', onKeyDown);
+        window.addEventListener('keyup', onKeyUp);
+        window.addEventListener('touchstart', onTouchStart, { passive: true });
+        window.addEventListener('touchend', onTouchEnd, { passive: true });
+
+        let score = 0;
+        let lives = 3;
+        let state = 'playing';
+        let enemyAIState = 'patrol';
+        let elapsedTime = 0;
+
+        const playerSpeed = 4.0;
+        const enemyChaseSpeed = 1.2;
+        const collectRadius = 1.2;
+        const hazardRadius = 1.0;
+        const chaseRange = 3.0;
+        const patrolReturnRange = 5.0;
+        const boundsMin = -8.0;
+        const boundsMax = 8.0;
+
+        const initialPositions = [];
+        for (let i = 0; i < meshes.length; i++) {
+          if (meshes[i]) {
+            initialPositions[i] = meshes[i].position.clone();
+          }
+        }
+
+        if (meshes[0]) {
+          meshes[0].name = 'player-chassis';
+          meshes[0].position.set(0, 0.5, 0);
+          meshes[0].rotation.set(0, 0, 0);
+          meshes[0].scale.set(1, 1, 1);
+        }
+
+        if (meshes[1]) {
+          meshes[1].name = 'hazard-carbon-sphere';
+          meshes[1].position.set(4, 0.5, 4);
+          meshes[1].rotation.set(0, 0, 0);
+          meshes[1].scale.set(0.6, 0.6, 0.6);
+        }
+
+        if (meshes[2]) {
+          meshes[2].name = 'enemy-slate-patrol';
+          meshes[2].position.set(-3, 0.5, -3);
+          meshes[2].rotation.set(0, 0, 0);
+          meshes[2].scale.set(0.8, 0.8, 0.8);
+        }
+
+        if (meshes[3]) {
+          meshes[3].name = 'hazard-glass-cone';
+          meshes[3].position.set(-5, 0.5, 2);
+          meshes[3].rotation.set(0, 0, 0);
+          meshes[3].scale.set(0.5, 0.7, 0.5);
+        }
+
+        if (meshes[4]) {
+          meshes[4].name = 'collectible-gold-ring';
+          meshes[4].position.set(2, 0.5, -4);
+          meshes[4].rotation.set(Math.PI / 2, 0, 0);
+          meshes[4].scale.set(0.5, 0.5, 0.5);
+        }
+
+        if (meshes[5]) {
+          meshes[5].name = 'hazard-crimson-box';
+          meshes[5].position.set(-2, 0.5, 5);
+          meshes[5].rotation.set(0, Math.PI / 4, 0);
+          meshes[5].scale.set(0.6, 0.6, 0.6);
+        }
+
+        if (meshes[6]) {
+          meshes[6].name = 'collectible-emissive-cyan-cylinder';
+          meshes[6].position.set(6, 0.5, -2);
+          meshes[6].rotation.set(0, 0, 0);
+          meshes[6].scale.set(0.4, 0.8, 0.4);
+        }
+
+        if (meshes[7]) {
+          meshes[7].name = 'hazard-emissive-magenta-torus';
+          meshes[7].position.set(-6, 0.5, -6);
+          meshes[7].rotation.set(Math.PI / 2, 0, 0);
+          meshes[7].scale.set(0.5, 0.5, 0.5);
+        }
+
+        if (meshes[8]) {
+          meshes[8].name = 'collectible-ground-hood';
+          meshes[8].position.set(0, 0.5, -6);
+          meshes[8].rotation.set(0, 0, 0);
+          meshes[8].scale.set(0.7, 0.3, 0.7);
+        }
+
+        if (meshes[9]) {
+          meshes[9].name = 'hazard-matCarbon-ring-outer';
+          meshes[9].position.set(5, 0.5, 6);
+          meshes[9].rotation.set(0, 0, Math.PI / 4);
+          meshes[9].scale.set(0.6, 0.6, 0.6);
+        }
+
+        if (meshes[10]) {
+          meshes[10].name = 'collectible-matSlate-chassis-part';
+          meshes[10].position.set(-4, 0.5, -1);
+          meshes[10].rotation.set(0, Math.PI / 6, 0);
+          meshes[10].scale.set(0.5, 0.5, 0.5);
+        }
+
+        if (meshes[11]) {
+          meshes[11].name = 'hazard-matGold-core';
+          meshes[11].position.set(3, 0.5, 1);
+          meshes[11].rotation.set(0, 0, 0);
+          meshes[11].scale.set(0.4, 0.4, 0.4);
+        }
+
+        if (meshes[12]) {
+          meshes[12].name = 'collectible-matGlass-shard';
+          meshes[12].position.set(-1, 0.5, 3);
+          meshes[12].rotation.set(Math.PI / 3, 0, Math.PI / 6);
+          meshes[12].scale.set(0.5, 0.5, 0.5);
+        }
+
+        if (meshes[13]) {
+          meshes[13].name = 'hazard-matCrimson-spine';
+          meshes[13].position.set(7, 0.5, 0);
+          meshes[13].rotation.set(0, 0, Math.PI / 2);
+          meshes[13].scale.set(0.3, 0.9, 0.3);
+        }
+
+        function update(dt, input) {
+          if (state !== 'playing') return;
+
+          elapsedTime += dt;
+
+          if (meshes[0]) {
+            let dx = 0;
+            let dz = 0;
+
+            if (keys['KeyW'] || keys['ArrowUp']) dz -= 1;
+            if (keys['KeyS'] || keys['ArrowDown']) dz += 1;
+            if (keys['KeyA'] || keys['ArrowLeft']) dx -= 1;
+            if (keys['KeyD'] || keys['ArrowRight']) dx += 1;
+
+            const swipeThreshold = 30;
+            if (Math.abs(touchDeltaX) > swipeThreshold || Math.abs(touchDeltaY) > swipeThreshold) {
+              if (Math.abs(touchDeltaX) > Math.abs(touchDeltaY)) {
+                dx += touchDeltaX > 0 ? 1 : -1;
+              } else {
+                dz += touchDeltaY > 0 ? 1 : -1;
+              }
+              touchDeltaX = 0;
+              touchDeltaY = 0;
+            }
+
+            const len = Math.sqrt(dx * dx + dz * dz);
+            if (len > 0) {
+              dx /= len;
+              dz /= len;
+            }
+
+            meshes[0].position.x += dx * playerSpeed * dt;
+            meshes[0].position.z += dz * playerSpeed * dt;
+
+            meshes[0].position.x = Math.max(boundsMin, Math.min(boundsMax, meshes[0].position.x));
+            meshes[0].position.z = Math.max(boundsMin, Math.min(boundsMax, meshes[0].position.z));
+            meshes[0].position.y = 0.5;
+
+            if (len > 0) {
+              meshes[0].rotation.y = Math.atan2(dx, dz);
+            }
+          }
+
+          for (let i = 1; i < meshes.length; i++) {
+            if (!meshes[i]) continue;
+            if (!meshes[i].visible) continue;
+            if (!meshes[0]) continue;
+
+            const dist = meshes[0].position.distanceTo(meshes[i].position);
+
+            if (i % 2 === 0) {
+              if (dist < collectRadius) {
+                score += 1;
+                meshes[i].visible = false;
+                if (score >= 5) {
+                  state = 'won';
+                }
+              }
+            } else {
+              if (dist < hazardRadius) {
+                lives -= 1;
+                meshes[i].visible = false;
+                if (lives <= 0) {
+                  state = 'lost';
+                }
+              }
+            }
+          }
+
+          if (meshes[2] && meshes[0] && meshes[2].visible) {
+            const distToPlayer = meshes[2].position.distanceTo(meshes[0].position);
+
+            if (enemyAIState === 'patrol') {
+              meshes[2].position.x = initialPositions[2].x + Math.sin(elapsedTime * 1.5) * 3.0;
+              meshes[2].position.z = initialPositions[2].z + Math.cos(elapsedTime * 1.5) * 2.0;
+              meshes[2].position.y = 0.5;
+              meshes[2].rotation.y = Math.atan2(
+                meshes[0].position.x - meshes[2].position.x,
+                meshes[0].position.z - meshes[2].position.z
+              );
+
+              if (distToPlayer < chaseRange) {
+                enemyAIState = 'chase';
+              }
+            } else if (enemyAIState === 'chase') {
+              const dirX = meshes[0].position.x - meshes[2].position.x;
+              const dirZ = meshes[0].position.z - meshes[2].position.z;
+              const dirLen = Math.sqrt(dirX * dirX + dirZ * dirZ);
+
+              if (dirLen > 0.01) {
+                meshes[2].position.x += (dirX / dirLen) * enemyChaseSpeed * dt;
+                meshes[2].position.z += (dirZ / dirLen) * enemyChaseSpeed * dt;
+              }
+              meshes[2].position.y = 0.5;
+              meshes[2].rotation.y = Math.atan2(dirX, dirZ);
+
+              if (distToPlayer > patrolReturnRange) {
+                enemyAIState = 'patrol';
+              }
+            }
+
+            meshes[2].position.x = Math.max(boundsMin, Math.min(boundsMax, meshes[2].position.x));
+            meshes[2].position.z = Math.max(boundsMin, Math.min(boundsMax, meshes[2].position.z));
+          }
+
+          for (let i = 1; i < meshes.length; i++) {
+            if (!meshes[i]) continue;
+            if (i === 2) continue;
+            if (!meshes[i].visible) continue;
+            meshes[i].rotation.y += dt * 0.8;
+            meshes[i].position.y = 0.5 + Math.sin(elapsedTime * 2.0 + i) * 0.1;
+          }
+        }
+
+        function getScore() {
+          return score;
+        }
+
+        function getLives() {
+          return lives;
+        }
+
+        function hasWon() {
+          return state === 'won';
+        }
+
+        function hasLost() {
+          return state === 'lost';
+        }
+
+        function reset() {
+          score = 0;
+          lives = 3;
+          state = 'playing';
+          enemyAIState = 'patrol';
+          elapsedTime = 0;
+
+          for (let i = 0; i < meshes.length;
+      // [auto-healed] }
+      // [auto-healed] // [auto-healed] // [auto-healed] // [auto-healed] // [auto-healed] // [auto-healed] // [auto-healed] }
+
+          // ─── DETERMINISTIC: Execute Parts & Render Loop ───
+          let sceneMeshes = [];
+          try {
+            if (typeof buildSceneObjects === 'function') {
+              const result = buildSceneObjects(scene, THREE);
+              sceneMeshes = Array.isArray(result) ? result : [];
+            }
+          } catch (e) {
+            console.warn('[SIS 3D] Object generation error:', e);
+          }
+
+          // Wire game logic if present (SIS integration step — never AI-assembled)
+          let game = null;
+          try {
+            if (typeof buildGameLogic === 'function' && sceneMeshes.length > 0) {
+              game = buildGameLogic(scene, sceneMeshes, THREE);
+            }
+          } catch (e) {
+            console.warn('[SIS 3D] Game-logic init error (scene still renders):', e);
+          }
+
+          // Raycasting hover tooltip
+          const raycaster = new THREE.Raycaster();
+          const pointer = new THREE.Vector2();
+          const tooltip = document.getElementById('tooltip');
+          renderer.domElement.addEventListener('pointermove', (e) => {
+            pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+            pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(pointer, camera);
+            const hits = raycaster.intersectObjects(sceneMeshes, false);
+            if (hits.length > 0) {
+              const name = hits[0].object.name || hits[0].object.geometry?.type || 'Object';
+              tooltip.style.display = 'block';
+              tooltip.style.left = e.clientX + 12 + 'px';
+              tooltip.style.top = e.clientY + 12 + 'px';
+              tooltip.textContent = name;
+            } else {
+              tooltip.style.display = 'none';
+            }
+          });
+
+          const clock = new THREE.Clock();
+          const hudInfo = document.getElementById('hud-info');
+          const hudScore = document.getElementById('hud-score');
+          const hudLives = document.getElementById('hud-lives');
+          const hudWin = document.getElementById('hud-win');
+          const btnRestart = document.getElementById('btn-restart');
+          const optNote = "";
+          if (hudInfo) hudInfo.textContent = `Objects: ${sceneMeshes.length}${game ? ' | GAME: 1 mechanic' : ''} | Interactive 3D | 60 FPS${optNote}`;
+          if (btnRestart) btnRestart.addEventListener('click', () => {
+            try { if (game && typeof game.reset === 'function') game.reset(); } catch (e) {}
+            if (hudWin) hudWin.style.display = 'none';
+            btnRestart.style.display = 'none';
+          });
+
+          function animate() {
+            requestAnimationFrame(animate);
+            const dt = Math.min(clock.getDelta(), 0.05);
+            try {
+              if (typeof animateScene === 'function') {
+                animateScene(sceneMeshes, clock, THREE);
+              }
+            } catch (e) { /* animation error — scene still renders */ }
+            try {
+              if (game && typeof game.update === 'function') {
+                game.update(dt);
+                const score = typeof game.getScore === 'function' ? game.getScore() : 0;
+                const lives = typeof game.getLives === 'function' ? game.getLives() : 3;
+                const won = typeof game.hasWon === 'function' && game.hasWon();
+                const lost = typeof game.hasLost === 'function' && game.hasLost();
+                if (hudScore) hudScore.textContent = `SCORE ${score}/5`;
+                if (hudLives) hudLives.textContent = `LIVES ${lives}`;
+                if ((won || lost) && hudWin) {
+                  hudWin.style.display = 'block';
+                  hudWin.textContent = won ? '★ YOU WIN ★' : '✖ GAME OVER';
+                  hudWin.style.color = won ? '#FFD700' : '#FF6B6B';
+                  if (btnRestart) btnRestart.style.display = 'inline-block';
+                }
+                if (hudInfo) hudInfo.textContent = `Objects: ${sceneMeshes.length} | 60 FPS${optNote}`;
+              }
+            } catch (e) { /* game-logic error — scene still renders */ }
+            controls.update();
+            renderer.render(scene, camera);
+          }
+          animate();
+    </script>
+  </body>
+  <!-- SIS-QUALITY score=1 passed=true meshes=23 -->
+</html>

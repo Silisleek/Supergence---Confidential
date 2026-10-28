@@ -1,0 +1,138 @@
+{
+  "source": "C:/Users/Akshan sharma/Downloads/MacOS Cursors (26-27)/MacOS Tahoe Cursors/Tailless/With Shadow",
+  "conversion": "Original 32px image and hotspot extracted without resampling from user-supplied multi-resolution CUR files.",
+  "cursors": {
+    "default": {
+      "file": "default.cur",
+      "hotspot": [2, 3],
+      "source": "Normal select.cur",
+      "sourceSha256": "d348b492813a8bf76d4e311d28642e470fd94bcb270bc18b7845985b5b58d00c"
+    },
+    "text": {
+      "file": "text.cur",
+      "hotspot": [15, 15],
+      "source": "beamS.cur",
+      "sourceSha256": "3134071dd7763b807c80e2140c851da036dd9b0bd40fa60549b3e95968df9443"
+    },
+    "pointer": {
+      "file": "pointer.cur",
+      "hotspot": [6, 3],
+      "source": "link select.cur",
+      "sourceSha256": "ac6fa9e16c79bf6a00b238ad7cf2b18c82f884dd00b9556e628c2108a072acba"
+    },
+    "help": {
+      "file": "help.cur",
+      "hotspot": [14, 14],
+      "source": "helpS.cur",
+      "sourceSha256": "fbcb237f8ff6ac5fe032555fae7f46b5d45120eeff30cff81a9af727ed88c8ad"
+    },
+    "move": {
+      "file": "move.cur",
+      "hotspot": [10, 10],
+      "source": "moveS.cur",
+      "sourceSha256": "81d251622ab44da7c6c852d2f30378ccf69c3c32378233c1d7e9b794eb5384af"
+    },
+    "unavailable": {
+      "file": "unavailable.cur",
+      "hotspot": [2, 2],
+      "source": "noS.cur",
+      "sourceSha256": "000a6911cf9e7c40620fb6f6948c27345c88a6cc97a8249f3e4d04515d9e3e3d"
+    },
+    "crosshair": {
+      "file": "crosshair.cur",
+      "hotspot": [15, 15],
+      "source": "crossS.cur",
+      "sourceSha256": "712f76ed3f5e44d0f73160fd45e65b4fbc2076e3d490e4591ac72a0152680e77"
+    },
+    "resize-horizontal": {
+      "file": "resize-horizontal.cur",
+      "hotspot": [8, 13],
+      "source": "HsizeS.cur",
+      "sourceSha256": "16db2a912decec7de840db1002c82c852dad7d2aa7479ad72a9b08a1387ff065"
+    },
+    "resize-vertical": {
+      "file": "resize-vertical.cur",
+      "hotspot": [11, 10],
+      "source": "VsizeS.cur",
+      "sourceSha256": "b5e568615743abefa646f121ea2b9fc2fb5407c0cca60593fcb547f45cb9946c"
+    },
+    "resize-diagonal-one": {
+      "file": "resize-diagonal-one.cur",
+      "hotspot": [10, 10],
+      "source": "D1sizeS.cur",
+      "sourceSha256": "6ba8a69bd510cd0a41855f9654b125ea7cdb7eab863336dd8b0382a0155e2f78"
+    },
+    "resize-diagonal-two": {
+      "file": "resize-diagonal-two.cur",
+      "hotspot": [10, 10],
+      "source": "D2sizeS.cur",
+      "sourceSha256": "ceb04d194832814c2aaa7ff56b3c8db79de98b1ed2c5805c30901ce0f3113c89"
+    }
+  },
+  "busyFrames": [
+    {
+      "file": "busy-0.cur",
+      "hotspot": [1, 1]
+    },
+    {
+      "file": "busy-1.cur",
+      "hotspot": [1, 1]
+    },
+    {
+      "file": "busy-2.cur",
+      "hotspot": [1, 1]
+    },
+    {
+      "file": "busy-3.cur",
+      "hotspot": [1, 1]
+    },
+    {
+      "file": "busy-4.cur",
+      "hotspot": [1, 1]
+    },
+    {
+      "file": "busy-5.cur",
+      "hotspot": [1, 1]
+    },
+    {
+      "file": "busy-6.cur",
+      "hotspot": [1, 1]
+    },
+    {
+      "file": "busy-7.cur",
+      "hotspot": [1, 1]
+    },
+    {
+      "file": "busy-8.cur",
+      "hotspot": [1, 1]
+    },
+    {
+      "file": "busy-9.cur",
+      "hotspot": [1, 1]
+    },
+    {
+      "file": "busy-10.cur",
+      "hotspot": [1, 1]
+    },
+    {
+      "file": "busy-11.cur",
+      "hotspot": [1, 1]
+    },
+    {
+      "file": "busy-12.cur",
+      "hotspot": [1, 1]
+    },
+    {
+      "file": "busy-13.cur",
+      "hotspot": [1, 1]
+    },
+    {
+      "file": "busy-14.cur",
+      "hotspot": [1, 1]
+    },
+    {
+      "file": "busy-15.cur",
+      "hotspot": [1, 1]
+    }
+  ]
+}

@@ -1,0 +1,107 @@
+.creation-studio {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(900px, 92vw);
+  max-height: 88vh;
+  overflow: auto;
+  padding: 28px;
+  border: 1px solid #46515f;
+  border-radius: 18px;
+  color: #e8edf3;
+  background: #171c24;
+  font:
+    14px/1.5 system-ui,
+    sans-serif;
+}
+.creation-studio::backdrop {
+  background: #000a;
+}
+.creation-studio header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.creation-studio h2 {
+  margin: 0;
+  font-size: 23px;
+}
+.creation-studio h3 {
+  margin: 24px 0 10px;
+}
+.creation-studio p {
+  color: #aebccc;
+  overflow-wrap: anywhere;
+}
+.creation-studio form {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: end;
+}
+.creation-studio label {
+  display: grid;
+  gap: 5px;
+  flex: 1;
+  min-width: 120px;
+}
+.creation-studio input,
+.creation-studio select,
+.creation-studio textarea,
+.creation-studio button {
+  font: inherit;
+  padding: 9px 12px;
+  border: 1px solid #485568;
+  border-radius: 8px;
+  color: inherit;
+  background: #242d39;
+}
+.creation-studio textarea {
+  width: 100%;
+  min-height: 125px;
+  box-sizing: border-box;
+  font-family: monospace;
+}
+.creation-studio button {
+  cursor: pointer;
+}
+.creation-studio button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.creation-studio .studio-projects {
+  display: grid;
+  gap: 8px;
+}
+.creation-studio .studio-project {
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.creation-studio .studio-project[aria-pressed='true'] {
+  border-color: #91c7fa;
+}
+.creation-studio .studio-result {
+  margin-top: 18px;
+  display: grid;
+  gap: 10px;
+}
+.creation-studio .studio-result img {
+  max-width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+  border-radius: 10px;
+}
+.creation-studio a {
+  color: #9dceff;
+}
+.creation-studio .studio-saved-assets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  max-height: 100px;
+  overflow: auto;
+}
+.creation-studio [role='status'] {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

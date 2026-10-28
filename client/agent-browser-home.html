@@ -1,0 +1,793 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agent Personal Browser — Home</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>"
+    />
+    <style>
+      :root {
+        --bg: #090d16;
+        --card-bg: rgba(18, 24, 38, 0.75);
+        --card-border: rgba(255, 255, 255, 0.08);
+        --card-hover: rgba(255, 255, 255, 0.14);
+        --agent-accent: #38bdf8;
+        --agent-glow: rgba(56, 189, 248, 0.25);
+        --text: #f8fafc;
+        --text-muted: #94a3b8;
+        --text-dim: #64748b;
+        --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 36px 20px 48px;
+        overflow-x: hidden;
+        background-image:
+          radial-gradient(circle at 50% 0%, var(--agent-glow) 0%, transparent 55%),
+          radial-gradient(circle at 85% 90%, rgba(16, 185, 129, 0.05) 0%, transparent 40%),
+          radial-gradient(circle at 15% 85%, rgba(139, 92, 246, 0.05) 0%, transparent 40%);
+        background-attachment: fixed;
+      }
+
+      /* Ambient animated mesh backdrop */
+      .ambient-glow {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+        z-index: 0;
+        background: radial-gradient(
+          circle at var(--mouse-x, 50%) var(--mouse-y, 20%),
+          var(--agent-glow) 0%,
+          transparent 40%
+        );
+        transition: background 0.15s ease;
+      }
+
+      .container {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 960px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      /* Top Agent Profile Banner */
+      .agent-header {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 20px;
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 14px;
+        backdrop-filter: blur(16px);
+        margin-bottom: 40px;
+      }
+
+      .agent-identity {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .agent-avatar-badge {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1.5px solid var(--agent-accent);
+        box-shadow: 0 0 16px var(--agent-glow);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+      }
+
+      .agent-meta-text {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .agent-name {
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .agent-role {
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+
+      .badge-pill {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        font-weight: 600;
+        padding: 3px 9px;
+        border-radius: 999px;
+        background: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .pulse-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #10b981;
+        box-shadow: 0 0 8px #10b981;
+        animation: pulseAnim 2s infinite ease-in-out;
+      }
+
+      @keyframes pulseAnim {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.5;
+          transform: scale(0.85);
+        }
+      }
+
+      /* Hero Section */
+      .hero-title {
+        font-size: 32px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin-bottom: 10px;
+        text-align: center;
+        background: linear-gradient(135deg, #fff 30%, var(--agent-accent) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .hero-sub {
+        font-size: 14px;
+        color: var(--text-muted);
+        margin-bottom: 30px;
+        text-align: center;
+        max-width: 580px;
+        line-height: 1.5;
+      }
+
+      /* Omni-Search Box */
+      .search-card {
+        width: 100%;
+        max-width: 720px;
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 20px;
+        backdrop-filter: blur(20px);
+        padding: 8px;
+        box-shadow:
+          0 12px 36px rgba(0, 0, 0, 0.4),
+          0 0 24px var(--agent-glow);
+        margin-bottom: 36px;
+        transition: all 0.2s ease;
+      }
+
+      .search-card:focus-within {
+        border-color: var(--agent-accent);
+        box-shadow:
+          0 14px 44px rgba(0, 0, 0, 0.5),
+          0 0 32px var(--agent-glow);
+      }
+
+      .search-engine-selector {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        margin-bottom: 6px;
+        overflow-x: auto;
+      }
+
+      .engine-btn {
+        background: transparent;
+        border: 1px solid transparent;
+        color: var(--text-muted);
+        font-size: 11px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.15s ease;
+      }
+
+      .engine-btn:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: #fff;
+      }
+
+      .engine-btn.active {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: var(--agent-accent);
+        color: var(--agent-accent);
+      }
+
+      .search-input-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 4px 10px 6px;
+      }
+
+      .search-icon {
+        font-size: 18px;
+        color: var(--text-dim);
+      }
+
+      .search-input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: #fff;
+        font-size: 16px;
+        font-family: inherit;
+        padding: 8px 0;
+      }
+
+      .search-input::placeholder {
+        color: var(--text-dim);
+      }
+
+      .search-submit-btn {
+        background: var(--agent-accent);
+        color: #090d16;
+        border: none;
+        outline: none;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 9px 18px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition:
+          transform 0.12s ease,
+          filter 0.12s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .search-submit-btn:hover {
+        transform: translateY(-1px);
+        filter: brightness(1.1);
+      }
+
+      /* Shortcuts / Speed Dial Grid */
+      .shortcuts-section {
+        width: 100%;
+        max-width: 780px;
+        margin-bottom: 40px;
+      }
+
+      .section-title {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-dim);
+        margin-bottom: 14px;
+        padding-left: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .shortcuts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 12px;
+      }
+
+      .shortcut-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 16px 12px;
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 14px;
+        text-decoration: none;
+        color: var(--text);
+        transition: all 0.18s ease;
+        backdrop-filter: blur(12px);
+        cursor: pointer;
+      }
+
+      .shortcut-card:hover {
+        background: var(--card-hover);
+        border-color: var(--agent-accent);
+        transform: translateY(-3px);
+        box-shadow:
+          0 8px 20px rgba(0, 0, 0, 0.4),
+          0 0 15px var(--agent-glow);
+      }
+
+      .shortcut-icon-wrap {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.06);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        transition: transform 0.15s ease;
+      }
+
+      .shortcut-card:hover .shortcut-icon-wrap {
+        transform: scale(1.12);
+      }
+
+      .shortcut-label {
+        font-size: 12.5px;
+        font-weight: 600;
+        text-align: center;
+        color: #f1f5f9;
+      }
+
+      .shortcut-domain {
+        font-size: 10px;
+        color: var(--text-dim);
+        font-family: var(--font-mono);
+      }
+
+      /* Personal Chrome Profile Specs Card */
+      .profile-info-card {
+        width: 100%;
+        max-width: 780px;
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 14px;
+        padding: 18px 22px;
+        backdrop-filter: blur(14px);
+      }
+
+      .profile-info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 14px;
+        margin-top: 12px;
+      }
+
+      .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .info-label {
+        font-size: 10.5px;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+      }
+
+      .info-value {
+        font-size: 12.5px;
+        font-family: var(--font-mono);
+        color: #e2e8f0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      /* Footer */
+      .home-footer {
+        margin-top: 40px;
+        font-size: 11px;
+        color: var(--text-dim);
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .home-footer a {
+        color: var(--text-muted);
+        text-decoration: none;
+        transition: color 0.15s ease;
+      }
+
+      .home-footer a:hover {
+        color: var(--agent-accent);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="ambient-glow" id="ambientGlow"></div>
+
+    <div class="container">
+      <!-- ─── 1. TOP AGENT PROFILE BANNER ─── -->
+      <header class="agent-header">
+        <div class="agent-identity">
+          <div class="agent-avatar-badge" id="agentAvatar">🤖</div>
+          <div class="agent-meta-text">
+            <div class="agent-name">
+              <span id="agentName">Agent Personal Browser</span>
+              <span class="badge-pill" id="agentProfileBadge">
+                <span class="pulse-dot"></span>
+                <span>PERSONAL CHROME</span>
+              </span>
+            </div>
+            <div class="agent-role" id="agentRole">Dedicated Multi-Tab Playwright Context</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px">
+          <span
+            class="badge-pill"
+            style="
+              background: rgba(56, 189, 248, 0.1);
+              color: #38bdf8;
+              border-color: rgba(56, 189, 248, 0.25);
+            "
+          >
+            <span>🛡️</span>
+            <span>STEALTH MODE ON</span>
+          </span>
+        </div>
+      </header>
+
+      <!-- ─── 2. HERO GREETING ─── -->
+      <h1 class="hero-title" id="heroGreeting">Where shall we navigate today?</h1>
+      <p class="hero-sub" id="heroSub">
+        Your dedicated personal Chrome browser session with persistent cookies, stealth automation
+        headers, and full human-like multi-tab control.
+      </p>
+
+      <!-- ─── 3. OMNI-SEARCH BOX ─── -->
+      <div class="search-card">
+        <div class="search-engine-selector">
+          <button
+            class="engine-btn active"
+            data-engine="google"
+            onclick="setSearchEngine('google')"
+          >
+            <span>🔍</span> Google
+          </button>
+          <button
+            class="engine-btn"
+            data-engine="duckduckgo"
+            onclick="setSearchEngine('duckduckgo')"
+          >
+            <span>🦆</span> DuckDuckGo
+          </button>
+          <button class="engine-btn" data-engine="amazon" onclick="setSearchEngine('amazon')">
+            <span>📦</span> Amazon
+          </button>
+          <button class="engine-btn" data-engine="github" onclick="setSearchEngine('github')">
+            <span>💻</span> GitHub
+          </button>
+          <button class="engine-btn" data-engine="youtube" onclick="setSearchEngine('youtube')">
+            <span>📺</span> YouTube
+          </button>
+          <button class="engine-btn" data-engine="arxiv" onclick="setSearchEngine('arxiv')">
+            <span>🧠</span> arXiv
+          </button>
+        </div>
+        <form class="search-input-row" onsubmit="handleSearchSubmit(event)">
+          <span class="search-icon">🔎</span>
+          <input
+            type="text"
+            id="omniSearchInput"
+            class="search-input"
+            placeholder="Search with Google or enter an address..."
+            autocomplete="off"
+            autofocus
+          />
+          <button type="submit" class="search-submit-btn" id="searchSubmitBtn">
+            <span>Search</span>
+            <span>➔</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- ─── 4. SPEED DIAL SHORTCUTS ─── -->
+      <section class="shortcuts-section">
+        <div class="section-title"><span>⚡</span> Quick Speed Dial</div>
+        <div class="shortcuts-grid">
+          <a class="shortcut-card" href="https://www.google.com">
+            <div class="shortcut-icon-wrap" style="color: #4285f4">🔍</div>
+            <span class="shortcut-label">Google</span>
+            <span class="shortcut-domain">google.com</span>
+          </a>
+          <a class="shortcut-card" href="https://duckduckgo.com">
+            <div class="shortcut-icon-wrap" style="color: #de5833">🦆</div>
+            <span class="shortcut-label">DuckDuckGo</span>
+            <span class="shortcut-domain">duckduckgo.com</span>
+          </a>
+          <a class="shortcut-card" href="https://www.amazon.com">
+            <div class="shortcut-icon-wrap" style="color: #ff9900">📦</div>
+            <span class="shortcut-label">Amazon</span>
+            <span class="shortcut-domain">amazon.com</span>
+          </a>
+          <a class="shortcut-card" href="https://github.com">
+            <div class="shortcut-icon-wrap" style="color: #fff">💻</div>
+            <span class="shortcut-label">GitHub</span>
+            <span class="shortcut-domain">github.com</span>
+          </a>
+          <a class="shortcut-card" href="https://www.youtube.com">
+            <div class="shortcut-icon-wrap" style="color: #ff0000">📺</div>
+            <span class="shortcut-label">YouTube</span>
+            <span class="shortcut-domain">youtube.com</span>
+          </a>
+          <a class="shortcut-card" href="https://en.wikipedia.org">
+            <div class="shortcut-icon-wrap" style="color: #fff">📚</div>
+            <span class="shortcut-label">Wikipedia</span>
+            <span class="shortcut-domain">wikipedia.org</span>
+          </a>
+          <a class="shortcut-card" href="https://arxiv.org">
+            <div class="shortcut-icon-wrap" style="color: #b31b1b">🧠</div>
+            <span class="shortcut-label">arXiv Papers</span>
+            <span class="shortcut-domain">arxiv.org</span>
+          </a>
+          <a class="shortcut-card" href="https://news.ycombinator.com">
+            <div class="shortcut-icon-wrap" style="color: #ff6600">📰</div>
+            <span class="shortcut-label">Hacker News</span>
+            <span class="shortcut-domain">ycombinator.com</span>
+          </a>
+          <a class="shortcut-card" href="https://reddit.com">
+            <div class="shortcut-icon-wrap" style="color: #ff4500">🤖</div>
+            <span class="shortcut-label">Reddit</span>
+            <span class="shortcut-domain">reddit.com</span>
+          </a>
+          <a class="shortcut-card" href="/workbench">
+            <div class="shortcut-icon-wrap" style="color: #10b981">⚡</div>
+            <span class="shortcut-label">Workbench</span>
+            <span class="shortcut-domain">localhost</span>
+          </a>
+        </div>
+      </section>
+
+      <!-- ─── 5. AGENT PERSONAL CHROME PROFILE SPECS ─── -->
+      <div class="profile-info-card">
+        <div class="section-title"><span>🛡️</span> Chrome Session Isolation & Profile Details</div>
+        <div class="profile-info-grid">
+          <div class="info-item">
+            <span class="info-label">Profile Directory</span>
+            <span class="info-value" id="profilePathLabel">data/browser-profiles/[agent]</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Active Engine</span>
+            <span class="info-value">Google Chrome 131 (Native Binary)</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Multi-Tab State</span>
+            <span class="info-value" id="multiTabStatusLabel"
+              >Isolated tabs & screencast active</span
+            >
+          </div>
+          <div class="info-item">
+            <span class="info-label">Stealth & Storage</span>
+            <span class="info-value">Persistent Cookies, LocalStorage, History</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── 6. FOOTER ─── -->
+      <footer class="home-footer">
+        <span>SIS 1.0 Supergence Swarm</span>
+        <span>•</span>
+        <span>Personal Browser Engine</span>
+        <span>•</span>
+        <a href="/workbench">Return to Workbench</a>
+        <span>•</span>
+        <a href="/classic">Classic HUD</a>
+      </footer>
+    </div>
+
+    <script>
+      let activeEngine = 'google';
+      const params = new URLSearchParams(window.location.search);
+      const agentId = params.get('agent') || 'agent-supergence';
+
+      // Roster fallback table
+      const ROSTER_META = {
+        'agent-biology': {
+          name: 'Bio-SIS',
+          role: 'Biology & Life Sciences Lead',
+          avatar: '🧬',
+          color: '#10B981',
+        },
+        'agent-cs': {
+          name: 'Nova-Dev',
+          role: 'Systems & Software Lead',
+          avatar: '💻',
+          color: '#0EA5E9',
+        },
+        'agent-mathematics': {
+          name: 'Astra-Logic',
+          role: 'Mathematics & Logic Lead',
+          avatar: '📐',
+          color: '#F59E0B',
+        },
+        'agent-ee': {
+          name: 'Volt-Phys',
+          role: 'Electrical & Physics Lead',
+          avatar: '⚡',
+          color: '#84CC16',
+        },
+        'agent-data-ai': {
+          name: 'Synapse-AI',
+          role: 'Neural Architectures Lead',
+          avatar: '🧠',
+          color: '#8B5CF6',
+        },
+        'agent-cybernetics': {
+          name: 'Claw-Cybernetics',
+          role: 'Autonomous OS & Robotics Lead',
+          avatar: '🦾',
+          color: '#14B8A6',
+        },
+        'agent-economics': {
+          name: 'Quant-Econ',
+          role: 'Quantitative Economics Lead',
+          avatar: '📊',
+          color: '#EC4899',
+        },
+        'agent-risk': {
+          name: 'Aegis-Risk',
+          role: 'Security & Governance Auditor',
+          avatar: '🛡️',
+          color: '#EF4444',
+        },
+        'agent-knowledge': {
+          name: 'Alexandria',
+          role: 'Knowledge Architecture Specialist',
+          avatar: '📚',
+          color: '#6366F1',
+        },
+        'agent-triage': {
+          name: 'Sentinel-Triage',
+          role: 'Workflow & Project Triage Lead',
+          avatar: '📋',
+          color: '#F97316',
+        },
+        'agent-supergence': {
+          name: 'Chief of Staff',
+          role: 'Supergence Master Orchestrator',
+          avatar: '⚡',
+          color: '#9F7CEF',
+        },
+      };
+
+      function applyAgentMeta(meta) {
+        if (!meta) return;
+        document.title = `${meta.name}'s Chrome Browser — Home`;
+        document.getElementById('agentName').textContent = meta.name;
+        document.getElementById('agentRole').textContent = meta.role;
+        document.getElementById('agentAvatar').textContent = meta.avatar;
+        document.getElementById('profilePathLabel').textContent =
+          `data/browser-profiles/${agentId}`;
+        document.getElementById('heroGreeting').textContent = `${meta.name}'s Personal Chrome`;
+
+        const accent = meta.color || '#38BDF8';
+        document.documentElement.style.setProperty('--agent-accent', accent);
+        document.documentElement.style.setProperty('--agent-glow', accent + '33');
+      }
+
+      // Initialize agent data
+      const foundLocal = ROSTER_META[agentId];
+      if (foundLocal) {
+        applyAgentMeta(foundLocal);
+      } else {
+        applyAgentMeta({
+          name: agentId.replace(/^agent-/, '').toUpperCase(),
+          role: 'Specialist Agent Teammate',
+          avatar: '🌐',
+          color: '#38BDF8',
+        });
+      }
+
+      // Fetch dynamic live details
+      fetch('/api/browser/agents')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && Array.isArray(data.agents)) {
+            const match = data.agents.find((a) => a.id === agentId);
+            if (match) applyAgentMeta(match);
+          }
+        })
+        .catch(() => {});
+
+      // Search Engine Selection
+      function setSearchEngine(engine) {
+        activeEngine = engine;
+        document.querySelectorAll('.engine-btn').forEach((btn) => {
+          btn.classList.toggle('active', btn.dataset.engine === engine);
+        });
+        const input = document.getElementById('omniSearchInput');
+        const placeholderMap = {
+          google: 'Search with Google or enter URL...',
+          duckduckgo: 'Search DuckDuckGo privately or enter URL...',
+          amazon: 'Search Amazon products or enter URL...',
+          github: 'Search GitHub repositories or enter URL...',
+          youtube: 'Search YouTube videos or enter URL...',
+          arxiv: 'Search arXiv scientific papers or enter URL...',
+        };
+        input.placeholder = placeholderMap[engine] || 'Enter URL or search term...';
+        input.focus();
+      }
+
+      // Search Submission
+      function handleSearchSubmit(e) {
+        e.preventDefault();
+        const input = document.getElementById('omniSearchInput');
+        const query = (input.value || '').trim();
+        if (!query) return;
+
+        // If user typed a direct URL, go directly there
+        if (/^(https?:\/\/|[a-zA-Z0-9-]+\.[a-zA-Z]{2,})(\/.*)?$/i.test(query)) {
+          const targetUrl = /^https?:\/\//i.test(query) ? query : `https://${query}`;
+          window.location.href = targetUrl;
+          return;
+        }
+
+        const encoded = encodeURIComponent(query);
+        let targetUrl = `https://www.google.com/search?q=${encoded}`;
+        if (activeEngine === 'duckduckgo') {
+          targetUrl = `https://duckduckgo.com/?q=${encoded}`;
+        } else if (activeEngine === 'amazon') {
+          targetUrl = `https://www.amazon.com/s?k=${encoded}`;
+        } else if (activeEngine === 'github') {
+          targetUrl = `https://github.com/search?q=${encoded}`;
+        } else if (activeEngine === 'youtube') {
+          targetUrl = `https://www.youtube.com/results?search_query=${encoded}`;
+        } else if (activeEngine === 'arxiv') {
+          targetUrl = `https://arxiv.org/search/?query=${encoded}&searchtype=all`;
+        }
+
+        window.location.href = targetUrl;
+      }
+
+      // Dynamic mouse parallax on ambient glow
+      window.addEventListener('mousemove', (e) => {
+        const xPercent = (e.clientX / window.innerWidth) * 100;
+        const yPercent = (e.clientY / window.innerHeight) * 100;
+        document.documentElement.style.setProperty('--mouse-x', `${xPercent}%`);
+        document.documentElement.style.setProperty('--mouse-y', `${yPercent}%`);
+      });
+    </script>
+  </body>
+</html>

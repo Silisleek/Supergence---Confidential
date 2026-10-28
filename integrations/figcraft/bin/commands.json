@@ -1,0 +1,4418 @@
+[
+  {
+    "id": "node.create",
+    "label": "Create layer",
+    "menu": null,
+    "params": "{type: rectangle|ellipse|polygon|star|line|arrow|vector|text|frame|section|component|slice, x?, y? (relative to the parent frame; groups don't count), width?, height?, parent? (id; default: the page), index?, name?, text? (for text), path? (SVG path data for vector), props? {node.set keys}, select? (default true)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "frame.create",
+    "label": "Create frame",
+    "menu": null,
+    "params": "{preset? (name from FRAME_PRESETS), x?, y?, width?, height?, parent?, name?, props?} (a preset without x/y lands to the right of the page's frames)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "shape.rectangle",
+    "label": "Rectangle",
+    "menu": null,
+    "params": "{x, y, width, height, parent?, props?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "shape.ellipse",
+    "label": "Ellipse",
+    "menu": null,
+    "params": "{x, y, width, height, parent?, props?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "shape.polygon",
+    "label": "Polygon",
+    "menu": null,
+    "params": "{x, y, width, height, parent?, props? {pointCount}}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "shape.star",
+    "label": "Star",
+    "menu": null,
+    "params": "{x, y, width, height, parent?, props? {pointCount, innerRadius}}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "shape.line",
+    "label": "Line",
+    "menu": null,
+    "params": "{x, y, width (length), parent?, props? {rotation}}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "shape.arrow",
+    "label": "Arrow",
+    "menu": null,
+    "params": "{x, y, width (length), parent?, props?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "text.create",
+    "label": "Text",
+    "menu": null,
+    "params": "{text, x, y, parent?, width? (fixed width wraps), props? (fontSize, fontFamily, …)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "vector.create",
+    "label": "Vector",
+    "menu": null,
+    "params": "{path (SVG path data) | points [[x,y],..], closed?, x?, y?, parent?, props?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "image.place",
+    "label": "Place image",
+    "menu": null,
+    "params": "{data (base64) | path, x?, y?, width?, height?, parent?, mode? (fill|fit|crop|tile)} → {id, image, width, height, imageProfile (its embedded colour profile; null: taken as sRGB)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "frame.swapOrientation",
+    "label": "Swap orientation",
+    "menu": null,
+    "params": "{ids?} (portrait ⇄ landscape: width and height trade places)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "frame.presets",
+    "label": "List frame presets",
+    "menu": null,
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "edit.undo",
+    "label": "Undo",
+    "menu": "Edit",
+    "params": "{}",
+    "shortcut": "Cmd+Z",
+    "undoable": false
+  },
+  {
+    "id": "edit.redo",
+    "label": "Redo",
+    "menu": "Edit",
+    "params": "{}",
+    "shortcut": "Shift+Cmd+Z",
+    "undoable": false
+  },
+  {
+    "id": "edit.delete",
+    "label": "Delete",
+    "menu": "Edit",
+    "params": "{ids?}",
+    "shortcut": "Delete",
+    "undoable": true
+  },
+  {
+    "id": "edit.duplicate",
+    "label": "Duplicate",
+    "menu": "Edit",
+    "params": "{ids?, dx?, dy? (offset; default 0 for frames-in-place... Figma offsets top-level frames to the right)}",
+    "shortcut": "Cmd+D",
+    "undoable": true
+  },
+  {
+    "id": "edit.copy",
+    "label": "Copy",
+    "menu": "Edit",
+    "params": "{ids?}",
+    "shortcut": "Cmd+C",
+    "undoable": false
+  },
+  {
+    "id": "edit.cut",
+    "label": "Cut",
+    "menu": "Edit",
+    "params": "{ids?}",
+    "shortcut": "Cmd+X",
+    "undoable": true
+  },
+  {
+    "id": "edit.paste",
+    "label": "Paste",
+    "menu": "Edit",
+    "params": "{parent?, x?, y? (page coordinates of the pasted top-left)}",
+    "shortcut": "Cmd+V",
+    "undoable": true
+  },
+  {
+    "id": "edit.pasteOver",
+    "label": "Paste over selection",
+    "menu": "Edit",
+    "params": "{}",
+    "shortcut": "Shift+Cmd+V",
+    "undoable": true
+  },
+  {
+    "id": "edit.pasteReplace",
+    "label": "Paste to replace",
+    "menu": "Edit",
+    "params": "{ids?}",
+    "shortcut": "Shift+Cmd+R",
+    "undoable": true
+  },
+  {
+    "id": "edit.copyProperties",
+    "label": "Copy properties",
+    "menu": "Edit",
+    "params": "{id?}",
+    "shortcut": "Alt+Cmd+C",
+    "undoable": false
+  },
+  {
+    "id": "edit.pasteProperties",
+    "label": "Paste properties",
+    "menu": "Edit",
+    "params": "{ids?}",
+    "shortcut": "Alt+Cmd+V",
+    "undoable": true
+  },
+  {
+    "id": "edit.findReplace",
+    "label": "Find and replace",
+    "menu": "Edit",
+    "params": "{find, replace? (text layers), layerNames? (bool), select? (default true)}",
+    "shortcut": "Cmd+F",
+    "undoable": true
+  },
+  {
+    "id": "edit.setDefaultProperties",
+    "label": "Set default properties",
+    "menu": "Edit",
+    "params": "{id?}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "select.set",
+    "label": "Select",
+    "menu": null,
+    "params": "{ids: [..]}  (replace the selection)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "select.add",
+    "label": "Add to selection",
+    "menu": null,
+    "params": "{ids}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "select.remove",
+    "label": "Remove from selection",
+    "menu": null,
+    "params": "{ids}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "select.layersAt",
+    "label": "Layers at a point",
+    "menu": null,
+    "params": "{x, y (page coordinates)} → {layers: [{id, name, type, depth}]} (every layer under the point, front-most first; what the context menu's Select layer lists)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "select.all",
+    "label": "Select all",
+    "menu": "Edit",
+    "params": "{}",
+    "shortcut": "Cmd+A",
+    "undoable": false
+  },
+  {
+    "id": "select.none",
+    "label": "Select none",
+    "menu": "Edit",
+    "params": "{}",
+    "shortcut": "Escape",
+    "undoable": false
+  },
+  {
+    "id": "select.inverse",
+    "label": "Select inverse",
+    "menu": "Edit",
+    "params": "{}",
+    "shortcut": "Shift+Cmd+A",
+    "undoable": false
+  },
+  {
+    "id": "select.area",
+    "label": "Select area",
+    "menu": null,
+    "params": "{x, y, width, height (page units; a marquee from x, y), add? (toggle like a Shift marquee), deep? (nested layers, like Cmd/Ctrl)} → {selection}; with no box: draw one from the keyboard in the app (arrows move it, Cmd/Ctrl+arrows or Shift+arrows size it, Enter selects, Escape cancels)",
+    "shortcut": "Ctrl+Space",
+    "undoable": false
+  },
+  {
+    "id": "select.children",
+    "label": "Select children",
+    "menu": "Object/Select layer",
+    "params": "{}",
+    "shortcut": "Enter",
+    "undoable": false
+  },
+  {
+    "id": "select.parent",
+    "label": "Select parent",
+    "menu": "Object/Select layer",
+    "params": "{}",
+    "shortcut": "Shift+Enter",
+    "undoable": false
+  },
+  {
+    "id": "select.next",
+    "label": "Select next sibling",
+    "menu": "Object/Select layer",
+    "params": "{}",
+    "shortcut": "Tab",
+    "undoable": false
+  },
+  {
+    "id": "select.previous",
+    "label": "Select previous sibling",
+    "menu": "Object/Select layer",
+    "params": "{}",
+    "shortcut": "Shift+Tab",
+    "undoable": false
+  },
+  {
+    "id": "select.matching",
+    "label": "Select matching layers",
+    "menu": "Edit",
+    "params": "{}",
+    "shortcut": "Alt+Cmd+A",
+    "undoable": false
+  },
+  {
+    "id": "select.sameFill",
+    "label": "Select same fill",
+    "menu": "Edit/Select all with same",
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "select.sameStroke",
+    "label": "Select same stroke",
+    "menu": "Edit/Select all with same",
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "select.sameEffect",
+    "label": "Select same effect",
+    "menu": "Edit/Select all with same",
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "select.sameText",
+    "label": "Select same text properties",
+    "menu": "Edit/Select all with same",
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "select.sameFont",
+    "label": "Select same font",
+    "menu": "Edit/Select all with same",
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "select.sameInstance",
+    "label": "Select same instance",
+    "menu": "Edit/Select all with same",
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "select.sameProperties",
+    "label": "Select same properties",
+    "menu": "Edit/Select all with same",
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "select.byName",
+    "label": "Select layers by name",
+    "menu": null,
+    "params": "{query, page? (default current; \"all\" for every page)}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "transform.nudge",
+    "label": "Nudge",
+    "menu": null,
+    "params": "{dx, dy, big? (use the big nudge amount)} (auto layout children move one place instead: along the flow, between wrapped rows, to the next grid cell, or into the neighbouring nested auto layout frame)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "transform.nudgeSize",
+    "label": "Resize by nudge",
+    "menu": null,
+    "params": "{dw, dh, big?} (grow or shrink the selection by the nudge amount, top-left fixed)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "object.rename",
+    "label": "Rename",
+    "menu": "Object",
+    "params": "{ids?, name?} (without a name: rename the layer inline in the layers panel)",
+    "shortcut": "Cmd+R",
+    "undoable": true
+  },
+  {
+    "id": "object.batchRename",
+    "label": "Batch rename",
+    "menu": "Object",
+    "params": "{ids?, find? (match; empty: none), regex? (find is a regular expression), replace? (for each match), name? (pattern for the whole name), start? (where $n starts and $N stops; default 1)} codes in replace and name: $& current name (or the match), $` and $' text before and after the match, $1…$9 groups, $n up, $N down, $nnn padded; layers are numbered in stacking order, bottom first",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "object.toggleVisible",
+    "label": "Show/Hide selection",
+    "menu": "Object",
+    "params": "{ids?, visible?}",
+    "shortcut": "Shift+Cmd+H",
+    "undoable": true
+  },
+  {
+    "id": "object.toggleLock",
+    "label": "Lock/Unlock selection",
+    "menu": "Object",
+    "params": "{ids?, locked?}",
+    "shortcut": "Shift+Cmd+L",
+    "undoable": true
+  },
+  {
+    "id": "object.hideOthers",
+    "label": "Hide other layers",
+    "menu": "Object",
+    "params": "{}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "object.opacityKeys",
+    "label": "Opacity from number keys",
+    "menu": null,
+    "params": "{digits (\"1\"…\"9\": 10%…90%, \"0\": 100%; two digits: that percentage, \"45\" is 45%), ids?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "object.removeFill",
+    "label": "Remove fill",
+    "menu": "Object",
+    "params": "{ids?}",
+    "shortcut": "Alt+/",
+    "undoable": true
+  },
+  {
+    "id": "object.removeStroke",
+    "label": "Remove stroke",
+    "menu": "Object",
+    "params": "{ids?}",
+    "shortcut": "Shift+/",
+    "undoable": true
+  },
+  {
+    "id": "object.swapFillStroke",
+    "label": "Swap fill and stroke",
+    "menu": "Object",
+    "params": "{ids?}",
+    "shortcut": "Shift+X",
+    "undoable": true
+  },
+  {
+    "id": "layers.collapseAll",
+    "label": "Collapse layers",
+    "menu": "Object",
+    "params": "{}",
+    "shortcut": "Alt+L",
+    "undoable": false
+  },
+  {
+    "id": "node.set",
+    "label": "Set properties",
+    "menu": null,
+    "params": "name, visible, locked, opacity (0-1), blend, x, y (relative to the parent frame; groups don't count), width, height, rotation (degrees), fills (paints or colours), fill (colour), strokes, stroke (colour), strokeWeight, strokeAlign (inside|center|outside), strokeSides [t,r,b,l], strokeTopWeight / strokeRightWeight / strokeBottomWeight / strokeLeftWeight (one side; turns on individual strokes), strokeCap / startCap / endCap, strokeJoin, miterAngle (degrees: sharper joins bevel; or miterLimit as a ratio), dashes [..], widthProfile (preset uniform|wedge|taper|eye|rounded|pinch, [[t, scale], ...] or null), brush (preset id, {preset, spacing, sizeJitter, rotationJitter, scatter, seed} or null), cornerRadius (n or [tl,tr,br,bl]), cornerSmoothing (0-1), effects, clip, isMask, layout (null|horizontal|vertical|grid|{...}), gap, crossGap, padding (n or [t,r,b,l]), paddingTop/Right/Bottom/Left, mainAlign (min|center|max, or the auto gaps spaceBetween|spaceAround|spaceEvenly), crossAlign (min|center|max|baseline: first text baselines, horizontal layouts), contentAlign (wrapped lines: auto = packed where crossAlign says | spaceBetween), wrap (rows of a horizontal layout, columns of a vertical one), strokesIncluded (the frame's inside stroke takes up space), reverseZ (canvas stacking: true = first on top), columnGap / rowGap (aliases of gap / crossGap), gridColumns, gridRows, columnTracks / rowTracks ([120 | \"1fr\" | \"auto\" | {sizing, value}]), gridColumn / gridRow (0-based cell anchor, null = auto), gridColumnSpan, gridRowSpan, gridAlignH / gridAlignV (a grid child's alignment in its cell: min|center|max, auto/null = the frame's), sizingH / sizingV (fixed|hug|fill), absolute (ignore auto layout; follows constraints), minWidth, maxWidth, minHeight, maxHeight (null removes), constraints {horizontal, vertical}, grids, exports, characters, fontFamily, fontStyle, fontSize, lineHeight (auto|px|\"150%\"), letterSpacing (px|\"2%\"), textAlign (left|center|right|justified), textAlignVertical, textAutoResize (widthAndHeight|height|none|truncate), textDecoration, textDecorationStyle (solid|dotted|wavy), textDecorationThickness / textDecorationOffset (auto|px|\"10%\" of the font size; the offset runs from the baseline down to an underline's top edge), textDecorationSkipInk (underlines break around descenders), textDecorationColor (colour, or auto/null: the text's), textCase (original|upper|lower|title|smallCaps), paragraphSpacing, paragraphIndent, listStyle (none|bulleted|numbered; with start/end: the paragraphs those chars touch), indentation (list nesting level 0-8, same range rule), listSpacing (px between list items, in place of paragraphSpacing), hangingPunctuation, hangingList (markers outside the box), leadingTrim (vertical trim: none|capHeight), maxLines, features ({tag: bool}, e.g. {\"liga\": false, \"tnum\": true}), fontVariations / variationSettings ({axis: number}, e.g. {\"wght\": 550, \"wdth\": 85}; null = none), pointCount, innerRadius, arcStart, arcSweep, arcInner, booleanOperation (a boolean group's operation, or an operand's own; null: the group's), operandOperation (a layer in a boolean group: how it combines with the operands below it; null: the group's), constrainProportions, description, interactions, overflow, pluginData {k: v}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "node.get",
+    "label": "Get layer",
+    "menu": null,
+    "params": "{id}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "node.reparent",
+    "label": "Move layer into",
+    "menu": null,
+    "params": "{ids?, parent, index?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "node.reorder",
+    "label": "Reorder layer",
+    "menu": null,
+    "params": "{id, index}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "fill.add",
+    "label": "Add fill",
+    "menu": null,
+    "params": "{ids?, paint? (default #D9D9D9 or white for frames)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "stroke.add",
+    "label": "Add stroke",
+    "menu": null,
+    "params": "{ids?, paint? (default black)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "fill.remove",
+    "label": "Remove fill",
+    "menu": null,
+    "params": "{ids?, index}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "stroke.remove",
+    "label": "Remove stroke",
+    "menu": null,
+    "params": "{ids?, index}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "fill.set",
+    "label": "Set fill",
+    "menu": null,
+    "params": "{ids?, index?, paint | color, opacity?, visible?, blend?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "stroke.set",
+    "label": "Set stroke",
+    "menu": null,
+    "params": "{ids?, index?, paint | color, opacity?, visible?, blend?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "fill.pattern",
+    "label": "Pattern fill",
+    "menu": null,
+    "params": "{source (layer id), ids?, index? (default the top fill), tile? (grid|horizontalHex|verticalHex), scale? (1 = the source's size), spacing? [x, y], align? (start|center|end), opacity?}  the source layer tiled; it updates as the source changes",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "stroke.widthProfile",
+    "label": "Width profile",
+    "menu": null,
+    "params": "{ids?, preset? (uniform|wedge|taper|eye|rounded|pinch) | points? [[t (0-1 along each subpath), scale (× stroke weight)], ...]} — none = uniform",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "stroke.brush",
+    "label": "Brush",
+    "menu": null,
+    "params": "{ids?, preset (taper|ink|ribbon|bristle: stretched along the path; dots|stars|confetti|leaves: scattered along it | null: plain), spacing? (× weight), sizeJitter? (0-1), rotationJitter? (0-1), scatter? (0-4 × weight), seed?}  layers without a stroke get a black one",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "effect.add",
+    "label": "Add effect",
+    "menu": null,
+    "params": "{ids?, type? (dropShadow|innerShadow|layerBlur|backgroundBlur|noise|texture|glass), effect? {..}}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "effect.remove",
+    "label": "Remove effect",
+    "menu": null,
+    "params": "{ids?, index}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "effect.set",
+    "label": "Set effect",
+    "menu": null,
+    "params": "{ids?, index, effect {..}}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "grid.add",
+    "label": "Add layout grid",
+    "menu": null,
+    "params": "{ids?, grid? {kind: grid|columns|rows, ..}}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "grid.remove",
+    "label": "Remove layout grid",
+    "menu": null,
+    "params": "{ids?, index}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "export.add",
+    "label": "Add export setting",
+    "menu": null,
+    "params": "{ids?, setting? {size: 2x|512w|512h|{by: scale|width|height, value}, suffix?, format?: png|jpg|svg|pdf|webp, bleed? (PDF: points, or with a unit: \"3mm\", \"0.125in\", \"9pt\"), cropMarks?, bleedMarks?, cmyk? (PDF print options)}} (without a setting: 1x, then one scale step up with an \"@2x\"-style suffix)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "export.update",
+    "label": "Edit export setting",
+    "menu": null,
+    "params": "{ids?, index, size? (2x|512w|512h|{by, value}), suffix?, format? (png|jpg|svg|pdf|webp), bleed? (PDF: points, or with a unit: \"3mm\", \"0.125in\", \"9pt\"), cropMarks?, bleedMarks?, cmyk? (PDF print options)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "export.remove",
+    "label": "Remove export setting",
+    "menu": null,
+    "params": "{ids?, index}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "command.batch",
+    "label": "Run several commands",
+    "menu": null,
+    "params": "{label?, commands: [{command, params}]} (one undo step)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "edit.repeat",
+    "label": "Repeat last command",
+    "menu": null,
+    "params": "{}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "fill.move",
+    "label": "Move fill",
+    "menu": null,
+    "params": "{ids?, from, to} (indices in the fill list, bottom first)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "stroke.move",
+    "label": "Move stroke",
+    "menu": null,
+    "params": "{ids?, from, to} (indices in the stroke list, bottom first)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "effect.move",
+    "label": "Move effect",
+    "menu": null,
+    "params": "{ids?, from, to} (indices in the effect list, bottom first)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "grid.move",
+    "label": "Move layout grid",
+    "menu": null,
+    "params": "{ids?, from, to} (indices in the layout grid list, bottom first)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "align.left",
+    "label": "Align left",
+    "menu": "Arrange",
+    "params": "{ids?}",
+    "shortcut": "Alt+A",
+    "undoable": true
+  },
+  {
+    "id": "align.hcenter",
+    "label": "Align horizontal centers",
+    "menu": "Arrange",
+    "params": "{ids?}",
+    "shortcut": "Alt+H",
+    "undoable": true
+  },
+  {
+    "id": "align.right",
+    "label": "Align right",
+    "menu": "Arrange",
+    "params": "{ids?}",
+    "shortcut": "Alt+D",
+    "undoable": true
+  },
+  {
+    "id": "align.top",
+    "label": "Align top",
+    "menu": "Arrange",
+    "params": "{ids?}",
+    "shortcut": "Alt+W",
+    "undoable": true
+  },
+  {
+    "id": "align.vcenter",
+    "label": "Align vertical centers",
+    "menu": "Arrange",
+    "params": "{ids?}",
+    "shortcut": "Alt+V",
+    "undoable": true
+  },
+  {
+    "id": "align.bottom",
+    "label": "Align bottom",
+    "menu": "Arrange",
+    "params": "{ids?}",
+    "shortcut": "Alt+S",
+    "undoable": true
+  },
+  {
+    "id": "distribute.horizontal",
+    "label": "Distribute horizontal spacing",
+    "menu": "Arrange",
+    "params": "{ids?, spacing?}",
+    "shortcut": "Alt+Shift+H",
+    "undoable": true
+  },
+  {
+    "id": "distribute.vertical",
+    "label": "Distribute vertical spacing",
+    "menu": "Arrange",
+    "params": "{ids?, spacing?}",
+    "shortcut": "Alt+Shift+V",
+    "undoable": true
+  },
+  {
+    "id": "arrange.tidy",
+    "label": "Tidy up",
+    "menu": "Arrange",
+    "params": "{ids?, spacing?}",
+    "shortcut": "Ctrl+Alt+Shift+T",
+    "undoable": true
+  },
+  {
+    "id": "arrange.packH",
+    "label": "Pack horizontal",
+    "menu": "Arrange",
+    "params": "{ids?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "arrange.packV",
+    "label": "Pack vertical",
+    "menu": "Arrange",
+    "params": "{ids?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "arrange.roundToPixels",
+    "label": "Round to pixels",
+    "menu": "Arrange",
+    "params": "{ids?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "arrange.front",
+    "label": "Bring to front",
+    "menu": "Object",
+    "params": "{ids?}",
+    "shortcut": "Shift+Cmd+]",
+    "undoable": true
+  },
+  {
+    "id": "arrange.forward",
+    "label": "Bring forward",
+    "menu": "Object",
+    "params": "{ids?}",
+    "shortcut": "Cmd+]",
+    "undoable": true
+  },
+  {
+    "id": "arrange.backward",
+    "label": "Send backward",
+    "menu": "Object",
+    "params": "{ids?}",
+    "shortcut": "Cmd+[",
+    "undoable": true
+  },
+  {
+    "id": "arrange.back",
+    "label": "Send to back",
+    "menu": "Object",
+    "params": "{ids?}",
+    "shortcut": "Shift+Cmd+[",
+    "undoable": true
+  },
+  {
+    "id": "object.flipH",
+    "label": "Flip horizontal",
+    "menu": "Object",
+    "params": "{ids?} (in vector edit mode without ids: the selected points)",
+    "shortcut": "Shift+H",
+    "undoable": true
+  },
+  {
+    "id": "object.flipV",
+    "label": "Flip vertical",
+    "menu": "Object",
+    "params": "{ids?} (in vector edit mode without ids: the selected points)",
+    "shortcut": "Shift+V",
+    "undoable": true
+  },
+  {
+    "id": "object.rotate180",
+    "label": "Rotate 180°",
+    "menu": "Object",
+    "params": "{ids?} (in vector edit mode without ids: the selected points)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "object.rotateLeft",
+    "label": "Rotate 90° left",
+    "menu": "Object",
+    "params": "{ids?} (in vector edit mode without ids: the selected points)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "object.rotateRight",
+    "label": "Rotate 90° right",
+    "menu": "Object",
+    "params": "{ids?} (in vector edit mode without ids: the selected points)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "transform.move",
+    "label": "Move",
+    "menu": null,
+    "params": "{ids?, dx, dy}  (page units)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "transform.moveTo",
+    "label": "Move to",
+    "menu": null,
+    "params": "{ids?, x, y} (page coordinates of the selection's top-left)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "transform.rotate",
+    "label": "Rotate",
+    "menu": null,
+    "params": "{ids?, degrees, cx?, cy? (pivot, page coords; default the selection's rotation origin, else its centre)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "transform.rotationOrigin",
+    "label": "Move rotation origin",
+    "menu": null,
+    "params": "{on? (default: toggles)} — shows the selection's rotation origin to drag (Escape hides it); not saved",
+    "shortcut": "Alt+R",
+    "undoable": false
+  },
+  {
+    "id": "transform.setRotationOrigin",
+    "label": "Set rotation origin",
+    "menu": null,
+    "params": "{x, y (page coords) | reset: true} — the point the selection turns about (default its centre); kept while the selection lasts, not saved",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "transform.scale",
+    "label": "Scale",
+    "menu": null,
+    "params": "{ids?, factor, cx?, cy? (pivot; default top-left)} — scales size, strokes, effects, text (the K tool)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "transform.resize",
+    "label": "Resize",
+    "menu": null,
+    "params": "{ids?, width?, height?, anchor? (tl|t|tr|l|c|r|bl|b|br)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "object.group",
+    "label": "Group selection",
+    "menu": "Object",
+    "params": "{ids?, name?}",
+    "shortcut": "Cmd+G",
+    "undoable": true
+  },
+  {
+    "id": "object.ungroup",
+    "label": "Ungroup selection",
+    "menu": "Object",
+    "params": "{ids?}",
+    "shortcut": "Shift+Cmd+G",
+    "undoable": true
+  },
+  {
+    "id": "object.frameSelection",
+    "label": "Frame selection",
+    "menu": "Object",
+    "params": "{ids?, name?}",
+    "shortcut": "Alt+Cmd+G",
+    "undoable": true
+  },
+  {
+    "id": "object.removeFrame",
+    "label": "Remove frame",
+    "menu": "Object",
+    "params": "{ids?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "object.convertToGroup",
+    "label": "Convert to group",
+    "menu": null,
+    "params": "{ids?} (frames become groups in place, their layers staying where they are; what only a frame has goes: auto layout, fills, strokes, corner radius, clipping, layout grids, guides and scrolling. Groups are left alone; instances, main components, layers inside instances and empty frames are refused)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "object.convertToFrame",
+    "label": "Convert to frame",
+    "menu": null,
+    "params": "{ids?} (groups become frames of the same box in place, their layers staying where they are: no fill, not clipping. Frames are left alone; instances, main components and layers inside instances are refused)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "object.wrapInSection",
+    "label": "Wrap in new section",
+    "menu": null,
+    "params": "{ids?, name?} (layers on the page or in a section; the section wraps them with some room)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "object.resizeToFit",
+    "label": "Resize to fit",
+    "menu": "Object",
+    "params": "{ids?} (frames, sections and components shrink or grow to their contents; the contents stay put)",
+    "shortcut": "Alt+Shift+Cmd+R",
+    "undoable": true
+  },
+  {
+    "id": "object.mask",
+    "label": "Use as mask",
+    "menu": "Object",
+    "params": "{ids?}",
+    "shortcut": "Ctrl+Alt+M",
+    "undoable": true
+  },
+  {
+    "id": "object.releaseMask",
+    "label": "Release mask",
+    "menu": "Object",
+    "params": "{ids?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "bool.union",
+    "label": "Union selection",
+    "menu": "Object/Boolean groups",
+    "params": "{ids?} — layers inside boolean groups: sets their own operation (how each combines with the operands below it); one boolean group: sets its operation (every operand follows it); otherwise wraps the layers in a new boolean group",
+    "shortcut": "Alt+Shift+U",
+    "undoable": true
+  },
+  {
+    "id": "bool.subtract",
+    "label": "Subtract selection",
+    "menu": "Object/Boolean groups",
+    "params": "{ids?} — layers inside boolean groups: sets their own operation (how each combines with the operands below it); one boolean group: sets its operation (every operand follows it); otherwise wraps the layers in a new boolean group",
+    "shortcut": "Alt+Shift+S",
+    "undoable": true
+  },
+  {
+    "id": "bool.intersect",
+    "label": "Intersect selection",
+    "menu": "Object/Boolean groups",
+    "params": "{ids?} — layers inside boolean groups: sets their own operation (how each combines with the operands below it); one boolean group: sets its operation (every operand follows it); otherwise wraps the layers in a new boolean group",
+    "shortcut": "Alt+Shift+I",
+    "undoable": true
+  },
+  {
+    "id": "bool.exclude",
+    "label": "Exclude selection",
+    "menu": "Object/Boolean groups",
+    "params": "{ids?} — layers inside boolean groups: sets their own operation (how each combines with the operands below it); one boolean group: sets its operation (every operand follows it); otherwise wraps the layers in a new boolean group",
+    "shortcut": "Alt+Shift+E",
+    "undoable": true
+  },
+  {
+    "id": "bool.flatten",
+    "label": "Flatten boolean",
+    "menu": "Object/Boolean groups",
+    "params": "{ids?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "vector.flatten",
+    "label": "Flatten",
+    "menu": "Object",
+    "params": "{ids?}",
+    "shortcut": "Alt+Shift+F",
+    "undoable": true
+  },
+  {
+    "id": "vector.outlineStroke",
+    "label": "Outline stroke",
+    "menu": "Object",
+    "params": "{ids?}",
+    "shortcut": "Alt+Cmd+O",
+    "undoable": true
+  },
+  {
+    "id": "layout.add",
+    "label": "Add auto layout",
+    "menu": "Object",
+    "params": "{ids?, direction? (horizontal|vertical|grid)}",
+    "shortcut": "Shift+A",
+    "undoable": true
+  },
+  {
+    "id": "layout.remove",
+    "label": "Remove auto layout",
+    "menu": "Object",
+    "params": "{ids?}",
+    "shortcut": "Alt+Shift+A",
+    "undoable": true
+  },
+  {
+    "id": "layout.suggest",
+    "label": "Suggest auto layout",
+    "menu": "Object",
+    "params": "{ids?}",
+    "shortcut": "Ctrl+Alt+Shift+A",
+    "undoable": true
+  },
+  {
+    "id": "object.moveToPage",
+    "label": "Move to page",
+    "menu": "Object",
+    "params": "{ids?, page}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "object.setThumbnail",
+    "label": "Set as thumbnail",
+    "menu": "Object",
+    "params": "{id?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "object.rasterize",
+    "label": "Rasterize selection",
+    "menu": "Object",
+    "params": "{ids?, scale? (default 2)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "vector.reverse",
+    "label": "Reverse path direction",
+    "menu": "Vector",
+    "params": "{ids?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "vector.simplify",
+    "label": "Simplify vector",
+    "menu": "Vector",
+    "params": "{ids?, tolerance?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "vector.offset",
+    "label": "Offset path",
+    "menu": "Vector",
+    "params": "{ids?, offset}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "vector.join",
+    "label": "Join selection",
+    "menu": "Vector",
+    "params": "{ids?} (in vector edit mode: joins the selected points)",
+    "shortcut": "Cmd+J",
+    "undoable": true
+  },
+  {
+    "id": "vector.smoothJoin",
+    "label": "Smooth join selection",
+    "menu": "Vector",
+    "params": "{ids?} (in vector edit mode: joins the selected points smoothly)",
+    "shortcut": "Shift+Cmd+J",
+    "undoable": true
+  },
+  {
+    "id": "section.toggleContents",
+    "label": "Hide/Show section contents",
+    "menu": null,
+    "params": "{ids?, hidden? (default: hide unless all are hidden)} (a hidden section shows only its name and outline; its layers aren't drawn or hit)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "dev.resolveChange",
+    "label": "Resolve change",
+    "menu": null,
+    "params": "{ids?, reason?} (ready-for-dev frames and sections that changed since they were marked go back to Ready for dev; the reason is kept)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "dev.compare",
+    "label": "Compare changes",
+    "menu": null,
+    "params": "{id? (default the first selected layer), show? (open the compare view in the app)} → {id, name, changed, snapshot, added, removed, modified, truncated, changes: [{id, name, type, change: added|removed|changed, depth, layers, properties?: [{section, property, before, after, text}]}]}  what changed in a ready-for-dev frame or section since it was marked (`snapshot` is false when that isn't known: a file from before snapshots were kept)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "dev.focus",
+    "label": "Focus view",
+    "menu": null,
+    "params": "{id? (a top-level frame or section; default the selection) | direction?: next|previous (the next ready-for-dev one, across pages)} → {id, name, page, index, count}  show only that layer on the canvas (Escape or `dev.unfocus` ends it)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "dev.unfocus",
+    "label": "Exit focus view",
+    "menu": null,
+    "params": "{} → {focused: false}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "layout.setTrack",
+    "label": "Set grid track size",
+    "menu": null,
+    "params": "{ids?, axis: columns|rows, index (0-based), sizing: fixed|hug|fill, value? (fixed: px, default the track's current size; fill: fr, default 1)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "file.new",
+    "label": "New design file",
+    "menu": "File",
+    "params": "{name?}",
+    "shortcut": "Cmd+N",
+    "undoable": false
+  },
+  {
+    "id": "file.open",
+    "label": "Open",
+    "menu": "File",
+    "params": "{path, variables? (REST: the local variables JSON as an object, JSON text or a path; default `<name>.variables.json` or `variables.json` next to the file)} (.figcraft, .json: FigCraft or REST API file JSON, .fig (best effort), .svg, .png, .jpg …); REST and .fig imports return `warnings`",
+    "shortcut": "Cmd+O",
+    "undoable": false
+  },
+  {
+    "id": "file.openRecent",
+    "label": "Open recent",
+    "menu": "File",
+    "params": "{path? | index? (into the list), clear? (forget them all), remove? (a path: forget that one)}  opens a recent file; a file that no longer exists is dropped from the list. Returns the list, newest first: {files: [{path, name, exists}]} (opening returns what `file.open` does)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "file.save",
+    "label": "Save",
+    "menu": "File",
+    "params": "{path?} (programmatic saves need a path the first time)",
+    "shortcut": "Cmd+S",
+    "undoable": false
+  },
+  {
+    "id": "file.saveAs",
+    "label": "Save as",
+    "menu": "File",
+    "params": "{path}",
+    "shortcut": "Shift+Cmd+S",
+    "undoable": false
+  },
+  {
+    "id": "file.export",
+    "label": "Export",
+    "menu": "File",
+    "params": "{ids? (default selection, else the page), format? (png|jpg|svg|pdf|webp, or fig: the whole file as .fig, experimental, with `warnings` for what was left out; other apps may not open every file), scale? (default 1) | size? (2x|512w|512h or {by: scale|width|height, value}: a scale, or a width or height in pixels), path? (else returns base64 `data`), bleed? (PDF: points, or with a unit: \"3mm\", \"0.125in\", \"9pt\"), cropMarks?, bleedMarks?, cmyk? (PDF print options)}",
+    "shortcut": "Shift+Cmd+E",
+    "undoable": false
+  },
+  {
+    "id": "file.exportLayers",
+    "label": "Export layers",
+    "menu": null,
+    "params": "{ids? (default the selection, else every layer on the page with export settings), assets? (true: the Inspect tab's assets in and under them instead: layers with export settings, icons as SVG, images as PNG), dir? (folder to write into; else each file comes back as base64 `data`), bleed? (PDF: points, or with a unit: \"3mm\", \"0.125in\", \"9pt\"), cropMarks?, bleedMarks?, cmyk? (PDF print options): for every PDF instead of each setting's own}  every layer once per export setting, named `<layer><suffix>.<format>` (\"@2x\" when a scaled export has no suffix; repeats get \" 2\"; slashes in a layer name make folders). Returns {files: [{name, id, bytes, path | data}], skipped (layers without settings)}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "file.exportSvg",
+    "label": "Export selection as SVG",
+    "menu": "File",
+    "params": "{ids?, path?}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "file.exportFramesPdf",
+    "label": "Export frames to PDF",
+    "menu": "File",
+    "params": "{path?, page? (page id, default the current page), bleed? (PDF: points, or with a unit: \"3mm\", \"0.125in\", \"9pt\"), cropMarks?, bleedMarks?, cmyk? (PDF print options)}  every top-level frame in reading order, one PDF page each; returns base64 `data` without a path",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "file.import",
+    "label": "Import",
+    "menu": "File",
+    "params": "{path | data (base64) + name, x?, y?, center? (SVG: centre it on x, y), variables? (REST: the local variables JSON as an object, JSON text or a path)}  SVG becomes an editable frame (shapes, text, gradients, masks, effects; with `warnings` for what it left out), images become image layers, .figcraft, REST API file JSON and .fig pages are appended with their variables and flows (REST and .fig: with `warnings`)",
+    "shortcut": "Shift+Cmd+I",
+    "undoable": true
+  },
+  {
+    "id": "file.placeImage",
+    "label": "Place image",
+    "menu": "File",
+    "params": "{path | data, x?, y?}",
+    "shortcut": "Shift+Cmd+K",
+    "undoable": true
+  },
+  {
+    "id": "file.close",
+    "label": "Close tab",
+    "menu": "File",
+    "params": "{index?, force? (discard unsaved changes)}",
+    "shortcut": "Cmd+W",
+    "undoable": false
+  },
+  {
+    "id": "file.recover",
+    "label": "Recover file",
+    "menu": null,
+    "params": "{path}  open a recovery copy (written while the app runs, read back after a crash) as a document with unsaved changes and no path: saving asks where → {index}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "file.rename",
+    "label": "Rename file",
+    "menu": "File",
+    "params": "{name}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "file.colorProfile",
+    "label": "Color profile",
+    "menu": "File",
+    "params": "{profile?: srgb|displayP3, convert? (default true: convert colour values so colours keep their appearance; false: keep the values and reinterpret them)}  without `profile`, returns the current one (and the app opens the dialog). Returns {profile, changed}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "file.duplicate",
+    "label": "Duplicate file",
+    "menu": "File",
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "file.revert",
+    "label": "Revert to saved",
+    "menu": "File",
+    "params": "{}  leave the live session first, if any",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "file.saveVersion",
+    "label": "Save to version history",
+    "menu": "File",
+    "params": "{name?, description?}  snapshot the document into the file's version history (on a branch tab: the branch's own history; kept when the file is saved); returns the version",
+    "shortcut": "Alt+Cmd+S",
+    "undoable": false
+  },
+  {
+    "id": "file.versionHistory",
+    "label": "Show version history",
+    "menu": "File",
+    "params": "{}  opens the panel; returns the versions like `version.list`",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "version.list",
+    "label": "List versions",
+    "menu": null,
+    "params": "{}  the version history, oldest first: [{id, index, name, description, time (Unix seconds), auto?, previewing?}]",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "version.restore",
+    "label": "Restore version",
+    "menu": null,
+    "params": "{id | index}  replace the design with the version (one undo step; the file name and the comments stay; the design as it was is kept in the history first, unless a version of it was just saved or restored)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "version.rename",
+    "label": "Rename version",
+    "menu": null,
+    "params": "{id | index, name, description?}  a titled autosave becomes a named version",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "version.delete",
+    "label": "Delete version",
+    "menu": null,
+    "params": "{id | index}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "version.preview",
+    "label": "View version",
+    "menu": null,
+    "params": "{id | index}  show the version on the canvas in place of the document (read-only; `version.restore` keeps it, `version.exitPreview` goes back)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "version.autosave",
+    "label": "Autosave version",
+    "menu": null,
+    "params": "{}  save an automatic checkpoint when the document has unsaved changes since the last version (the app does this every 30 minutes); keeps the newest 20 autosaves → {saved, version?}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "version.exitPreview",
+    "label": "Back to current version",
+    "menu": null,
+    "params": "{}  end a version preview",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "version.duplicate",
+    "label": "Duplicate version",
+    "menu": null,
+    "params": "{id | index}  open the version as a new document; returns its tab `index`",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "doc.switch",
+    "label": "Switch document",
+    "menu": null,
+    "params": "{index}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "doc.nextTab",
+    "label": "Next tab",
+    "menu": null,
+    "params": "{}",
+    "shortcut": "Ctrl+Tab",
+    "undoable": false
+  },
+  {
+    "id": "doc.previousTab",
+    "label": "Previous tab",
+    "menu": null,
+    "params": "{}",
+    "shortcut": "Ctrl+Shift+Tab",
+    "undoable": false
+  },
+  {
+    "id": "doc.list",
+    "label": "List documents",
+    "menu": null,
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "doc.home",
+    "label": "Home",
+    "menu": null,
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "page.add",
+    "label": "Add page",
+    "menu": null,
+    "params": "{name?} (a name starting with a hyphen adds a divider)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "page.select",
+    "label": "Go to page",
+    "menu": null,
+    "params": "{id | index}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "page.rename",
+    "label": "Rename page",
+    "menu": null,
+    "params": "{id?, name} (an empty page named with a leading hyphen becomes a divider)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "page.delete",
+    "label": "Delete page",
+    "menu": null,
+    "params": "{id?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "page.duplicate",
+    "label": "Duplicate page",
+    "menu": null,
+    "params": "{id?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "page.move",
+    "label": "Move page",
+    "menu": null,
+    "params": "{id?, index}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "page.setBackground",
+    "label": "Page background",
+    "menu": null,
+    "params": "{id?, color}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "page.list",
+    "label": "List pages",
+    "menu": null,
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "guide.add",
+    "label": "Add guide",
+    "menu": null,
+    "params": "{vertical (bool), offset, frame? | page?} → {index}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "guide.move",
+    "label": "Move guide",
+    "menu": null,
+    "params": "{index, offset, frame? | page?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "guide.remove",
+    "label": "Remove guide",
+    "menu": null,
+    "params": "{index?, frame? | page?} (no index: the selected guide)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "guide.select",
+    "label": "Select guide",
+    "menu": null,
+    "params": "{index?, frame? | page?}  a ruler guide to delete or nudge (deselects layers; no index: none)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "guide.clear",
+    "label": "Remove all guides",
+    "menu": null,
+    "params": "{frame? | page?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "view.zoomIn",
+    "label": "Zoom in",
+    "menu": "View",
+    "params": "{}",
+    "shortcut": "Cmd+=",
+    "undoable": false
+  },
+  {
+    "id": "view.zoomOut",
+    "label": "Zoom out",
+    "menu": "View",
+    "params": "{}",
+    "shortcut": "Cmd+-",
+    "undoable": false
+  },
+  {
+    "id": "view.zoom100",
+    "label": "Zoom to 100%",
+    "menu": "View",
+    "params": "{}",
+    "shortcut": "Shift+0",
+    "undoable": false
+  },
+  {
+    "id": "view.zoom50",
+    "label": "Zoom to 50%",
+    "menu": "View",
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "view.zoom200",
+    "label": "Zoom to 200%",
+    "menu": "View",
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "view.zoomFit",
+    "label": "Zoom to fit",
+    "menu": "View",
+    "params": "{}",
+    "shortcut": "Shift+1",
+    "undoable": false
+  },
+  {
+    "id": "view.zoomSelection",
+    "label": "Zoom to selection",
+    "menu": "View",
+    "params": "{}",
+    "shortcut": "Shift+2",
+    "undoable": false
+  },
+  {
+    "id": "view.set",
+    "label": "Set view",
+    "menu": null,
+    "params": "{zoom?, cx?, cy? (page coordinate at the centre), vw?, vh? (viewport size)}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "view.zoomAt",
+    "label": "Zoom tool",
+    "menu": null,
+    "params": "{x, y (page point kept in place), out? (zoom out a step), width?, height? (an area to fit instead)}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "view.get",
+    "label": "Get view",
+    "menu": null,
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "view.prevFrame",
+    "label": "Zoom to previous frame",
+    "menu": "View",
+    "params": "{}",
+    "shortcut": "Shift+N",
+    "undoable": false
+  },
+  {
+    "id": "view.nextFrame",
+    "label": "Zoom to next frame",
+    "menu": "View",
+    "params": "{}",
+    "shortcut": "N",
+    "undoable": false
+  },
+  {
+    "id": "view.prevPage",
+    "label": "Previous page",
+    "menu": "View",
+    "params": "{}",
+    "shortcut": "PageUp",
+    "undoable": false
+  },
+  {
+    "id": "view.nextPage",
+    "label": "Next page",
+    "menu": "View",
+    "params": "{}",
+    "shortcut": "PageDown",
+    "undoable": false
+  },
+  {
+    "id": "view.pixelGrid",
+    "label": "Pixel grid",
+    "menu": "View",
+    "params": "{on?}",
+    "shortcut": "Shift+'",
+    "undoable": false
+  },
+  {
+    "id": "view.layoutGrids",
+    "label": "Layout grids",
+    "menu": "View",
+    "params": "{on?}",
+    "shortcut": "Shift+G",
+    "undoable": false
+  },
+  {
+    "id": "view.rulers",
+    "label": "Rulers",
+    "menu": "View",
+    "params": "{on?}",
+    "shortcut": "Shift+R",
+    "undoable": false
+  },
+  {
+    "id": "view.slices",
+    "label": "Slices",
+    "menu": "View",
+    "params": "{on?}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "view.comments",
+    "label": "Comments",
+    "menu": "View",
+    "params": "{on?}",
+    "shortcut": "Shift+C",
+    "undoable": false
+  },
+  {
+    "id": "view.multiplayerCursors",
+    "label": "Multiplayer cursors",
+    "menu": "View",
+    "params": "{on?}  others' cursors in a live session",
+    "shortcut": "Alt+Cmd+\\",
+    "undoable": false
+  },
+  {
+    "id": "view.pan",
+    "label": "Pan the view",
+    "menu": null,
+    "params": "{dx, dy (arrow-key steps, e.g. 1 or -1), big? (ten times as far, like Shift)}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "view.outlines",
+    "label": "Outlines",
+    "menu": "View/Outlines",
+    "params": "{on?}",
+    "shortcut": "Shift+Cmd+O",
+    "undoable": false
+  },
+  {
+    "id": "view.outlinesSelection",
+    "label": "Outlines for selection",
+    "menu": "View/Outlines",
+    "params": "{on?}  outline mode for the selected layers only",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "view.outlinesHiddenLayers",
+    "label": "Include hidden layers in outlines",
+    "menu": "View/Outlines",
+    "params": "{on?}  outline mode (and outlines for the selection) outlines hidden layers too; they can be clicked there",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "view.outlinesObjectBounds",
+    "label": "Include object bounds in outlines",
+    "menu": "View/Outlines",
+    "params": "{on?}  outline mode also draws each layer's box (groups, text, vectors); a click on a box's edge picks its layer",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "view.maskOutlines",
+    "label": "Mask outlines",
+    "menu": "View",
+    "params": "{on?}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "view.pixelPreview",
+    "label": "Pixel preview",
+    "menu": "View",
+    "params": "{on?, scale? (1|2: rendered pixels per page pixel; turns it on)}",
+    "shortcut": "Ctrl+Alt+P",
+    "undoable": false
+  },
+  {
+    "id": "view.frameOutlines",
+    "label": "Frame outlines",
+    "menu": "View",
+    "params": "{on?}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "view.proofSrgb",
+    "label": "Soft-proof sRGB",
+    "menu": "View",
+    "params": "{on?}  mark the colours of a Display P3 file that sRGB screens and files can't show",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "view.snapGeometry",
+    "label": "Snap to geometry",
+    "menu": "Preferences",
+    "params": "{on?}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "view.snapObjects",
+    "label": "Snap to objects",
+    "menu": "Preferences",
+    "params": "{on?}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "view.snapPixel",
+    "label": "Snap to pixel grid",
+    "menu": "Preferences",
+    "params": "{on?}",
+    "shortcut": "Shift+Cmd+'",
+    "undoable": false
+  },
+  {
+    "id": "view.toggleUi",
+    "label": "Show/Hide UI",
+    "menu": "View/Panels",
+    "params": "{on?}",
+    "shortcut": "Cmd+\\",
+    "undoable": false
+  },
+  {
+    "id": "view.fullscreen",
+    "label": "Full screen",
+    "menu": "View",
+    "params": "{on?}  the window fills the screen (the desktop app; a no-op headless)",
+    "shortcut": "F11",
+    "undoable": false
+  },
+  {
+    "id": "view.layers",
+    "label": "Layers panel",
+    "menu": "View/Panels",
+    "params": "{}",
+    "shortcut": "Alt+1",
+    "undoable": false
+  },
+  {
+    "id": "view.assets",
+    "label": "Assets panel",
+    "menu": "View/Panels",
+    "params": "{}",
+    "shortcut": "Alt+2",
+    "undoable": false
+  },
+  {
+    "id": "view.design",
+    "label": "Design panel",
+    "menu": "View/Panels",
+    "params": "{}",
+    "shortcut": "Alt+8",
+    "undoable": false
+  },
+  {
+    "id": "view.prototype",
+    "label": "Prototype panel",
+    "menu": "View/Panels",
+    "params": "{}",
+    "shortcut": "Alt+9",
+    "undoable": false
+  },
+  {
+    "id": "view.designPrototype",
+    "label": "Switch between Design and Prototype",
+    "menu": null,
+    "params": "{}",
+    "shortcut": "Shift+E",
+    "undoable": false
+  },
+  {
+    "id": "view.devMode",
+    "label": "Dev Mode",
+    "menu": null,
+    "params": "{}",
+    "shortcut": "Shift+D",
+    "undoable": false
+  },
+  {
+    "id": "view.leftSidebar",
+    "label": "Show/Hide left sidebar",
+    "menu": null,
+    "params": "{}",
+    "shortcut": "Shift+Cmd+\\",
+    "undoable": false
+  },
+  {
+    "id": "view.panelWidths",
+    "label": "Reset panel widths",
+    "menu": "View/Panels",
+    "params": "{left?, right? (the panels' widths in pixels, kept within their limits)}  without either, both go back to their default width (a double-click on a panel's edge does it for that panel)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "window.new",
+    "label": "New window",
+    "menu": "File",
+    "params": "{path?, index?}  a new window with a new file, the file at `path`, or open file `index` moved into it",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "window.focus",
+    "label": "Bring window to front",
+    "menu": null,
+    "params": "{id}  a window id (control channel `window.list`)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "view.nextRegion",
+    "label": "Focus next region",
+    "menu": null,
+    "params": "{}",
+    "shortcut": "F6",
+    "undoable": false
+  },
+  {
+    "id": "view.previousRegion",
+    "label": "Focus previous region",
+    "menu": null,
+    "params": "{}",
+    "shortcut": "Shift+F6",
+    "undoable": false
+  },
+  {
+    "id": "view.contextMenu",
+    "label": "Show context menu",
+    "menu": null,
+    "params": "{}  the selection's context menu at its layer row (when the layers panel has the keyboard) or on the canvas; the menu takes the keyboard",
+    "shortcut": "Shift+F10",
+    "undoable": false
+  },
+  {
+    "id": "view.themeLight",
+    "label": "Light theme",
+    "menu": "View/Theme",
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "view.themeDark",
+    "label": "Dark theme",
+    "menu": "View/Theme",
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "view.themeSystem",
+    "label": "Follow system theme",
+    "menu": "View/Theme",
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "pref.keepTool",
+    "label": "Keep tool selected after use",
+    "menu": "Preferences",
+    "params": "{on?}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "pref.highlightHover",
+    "label": "Highlight layers on hover",
+    "menu": "Preferences",
+    "params": "{on?}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "pref.renameDuplicates",
+    "label": "Rename duplicated layers",
+    "menu": "Preferences",
+    "params": "{on?}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "pref.showDimensions",
+    "label": "Show dimensions on objects",
+    "menu": "Preferences",
+    "params": "{on?}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "pref.numberKeysOpacity",
+    "label": "Use number keys for opacity",
+    "menu": "Preferences",
+    "params": "{on?}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "pref.reduceMotion",
+    "label": "Reduce motion",
+    "menu": null,
+    "params": "{on?}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "pref.nudge",
+    "label": "Nudge amount",
+    "menu": "Preferences",
+    "params": "{small?, big?}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "pref.userName",
+    "label": "Your name in comments",
+    "menu": null,
+    "params": "{name (blank: the default, \"You\")}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "pref.publishServer",
+    "label": "Server for online sharing",
+    "menu": null,
+    "params": "{url?: ws://host:port/ or wss://host/path/ (no key; empty: online sharing off; omit: back to the built-in server)} → {url, default (the built-in server)}: where Share ▸ Online keeps files and where join codes are asked",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "pref.language",
+    "label": "Interface language",
+    "menu": null,
+    "params": "{language: system|en|es|es-419|fr|de|pt-BR|ja|ko|zh-Hans|…; else English}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "app.preferences",
+    "label": "Preferences",
+    "menu": "Preferences",
+    "params": "{}",
+    "shortcut": "Cmd+,",
+    "undoable": false
+  },
+  {
+    "id": "app.actions",
+    "label": "Actions",
+    "menu": "Tools",
+    "params": "{}",
+    "shortcut": "Cmd+K",
+    "undoable": false
+  },
+  {
+    "id": "help.shortcuts",
+    "label": "Keyboard shortcuts",
+    "menu": "Help",
+    "params": "{}",
+    "shortcut": "Ctrl+Shift+?",
+    "undoable": false
+  },
+  {
+    "id": "help.about",
+    "label": "About FigCraft",
+    "menu": "Help",
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "help.page",
+    "label": "Help page",
+    "menu": "Help",
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "help.gettingStarted",
+    "label": "Getting started",
+    "menu": "Help",
+    "params": "{show? (default true; false closes them)}  the Getting started tips on the home screen: shows them again (the app opens the home screen), or closes them until asked for → {shown}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "libraries.open",
+    "label": "Libraries",
+    "menu": "Libraries",
+    "params": "{}",
+    "shortcut": "Alt+3",
+    "undoable": false
+  },
+  {
+    "id": "tool.set",
+    "label": "Choose tool",
+    "menu": null,
+    "params": "{tool: move|scale|hand|frame|section|slice|rectangle|line|arrow|ellipse|polygon|star|pen|pencil|text|comment|shapeBuilder}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "tool.place",
+    "label": "Place with the tool",
+    "menu": null,
+    "params": "{tool? (a shape or frame tool; default the current one), x?, y? (its centre, page coords; default the middle of the view)} — what a click with the tool makes, selected (Enter with the tool chosen)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "tool.pencilBrush",
+    "label": "Pencil brush",
+    "menu": null,
+    "params": "{preset? (taper|ink|ribbon|bristle|dots|stars|confetti|leaves | null: plain), spacing?, sizeJitter?, rotationJitter?, scatter?, seed?} (the brush new Pencil strokes get; omit `preset` to read it)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "tool.scaleAnchor",
+    "label": "Scale anchor",
+    "menu": null,
+    "params": "{anchor?: tl|t|tr|l|c|r|bl|b|br} (the point of the selection that stays put when the Scale tool scales; omit to read it)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "tool.move",
+    "label": "Move",
+    "menu": "Tools",
+    "params": "{}",
+    "shortcut": "V",
+    "undoable": false
+  },
+  {
+    "id": "tool.scale",
+    "label": "Scale",
+    "menu": "Tools",
+    "params": "{}",
+    "shortcut": "K",
+    "undoable": false
+  },
+  {
+    "id": "tool.hand",
+    "label": "Hand",
+    "menu": "Tools",
+    "params": "{}",
+    "shortcut": "H",
+    "undoable": false
+  },
+  {
+    "id": "tool.frame",
+    "label": "Frame",
+    "menu": "Tools",
+    "params": "{}",
+    "shortcut": "F",
+    "undoable": false
+  },
+  {
+    "id": "tool.section",
+    "label": "Section",
+    "menu": "Tools",
+    "params": "{}",
+    "shortcut": "Shift+S",
+    "undoable": false
+  },
+  {
+    "id": "tool.slice",
+    "label": "Slice",
+    "menu": "Tools",
+    "params": "{}",
+    "shortcut": "S",
+    "undoable": false
+  },
+  {
+    "id": "tool.rectangle",
+    "label": "Rectangle",
+    "menu": "Tools",
+    "params": "{}",
+    "shortcut": "R",
+    "undoable": false
+  },
+  {
+    "id": "tool.line",
+    "label": "Line",
+    "menu": "Tools",
+    "params": "{}",
+    "shortcut": "L",
+    "undoable": false
+  },
+  {
+    "id": "tool.arrow",
+    "label": "Arrow",
+    "menu": "Tools",
+    "params": "{}",
+    "shortcut": "Shift+L",
+    "undoable": false
+  },
+  {
+    "id": "tool.ellipse",
+    "label": "Ellipse",
+    "menu": "Tools",
+    "params": "{}",
+    "shortcut": "O",
+    "undoable": false
+  },
+  {
+    "id": "tool.polygon",
+    "label": "Polygon",
+    "menu": "Tools",
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "tool.star",
+    "label": "Star",
+    "menu": "Tools",
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "tool.pen",
+    "label": "Pen",
+    "menu": "Tools",
+    "params": "{}",
+    "shortcut": "P",
+    "undoable": false
+  },
+  {
+    "id": "tool.pencil",
+    "label": "Pencil",
+    "menu": "Tools",
+    "params": "{}",
+    "shortcut": "Shift+P",
+    "undoable": false
+  },
+  {
+    "id": "tool.text",
+    "label": "Text",
+    "menu": "Tools",
+    "params": "{}",
+    "shortcut": "T",
+    "undoable": false
+  },
+  {
+    "id": "tool.comment",
+    "label": "Comment",
+    "menu": "Tools",
+    "params": "{}",
+    "shortcut": "C",
+    "undoable": false
+  },
+  {
+    "id": "tool.shapeBuilder",
+    "label": "Shape builder",
+    "menu": "Tools",
+    "params": "{}",
+    "shortcut": "Shift+M",
+    "undoable": false
+  },
+  {
+    "id": "edit.pickColor",
+    "label": "Pick color",
+    "menu": "Edit",
+    "params": "{}",
+    "shortcut": "I",
+    "undoable": false
+  },
+  {
+    "id": "text.onPath",
+    "label": "Text on path",
+    "menu": null,
+    "params": "{text? (text layer), path? (vector or shape layer; default: the selected text and other layer), start? (0..1 along the path), flip?}  the text follows the path and the path layer is removed → {id}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "text.pathOptions",
+    "label": "Text path options",
+    "menu": null,
+    "params": "{start? (0..1 along the path), flip?, ids?}  for text on a path",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "text.removeFromPath",
+    "label": "Remove text from path",
+    "menu": null,
+    "params": "{ids?}  text on a path back to a line of auto-width text",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "text.bold",
+    "label": "Bold",
+    "menu": "Text",
+    "params": "{ids?}",
+    "shortcut": "Cmd+B",
+    "undoable": true
+  },
+  {
+    "id": "text.italic",
+    "label": "Italic",
+    "menu": "Text",
+    "params": "{ids?}",
+    "shortcut": "Cmd+I",
+    "undoable": true
+  },
+  {
+    "id": "text.underline",
+    "label": "Underline",
+    "menu": "Text",
+    "params": "{ids?}",
+    "shortcut": "Cmd+U",
+    "undoable": true
+  },
+  {
+    "id": "text.strikethrough",
+    "label": "Strikethrough",
+    "menu": "Text",
+    "params": "{ids?}",
+    "shortcut": "Shift+Cmd+X",
+    "undoable": true
+  },
+  {
+    "id": "text.link",
+    "label": "Create link",
+    "menu": "Text",
+    "params": "{url, ids?}",
+    "shortcut": "Shift+Cmd+U",
+    "undoable": true
+  },
+  {
+    "id": "text.bulletList",
+    "label": "Bulleted list",
+    "menu": "Text",
+    "params": "{ids?}  while editing: the selected paragraphs",
+    "shortcut": "Shift+Cmd+8",
+    "undoable": true
+  },
+  {
+    "id": "text.numberList",
+    "label": "Numbered list",
+    "menu": "Text",
+    "params": "{ids?}  while editing: the selected paragraphs",
+    "shortcut": "Shift+Cmd+7",
+    "undoable": true
+  },
+  {
+    "id": "text.alignLeft",
+    "label": "Align left",
+    "menu": "Text/Alignment",
+    "params": "{ids?}",
+    "shortcut": "Alt+Cmd+L",
+    "undoable": true
+  },
+  {
+    "id": "text.alignCenter",
+    "label": "Align center",
+    "menu": "Text/Alignment",
+    "params": "{ids?}",
+    "shortcut": "Alt+Cmd+T",
+    "undoable": true
+  },
+  {
+    "id": "text.alignRight",
+    "label": "Align right",
+    "menu": "Text/Alignment",
+    "params": "{ids?}",
+    "shortcut": "Alt+Cmd+R",
+    "undoable": true
+  },
+  {
+    "id": "text.alignJustify",
+    "label": "Justify",
+    "menu": "Text/Alignment",
+    "params": "{ids?}",
+    "shortcut": "Alt+Cmd+J",
+    "undoable": true
+  },
+  {
+    "id": "text.sizeUp",
+    "label": "Increase font size",
+    "menu": "Text/Adjust",
+    "params": "{ids?}",
+    "shortcut": "Shift+Cmd+.",
+    "undoable": true
+  },
+  {
+    "id": "text.sizeDown",
+    "label": "Decrease font size",
+    "menu": "Text/Adjust",
+    "params": "{ids?}",
+    "shortcut": "Shift+Cmd+,",
+    "undoable": true
+  },
+  {
+    "id": "text.weightUp",
+    "label": "Increase font weight",
+    "menu": "Text/Adjust",
+    "params": "{ids?}",
+    "shortcut": "Alt+Cmd+.",
+    "undoable": true
+  },
+  {
+    "id": "text.weightDown",
+    "label": "Decrease font weight",
+    "menu": "Text/Adjust",
+    "params": "{ids?}",
+    "shortcut": "Alt+Cmd+,",
+    "undoable": true
+  },
+  {
+    "id": "text.lineHeightUp",
+    "label": "Increase line height",
+    "menu": "Text/Adjust",
+    "params": "{ids?}",
+    "shortcut": "Alt+Shift+.",
+    "undoable": true
+  },
+  {
+    "id": "text.lineHeightDown",
+    "label": "Decrease line height",
+    "menu": "Text/Adjust",
+    "params": "{ids?}",
+    "shortcut": "Alt+Shift+,",
+    "undoable": true
+  },
+  {
+    "id": "text.trackingUp",
+    "label": "Increase letter spacing",
+    "menu": "Text/Adjust",
+    "params": "{ids?}",
+    "shortcut": "Alt+.",
+    "undoable": true
+  },
+  {
+    "id": "text.trackingDown",
+    "label": "Decrease letter spacing",
+    "menu": "Text/Adjust",
+    "params": "{ids?}",
+    "shortcut": "Alt+,",
+    "undoable": true
+  },
+  {
+    "id": "text.caseOriginal",
+    "label": "Original case",
+    "menu": "Text/Case",
+    "params": "{ids?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "text.caseUpper",
+    "label": "Uppercase",
+    "menu": "Text/Case",
+    "params": "{ids?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "text.caseLower",
+    "label": "Lowercase",
+    "menu": "Text/Case",
+    "params": "{ids?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "text.caseTitle",
+    "label": "Title case",
+    "menu": "Text/Case",
+    "params": "{ids?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "text.caseSmallCaps",
+    "label": "Small caps",
+    "menu": null,
+    "params": "{ids?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "text.case",
+    "label": "Letter case",
+    "menu": null,
+    "params": "{case: original|upper|lower|title|smallCaps, ids?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "text.decoration",
+    "label": "Decoration",
+    "menu": null,
+    "params": "{decoration: none|underline|strikethrough, ids?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "text.listStyle",
+    "label": "List style",
+    "menu": null,
+    "params": "{style: none|bulleted|numbered, ids?}  while editing: the selected paragraphs",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "text.paragraphIndent",
+    "label": "Paragraph indent",
+    "menu": null,
+    "params": "{indent (px), ids?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "text.paragraphSpacing",
+    "label": "Paragraph spacing",
+    "menu": null,
+    "params": "{spacing (px), ids?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "text.maxLines",
+    "label": "Max lines",
+    "menu": null,
+    "params": "{lines (0 = no limit; truncates), ids?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "text.setFeatures",
+    "label": "OpenType features",
+    "menu": null,
+    "params": "{features: {tag: bool | null (font default)}, replace? (clear others first), id?/ids?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "text.setVariations",
+    "label": "Variable font axes",
+    "menu": null,
+    "params": "{variations: {axis: number | null (style default)}, replace? (clear others first), id?/ids?}; while editing: the selected range",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "text.preview",
+    "label": "Preview text change",
+    "menu": null,
+    "params": "{command: style.apply|library.applyStyle|text.setVariations|text.style, params}  shows what the command would do on the canvas without an undo step (a hovered text style or named instance, a dragged axis slider), in place of an earlier preview; text.endPreview or any other command ends it, so running the command for real commits it as one undo step",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "text.endPreview",
+    "label": "End text preview",
+    "menu": null,
+    "params": "{}  puts the document back as it was before text.preview → {ended}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "text.set",
+    "label": "Set text",
+    "menu": null,
+    "params": "{id?, characters}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "text.style",
+    "label": "Style text range",
+    "menu": null,
+    "params": "{id?, start?, end?, fontFamily?, fontStyle?, fontWeight?, fontSize?, lineHeight?, letterSpacing?, textDecoration?, textCase?, hyperlink?, textFills?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "text.edit.begin",
+    "label": "Edit text",
+    "menu": null,
+    "params": "{id, caret? (char index; default select all)}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "text.edit.insert",
+    "label": "Type text",
+    "menu": null,
+    "params": "{text}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "text.edit.key",
+    "label": "Text key",
+    "menu": null,
+    "params": "{key: Backspace|Delete|Left|Right|Up|Down|Home|End|Enter|Tab|Escape|SelectAll, shift?, alt?, cmd?}  in a list, Tab nests the item and Shift+Tab, Enter on an empty item or Backspace at its start move it out",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "text.listIndent",
+    "label": "Indent list",
+    "menu": null,
+    "params": "{}  while editing: the selected list items a level deeper",
+    "shortcut": "Cmd+]",
+    "undoable": true
+  },
+  {
+    "id": "text.listOutdent",
+    "label": "Outdent list",
+    "menu": null,
+    "params": "{}  while editing: the selected list items a level out",
+    "shortcut": "Cmd+[",
+    "undoable": true
+  },
+  {
+    "id": "text.edit.caret",
+    "label": "Set caret",
+    "menu": null,
+    "params": "{index, extend?}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "text.edit.selectWord",
+    "label": "Select word",
+    "menu": null,
+    "params": "{index}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "text.edit.selectLine",
+    "label": "Select line",
+    "menu": null,
+    "params": "{index}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "text.edit.preedit",
+    "label": "Compose text (IME)",
+    "menu": null,
+    "params": "{text (empty = cancel), cursor? (chars into text)}; shown at the caret, committed by text.edit.insert",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "text.edit.selection",
+    "label": "Text selection",
+    "menu": null,
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "text.edit.end",
+    "label": "Stop editing text",
+    "menu": null,
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "text.fonts",
+    "label": "List fonts",
+    "menu": null,
+    "params": "{family? (list its styles), style?, features? (the face's OpenType features), axes? (the face's variation axes and named instances)}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "paint.documentColors",
+    "label": "Document colours",
+    "menu": null,
+    "params": "{page?, limit? (default 21)} → solid colours used on the page, most used first",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "style.create",
+    "label": "Create style",
+    "menu": null,
+    "params": "{type: paint|text|effect|grid, name, from? (node id; default first selected), description?, value? (paints/effects/grids/text style JSON)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "style.apply",
+    "label": "Apply style",
+    "menu": null,
+    "params": "{ids?, style (id or name), target? (fill|stroke; paint styles), start?, end? (text styles: these chars; while editing text, the selected chars)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "style.detach",
+    "label": "Detach style",
+    "menu": null,
+    "params": "{ids?, which: fill|stroke|effect|grid|text, start?, end? (text: these chars; while editing text, the selected chars)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "style.update",
+    "label": "Edit style",
+    "menu": null,
+    "params": "{style, name?, description?, value?, from? (node id: redefine from it)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "style.bind",
+    "label": "Bind variable in style",
+    "menu": null,
+    "params": "{style, field, variable? (id or name; none: unbind)}  bind a variable to a field of the style's value: a paint style's `fills/<i>/color` (or `fill`: its first paint) and `fills/<i>/stops/<j>/color`, an effect style's `effects/<i>/<color|radius|spread|offsetX|offsetY|startRadius>`, a grid style's `layoutGrids/<i>/<size|count|gutter|offset>`, a text style's `fontSize|lineHeight|letterSpacing` (numbers, px) and `fontFamily|fontStyle` (strings). Every layer using the style shows the field resolved in its own modes; the style keeps it resolved in the default modes",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "style.duplicate",
+    "label": "Duplicate style",
+    "menu": null,
+    "params": "{style} → {id} (right below it, named \"<name> copy\")",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "style.move",
+    "label": "Move styles",
+    "menu": null,
+    "params": "{styles [ids], before? (style id; default: the end), folder? (\"Brand/Blog\"; \"\" = no folder: the styles are renamed into it)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "style.renameFolder",
+    "label": "Rename style folder",
+    "menu": null,
+    "params": "{folder (\"Brand/Blog\"), name (\"Brand/News\")} (renames the styles in it)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "style.delete",
+    "label": "Delete style",
+    "menu": null,
+    "params": "{style}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "style.list",
+    "label": "List styles",
+    "menu": null,
+    "params": "{type?}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "variable.createCollection",
+    "label": "Create variable collection",
+    "menu": null,
+    "params": "{name, modes? [names]}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "variable.addMode",
+    "label": "Add mode",
+    "menu": null,
+    "params": "{collection, name, from? (mode id or name to duplicate; default: the default mode)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "variable.create",
+    "label": "Create variable",
+    "menu": null,
+    "params": "{collection, name, type: color|number|string|boolean, value (default mode) | values {modeName: value}}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "variable.set",
+    "label": "Set variable value",
+    "menu": null,
+    "params": "{variable, mode? (name or id; default first), value | {alias: variable} (same type, no loops)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "variable.delete",
+    "label": "Delete variable",
+    "menu": null,
+    "params": "{variable} (bound layers keep their values; variables aliasing it take its values)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "variable.bind",
+    "label": "Bind variable",
+    "menu": null,
+    "params": "{ids?, field (fill|stroke (first paint)|fills/<i>/color|strokes/<i>/color|fills/<i>/stops/<j>/color (gradient stops)|effects/<i>/<offsetX|offsetY|radius|startRadius|spread|color>|layoutGrids/<i>/<size|count|gutter|offset>|componentProperties/<name> (instances: boolean/text properties; variant properties take string variables naming a value)|width|height|opacity (percent)|cornerRadius|gap|paddingHorizontal|characters|visible|fontSize…; list indices bottom first), variable (null unbinds)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "variable.setMode",
+    "label": "Set variable mode",
+    "menu": null,
+    "params": "{ids? (frames/page), collection, mode (id or name; null: Auto, inherited from the parent)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "variable.list",
+    "label": "List variables",
+    "menu": null,
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "image.adjust",
+    "label": "Adjust image",
+    "menu": null,
+    "params": "{ids?, target? (fill|stroke, default fill), index? (default every image paint), preset? (vivid|muted|warm|cool|blackAndWhite|fade|reset, or the name of a preset saved in the file), filters? ({exposure, contrast, saturation, temperature, tint, highlights, shadows}: each -1..1, applied over the preset)}  sets the adjustments of the layers' image paints; returns {changed}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "image.savePreset",
+    "label": "Save image preset",
+    "menu": null,
+    "params": "{name, filters? (default the adjustments of the first image paint of `ids`/the selection), ids?, target?, index?}  saved in the file; a preset with the same name is replaced",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "image.deletePreset",
+    "label": "Delete image preset",
+    "menu": null,
+    "params": "{name}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "image.presets",
+    "label": "Image presets",
+    "menu": null,
+    "params": "{} → {builtIn: [{id, label, filters}], saved: [{name, filters}]}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "variable.update",
+    "label": "Edit variable",
+    "menu": null,
+    "params": "{variable, name?, description?, scopes? ([scope ids]; null or [\"ALL_SCOPES\"] = every supported property, [] = hidden from pickers), hiddenFromPublishing? (left out when the file is published as a library), codeSyntax? {WEB?, iOS?, ANDROID?: name code uses (\"\" clears)}}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "variable.duplicate",
+    "label": "Duplicate variable",
+    "menu": null,
+    "params": "{variable} → {id}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "variable.renameMode",
+    "label": "Rename mode",
+    "menu": null,
+    "params": "{collection, mode, name}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "variable.removeMode",
+    "label": "Delete mode",
+    "menu": null,
+    "params": "{collection, mode} (a collection keeps at least one mode)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "variable.moveMode",
+    "label": "Move mode",
+    "menu": null,
+    "params": "{collection, mode, to (index; 0 = the default mode, layers on Auto follow it)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "variable.renameCollection",
+    "label": "Rename collection",
+    "menu": null,
+    "params": "{collection, name}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "variable.deleteCollection",
+    "label": "Delete collection",
+    "menu": null,
+    "params": "{collection} (with its variables; bound layers keep their values)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "variable.resetOverride",
+    "label": "Reset variable override",
+    "menu": null,
+    "params": "{variable (a variable of an extended collection inherited from the collection it extends), mode? (id or name; every overridden mode when omitted)}  the value follows the inherited one again",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "variable.export",
+    "label": "Export variables",
+    "menu": null,
+    "params": "{collections? [ids or names; default every collection of this file, not library copies], format? (json (default): the local variables JSON that variable.import reads | css: custom properties, the default mode on :root and each other mode on [data-<collection>=\"<mode>\"]), path? (write it there)}  → {text}, or {path} when written",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "variable.import",
+    "label": "Import variables",
+    "menu": null,
+    "params": "{variables (the local variables JSON, as variable.export writes it: an object, JSON text or a path)}  collections join this file's collection of the same name (values by mode name; new modes and variables are added, a variable of another type is skipped), others are added  → {collections (added), variables (added), updated, warnings}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "component.create",
+    "label": "Create component",
+    "menu": "Object",
+    "params": "{ids?}  (one frame/group becomes a component; several layers are wrapped in one)",
+    "shortcut": "Alt+Cmd+K",
+    "undoable": true
+  },
+  {
+    "id": "component.createMultiple",
+    "label": "Create multiple components",
+    "menu": "Object",
+    "params": "{ids?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "component.combineVariants",
+    "label": "Combine as variants",
+    "menu": "Object",
+    "params": "{ids? (components)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "component.addVariant",
+    "label": "Add variant",
+    "menu": null,
+    "params": "{id? (component set or variant), property?, value?}  (duplicates the variant; `property`=`value` names the new one)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "instance.create",
+    "label": "Create instance",
+    "menu": null,
+    "params": "{component (component or set: its default variant), x?, y?, parent?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "instance.place",
+    "label": "Place instance",
+    "menu": null,
+    "params": "{component, x, y (page point: the instance is centred there, inside the frame under it; auto layout frames insert by position)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "component.exposeInstance",
+    "label": "Expose nested instance",
+    "menu": null,
+    "params": "{id? (an instance inside a main component), exposed? (default true)} — its properties then show on the main's instances",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "instance.exposed",
+    "label": "Exposed nested instances",
+    "menu": null,
+    "params": "{id? (instance)} → the nested instance copies whose properties it exposes",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "component.makeSlot",
+    "label": "Make slot",
+    "menu": null,
+    "params": "{id? (a frame inside a main component), name? (the slot property's name; the frame's by default), preferred? [component or set ids]}  (its instances take any content there)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "component.removeSlot",
+    "label": "Remove slot",
+    "menu": null,
+    "params": "{id? (a slot frame of a main component)}  (instances lose their own content in it)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "instance.slotInsert",
+    "label": "Insert into slot",
+    "menu": null,
+    "params": "{id? (a slot inside an instance, or the instance with `slot`), slot? (slot property name), component, index? (child index; on top when omitted), replace? (clear the slot first)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "instance.resetSlot",
+    "label": "Reset slot",
+    "menu": null,
+    "params": "{id? (a slot inside an instance, or the instance with `slot`), slot?}  (back to the main's default content)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "component.hideWhenPublishing",
+    "label": "Hide when publishing",
+    "menu": "Libraries",
+    "params": "{ids? (components, sets or layers in them; default the selection), on? (default: toggle, hiding unless all are hidden)}  keeps them out of the library this file publishes, the way a name starting with `.` or `_` does: hiding puts a `.` before the name, showing takes the leading `.` and `_` away → {ids, hidden}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "component.detach",
+    "label": "Detach instance",
+    "menu": "Object",
+    "params": "{ids?}",
+    "shortcut": "Alt+Cmd+B",
+    "undoable": true
+  },
+  {
+    "id": "component.resetInstance",
+    "label": "Reset all changes",
+    "menu": "Object",
+    "params": "{ids?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "component.resetOverride",
+    "label": "Reset override",
+    "menu": null,
+    "params": "{id?, group? (fills|strokes|effects|opacity|visible|name|corners|characters|textStyle|padding|gap|alignment|grids|exports|interactions|size|position|component|props|slot; all when omitted)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "component.goToMain",
+    "label": "Go to main component",
+    "menu": "Object",
+    "params": "{id?}",
+    "shortcut": "Ctrl+Alt+Shift+K",
+    "undoable": false
+  },
+  {
+    "id": "component.pushChanges",
+    "label": "Push changes to main component",
+    "menu": "Object",
+    "params": "{id?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "component.restoreMain",
+    "label": "Restore main component",
+    "menu": "Object",
+    "params": "{id?}  (an instance whose main was deleted becomes the main again, in its place)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "instance.swap",
+    "label": "Swap instance",
+    "menu": null,
+    "params": "{ids?, component}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "instance.swapAt",
+    "label": "Swap instance at point",
+    "menu": null,
+    "params": "{component (component or set: its default variant), x, y (page point)}  swaps the instance there (preferring one showing the same component set; Alt-drop from the Assets panel); only text layers keep their overrides (by matching names)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "instance.setProperties",
+    "label": "Set instance properties",
+    "menu": null,
+    "params": "{ids?, properties {name: value}} (variant properties switch variants)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "component.addProperty",
+    "label": "Add component property",
+    "menu": null,
+    "params": "{id? (component, set, or a layer inside a component: it gets bound), name, type: boolean|text|instanceSwap|variant|slot, default?, layer? (node bound to it; a frame for slots), preferred? (instance swap and slot properties: component or set ids offered first)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "component.editProperty",
+    "label": "Edit component property",
+    "menu": null,
+    "params": "{id? (component or set), name, newName?, default? (variant properties: that variant takes the top-left place), value? + newValue? (rename a variant value), index? (variant properties: move to this place; the variants' names follow), preferred? (instance swap and slot properties: component or set ids offered first)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "component.deleteProperty",
+    "label": "Delete component property",
+    "menu": null,
+    "params": "{id? (component or set), name}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "component.bindProperty",
+    "label": "Bind layer to property",
+    "menu": null,
+    "params": "{layer?, property (null/\"\" unbinds), field?: visible|characters|mainComponent|slot}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "component.properties",
+    "label": "Component properties",
+    "menu": null,
+    "params": "{id? (component, set or instance)}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "component.list",
+    "label": "List components",
+    "menu": null,
+    "params": "{} → [{id, name, type, page, instances, folder (the Assets panel's folders: page, frames, slash names), label, library?}]",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "libraries.publish",
+    "label": "Publish library…",
+    "menu": "Libraries",
+    "params": "{}  (opens the publish form in the Assets panel)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "library.publish",
+    "label": "Publish library",
+    "menu": null,
+    "params": "{description?, include? [component/set ids, style ids, variable collection ids or names: exactly these], exclude? [same]}  publishes this file's components, component sets, styles and variable collections (by default all but names starting with . or _, or what the last publish offered; variables hidden from publishing stay out unless something published uses them) as a new library version; save the file so other files see it",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "library.list",
+    "label": "List libraries",
+    "menu": null,
+    "params": "{assets? (also list each library's components, styles, variable collections and variables, and what this file can publish)}  → enabled libraries (version, updates, errors) and this file's published library",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "library.publishToServer",
+    "label": "Publish library to server",
+    "menu": null,
+    "params": "{server? (an edit link of this file on a figcraft-server; omit while this file is in a live session on a server, or give the server's address with its key to keep the file there first), key?, description?, include?, exclude? (as library.publish)}  publishes the library as the next version of the one kept on the server under this file (per-asset versions as library.publish); files that enabled it with a link of the file see the update → {id, version, components, styles, collections, variables, file?, edit?, view? (links when the file was kept there now)}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "library.add",
+    "label": "Add library",
+    "menu": null,
+    "params": "{path (.figcraft file published as a library, or a share link of a file on a server: a view link is enough)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "library.usage",
+    "label": "Library usage",
+    "menu": null,
+    "params": "{library? (an enabled team library: id, name or link; omit for this file's library on its server)}  → what files report: {id, name, instances, files: [{name, updated, instances}], components: [{id, name, instances, files}]}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "library.swap",
+    "label": "Swap library",
+    "menu": null,
+    "params": "{from (an enabled library: id, name or path), to (another enabled library)}  re-points every component instance, style and variable copied from `from` to the published one of the same name in `to` (instances keep their overrides) → {components, styles, variables, unmatched: [names still from `from`], removed (nothing of `from` is used any more: it was removed)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "library.remove",
+    "label": "Remove library",
+    "menu": null,
+    "params": "{id (library id, name or path)}  (copies still in use stay; unused ones are dropped)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "library.updates",
+    "label": "Library updates",
+    "menu": null,
+    "params": "{}  → the components, styles, variable collections and variables with a newer published version, and variables new to a library collection this file extends (listed without an `id`: no copy yet)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "library.acceptUpdates",
+    "label": "Accept library updates",
+    "menu": null,
+    "params": "{ids? [library ids; all when omitted]}  pulls updated components, styles, variable collections and variables in (instances keep their overrides; bound layers follow)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "library.place",
+    "label": "Place library component",
+    "menu": null,
+    "params": "{library (id, name or path), component (id or name of a published component, set or variant), x?, y? (page point; default the view's centre)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "library.swapAt",
+    "label": "Swap instance to library component",
+    "menu": null,
+    "params": "{library, component (id or name of a published component, set or variant), x, y (page point)}  copies the component in and swaps the instance there to it (as instance.swapAt)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "library.import",
+    "label": "Import library component",
+    "menu": null,
+    "params": "{library, component}  → {component (local, read-only main to instantiate with instance.create)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "library.applyStyle",
+    "label": "Apply library style",
+    "menu": null,
+    "params": "{library, style (id or name of a published style), ids?, target? (fill|stroke)}  copies the style in (linked, read-only) and applies it",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "library.importVariable",
+    "label": "Import library variable",
+    "menu": null,
+    "params": "{library, variable (id or name of a published variable)}  → {variable (local, read-only linked copy to use with variable.bind, or as an alias in variable.set)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "library.bindVariable",
+    "label": "Bind library variable",
+    "menu": null,
+    "params": "{library, variable (id or name of a published variable), field (as variable.bind), ids?}  copies the variable in (linked, read-only) and binds it",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "library.aliasVariable",
+    "label": "Alias library variable",
+    "menu": null,
+    "params": "{library, alias (id or name of a published variable of the same type), variable (a local variable), mode? (default first)}  copies the library variable in (linked, read-only) and makes the local variable's value an alias of it",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "library.setVariableMode",
+    "label": "Set library variable mode",
+    "menu": null,
+    "params": "{library, collection (id or name of a published collection), mode (id or name), ids? (frames; the page when omitted)}  copies the collection in (linked, read-only) and sets its mode on the frames",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "library.extendCollection",
+    "label": "Extend library collection",
+    "menu": null,
+    "params": "{library, collection (id or name of a published collection), name? (default \"<name> (extended)\")}  → {id}: a collection of this file with the library collection's modes and variables (they follow its updates); override their values per mode with variable.set (variable.resetOverride goes back to the inherited value) and add variables of its own",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "proto.interaction.add",
+    "label": "Add interaction",
+    "menu": null,
+    "params": "{id?, trigger? {type: onClick|onHover|onPress|onDrag|mouseEnter|mouseLeave|mouseDown|mouseUp|afterDelay {ms}|keyPress {key (a key or a combination: Shift+K, Ctrl+Alt+Delete; or a controller button: Gamepad A|B|X|Y|LB|RB|LT|RT|View|Menu|LS|RS|Up|Down|Left|Right|Home)}}, action {type: navigate {preserveScroll?}|back|scrollTo {offset? [x, y] (where the layer ends up from the top-left)}|openOverlay {position?, offset? [x, y] (position manual: the overlay's top-left from the top-left of the layer that opens it; without it, right below that layer), close_on_outside? (default true), background?}|swapOverlay|closeOverlay|openUrl {url}|changeTo|setVariable {variable, value | expression (text, e.g. \"count + 1\")}|setVariableMode {collection, mode}|conditional {blocks [{condition? | expression? (text, e.g. \"count >= 3\"), actions}]}, dest?}, actions? [..], transition? {type: instant|dissolve|smartAnimate|moveIn|moveOut|push|slideIn|slideOut, direction?: left|right|top|bottom}, durationMs?, easing? linear|easeIn|easeOut|easeInOut|easeInBack|easeOutBack|easeInOutBack|gentle|quick|bouncy|slow|{customBezier {x1, y1, x2, y2}}|{customSpring {mass, stiffness, damping}}}, delayMs? (mouse enter, leave, down and up: how long after the gesture the actions run, up to 600000)} — or {id, dest} for a click-navigate. Returns {index}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "proto.interaction.clear",
+    "label": "Remove all interactions",
+    "menu": null,
+    "params": "{ids?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "proto.interaction.remove",
+    "label": "Remove interaction",
+    "menu": null,
+    "params": "{id?, index}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "proto.interaction.set",
+    "label": "Edit interaction",
+    "menu": null,
+    "params": "{id?, index, interaction {..}} replaces it; or patch fields: {id?, index, trigger?, action? (first action), actions?, transition?, durationMs?, easing?, delayMs?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "proto.flow.add",
+    "label": "Add flow starting point",
+    "menu": null,
+    "params": "{start? (top-level frame id; default selection), name?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "proto.flow.rename",
+    "label": "Rename flow",
+    "menu": null,
+    "params": "{start, name?, description?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "proto.flow.remove",
+    "label": "Remove flow",
+    "menu": null,
+    "params": "{start}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "proto.settings",
+    "label": "Prototype settings",
+    "menu": null,
+    "params": "{device? (a device name, \"Custom size\" or \"None\"), background?, rotation? portrait|landscape (or 0|90; phones and tablets turn), color? (one of the device's colours by name), width?, height? (the custom size's screen, 1–10000 points; picks \"Custom size\"), responsive? bool (frames resize to the screen and their constraints and auto layout respond)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "proto.present",
+    "label": "Present",
+    "menu": null,
+    "params": "{start? (frame id; default: the selected frame, else the first flow, else the first frame)}",
+    "shortcut": "Alt+Cmd+Enter",
+    "undoable": false
+  },
+  {
+    "id": "proto.preview",
+    "label": "Open prototype preview",
+    "menu": null,
+    "params": "{start? (frame id; default as proto.present)}  a floating preview pane over the canvas that follows edits live",
+    "shortcut": "Shift+Space",
+    "undoable": false
+  },
+  {
+    "id": "proto.closePreview",
+    "label": "Close prototype preview",
+    "menu": null,
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "proto.presentOptions",
+    "label": "Presentation options",
+    "menu": null,
+    "params": "{scale? fit|fitWidth|fill|actual, deviceFrame? bool, hotspotHints? bool, inspect? bool}  how the presenter sizes the prototype (Fit scales down to fit, Fit width fills the width, Fill covers the window, Actual shows it at 100%), whether it draws the device, whether a click where nothing reacts flashes the hotspots (on by default) and whether the Inspect panel shows the properties of the layer under the pointer; kept for later presentations",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "proto.action.add",
+    "label": "Add prototype action",
+    "menu": null,
+    "params": "{id?, index (interaction), path? (where it goes: [n] appends to an interaction with n actions, [i, b, j] inside block b of the conditional i; default: after the last action), action {type: …, as proto.interaction.add; setVariable takes `expression` text, conditional blocks take `expression` or `condition`}} → {path}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "proto.action.set",
+    "label": "Edit prototype action",
+    "menu": null,
+    "params": "{id?, index, path [action, block, action, …], action {…}}  replaces the action there",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "proto.action.remove",
+    "label": "Remove prototype action",
+    "menu": null,
+    "params": "{id?, index, path}  (an interaction keeps at least one action: remove the interaction instead)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "proto.action.move",
+    "label": "Reorder prototype action",
+    "menu": null,
+    "params": "{id?, index, path, to (its new index in the same list)} → {path}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "proto.conditional.addBlock",
+    "label": "Add else if / else",
+    "menu": null,
+    "params": "{id?, index, path (a conditional action), else? bool (add the else block; default: an else if before it), expression? (text, e.g. \"count >= 3\") | condition? (expression JSON); default condition: the first variable equal to its value} → {block}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "proto.conditional.setCondition",
+    "label": "Edit condition",
+    "menu": null,
+    "params": "{id?, index, path (a conditional action), block, expression (text) | condition (expression JSON)}  the condition must give true or false",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "proto.conditional.removeBlock",
+    "label": "Remove if / else if / else",
+    "menu": null,
+    "params": "{id?, index, path (a conditional action), block}  removing the if when only an else (or nothing) is left removes the whole conditional action → {removedAction}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "proto.evaluate",
+    "label": "Evaluate prototype expression",
+    "menu": null,
+    "params": "{expression (text, e.g. \"count + 1\", \"accent[Dark]\", \"mode(Theme) == 'Dark'\") | expr (expression JSON), id? (the layer it runs on: variables resolve in its modes; default: the document's default modes)} → {value, type, text}  without changing anything",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "comment.add",
+    "label": "Add comment",
+    "menu": null,
+    "params": "{x, y, text, page?, author?, anchor? (node id to pin to; true = innermost frame under the point)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "comment.reply",
+    "label": "Reply to comment",
+    "menu": null,
+    "params": "{id, text, author?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "comment.edit",
+    "label": "Edit comment",
+    "menu": null,
+    "params": "{id, text, reply? (index; omit for the first message), author?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "comment.react",
+    "label": "React to comment",
+    "menu": null,
+    "params": "{id, emoji, reply? (index; omit for the first message), on? (default: toggle), author?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "comment.resolve",
+    "label": "Resolve comment",
+    "menu": null,
+    "params": "{id, resolved? (default true)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "comment.move",
+    "label": "Move comment",
+    "menu": null,
+    "params": "{id, x, y, anchor? (default true: pin to the innermost frame under the point; false: to the page; or a node id)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "comment.delete",
+    "label": "Delete comment",
+    "menu": null,
+    "params": "{id, reply? (index: delete one reply; omit to delete the thread), author?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "comment.markRead",
+    "label": "Mark comment as read",
+    "menu": null,
+    "params": "{id? | link? (omit: every thread), read? (default true; false marks it unread), author?}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "comment.open",
+    "label": "Open comment",
+    "menu": null,
+    "params": "{id | link, view? (fit: zoom to the thread's frame, default; center: centre the pin; keep), author?}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "comment.next",
+    "label": "Next comment",
+    "menu": null,
+    "params": "{id? (the thread to step from; omitted: the first or last), dir? (1 next, -1 previous; default 1), page?, filter?, sort?, query? (the list, as comment.list), author?}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "comment.zoom",
+    "label": "Zoom to comments",
+    "menu": null,
+    "params": "{ids (comment ids on the current page)}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "comment.link",
+    "label": "Copy link to comment",
+    "menu": null,
+    "params": "{id}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "comment.people",
+    "label": "People in comments",
+    "menu": null,
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "comment.list",
+    "label": "List comments",
+    "menu": null,
+    "params": "{page? (default: current; \"all\" for every page), filter? (all|open|resolved|mine|unread; default all), sort? (date|page; default date), query? (search text), frame? (a top-level frame id), resolved? (false hides resolved ones), author? (whose threads and read state)}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "vector.edit.begin",
+    "label": "Edit vector",
+    "menu": null,
+    "params": "{id? | ids?} (default the selection; several layers are edited at once, the first active; converts shapes to vectors)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "vector.edit.end",
+    "label": "Done editing",
+    "menu": null,
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "vector.edit.state",
+    "label": "Vector edit state",
+    "menu": null,
+    "params": "{} → page-space overlay plus the local network",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "vector.edit.tool",
+    "label": "Vector edit tool",
+    "menu": null,
+    "params": "{tool: move|pen|bend|paint|lasso|cut|eraser|width}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "vector.edit.select",
+    "label": "Select points",
+    "menu": null,
+    "params": "{vertices?: [i, ...], segments?: [i, ...], handles?: [[segment, start], ...], regions?: [i, ...] (filled regions, with their points), id? (an edited layer, made active), add?}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "vector.edit.selectAll",
+    "label": "Select all points",
+    "menu": null,
+    "params": "{} (in every edited layer)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "vector.edit.moveVertices",
+    "label": "Move points",
+    "menu": null,
+    "params": "{vertices?, dx, dy} (local units; default the selected points of every edited layer)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "vector.edit.nudge",
+    "label": "Nudge points",
+    "menu": null,
+    "params": "{dx, dy} (page units; the selected points of every edited layer)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "vector.edit.position",
+    "label": "Point position",
+    "menu": null,
+    "params": "{x?, y?} (the selected points' top-left, in the parent's coordinates)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "vector.edit.setHandle",
+    "label": "Set handle",
+    "menu": null,
+    "params": "{segment, start (bool), x, y (local), independent?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "vector.edit.moveHandles",
+    "label": "Move handles",
+    "menu": null,
+    "params": "{dx, dy (page units), handles?: [[segment, start], ...] (default the selected handles), independent?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "vector.edit.mirroring",
+    "label": "Handle mirroring",
+    "menu": null,
+    "params": "{mode: none|angle|angleAndLength, vertices?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "vector.edit.smooth",
+    "label": "Smooth or sharpen points",
+    "menu": null,
+    "params": "{vertices?, smooth? (default true)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "vector.edit.bend",
+    "label": "Bend segment",
+    "menu": null,
+    "params": "{segment, t (0..1), x, y (page point the curve passes through)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "vector.edit.addVertex",
+    "label": "Add point",
+    "menu": null,
+    "params": "{segment, t (0..1)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "vector.deleteHeal",
+    "label": "Delete and heal selection",
+    "menu": "Vector",
+    "params": "{vertices?} (default the selected points of every edited layer)",
+    "shortcut": "Shift+Delete",
+    "undoable": true
+  },
+  {
+    "id": "vector.edit.delete",
+    "label": "Delete points",
+    "menu": null,
+    "params": "{vertices?, segments?} (default the selection in every edited layer)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "vector.edit.cornerRadius",
+    "label": "Point corner radius",
+    "menu": null,
+    "params": "{radius, vertices?}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "vector.edit.strokeCap",
+    "label": "Point stroke cap",
+    "menu": null,
+    "params": "{cap: none|round|square|lineArrow|triangleArrow|reversedTriangle|circleFilled|diamondFilled|null (the layer's), vertices?} — where the stroke ends at these points",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "vector.edit.strokeJoin",
+    "label": "Point stroke join",
+    "menu": null,
+    "params": "{join: miter|bevel|round|null (the layer's), vertices?} — how the stroke turns at these points",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "vector.edit.paint",
+    "label": "Paint bucket",
+    "menu": null,
+    "params": "{x, y} | {points: [[x, y], ...]} (page points: fills or unfills the closed area under the first, and does the same to the areas under the rest, like a drag)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "vector.edit.cut",
+    "label": "Cut path",
+    "menu": null,
+    "params": "{segment, t?} | {vertex} | {from: [x, y], to: [x, y]} (page: cuts every path the line crosses; parts that come apart move to layers of their own)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "vector.edit.erase",
+    "label": "Erase",
+    "menu": null,
+    "params": "{points: [[x, y], ...] (page), radius? (page units, default 8)} — removes the parts of paths the brush passes over",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "vector.edit.connect",
+    "label": "Connect points",
+    "menu": null,
+    "params": "{a, b} (adds a straight segment)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "vector.edit.lasso",
+    "label": "Lasso select",
+    "menu": null,
+    "params": "{points: [[x, y], ...] (page), add?}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "vector.edit.pen",
+    "label": "Pen point",
+    "menu": null,
+    "params": "{x, y (page), dx?, dy? (handle drag)} — continues from the pen's open end; clicking a point connects to it",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "vector.edit.penEnd",
+    "label": "End pen path",
+    "menu": null,
+    "params": "{}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "vector.edit.bounds",
+    "label": "Selected points' bounds",
+    "menu": null,
+    "params": "{} → {x, y (top-left in the parent's coordinates), width, height (in the vector's axes), corners (page), points}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "vector.edit.resize",
+    "label": "Resize points",
+    "menu": null,
+    "params": "{width?, height?, center? (about the centre; default keeps the top-left)} — scales the selected points' box in the vector's axes",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "vector.edit.rotate",
+    "label": "Rotate points",
+    "menu": null,
+    "params": "{angle (degrees, counter-clockwise), cx?, cy? (page pivot; default the box centre)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "vector.edit.transform",
+    "label": "Transform points",
+    "menu": null,
+    "params": "{matrix: [a, b, c, d, e, f] (page space), vertices? (default the selected points)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "vector.edit.widthPoint",
+    "label": "Width point",
+    "menu": null,
+    "params": "{action?: add|set|remove, index?, t? (0-1 along the path), width? (px) | scale? (× stroke weight)} — add needs t (width defaults to the current one); set moves or resizes point `index`; with `side` only that side of the path changes (looking along it): `width` is then the distance from the centre line to that edge and `scale` that side's scale (× stroke weight, as if both sides were that wide)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "shapeBuilder.regions",
+    "label": "Shape builder regions",
+    "menu": null,
+    "params": "{ids?} → {sources (bottom to top), regions: [{index, path (SVG, page), sources (top-most first), parts: [{id, stroke}] (the fills and outlined strokes covering it, top-most first), bounds [x, y, w, h], point [x, y] inside}]} — visible strokes take part as their outlined areas, so stroked lines and open paths split regions",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "shapeBuilder.merge",
+    "label": "Merge regions",
+    "menu": null,
+    "params": "{ids?, regions?: [i, ...], points?: [[x, y], ...] (page)} → {id, changed, removed, outlines, regions} — one new shape from the regions, styled like the top-most fill or stroke over the first; the shapes lose those areas (strokes of the shapes involved become outlined vectors: `outlines`)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "shapeBuilder.remove",
+    "label": "Remove regions",
+    "menu": null,
+    "params": "{ids?, regions?: [i, ...], points?: [[x, y], ...] (page)} → {changed, removed, outlines, regions} — the shapes (and strokes) covering the regions lose them",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "shapeBuilder.mode",
+    "label": "Shape builder mode",
+    "menu": null,
+    "params": "{mode: merge|remove} (what a click does; Alt does the other)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "inspect.code",
+    "label": "Code for layer",
+    "menu": null,
+    "params": "{id?, language?: css|html|react|leptos|swiftui|compose (default css; html, react and leptos are the whole layer tree; components take their properties as parameters, instances pass their values; a component connected to code (codeConnect.set) gives its import and snippet instead), unit?: px|rem (CSS, HTML, React and Leptos; default px), rootFontSize? (rem: pixels per rem, default 16)} → {code, language, connected}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "inspect.readyForDev",
+    "label": "Ready for dev",
+    "menu": null,
+    "params": "{status?: readyForDev|completed|any (default readyForDev), page? (page id; default every page)} → {items: [{id, name, page, status}]}  frames and sections by handoff status (set it with `node.set {devStatus}`)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "inspect.assets",
+    "label": "Inspect assets",
+    "menu": null,
+    "params": "{ids? (default the selection)} → {assets: [{id, name, kind: export|icon|image, exports}]}  the layers in and under them to hand over as files: those with export settings, icons (small, vector shapes only; SVG) and images (PNG). Export them with `file.exportLayers {assets: true}`",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "inspect.properties",
+    "label": "Inspect properties",
+    "menu": null,
+    "params": "{id?, colorFormat?: hex|rgb|css|hsl|hsb (default hex)} → {sections: [{title, rows: [{label, value, color?, token?}]}]}  layout (positions from the frame around the layer), auto layout, typography, fills, strokes and effects, with style and variable names",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "inspect.componentCode",
+    "label": "Component code",
+    "menu": null,
+    "params": "{id? (component, set or instance; default the selection), language?: react|leptos|swiftui|compose (default react)} → {component, name, set, properties: [{name, param, type, default, value? (instances)}], definition, usage? (instances; the connected snippet when the component is connected to code), connected: {importPath, name, template, import, code} | null}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "component.playground",
+    "label": "Component playground",
+    "menu": null,
+    "params": "{id? (an instance, a component or a component set; default the selection), properties? {name: value} (variant, boolean, text and instance-swap properties, as instance.setProperties takes them), language? css|html|react|swiftui|compose (default react), path? (write the preview there as a PNG), scale? (the PNG's, default 2)} → {component, properties: [{name, type, options?, value}], language, code, width, height, path?}  the component with those property values, tried on a copy: its code and its look. Nothing in the document changes",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "codeConnect.set",
+    "label": "Connect to code",
+    "menu": null,
+    "params": "{id? (component, set or instance; default the selection), language?: react|leptos|swiftui|compose (default react), importPath?, name? (default the generated name), template? (default a call passing every property)}  links the component (its set, for a variant) to its code component; fields left out keep their current value. Placeholders: {property} (its name or parameter name) and {property ? \"a\" : \"b\"}; other {…} stay as written  → {component, language, code (the snippet for the layer), unknown (placeholder names that aren't properties)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "codeConnect.remove",
+    "label": "Disconnect from code",
+    "menu": null,
+    "params": "{id? (component, set or instance; default the selection), language? (omit: every language)}  → {component, removed}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "codeConnect.export",
+    "label": "Export code connections",
+    "menu": null,
+    "params": "{path? (write it there, e.g. figcraft.connect.json in the code repository)}  every component's links as {version: 1, links: [{component (its name), language, importPath, name, template}]}, sorted  → {text, links} or {path, links}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "codeConnect.import",
+    "label": "Import code connections",
+    "menu": null,
+    "params": "{json (the connect JSON as codeConnect.export writes it: an object or JSON text) | path (a figcraft.connect.json)}  links each entry to every component or set of that name (replacing its link for the language); invalid entries and unknown components are skipped with a warning  → {linked, warnings}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "annotation.add",
+    "label": "Add annotation",
+    "menu": null,
+    "params": "{id? (default the first selected layer), label? (the note), properties?: [width|height|top|left|rotation|opacity|cornerRadius|direction|gap|padding|alignment|fontFamily|fontStyle|fontSize|lineHeight|letterSpacing|textAlign|fill|stroke|strokeWeight|effects], category? (id or name)} → {id, index}  (a note, pinned properties or both)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "annotation.edit",
+    "label": "Edit annotation",
+    "menu": null,
+    "params": "{id?, index, label?, properties?: [..] (replaces the pinned properties), category? (id or name; null: none)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "annotation.remove",
+    "label": "Remove annotation",
+    "menu": null,
+    "params": "{id?, index? (omit: every annotation on the layer)}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "annotation.list",
+    "label": "List annotations",
+    "menu": null,
+    "params": "{ids? | id? (those layers), page? (page id, or \"all\"; default the current page), category? (id or name, or \"none\": only those)} → {annotations: [{id, name, index, label, category?: {id, name, color}, properties: [{property, label, value (null when the layer has none), token?, color?}]}]}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "annotation.categories",
+    "label": "Annotation categories",
+    "menu": null,
+    "params": "{} → {categories: [{id, name, color, count (annotations in it, every page)}]}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "annotation.addCategory",
+    "label": "Add annotation category",
+    "menu": null,
+    "params": "{name, color? (default the first unused colour)} → {id}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "annotation.editCategory",
+    "label": "Edit annotation category",
+    "menu": null,
+    "params": "{id (id or name), name?, color?}  (rename and/or recolour)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "annotation.removeCategory",
+    "label": "Delete annotation category",
+    "menu": null,
+    "params": "{id (id or name)} → {id, uncategorized (how many annotations were in it)}  (its annotations stay, without a category)",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "devResource.add",
+    "label": "Add dev resource",
+    "menu": null,
+    "params": "{id? (default the first selected layer), url (http or https), name? (default the URL without its scheme)}  a link for developers on the layer; an instance also shows its main component's → {id, index}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "devResource.edit",
+    "label": "Edit dev resource",
+    "menu": null,
+    "params": "{id?, index (of the layer's own), url?, name?}  → {id, index}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "devResource.remove",
+    "label": "Remove dev resource",
+    "menu": null,
+    "params": "{id?, index? (omit: every dev resource of the layer's own)}  → {removed}",
+    "shortcut": null,
+    "undoable": true
+  },
+  {
+    "id": "devResource.list",
+    "label": "List dev resources",
+    "menu": null,
+    "params": "{id? (default the first selected layer)}  the layer's links, its own first, then inherited from its main component and that component's set → [{name, url, index? (own), from? (the layer it comes from)}]",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "measure.distances",
+    "label": "Measure distances",
+    "menu": null,
+    "params": "{ids? (default selection), to? (layer id; default the parent)} → {lines: [{x0, y0, x1, y1, label, dashed}]} (page space; what Alt-hover shows)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "measure.padding",
+    "label": "Measure auto layout padding",
+    "menu": null,
+    "params": "{id? (an auto layout frame or a child; default the selection)} → {frame, lines} (padding and gaps; what Shift+Alt-hover shows)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "collab.diff",
+    "label": "Show sync changes",
+    "menu": null,
+    "params": "{against? (undo: the last undoable action, the default | saved: since the last save)} → the changes a live session would send, their count and binary size",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "branch.create",
+    "label": "Create branch",
+    "menu": "File",
+    "params": "{name?}  a copy of the file to work on separately, opened in a new tab; it remembers the file as it is now (its base) → {id, name, index (its tab)}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "branch.list",
+    "label": "List branches",
+    "menu": null,
+    "params": "{}  the branches of the file shown (or of the file a branch tab belongs to), oldest first → [{id, name, time (Unix seconds), state: active|merged|archived, index? (its open tab)}]",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "branch.open",
+    "label": "Open branch",
+    "menu": null,
+    "params": "{id}  open the branch in a tab (or switch to its tab) → {index}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "branch.review",
+    "label": "Review branch",
+    "menu": null,
+    "params": "{id? (default: the branch tab shown)}  what changed on the branch and on the main file since the branch was made or last updated from main, and where they conflict (the same property changed on both sides, or a layer deleted on one side and edited on the other) → {id, name, state, branch: {layers, document, truncated}, main: {…}, conflicts: [{key, id?, name, property, branch, main, deletedBy?}]}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "branch.updateFromMain",
+    "label": "Update from main",
+    "menu": null,
+    "params": "{id?, resolutions? ({<conflict key>: \"branch\" | \"main\"})}  bring the main file's changes since the branch was made into the branch; refused while a conflict has no resolution. Not undoable (the branch tab's undo history starts over) → {updated, changes, conflicts}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "branch.merge",
+    "label": "Merge branch",
+    "menu": null,
+    "params": "{id?, resolutions? ({<conflict key>: \"branch\" | \"main\"})}  merge the branch into the main file as one undo step, then archive it and show the main file; refused while a conflict has no resolution → {merged, changes, conflicts, index}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "branch.archive",
+    "label": "Archive branch",
+    "menu": null,
+    "params": "{id?}  set the branch aside without merging (it stays in the file and can still be opened) and close its tab",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "plugin.list",
+    "label": "List plugins",
+    "menu": null,
+    "params": "{} → {plugins: [{id, name, version, main, permissions, commands, path, loaded}], last}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "plugin.import",
+    "label": "Import plugin from manifest…",
+    "menu": "Plugins/Development",
+    "params": "{path (figcraft-plugin.json or its folder) | manifest (object or JSON text), wasm (base64)} replaces a plugin with the same id",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "plugin.remove",
+    "label": "Remove plugin",
+    "menu": null,
+    "params": "{id}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "plugin.run",
+    "label": "Run plugin",
+    "menu": null,
+    "params": "{id, command? (default: the first), params? (the command's parameters), fuel? (lower instruction budget)} one undo step → {output, logs, calls, fuel, panel}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "plugin.ui",
+    "label": "Plugin panel",
+    "menu": null,
+    "params": "{id?} → plugin id's open panel (without id: the one opened last) {plugin, command, title, controls, values}, or null",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "plugin.event",
+    "label": "Use plugin panel control",
+    "menu": null,
+    "params": "{id, control, value? (a field's new value)} presses a button or sets a field in the plugin's open panel; the plugin is called back as one undo step → like plugin.run",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "plugin.close",
+    "label": "Close plugin panel",
+    "menu": null,
+    "params": "{id} → {closed}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "plugins.runLast",
+    "label": "Run last plugin",
+    "menu": "Plugins",
+    "params": "{}",
+    "shortcut": "Ctrl+Alt+Shift+P",
+    "undoable": false
+  },
+  {
+    "id": "plugins.manage",
+    "label": "Manage plugins…",
+    "menu": "Plugins",
+    "params": "{}  opens the plugins window; returns the list like `plugin.list`",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "plugin.directory.list",
+    "label": "Browse plugin directory",
+    "menu": null,
+    "params": "{server? (ws://host:port/; default: the one browsed last), query?} → {server, plugins: [{id, name, version, description, author, api, access, commands, widget, bytes, sha256, published, versions, installed, update}]}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "plugin.directory.install",
+    "label": "Install plugin from directory",
+    "menu": null,
+    "params": "{id, version? (default: the latest), confirm: true (required: installing runs the plugin's code), server?, sha256? (the one shown)} downloads, checks the SHA-256 and installs or updates it → {installed, name, version, permissions, sha256, path, source, replaced}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "plugin.directory.publish",
+    "label": "Publish plugin to directory",
+    "menu": null,
+    "params": "{path (a plugin folder or its figcraft-plugin.json) | plugin (an installed plugin's id), server (ws://host:port/?key=…)} → {published: entry, server}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "plugin.directory.unpublish",
+    "label": "Unpublish plugin from directory",
+    "menu": null,
+    "params": "{id, version? (default: every version), server (ws://host:port/?key=…)} → {id, removed: [versions]}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "widget.insert",
+    "label": "Insert widget",
+    "menu": null,
+    "params": "{plugin (a widget plugin's id), x?, y? (top-left; default: centred in the view), fuel?} the plugin draws it; one undo step → {id, plugin, state, targets, output, logs, calls, fuel}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "widget.click",
+    "label": "Click widget",
+    "menu": null,
+    "params": "{id (a widget or a layer in one), target (see widget.list), fuel?} calls the widget's plugin back, which redraws it; one undo step → like widget.insert",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "widget.list",
+    "label": "List widgets",
+    "menu": null,
+    "params": "{} → {widgets: [{id, plugin, name, page, state, targets}]}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "collab.host",
+    "label": "Start live session",
+    "menu": null,
+    "params": "{port? (default 47900, else any free port), bind?: \"local\" (this machine, default) | \"lan\" (the local network) | an IP address} → the open file's session: {session, link, url (invites: they carry the secret token), address, …}; sessions are per file, so other files' sessions go on (a session this file was in ends)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "collab.share",
+    "label": "Share with a join code",
+    "menu": null,
+    "params": "{via?: \"online\" (default: the open file is kept on the server in Preferences, `pref.publishServer`, and the server hands out the codes) | \"local\" (this app hosts it for people on the same network; no server), access?: \"edit\" (default) | \"view\" (online only: which code `code` is), server? (online: another server's address, with ?key=… when it needs its key), name? (online: the file's name there), port?, bind?: \"lan\" (default) | \"local\" (this machine only) | an IP address (local)} → the open file's session as `collab.peers` gives it: `code` is what others type to join (`collab.join {code}`, the Join field), `link` an invite link. Local: at once, the code carries the host's IPv4 address, port and secret (K7M2Q-…, 20 symbols). Online: status \"connecting\" first; once live `code` is the server's (K7M-2QX-9TD) and `share` is {via, access, shared, editCode, viewCode, editLink, viewLink}: links made for others (the file's own links in `published` stay yours); `code` stays null when the server is older than join codes (give `share.editLink` / `share.viewLink` instead). Called again while shared: only switches which code `code` is (`access`). Called after `collab.stop` on a file that is still on the server: new links and codes for that same file (nothing is published twice). `collab.stop` stops sharing",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "collab.stop",
+    "label": "Stop live session",
+    "menu": null,
+    "params": "{} → {ended}: the open file's session ends (a session this app hosts stops for everyone; a joined one is left). A file shared online with `collab.share` is different: its sharing stops → {ended: false, shared: false}: the links and codes others got are revoked on the server, whoever joined with them is disconnected at once (they keep their copy), and you stay in the file, which stays on the server, open only to you (`collab.share` shares it again with new codes; `collab.leave` leaves it there; `collab.manageFile {action: \"remove\"}` with its owner token takes it off the server)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "collab.join",
+    "label": "Join live session",
+    "menu": "File",
+    "params": "{code: a join code (K7M-2QX-9TD from a server, asked at the server in Preferences; a longer one for the local network; spaces, dashes and case don't matter, O reads as 0 and I or L as 1) | link: figcraft://join?host=…&file=…&token=…, figcraft://join?server=ws(s)://…&file=…&token=… or ws(s)://host:port/?file=…&token=… (a session an app hosts, or a server's share link; a code here works too)} → the new session: {session, status: \"connecting\", …}; its file opens in a tab of its own (other files' sessions go on) and `collab.peers` tells when it's live (`sessions` lists it until then, and if it fails)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "collab.leave",
+    "label": "Leave live session",
+    "menu": null,
+    "params": "{} (the open file's session; the synced file stays open as a local copy) → {ended}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "collab.publish",
+    "label": "Publish to server",
+    "menu": "File",
+    "params": "{server: ws://host:port/?key=… or wss://host/path/?key=… (the server's address with its key; `figcraft-server key` prints it; without a key on a server open to the public), key? (when the address has none), name? (default: the file's name)} → status \"connecting\": the open file is uploaded as a new file and this tab syncs through the server; `collab.peers` then has `published: {server, file, name, edit, view, owner (published without a key: the owner token, shown once), expires (seconds since 1970, or null)}` and `hosting` (the server's operator, terms and idle expiry)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "collab.serverInfo",
+    "label": "Server info",
+    "menu": null,
+    "params": "{server: ws://host:port/ or wss://host/path/} → {open (anyone may publish without the key), operator, terms (a web address), idleDays (files published without the key are deleted after this many days unopened; null: kept), maxFileMb, expires}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "collab.manageFile",
+    "label": "Manage published file",
+    "menu": null,
+    "params": "{file (its id), server?, owner? (the server's address and the owner token you got when you published the file without the key; each defaults to what is recorded for one of your online files, see `collab.files`), action: links | createLink {access?: view (default) | edit, label?} | revoke {link (a link's id)} | share (others get new links and join codes) | unshare (the links and codes others got are revoked; the file stays yours on the server) | rename {name} | remove (the file is deleted from the server and leaves your online files)} → {links: [{id, access, label, created}]} | {id, access, link (a new share link, shown once)} | {shared, code, viewCode, editLink, viewLink} | {done}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "collab.report",
+    "label": "Report file to server operator",
+    "menu": null,
+    "params": "{reason (a few words, at most 500 characters)} → {sent}: the file you joined on a server is reported to its operator; the session's message says when the server kept it (servers older than this app don't take reports)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "collab.peers",
+    "label": "People in this file",
+    "menu": null,
+    "params": "{} → the open file's session (each open file has its own or none): {available, canHost (false in the browser: it can only join), session (its id; null: this file isn't in a session), status: off|connecting|live|reconnecting|failed, reason?, role, me, name, color, fileName, pages, link, url, address, network, access: edit|view (view: a server's view link; edits are refused), readOnly (the open file can't be edited now: view only, or being published), published (a file you published: {server, file, name, edit, view}), code (the join code to give others, when the file was shared with `collab.share`; null otherwise or while it is on its way), share ({via: online|local, access, shared (false: a file of yours on a server that nobody else gets into now), editCode, viewCode, editLink, viewLink (what others join with; null when not shared)} or null), follow, syncing, document (index of the synced open document), editing (the text layer you type in: {node, layer, caret, selection}), peers: [{id, name, color, editing (theirs, same shape, or null), presence: {cursor: [page, x, y], selection, viewport: [page, x, y, w, h], editing_text}}], sessions: [{session, document (index of its open document; null for a join on its way), status, reason, role, fileName, link, peers (how many others)}] (every session of the app)}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "collab.follow",
+    "label": "Follow",
+    "menu": null,
+    "params": "{client? (a peer's id; omit to stop following)} → {follow}",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "collab.cursor",
+    "label": "Show cursor at",
+    "menu": null,
+    "params": "{x?, y? (page coordinates on the current page; omit both to hide)} → {cursor} (agents; in the app the pointer drives it): your pointer in the open file's session (null when the file isn't in one)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "collab.cursorChat",
+    "label": "Cursor chat",
+    "menu": null,
+    "params": "{text? (shown next to your cursor for everyone, at most 100 characters; empty closes it; omit to open the chat box in the app)} → {chat} (or {open}); others see it fade after 5 s without changes",
+    "shortcut": "/",
+    "undoable": false
+  },
+  {
+    "id": "collab.spotlight",
+    "label": "Spotlight me",
+    "menu": null,
+    "params": "{on? (default: toggle)} → {spotlighting}: everyone in the session follows your view and page until they move theirs",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "collab.files",
+    "label": "Your online files",
+    "menu": null,
+    "params": "{refresh? (true: ask each server once what became of its files; default false: no network)} → {files: [{server, host, file (its id), name, created, opened (seconds since 1970), shared (others get in with a code now), code, viewCode (the join codes, while shared), state: unknown | online | gone (the server no longer has it: removed or expired), expires, session, document (the session and open document it is in now, or null), hasOwnerToken: true}], problems: [{server, host, state: offline | unsupported (a server older than this request), reason}], max}: the files you published or shared without a server key, most recently opened first, as recorded on this computer with the preferences. Owner tokens and your own links are never in the result",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "collab.openFile",
+    "label": "Open online file",
+    "menu": null,
+    "params": "{file (its id, from `collab.files`), server? (when files on several servers have that id)} → {session, status: \"connecting\", document, alreadyOpen, file, server, name}: joins the file as its owner in a tab of its own (`collab.peers` tells when it's live; `collab.share` and `collab.stop` there start and stop its sharing); a file that is open already comes to the front instead (alreadyOpen: true)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "collab.forgetFile",
+    "label": "Forget online file",
+    "menu": null,
+    "params": "{file, server?} → {forgotten, file, server, onServer}: drops the file from the list on this computer only. The file stays on its server until it expires, and without its owner token it can't be managed from here again (`collab.manageFile {action: \"remove\"}` takes it off the server instead)",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "collab.recoverFile",
+    "label": "Recover online file",
+    "menu": null,
+    "params": "{path (a recovery copy of one of your online files), file, server?, session, client, seq (who the app was in the file when the copy was written, and the server's last change it had: from the note beside the copy)} → {session, status: \"connecting\"}: joins the file again as its owner and keeps the copy until the file arrives. Then: the server has everything in the copy → nothing more; the copy has changes of yours the server never confirmed and nothing else changed there → they are applied on top as one edit (\"Recovered changes\", synced to everyone); anything else changed meanwhile → the copy opens beside the file as “<name> (recovered copy)”; the file can't be joined → the copy opens as an unsaved document. The session's message says which",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "collab.registerLinks",
+    "label": "Open invite links in FigCraft",
+    "menu": null,
+    "params": "{on? (default: switch)} → {on, registered}: make this app the opener of figcraft:// invite links (or stop); also the Preferences checkbox",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "template.list",
+    "label": "List templates",
+    "menu": null,
+    "params": "{}  the starter templates: [{id, name, description, kind (app|website|kit|media), size}]",
+    "shortcut": null,
+    "undoable": false
+  },
+  {
+    "id": "file.newFromTemplate",
+    "label": "New from template",
+    "menu": "File",
+    "params": "{template (an id from `template.list`), name? (the document's name; default the template's)}  opens a new, unsaved document built from the template → {index, template}; without `template`, returns {templates} (and the app shows them to pick from)",
+    "shortcut": null,
+    "undoable": false
+  }
+]

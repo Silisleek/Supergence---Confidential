@@ -1,0 +1,22 @@
+[MAIN 2] Unrecognized feature: 'pointer-lock'.
+[MAIN 2] %cElectron Security Warning (Insecure Content-Security-Policy) font-weight: bold; This renderer process has either no Content Security
+  Policy set or a policy with "unsafe-eval" enabled. This exposes users of
+  this app to unnecessary security risks.
+
+For more information and help, consult
+https://electronjs.org/docs/tutorial/security.
+This warning will not show up
+once the app is packaged.
+[MAIN 1] [HoloWindowManager] Initialized holographic desktop windowing system.
+[MAIN 1] [StarkHudController] Initialized authentic JARVIS HUD OS.
+[MAIN 1] [WS] Connected to SIS Brain
+[PREVIEW 2] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation
+[PREVIEW 3] Uncaught SyntaxError: Unexpected identifier 'id'
+[PREVIEW 2] %cElectron Security Warning (Insecure Content-Security-Policy) font-weight: bold; This renderer process has either no Content Security
+  Policy set or a policy with "unsafe-eval" enabled. This exposes users of
+  this app to unnecessary security risks.
+
+For more information and help, consult
+https://electronjs.org/docs/tutorial/security.
+This warning will not show up
+once the app is packaged.

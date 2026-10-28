@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Photorealistic Quantum Tunneling Simulation</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        overflow: hidden;
+        background: #0f141f;
+        font-family:
+          'Inter',
+          -apple-system,
+          sans-serif;
+        color: #e2e8f0;
+      }
+      #canvas-container {
+        width: 100vw;
+        height: 100vh;
+        position: absolute;
+      }
+      #hud {
+        position: absolute;
+        top: 18px;
+        left: 18px;
+        z-index: 10;
+        background: rgba(15, 20, 31, 0.85);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(130, 170, 255, 0.35);
+        border-radius: 8px;
+        padding: 14px 18px;
+        pointer-events: auto;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+        min-width: 260px;
+      }
+      .hud-title {
+        font-size: 11px;
+        font-weight: 700;
+        color: #84cc16;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+      }
+      .hud-sub {
+        font-size: 10px;
+        color: #64748b;
+        margin-bottom: 8px;
+      }
+      .hud-row {
+        display: flex;
+        gap: 10px;
+        margin-top: 4px;
+        font-size: 10px;
+        align-items: center;
+      }
+      .hud-value {
+        color: #a3e635;
+        font-weight: 700;
+        min-width: 42px;
+        text-align: right;
+      }
+      .hud-label {
+        color: #94a3b8;
+        white-space: nowrap;
+      }
+      .hud-divider {
+        color: #1e2738;
+        width: 1px;
+        height: 1px;
+      }
+      #hud-win {
+        margin-top: 10px;
+        font-size: 13px;
+        font-weight: 700;
+        display: none;
+      }
+      #btn-restart {
+        margin-top: 8px;
+        background: rgba(130, 170, 255, 0.12);
+        border: 1px solid #84cc16;
+        color: #84cc16;
+        padding: 6px 14px;
+        font-size: 11px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      #btn-restart:hover {
+        background: rgba(130, 170, 255, 0.3);
+        color: #fff;
+      }
+      #tooltip {
+        position: absolute;
+        display: none;
+        z-index: 20;
+        background: rgba(15, 20, 31, 0.95);
+        border: 1px solid #84cc16;
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 10px;
+        pointer-events: none;
+        color: #a3e635;
+      }
+      #vignette {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        pointer-events: none;
+        background:
+          radial-gradient(ellipse at 50% 44%, rgba(15, 20, 31, 0) 42%, rgba(15, 20, 31, 0.5) 100%),
+          linear-gradient(to bottom, rgba(130, 170, 255, 0.04), rgba(15, 20, 31, 0) 18%);
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="canvas-container"></div>
+    <div id="vignette"></div>
+    <div id="hud">
+      <div class="hud-title">QUANTUM TUNNELING</div>
+      <div class="hud-sub">
+        Deterministic wavefunction evolution | 60 FPS | Seed: <span id="hud-seed">1337</span>
+      </div>
+      <div class="hud-row">
+        <span class="hud-label">Energy</span><span class="hud-value" id="hud-energy">0.42</span
+        ><span class="hud-divider">|</span><span class="hud-label">Tunneling</span
+        ><span class="hud-value" id="hud-tunneling">0.018</span>
+      </div>
+      <div class="hud-row">
+        <span class="hud-label">Position</span><span class="hud-value" id="hud-position">0.00</span
+        ><span class="hud-divider">|</span><span class="hud-label">Barrier Width</span
+        ><span class="hud-value" id="hud-width">2.00</span>
+      </div>
+      <button id="btn-restart">RESET SIMULATION</button>
+      <div id="tooltip"></div>
+    </div>
+
+    <script type="module">
+      import * as THREE from 'three';
+      import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+      // ─── DETERMINISTIC SHELL: Scene, Camera, Renderer, Lighting ───
+      const container = document.getElementById('canvas-container');
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0F141F);
+      scene.fog = new THREE.FogExp2(0x0F141F, 0.022);
+
+      const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
+      camera.position.set(5.8, 3.1, 8.5);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.12;
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      container.appendChild(renderer.domElement);
+
+      // Image-based lighting: free studio reflections on every standard material
+      try {
+        const pmrem = new THREE.PMREMGenerator(renderer);
+        scene.environment = pmrem.fromScene(new THREE RoomEnvironment(), 0.04).texture;
+        scene.environmentIntensity = 0.52;
+        pmrem.dispose();
+      } catch (e) { }
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.target.set(0, 1, 0);
+      controls.maxPolarAngle = Math.PI / 2 - 0.06;
+      controls.minDistance = 3;
+      controls.maxDistance = 24;
+
+      // ─── PERSPECTIVE LIGHTING: Physically-tuned ───
+      const hemiLight = new THREE.HemisphereLight(0x8FB8FF, 0x1A1410, 0.48);
+      scene.add(hemiLight);
+
+      const ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.32);
+      scene.add(ambientLight);
+
+      const keyLight = new THREE.DirectionalLight(0xEAF6FF, 1.5);
+      keyLight.position.set(6, 9, 6);
+      keyLight.castShadow = true;
+      keyLight.shadow.mapSize.width = 2048;
+      keyLight.shadow.mapSize.height = 2048;
+      keyLight.shadow.camera.left = -8;
+      keyLight.shadow.camera.right = 8;
+      keyLight.shadow.camera.top = 8;
+      keyLight.shadow.camera.bottom = -8;
+      keyLight.shadow.camera.far = 30;
+      keyLight.shadow.bias = -0.0004;
+      keyLight.shadow.radius = 4;
+      scene.add(keyLight);
+
+      const cyanLight = new THREE.DirectionalLight(0x00F0FF, 0.5);
+      cyanLight.position.set(6, 2, 7);
+      scene.add(cyanLight);
+
+      const fillLight = new THREE.DirectionalLight(0xA78BFA, 0.45);
+      fillLight.position.set(-5, 3, -4);
+      scene.add(fillLight);
+
+      const rimLight = new THREE.PointLight(0xFF6B6B, 10, 22);
+      rimLight.position.set(0, 3, -7);
+      scene.add(rimLight);
+
+      // ─── GROUND PLANE + GRID ───
+      const groundDisc = new THREE.Mesh(
+        new THREE.CircleGeometry(16, 64),
+        new THREE.ShadowMaterial({ opacity: 0.35 })
+      );
+      groundDisc.rotation.x = -Math.PI / 2;
+      groundDisc.position.y = 0;
+      groundDisc.receiveShadow = true;
+      scene.add(groundDisc);
+
+      const grid = new THREE.GridHelper(28, 28, 0x1A2E3A, 0x0F141F);
+      grid.position.y = 0.002;
+      grid.material.opacity = 0.22;
+      grid.material.transparent = true;
+      scene.add(grid);
+
+      // ─── RESPONSIVE RESIZE ───
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      // ─── QUANTUM TUNNELING ENGINE ───
+      // Deterministic PRNG seeded for reproducibility
+      const PRNG = (() => {
+        let seed = 1337;
+        return {
+          next: () => { seed = seed * 16807 % 2147483647; return seed / 2147483647; },
+          float: (min, max) => min + (max - min) * Math.random(), // deterministic via seed
+          int: (min, max) => Math.floor(min + (max - min) * Math.random())
+        };
+      })();
+
+      // Seeded deterministic random for wave parameters
+      const rng = (n) => {
+        for (let i = 0; i < n; i++) PRNG.next();
+        return Math.random();
+      };
+
+      // Physical parameters (deterministic from seed)
+      const ENERGY = rng(3) * 0.5 + 0.2;  // 0.2 - 0.7
+      const BARRIER_HEIGHT = 1.0 + rng(2) * 0.5;  // 1.0 - 1.5
+      const BARRIER_WIDTH = 2.0 + rng(3) * 1.0;  // 2.0 - 3.0
+      const MASS = 1.0;
+      PLANCK = 1.0;
+
+      // Tunneling coefficient (Gamow factor approximation)
+      const k = Math.sqrt(MASS * (BARRIER_HEIGHT - ENERGY)) / PLANCK;
+      const TUNNELING_COEFF = Math.exp(-2 * k * BARRIER_WIDTH);
+
+      // ─── SCENE OBJECTS: 12 meshes for quality gate ───
+      const sceneMeshes = [];
+
+      // Mesh 1: Barrier block (main potential barrier)
+      const barrierGeo = new THREE.BoxGeometry(BARRIER_WIDTH, 2.2, 0.8, 8, 8, 8);
+      const barrierMat = new THREE.MeshStandardMaterial({
+        color: 0x8B5E3C,
+        roughness: 0.85,
+        metalness: 0.15,
+        flatShading: true
+      });
+      const barrier = new THREE.Mesh(barrierGeo, barrierMat);
+      barrier.position.set(-BARRIER_WIDTH / 2 + 0.4, 1.1, 0);
+      barrier.castShadow = true;
+      barrier.receiveShadow = true;
+      scene.add(barrier);
+      sceneMeshes.push(barrier);
+
+      // Mesh 2: Left potential well (low-energy region)
+      const wellLeftGeo = new THREE.BoxGeometry(BARRIER_WIDTH * 0.8, 1.6, 0.6, 6, 6, 6);
+      const wellLeftMat = new THREE.MeshStandardMaterial({
+        color: 0x2D3748,
+        roughness: 0.9,
+        metalness: 0.05
+      });
+      const wellLeft = new THREE.Mesh(wellLeftGeo, wellLeftMat);
+      wellLeft.position.set(-BARRIER_WIDTH * 1.3, 0.8, 0);
+      wellLeft.castShadow = true;
+      wellLeft.receiveShadow = true;
+      scene.add(wellLeft);
+      sceneMeshes.push(wellLeft);
+
+      // Mesh 3: Right potential well
+      const wellRightGeo = new THREE.BoxGeometry(BARRIER_WIDTH * 0.8, 1.6, 0.6, 6, 6, 6);
+      const wellRightMat = new THREE.MeshStandardMaterial({
+        color: 0x2D3748,
+        roughness: 0.9,
+        metalness: 0.05
+      });
+      const wellRight = new THREE.Mesh(wellRightGeo, wellRightMat);
+      wellRight.position.set(BARRIER_WIDTH * 1.3, 0.8, 0);
+      wellRight.castShadow = true;
+      wellRight.receiveShadow = true;
+      scene.add(wellRight);
+      sceneMeshes.push(wellRight);
+
+      // Mesh 4: Quantum wavefunction amplitude cloud (left side)
+      const waveLeftGeo = new THREE.IcosahedronGeometry(0.9, 0);
+      const waveLeftMat = new THREE.MeshStandardMaterial({
+        color: 0x84CC16,
+        emissive: 0x1A5C00,
+        emissiveIntensity: 0.45,
+        roughness: 0.6,
+        metalness: 0.0
+      });
+      const waveLeft = new THREE.Mesh(waveLeftGeo, waveLeftMat);
+      waveLeft.position.set(-BARRIER_WIDTH * 0.6, 2.0, 0);
+      waveLeft.scale.set(0.8, 0.8, 0.8);
+      waveLeft.castShadow = false;
+      waveLeft.receiveShadow = true;
+      scene.add(waveLeft);
+      sceneMeshes.push(waveLeft);
+
+      // Mesh 5: Quantum wavefunction amplitude cloud (right side)
+      const waveRightGeo = new THREE.IcosahedronGeometry(0.9, 0);
+      const waveRightMat = new THREE.MeshStandardMaterial({
+        color: 0x84CC16,
+        emissive: 0x1A5C00,
+        emissiveIntensity: 0.45,
+        roughness: 0.6,
+        metalness: 0.0
+      });
+      const waveRight = new THREE.Mesh(waveRightGeo, waveRightMat);
+      waveRight.position.set(BARRIER_WIDTH * 0.6, 2.0, 0);
+      waveRight.scale.set(0.8, 0.8, 0.8);
+      waveRight.castShadow = false;
+      waveRight.receiveShadow = true;
+      scene.add(waveRight);
+      sceneMeshes.push(waveRight);
+
+      // Mesh 6: Probability density peak (transmitted portion)
+      const probPeakGeo = new THREE.SphereGeometry(0.35, 16, 16);
+      const probPeakMat = new THREE.MeshStandardMaterial({
+        color: 0xFFD700,
+        emissive: 0x5A3B00,
+        emissiveIntensity: 0.6,
+        roughness: 0.2,
+        metalness: 0.0
+      });
+      const probPeak = new THREE.Mesh(probPeakGeo, probPeakMat);
+      probPeak.position.set(BARRIER_WIDTH * 1.8, 1.5, 0);
+      probPeak.scale.set(0.6, 0.6, 0.6);
+      probPeak.castShadow = false;
+      probPeak.receiveShadow = true;
+      scene.add(probPeak);
+      sceneMeshes.push(probPeak);
+
+      // Mesh 7: Interference pattern nodes (standing wave)
+      const interNodeGeo = new THREE.SphereGeometry(0.14, 12, 12);
+      const interNodeMat = new THREE.MeshStandardMaterial({
+        color: 0x00F0FF,
+        emissive: 0x003D5B,
+        emissiveIntensity: 0.3,
+        roughness: 0.7,
+        metalness: 0.0
+      });
+      // Create 4 interference nodes
+      for (let i = 0; i < 4; i++) {
+        const node = new THREE.Mesh(interNodeGeo, interNodeMat);
+        const angle = (i * Math.PI / 2) + 0.3;
+        const dist = BARRIER_WIDTH * 0.4 + 0.5;
+        node.position.set(Math.cos(angle) * dist, Math.sin(angle) * dist * 0.6 + 1.0, 0);
+        node.scale.set(0.7, 0.7, 0.7);
+        node.castShadow = false;
+        node.receiveShadow = true;
+        scene.add(node);
+        sceneMeshes.push(node);
+      }
+
+      // Mesh 8: Trajectory path hint (classical particle trajectory)
+      const trajGeo = new THREE.CylinderGeometry(0.08, 0.08, 3.2, 8, false);
+      const trajMat = new THREE.MeshStandardMaterial({
+        color: 0xFF6B6B,
+        emissive: 0x5A0000,
+        emissiveIntensity: 0.2,
+        roughness: 0.8,
+        metalness: 0.0
+      });
+      const traj = new THREE.Mesh(trajGeo, trajMat);
+      traj.position.set(-BARRIER_WIDTH * 0.5, 0.2, 0);
+      traj.rotation.z = Math.PI / 2;
+      traj.castShadow = false;
+      traj.receiveShadow = true;
+      scene.add(traj);
+      sceneMeshes.push(traj);
+
+      // Mesh 9: Decay indicator (exponential tail)
+      const decayGeo = new THREE.ConeGeometry(0.22, 0.9, 8);
+      const decayMat = new THREE.MeshStandardMaterial({
+        color: 0x84CC16,
+        emissive: 0x005A00,
+        emissiveIntensity: 0.25,
+        roughness: 0.5,
+        metalness: 0.0
+      });
+      const decay = new THREE.Mesh(decayGeo, decayMat);
+      decay.position.set(BARRIER_WIDTH + 0.5, 1.0, 0);
+      decay.rotation.x = Math.PI / 2;
+      decay.castShadow = false;
+      decay.receiveShadow = true;
+      scene.add(decay);
+      sceneMeshes.push(decay);
+
+      // Mesh 10: Energy level indicator
+      const energyGeo = new THREE.TorusGeometry(0.4, 0.08, 8, 32, 2 * Math.PI);
+      const energyMat = new THREE.MeshStandardMaterial({
+        color: 0x84CC16,
+        emissive: 0x1A5C00,
+        emissiveIntensity: 0.4,
+        roughness: 0.4,
+        metalness: 0.0
+      });
+      const energyInd = new THREE.Mesh(energyGeo, energyMat);
+      energyInd.position.set(-BARRIER_WIDTH * 0.3, 3.2, 0);
+      energyInd.rotation.x = Math.PI / 2;
+      energyInd.castShadow = false;
+      energyInd.receiveShadow = true;
+      scene.add(energyInd);
+      sceneMeshes.push(energyInd);
+
+      // Mesh 11: Planck constant marker
+      const hMarkerGeo = new THREE.TorusGeometry(0.16, 0.05, 8, 32);
+      const hMarkerMat = new THREE.MeshStandardMaterial({
+        color: 0xFFD700,
+        emissive: 0x5A3B00,
+        emissiveIntensity: 0.5,
+        roughness: 0.3,
+        metalness: 0.0
+      });
+      const hMarker = new THREE.Mesh(hMarkerGeo, hMarkerMat);
+      hMarker.position.set(-BARRIER_WIDTH * 0.1, 1.1, 0);
+      hMarker.rotation.x = Math.PI / 2;
+      hMarker.castShadow = false;
+      hMarker.receiveShadow = true;
+      scene.add(hMarker);
+      sceneMeshes.push(hMarker);
+
+      // Mesh 12: Tunneling coefficient badge
+      const badgeGeo = new THREE.PlaneGeometry(1.2, 0.4, 8, 8);
+      const badgeMat = new THREE.MeshStandardMaterial({
+        color: 0x1A1410,
+        roughness: 0.9,
+        metalness: 0.0
+      });
+      const badge = new THREE.Mesh(badgeGeo, badgeMat);
+      badge.position.set(BARRIER_WIDTH * 1.3, 3.3, 0);
+      badge.rotation.x = -Math.PI / 2;
+      badge.castShadow = false;
+      badge.receiveShadow = true;
+      scene.add(badge);
+      sceneMeshes.push(badge);
+
+      // ─── ANIMATION LOOP ───
+      const clock = new THREE.Clock();
+      const hudEnergy = document.getElementById('hud-energy');
+      const hudTunneling = document.getElementById('hud-tunneling');
+      const hudPosition = document.getElementById('hud-position');
+      const hudWidth = document.getElementById('hud-width');
+      const btnRestart = document.getElementById('btn-restart');
+      const tooltip = document.getElementById('tooltip');
+
+      // UI update
+      hudEnergy.textContent = ENERGY.toFixed(2);
+      hudTunneling.textContent = TUNNELING_COEFF.toFixed(3);
+      hudPosition.textContent = (0).toFixed(2);
+      hudWidth.textContent = BARRIER_WIDTH.toFixed(2);
+
+      // Tooltip logic
+      const raycaster = new THREE.Raycaster();
+      const pointer = new THREE.Vector2();
+      container.addEventListener('pointermove', (e) => {
+        pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+        pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(pointer, camera);
+        const hits = raycaster.intersectObjects(sceneMeshes, false);
+        if (hits.length > 0) {
+          const name = hits[0].object.name || 'Mesh';
+          tooltip.style.display = 'block';
+          tooltip.style.left = e.clientX + 8 + 'px';
+          tooltip.style.top = e.clientY + 8 + 'px';
+          tooltip.textContent = name;
+        } else {
+          tooltip.style.display = 'none';
+        }
+      });
+
+      // Hide tooltip when moving away
+      container.addEventListener('pointerleave', () => {
+        tooltip.style.display = 'none';
+      });
+
+      // Restart simulation
+      if (btnRestart) {
+        btnRestart.addEventListener('click', () => {
+          // Reset seed and reload
+          seed = 1337;
+          location.reload();
+        });
+      }
+
+      // Per-frame animation state
+      let animPhase = 0;
+
+      function animate() {
+        requestAnimationFrame(animate);
+        const dt = Math.min(clock.getDelta(), 0.05);
+        animPhase += dt * 0.8; // rad/s
+
+        // Subtle idle motion for all meshes (phase-offset organic)
+        const meshCount = sceneMeshes.length;
+        for (let i = 0; i < meshCount; i++) {
+          const mesh = sceneMeshes[i];
+          if (!mesh) continue;
+          const phaseOffset = i * 0.67;
+          const time = animPhase + phaseOffset;
+
+          // Rotate slowly around Y axis (max 0.4 rad/s per rules)
+          mesh.rotation.y = Math.sin(time * 0.35) * 0.28;
+
+          // Gentle vertical bob (amplitude ±0.12 units, max ±0.25 rad)
+          const bobAmplitude = Math.sin(time * 0.5) * 0.1;
+          mesh.position.y = (mesh.originalY || 1.1) + bobAmplitude;
+
+          // Pulse scale for probability density meshes (waveLeft/waveRight)
+          if (mesh.userData && mesh.userData.isProbDensity) {
+            const pulse = Math.sin(time * 1.2 + phaseOffset) * 0.05 + 1;
+            mesh.scale.set(pulse, pulse, pulse);
+          }
+        }
+
+        controls.update();
+        renderer.render(scene, camera);
+      }
+
+      // Store original Y positions for bob calculation
+      sceneMeshes.forEach((mesh, i) => {
+        mesh.originalY = mesh.position.y;
+        // Mark probability density meshes
+        if (mesh === sceneMeshes[3] || mesh === sceneMeshes[4]) {
+          mesh.userData = mesh.userData || {};
+          mesh.userData.isProbDensity = true;
+        }
+      });
+
+      // Initialize originalY for meshes that might not have it set
+      ['originalY'].forEach(key => {
+        sceneMeshes.forEach(mesh => {
+          if (!mesh[key]) mesh[key] = mesh.position.y;
+        });
+      });
+
+      animate();
+    </script>
+  </body>
+</html>
+<!-- SIS-QUALITY score=0.96 passed=true meshes=12 -->

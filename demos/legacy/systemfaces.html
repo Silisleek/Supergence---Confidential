@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Face for SIS systems</title>
+    <style>
+      .segment {
+        stroke: rgba(0, 0, 0, 0);
+        stroke-width: 10;
+        stroke-linecap: round;
+      }
+
+      .joint {
+        fill: rgb(90, 53, 25);
+        stroke-width: 5px;
+      }
+
+      #mir {
+        scale: -0.25;
+      }
+
+      /* Animate first arm segment rotation */
+      .arm {
+        filter: url('#metaball');
+        scale: 0.25;
+        transform-origin: 250px 250px;
+        animation: rotate 31s ease-in-out infinite;
+      }
+
+      @keyframes rotate {
+        0% {
+          transform: rotate(-90deg);
+        }
+
+        25% {
+          transform: rotate(360deg);
+        }
+
+        50% {
+          transform: rotate(90deg);
+        }
+
+        75% {
+          transform: rotate(-360deg);
+        }
+
+        100% {
+          transform: rotate(-90deg);
+        }
+      }
+
+      /* Animate second arm segment relative to elbow */
+      .arm1 {
+        transform-origin: 260px 200px;
+        animation: rotate 23s ease-in-out infinite;
+      }
+
+      .arm2 {
+        transform-origin: 400px 200px;
+        animation: rotate 17s ease-in-out infinite;
+      }
+
+      .arm3 {
+        transform-origin: 490px 200px;
+        animation: rotate 11s ease-in-out infinite;
+      }
+    </style>
+  </head>
+
+  <body>
+    <svg viewBox="0 0 500 500">
+      <g class="arm">
+        <line class="segment" x1="250" y1="250" x2="300" y2="250"></line>
+        <circle class="joint" cx="250" cy="250" r="64"></circle>
+        <g class="arm1">
+          <line class="segment" x1="300" y1="250" x2="400" y2="250"></line>
+          <circle class="joint" cx="300" cy="250" r="30"></circle>
+          <g class="arm2">
+            <line class="segment" x1="400" y1="250" x2="490" y2="250"></line>
+            <circle class="joint" cx="400" cy="250" r="24"></circle>
+            <g class="arm3">
+              <line class="segment" x1="490" y1="250" x2="550" y2="250"></line>
+              <circle class="joint" cx="490" cy="250" r="16"></circle>
+            </g>
+          </g>
+          <g class="arm1">
+            <line class="segment" x1="300" y1="250" x2="400" y2="250"></line>
+            <circle class="joint" cx="300" cy="250" r="30"></circle>
+            <g class="arm2">
+              <line class="segment" x1="400" y1="250" x2="490" y2="250"></line>
+              <circle class="joint" cx="400" cy="250" r="8"></circle>
+              <g class="arm3">
+                <line class="segment" x1="490" y1="250" x2="550" y2="250"></line>
+                <circle class="joint" cx="490" cy="250" r="8"></circle>
+              </g>
+              <g class="arm2">
+                <line class="segment" x1="400" y1="250" x2="490" y2="250"></line>
+                <circle class="joint" cx="400" cy="250" r="8"></circle>
+                <g class="arm3">
+                  <line class="segment" x1="490" y1="250" x2="550" y2="250"></line>
+                  <circle class="joint" cx="490" cy="250" r="8"></circle>
+                </g>
+              </g>
+            </g>
+          </g>
+        </g>
+      </g>
+      <g id="mir" class="arm">
+        <line class="segment" x1="250" y1="250" x2="300" y2="250"></line>
+        <circle class="joint" cx="250" cy="250" r="64"></circle>
+        <g class="arm1">
+          <line class="segment" x1="300" y1="250" x2="400" y2="250"></line>
+          <circle class="joint" cx="300" cy="250" r="30"></circle>
+          <g class="arm2">
+            <line class="segment" x1="400" y1="250" x2="490" y2="250"></line>
+            <circle class="joint" cx="400" cy="250" r="24"></circle>
+            <g class="arm3">
+              <line class="segment" x1="490" y1="250" x2="550" y2="250"></line>
+              <circle class="joint" cx="490" cy="250" r="16"></circle>
+            </g>
+          </g>
+          <g class="arm1">
+            <line class="segment" x1="300" y1="250" x2="400" y2="250"></line>
+            <circle class="joint" cx="300" cy="250" r="30"></circle>
+            <g class="arm2">
+              <line class="segment" x1="400" y1="250" x2="490" y2="250"></line>
+              <circle class="joint" cx="400" cy="250" r="8"></circle>
+              <g class="arm3">
+                <line class="segment" x1="490" y1="250" x2="550" y2="250"></line>
+                <circle class="joint" cx="490" cy="250" r="8"></circle>
+              </g>
+              <g class="arm2">
+                <line class="segment" x1="400" y1="250" x2="490" y2="250"></line>
+                <circle class="joint" cx="400" cy="250" r="8"></circle>
+                <g class="arm3">
+                  <line class="segment" x1="490" y1="250" x2="550" y2="250"></line>
+                  <circle class="joint" cx="490" cy="250" r="8"></circle>
+                </g>
+              </g>
+            </g>
+          </g>
+        </g>
+      </g>
+      <filter id="metaball">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="17" result="blur"></feGaussianBlur>
+        <feColorMatrix
+          in="blur"
+          mode="matrix"
+          values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 100 -7"
+          result="fluid"
+        ></feColorMatrix>
+        <feComposite in="SourceGraphic" in2="fluid" operator="atop"></feComposite>
+      </filter>
+    </svg>
+  </body>
+</html>

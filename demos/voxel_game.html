@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A 3D voxel world built with Three.js using InstancedMesh for // SIS 3D Simulation</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        overflow: hidden;
+        background: #080b10;
+        font-family:
+          'Inter',
+          -apple-system,
+          sans-serif;
+        color: #e2e8f0;
+      }
+      #canvas-container {
+        width: 100vw;
+        height: 100vh;
+        position: absolute;
+      }
+      #hud {
+        position: absolute;
+        top: 14px;
+        left: 14px;
+        z-index: 10;
+        background: rgba(13, 17, 23, 0.88);
+        backdrop-filter: blur(14px);
+        border: 1px solid rgba(0, 240, 255, 0.35);
+        border-radius: 8px;
+        padding: 12px 16px;
+        pointer-events: auto;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+        min-width: 240px;
+      }
+      .hud-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: #00f0ff;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 3px;
+      }
+      .hud-sub {
+        font-size: 10px;
+        color: #8b949e;
+      }
+      .hud-row {
+        display: flex;
+        gap: 12px;
+        margin-top: 6px;
+        font-size: 11px;
+      }
+      .hud-score {
+        color: #84cc16;
+        font-weight: 700;
+      }
+      .hud-lives {
+        color: #ff6b6b;
+        font-weight: 700;
+      }
+      #hud-win {
+        display: none;
+        margin-top: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #ffd700;
+      }
+      #btn-restart {
+        display: none;
+        margin-top: 8px;
+        background: rgba(0, 240, 255, 0.12);
+        border: 1px solid #00f0ff;
+        color: #00f0ff;
+        padding: 5px 12px;
+        font-size: 11px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      #btn-restart:hover {
+        background: rgba(0, 240, 255, 0.3);
+        color: #fff;
+      }
+      .hud-hint {
+        margin-top: 6px;
+        font-size: 9px;
+        color: #64748b;
+      }
+      #tooltip {
+        position: absolute;
+        display: none;
+        z-index: 20;
+        background: rgba(13, 17, 23, 0.95);
+        border: 1px solid #00f0ff;
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 11px;
+        pointer-events: none;
+        color: #00f0ff;
+      }
+      /* Cinematic vignette + top glow: cheap post-processing without a post chain */
+      #vignette {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        pointer-events: none;
+        background:
+          radial-gradient(ellipse at 50% 42%, rgba(0, 0, 0, 0) 46%, rgba(0, 0, 0, 0.42) 100%),
+          linear-gradient(to bottom, rgba(0, 240, 255, 0.05), rgba(0, 0, 0, 0) 22%);
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="canvas-container"></div>
+    <div id="vignette"></div>
+    <div id="hud">
+      <div class="hud-title">✦ A 3D VOXEL WORLD BUILT WITH THREE.JS USI</div>
+      <div class="hud-sub" id="hud-info">Interactive 3D Simulation | 60 FPS</div>
+      <div class="hud-row">
+        <span class="hud-score" id="hud-score">SCORE 0</span
+        ><span class="hud-lives" id="hud-lives">LIVES 3</span>
+      </div>
+      <div id="hud-win"></div>
+      <button id="btn-restart">↻ RESTART</button>
+      <div class="hud-hint">WASD / arrows to move · swipe on touch · collect 5 to win</div>
+    </div>
+    <div id="tooltip"></div>
+    <script type="module">
+      import * as THREE from 'three';
+      import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+      import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+      // ─── DETERMINISTIC SHELL: Scene, Camera, Renderer, Lighting ───
+      // Beauty is deterministic: IBL + shadow catcher + tuned lights ship with EVERY scene,
+      // so output quality never depends on the model remembering them.
+      const container = document.getElementById('canvas-container');
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x080b10);
+      scene.fog = new THREE.FogExp2(0x080b10, 0.022);
+
+      const camera = new THREE.PerspectiveCamera(
+        50,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        200,
+      );
+      camera.position.set(5.2, 3.4, 7.2);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.15;
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      container.appendChild(renderer.domElement);
+
+      // Image-based lighting: free studio reflections on every standard material (no network)
+      try {
+        const pmrem = new THREE.PMREMGenerator(renderer);
+        scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+        scene.environmentIntensity = 0.55;
+        pmrem.dispose();
+      } catch (e) {
+        /* IBL optional — lights alone still carry the scene */
+      }
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.target.set(0, 1, 0);
+      controls.maxPolarAngle = Math.PI / 2 - 0.06; // never dive under the floor
+      controls.minDistance = 3;
+      controls.maxDistance = 24;
+
+      // ─── PERSISTENT STYLE GUIDE: Tactical Lighting Reference Sheet ───
+      const hemiLight = new THREE.HemisphereLight(0x8fb8ff, 0x1a1410, 0.5);
+      scene.add(hemiLight);
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.35);
+      scene.add(ambientLight);
+
+      const keyLight = new THREE.DirectionalLight(0xeaf6ff, 1.6);
+      keyLight.position.set(5, 8, 5);
+      keyLight.castShadow = true;
+      keyLight.shadow.mapSize.width = 2048;
+      keyLight.shadow.mapSize.height = 2048;
+      keyLight.shadow.camera.left = -8;
+      keyLight.shadow.camera.right = 8;
+      keyLight.shadow.camera.top = 8;
+      keyLight.shadow.camera.bottom = -8;
+      keyLight.shadow.camera.far = 30;
+      keyLight.shadow.bias = -0.0004;
+      keyLight.shadow.radius = 4;
+      scene.add(keyLight);
+
+      const cyanKick = new THREE.DirectionalLight(0x00f0ff, 0.55);
+      cyanKick.position.set(5, 2, 6);
+      scene.add(cyanKick);
+
+      const fillLight = new THREE.DirectionalLight(0xa78bfa, 0.5);
+      fillLight.position.set(-4, 3, -3);
+      scene.add(fillLight);
+
+      const rimLight = new THREE.PointLight(0xff6b6b, 12, 24);
+      rimLight.position.set(0, 3, -6);
+      scene.add(rimLight);
+
+      // Shadow-catcher ground disc (invisible except for soft shadows) + grid above it
+      const groundDisc = new THREE.Mesh(
+        new THREE.CircleGeometry(14, 48),
+        new THREE.ShadowMaterial({ opacity: 0.38 }),
+      );
+      groundDisc.rotation.x = -Math.PI / 2;
+      groundDisc.position.y = 0;
+      groundDisc.receiveShadow = true;
+      scene.add(groundDisc);
+
+      const grid = new THREE.GridHelper(24, 24, 0x00f0ff, 0x1a1a2e);
+      grid.position.y = 0.002;
+      grid.material.opacity = 0.28;
+      grid.material.transparent = true;
+      scene.add(grid);
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      // ─── AI-GENERATED PART 1: Scene Objects (retopology-optimized) ───
+      function buildSceneObjects() {}
+
+      // ─── AI-GENERATED PART 2: Animation Logic ───
+      function animateScene() {}
+
+      // ─── AI-GENERATED PART 2b: Game Logic (single mechanic + win) ───
+      function buildGameLogic() {}
+
+      // ─── DETERMINISTIC: Execute Parts & Render Loop ───
+      let sceneMeshes = [];
+      try {
+        if (typeof buildSceneObjects === 'function') {
+          const result = buildSceneObjects(scene, THREE);
+          sceneMeshes = Array.isArray(result) ? result : [];
+        }
+      } catch (e) {
+        console.warn('[SIS 3D] Object generation error:', e);
+      }
+
+      // Wire game logic if present (SIS integration step — never AI-assembled)
+      let game = null;
+      try {
+        if (typeof buildGameLogic === 'function' && sceneMeshes.length > 0) {
+          game = buildGameLogic(scene, sceneMeshes, THREE);
+        }
+      } catch (e) {
+        console.warn('[SIS 3D] Game-logic init error (scene still renders):', e);
+      }
+
+      // Raycasting hover tooltip
+      const raycaster = new THREE.Raycaster();
+      const pointer = new THREE.Vector2();
+      const tooltip = document.getElementById('tooltip');
+      renderer.domElement.addEventListener('pointermove', (e) => {
+        pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+        pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(pointer, camera);
+        const hits = raycaster.intersectObjects(sceneMeshes, false);
+        if (hits.length > 0) {
+          const name = hits[0].object.name || hits[0].object.geometry?.type || 'Object';
+          tooltip.style.display = 'block';
+          tooltip.style.left = e.clientX + 12 + 'px';
+          tooltip.style.top = e.clientY + 12 + 'px';
+          tooltip.textContent = name;
+        } else {
+          tooltip.style.display = 'none';
+        }
+      });
+
+      const clock = new THREE.Clock();
+      const hudInfo = document.getElementById('hud-info');
+      const hudScore = document.getElementById('hud-score');
+      const hudLives = document.getElementById('hud-lives');
+      const hudWin = document.getElementById('hud-win');
+      const btnRestart = document.getElementById('btn-restart');
+      const optNote = '';
+      if (hudInfo)
+        hudInfo.textContent = `Objects: ${sceneMeshes.length}${game ? ' | GAME: 1 mechanic' : ''} | Interactive 3D | 60 FPS${optNote}`;
+      if (btnRestart)
+        btnRestart.addEventListener('click', () => {
+          try {
+            if (game && typeof game.reset === 'function') game.reset();
+          } catch (e) {}
+          if (hudWin) hudWin.style.display = 'none';
+          btnRestart.style.display = 'none';
+        });
+
+      function animate() {
+        requestAnimationFrame(animate);
+        const dt = Math.min(clock.getDelta(), 0.05);
+        try {
+          if (typeof animateScene === 'function') {
+            animateScene(sceneMeshes, clock, THREE);
+          }
+        } catch (e) {
+          /* animation error — scene still renders */
+        }
+        try {
+          if (game && typeof game.update === 'function') {
+            game.update(dt);
+            const score = typeof game.getScore === 'function' ? game.getScore() : 0;
+            const lives = typeof game.getLives === 'function' ? game.getLives() : 3;
+            const won = typeof game.hasWon === 'function' && game.hasWon();
+            const lost = typeof game.hasLost === 'function' && game.hasLost();
+            if (hudScore) hudScore.textContent = `SCORE ${score}/5`;
+            if (hudLives) hudLives.textContent = `LIVES ${lives}`;
+            if ((won || lost) && hudWin) {
+              hudWin.style.display = 'block';
+              hudWin.textContent = won ? '★ YOU WIN ★' : '✖ GAME OVER';
+              hudWin.style.color = won ? '#FFD700' : '#FF6B6B';
+              if (btnRestart) btnRestart.style.display = 'inline-block';
+            }
+            if (hudInfo) hudInfo.textContent = `Objects: ${sceneMeshes.length} | 60 FPS${optNote}`;
+          }
+        } catch (e) {
+          /* game-logic error — scene still renders */
+        }
+        controls.update();
+        renderer.render(scene, camera);
+      }
+      animate();
+    </script>
+  </body>
+  <!-- SIS-QUALITY score=0.71 passed=false meshes=1 -->
+</html>

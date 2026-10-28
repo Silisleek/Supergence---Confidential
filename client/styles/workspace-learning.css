@@ -1,0 +1,175 @@
+/* Display typography comes from the shared Supergence tokens. */
+.learning-dialog {
+  width: min(760px, calc(100vw - 32px));
+  max-height: 85dvh;
+  overflow-y: auto;
+}
+.learning-dialog h2 {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 29px;
+  font-weight: 400;
+  line-height: 1.2;
+  margin-top: 8px;
+}
+.learning-intro,
+.learning-note,
+#learningStatus,
+#learningREAStatus {
+  font-size: 12px;
+  color: var(--shell-muted);
+  line-height: 1.7;
+}
+.learning-tabs,
+.learning-source-actions {
+  display: flex;
+  gap: 8px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+.learning-tabs button,
+.learning-source-actions button {
+  border: 0;
+  color: var(--shell-muted);
+  background: var(--shell-surface);
+  border-radius: 7px;
+  padding: 9px 12px;
+  font-size: 12px;
+}
+.learning-tabs [aria-pressed='true'] {
+  color: var(--shell-text);
+  background: var(--shell-selected);
+}
+.learning-input {
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  background: var(--shell-code);
+  color: var(--shell-text);
+  border: 0;
+  border-radius: 8px;
+  font: 13px/1.6 var(--font-ui);
+  box-sizing: border-box;
+}
+.learning-form {
+  display: grid;
+  gap: 17px;
+  margin-top: 18px;
+}
+.learning-form label {
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--shell-muted);
+}
+.learning-form textarea {
+  resize: vertical;
+}
+.learning-primary {
+  justify-self: start;
+  background: var(--shell-accent);
+  color: var(--shell-accent-ink);
+  border: 0;
+  padding: 10px 16px;
+  border-radius: 7px;
+  font-size: 12px;
+}
+.learning-primary:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.learning-source {
+  padding: 20px;
+  margin-top: 12px;
+  border-radius: 12px;
+  background: var(--shell-code);
+}
+.learning-source h3 {
+  font-size: 14px;
+  font-weight: 550;
+  margin: 0 0 8px;
+  color: var(--shell-text);
+}
+.learning-source-meta,
+.learning-source summary,
+.learning-instructions summary {
+  font-size: 11px;
+  color: var(--shell-muted);
+  line-height: 1.7;
+}
+.learning-source summary,
+.learning-instructions summary {
+  cursor: pointer;
+}
+.learning-source-text,
+#learningSkillText {
+  font:
+    11px/1.8 'JetBrains Mono',
+    Consolas,
+    monospace;
+  color: var(--shell-text-secondary);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 310px;
+  overflow-y: auto;
+}
+.learning-note {
+  overflow-wrap: anywhere;
+}
+.learning-source-actions {
+  margin-bottom: 0;
+}
+.shell-agent-select {
+  max-width: 210px;
+  border: 0;
+  padding: 6px 5px;
+  color: var(--shell-muted);
+  background: transparent;
+  font: 11px var(--font-ui);
+}
+.shell-agent-select option {
+  background: var(--shell-panel);
+  color: var(--shell-text);
+}
+.sis-workspace-ui .user-query-pill {
+  white-space: normal;
+}
+.user-query-pill p:last-child {
+  margin-bottom: 0;
+}
+.user-query-pill pre {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.source-citation {
+  border: 0;
+  border-radius: 5px;
+  background: var(--shell-surface);
+  color: var(--shell-accent);
+  padding: 2px 6px;
+  font: 10px var(--font-ui);
+  vertical-align: baseline;
+  margin-left: 5px;
+}
+.sis-workspace-ui .resp-agent-name {
+  text-transform: none;
+}
+.sis-workspace-ui .response-body-markdown :is(h1, h2) {
+  font-family: var(--font-editorial);
+  font-weight: 400;
+}
+.user-query-pill :is(h1, h2, h3, h4, h5, h6) {
+  font-size: 17px;
+  font-weight: 550;
+  margin: 12px 0;
+}
+.user-query-pill :is(ul, ol) {
+  margin-left: 17px;
+}
+@media (max-width: 700px) {
+  .shell-agent-select {
+    max-width: 140px;
+  }
+  .learning-dialog {
+    padding: 20px;
+  }
+}

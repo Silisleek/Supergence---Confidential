@@ -1,0 +1,347 @@
+/* Theme palettes stay separate from layout. All values describe presentation;
+   capability and learning states are supplied by the application. */
+
+.shell-empty h1 {
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: clamp(26px, 2.6vw, 34px);
+  letter-spacing: -0.025em;
+}
+
+.sis-workspace-ui .workspace-columns-viewport {
+  box-shadow: none;
+}
+
+.sis-workspace-ui .side-agents-container {
+  border: 0;
+}
+
+.shell-rail-button.is-active {
+  box-shadow: none;
+}
+
+.sis-workspace-ui .sidebar-conv-item.active {
+  box-shadow: none;
+}
+
+.sis-workspace-ui .sidebar-search-box input:focus-visible {
+  outline: 2px solid var(--shell-accent);
+  outline-offset: 2px;
+}
+
+.shell-sidebar-footer {
+  border: 0;
+}
+
+.shell-empty {
+  width: 100%;
+  max-width: 680px;
+  padding: 32px 8px 48px;
+}
+
+.shell-empty-mark {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 24px;
+  box-shadow: none;
+}
+
+.shell-empty .shell-eyebrow {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: var(--shell-accent);
+  margin-bottom: 16px;
+}
+
+.shell-empty p {
+  max-width: 420px;
+  font-size: 13px;
+}
+
+.shell-starters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.shell-starters button {
+  display: block;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--shell-muted);
+  font-size: 12px;
+  text-align: center;
+  transition: background 150ms ease;
+}
+
+.shell-starters button:hover,
+.shell-starters button:focus-visible {
+  background: var(--shell-hover);
+  color: var(--shell-text);
+}
+
+.shell-starters svg {
+  width: 21px;
+  height: 21px;
+  color: var(--shell-accent);
+  margin-bottom: 8px;
+}
+
+.shell-starters strong {
+  color: var(--shell-text);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.shell-starters button span {
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--shell-muted);
+}
+
+.workspace-quick-launch .cockpit-button {
+  background: transparent;
+  box-shadow: none;
+}
+
+.sis-workspace-ui .workspace-quick-launch h2 {
+  font: 500 13px/1.5 var(--font-ui);
+  margin-bottom: 12px;
+  color: var(--shell-muted);
+}
+
+.workspace-quick-launch .cockpit-button:hover {
+  background: var(--shell-hover);
+}
+
+@media (max-width: 800px) {
+  .sis-workspace-ui .workspace-textarea {
+    min-height: 52px;
+  }
+
+  .shell-composer-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px;
+  }
+
+  .shell-composer-leading {
+    min-width: 0;
+    gap: 2px;
+  }
+
+  .shell-composer-leading .shell-icon-button,
+  .sis-workspace-ui .workspace-composer-actions > button {
+    flex-shrink: 0;
+  }
+
+  .shell-composer-leading .shell-agent-select {
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+    text-overflow: ellipsis;
+  }
+
+  .sis-workspace-ui .workspace-composer-actions {
+    gap: 4px;
+  }
+
+  .sis-workspace-ui .workspace-composer-actions .access-trigger {
+    max-width: 100px;
+    padding: 7px 4px;
+    font-size: 10px;
+    line-height: 1.4;
+  }
+
+  .shell-empty {
+    padding: 16px 0 24px;
+  }
+
+  .shell-empty h1 {
+    font-size: 26px;
+  }
+
+  .shell-empty-mark {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 18px;
+  }
+
+  .shell-starters {
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 24px;
+  }
+
+  .shell-starters button {
+    display: block;
+    padding: 12px 14px;
+  }
+
+  .shell-starters svg {
+    grid-row: span 2;
+    align-self: center;
+    margin: 0;
+  }
+
+  .shell-starters button span {
+    grid-column: 2;
+  }
+}
+
+.sis-workspace-ui {
+  accent-color: var(--shell-accent);
+  scrollbar-color: var(--shell-selected) transparent;
+}
+.sis-workspace-ui ::selection {
+  color: var(--shell-text);
+  background: color-mix(in srgb, var(--shell-accent) 28%, transparent);
+}
+
+/* The reference uses space and tonal shifts to separate surfaces. */
+.sis-workspace-ui .workspace-conversations-sidebar {
+  border: 0;
+}
+.sis-workspace-ui .sidebar-conv-item.active {
+  background: var(--shell-selected);
+}
+.sis-workspace-ui .sidebar-conv-item.active .shell-conv-icon {
+  background: var(--shell-surface);
+  color: var(--shell-accent);
+}
+.sis-workspace-ui .response-body-markdown > :last-child {
+  margin-bottom: 0;
+}
+.sis-workspace-ui .response-body-markdown ul,
+.sis-workspace-ui .response-body-markdown ol {
+  padding-left: 24px;
+  margin: 14px 0 20px;
+}
+.sis-workspace-ui .response-body-markdown li {
+  padding-left: 3px;
+  margin: 6px 0;
+}
+.sis-workspace-ui .response-body-markdown li::marker {
+  color: var(--shell-muted);
+}
+.sis-workspace-ui .response-body-markdown h1 {
+  font-size: 25px;
+  line-height: 1.35;
+}
+.sis-workspace-ui .response-body-markdown h2 {
+  font-size: 20px;
+  line-height: 1.45;
+}
+.sis-workspace-ui .response-body-markdown h3 {
+  font-size: 17px;
+  line-height: 1.5;
+}
+.sis-workspace-ui .response-body-markdown h4,
+.sis-workspace-ui .response-body-markdown h5,
+.sis-workspace-ui .response-body-markdown h6 {
+  margin: 22px 0 10px;
+  color: var(--shell-text);
+  font-size: 15px;
+  line-height: 1.5;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.sis-workspace-ui .response-body-markdown :not(pre) > code {
+  padding: 2px 5px;
+  font-size: 0.87em;
+}
+
+/* The same palette follows working code and canvases into the conversation. */
+.sis-workspace-ui .chat-artifact,
+.sis-workspace-ui .chat-artifact-source,
+.sis-workspace-ui img.chat-artifact-preview {
+  background: var(--shell-code);
+}
+.sis-workspace-ui .chat-artifact-source,
+.sis-workspace-ui .chat-artifact-output {
+  color: var(--shell-text-secondary);
+}
+.sis-workspace-ui .chat-artifact-output {
+  background: var(--shell-hover);
+}
+.sis-workspace-ui .chat-artifact-kind,
+.sis-workspace-ui .chat-artifact-status,
+.sis-workspace-ui .chat-code-meta small,
+.sis-workspace-ui .chat-artifact button,
+.sis-workspace-ui .chat-artifact a,
+.sis-workspace-ui .chat-working {
+  color: var(--shell-muted);
+}
+.sis-workspace-ui .chat-artifact h3 {
+  color: var(--shell-text);
+}
+.sis-workspace-ui .chat-artifact button:hover,
+.sis-workspace-ui .chat-artifact a:hover {
+  color: var(--shell-text);
+  background: var(--shell-surface);
+}
+.sis-workspace-ui .chat-artifact .chat-artifact-run {
+  color: var(--shell-accent-ink);
+  background: var(--shell-accent);
+}
+.sis-workspace-ui .chat-artifact .chat-artifact-run:hover {
+  background: var(--shell-accent-hover);
+}
+.sis-workspace-ui .chat-artifact-tabs [aria-pressed='true'] {
+  background: var(--shell-surface);
+  color: var(--shell-text);
+}
+.sis-workspace-ui .chat-artifact[data-state='error'] .chat-artifact-status {
+  color: var(--shell-error);
+}
+.sis-workspace-ui .chat-artifact[data-state='complete'] .chat-artifact-status {
+  color: var(--shell-success);
+}
+.sis-workspace-ui .chat-stream-notice {
+  color: var(--shell-warning);
+}
+.sis-workspace-ui .workspace-artifact-chip {
+  border: 0 !important;
+}
+
+/* Native selects retain keyboard navigation and an explicit saved choice. */
+.shell-theme-select {
+  max-width: 150px;
+  padding: 9px 28px 9px 12px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--shell-text);
+  background-color: var(--shell-surface);
+  font: 12px var(--font-ui);
+  cursor: pointer;
+}
+.shell-theme-select:focus-visible {
+  outline: 2px solid var(--shell-accent);
+  outline-offset: 3px;
+}
+.shell-theme-select option {
+  background: var(--shell-raised);
+  color: var(--shell-text);
+}
+
+@media (max-width: 800px) {
+  .sis-workspace-ui .response-body-markdown h1 {
+    font-size: 22px;
+  }
+  .sis-workspace-ui .response-body-markdown h2 {
+    font-size: 19px;
+  }
+  .sis-workspace-ui .response-body-markdown h3 {
+    font-size: 16px;
+  }
+  .sis-workspace-ui .shell-theme-select {
+    max-width: 125px;
+  }
+}

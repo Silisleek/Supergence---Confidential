@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cyber Tank 3D: Voxel Warfare with tank controls and enemy ta // SIS 3D Simulation</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        overflow: hidden;
+        background: #080b10;
+        font-family:
+          'Inter',
+          -apple-system,
+          sans-serif;
+        color: #e2e8f0;
+      }
+      #canvas-container {
+        width: 100vw;
+        height: 100vh;
+        position: absolute;
+      }
+      #hud {
+        position: absolute;
+        top: 14px;
+        left: 14px;
+        z-index: 10;
+        background: rgba(13, 17, 23, 0.88);
+        backdrop-filter: blur(14px);
+        border: 1px solid rgba(0, 240, 255, 0.35);
+        border-radius: 8px;
+        padding: 12px 16px;
+        pointer-events: auto;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+        min-width: 240px;
+      }
+      .hud-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: #00f0ff;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 3px;
+      }
+      .hud-sub {
+        font-size: 10px;
+        color: #8b949e;
+      }
+      .hud-row {
+        display: flex;
+        gap: 12px;
+        margin-top: 6px;
+        font-size: 11px;
+      }
+      .hud-score {
+        color: #84cc16;
+        font-weight: 700;
+      }
+      .hud-lives {
+        color: #ff6b6b;
+        font-weight: 700;
+      }
+      #hud-win {
+        display: none;
+        margin-top: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #ffd700;
+      }
+      #btn-restart {
+        display: none;
+        margin-top: 8px;
+        background: rgba(0, 240, 255, 0.12);
+        border: 1px solid #00f0ff;
+        color: #00f0ff;
+        padding: 5px 12px;
+        font-size: 11px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      #btn-restart:hover {
+        background: rgba(0, 240, 255, 0.3);
+        color: #fff;
+      }
+      .hud-hint {
+        margin-top: 6px;
+        font-size: 9px;
+        color: #64748b;
+      }
+      #tooltip {
+        position: absolute;
+        display: none;
+        z-index: 20;
+        background: rgba(13, 17, 23, 0.95);
+        border: 1px solid #00f0ff;
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 11px;
+        pointer-events: none;
+        color: #00f0ff;
+      }
+      /* Cinematic vignette + top glow: cheap post-processing without a post chain */
+      #vignette {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        pointer-events: none;
+        background:
+          radial-gradient(ellipse at 50% 42%, rgba(0, 0, 0, 0) 46%, rgba(0, 0, 0, 0.42) 100%),
+          linear-gradient(to bottom, rgba(0, 240, 255, 0.05), rgba(0, 0, 0, 0) 22%);
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="canvas-container"></div>
+    <div id="vignette"></div>
+    <div id="hud">
+      <div class="hud-title">✦ CYBER TANK 3D: VOXEL WARFARE WITH TANK C</div>
+      <div class="hud-sub" id="hud-info">Interactive 3D Simulation | 60 FPS</div>
+      <div class="hud-row">
+        <span class="hud-score" id="hud-score">SCORE 0</span
+        ><span class="hud-lives" id="hud-lives">LIVES 3</span>
+      </div>
+      <div id="hud-win"></div>
+      <button id="btn-restart">↻ RESTART</button>
+      <div class="hud-hint">WASD / arrows to move · swipe on touch · collect 5 to win</div>
+    </div>
+    <div id="tooltip"></div>
+    <script type="module">
+          import * as THREE from 'three';
+          import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+          import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+          // ─── DETERMINISTIC SHELL: Scene, Camera, Renderer, Lighting ───
+          // Beauty is deterministic: IBL + shadow catcher + tuned lights ship with EVERY scene,
+          // so output quality never depends on the model remembering them.
+          const container = document.getElementById('canvas-container');
+          const scene = new THREE.Scene();
+          scene.background = new THREE.Color(0x080B10);
+          scene.fog = new THREE.FogExp2(0x080B10, 0.022);
+
+          const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
+          camera.position.set(5.2, 3.4, 7.2);
+
+          const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+          renderer.setSize(window.innerWidth, window.innerHeight);
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+          renderer.toneMapping = THREE.ACESFilmicToneMapping;
+          renderer.toneMappingExposure = 1.15;
+          renderer.shadowMap.enabled = true;
+          renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+          container.appendChild(renderer.domElement);
+
+          // Image-based lighting: free studio reflections on every standard material (no network)
+          try {
+            const pmrem = new THREE.PMREMGenerator(renderer);
+            scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+            scene.environmentIntensity = 0.55;
+            pmrem.dispose();
+          } catch (e) { /* IBL optional — lights alone still carry the scene */ }
+
+          const controls = new OrbitControls(camera, renderer.domElement);
+          controls.enableDamping = true;
+          controls.dampingFactor = 0.05;
+          controls.target.set(0, 1, 0);
+          controls.maxPolarAngle = Math.PI / 2 - 0.06; // never dive under the floor
+          controls.minDistance = 3;
+          controls.maxDistance = 24;
+
+          // ─── PERSISTENT STYLE GUIDE: Tactical Lighting Reference Sheet ───
+          const hemiLight = new THREE.HemisphereLight(0x8FB8FF, 0x1A1410, 0.5);
+          scene.add(hemiLight);
+
+          const ambientLight = new THREE.AmbientLight(0xffffff, 0.35);
+          scene.add(ambientLight);
+
+          const keyLight = new THREE.DirectionalLight(0xEAF6FF, 1.6);
+          keyLight.position.set(5, 8, 5);
+          keyLight.castShadow = true;
+          keyLight.shadow.mapSize.width = 2048;
+          keyLight.shadow.mapSize.height = 2048;
+          keyLight.shadow.camera.left = -8;
+          keyLight.shadow.camera.right = 8;
+          keyLight.shadow.camera.top = 8;
+          keyLight.shadow.camera.bottom = -8;
+          keyLight.shadow.camera.far = 30;
+          keyLight.shadow.bias = -0.0004;
+          keyLight.shadow.radius = 4;
+          scene.add(keyLight);
+
+          const cyanKick = new THREE.DirectionalLight(0x00F0FF, 0.55);
+          cyanKick.position.set(5, 2, 6);
+          scene.add(cyanKick);
+
+          const fillLight = new THREE.DirectionalLight(0xA78BFA, 0.5);
+          fillLight.position.set(-4, 3, -3);
+          scene.add(fillLight);
+
+          const rimLight = new THREE.PointLight(0xFF6B6B, 12, 24);
+          rimLight.position.set(0, 3, -6);
+          scene.add(rimLight);
+
+          // Shadow-catcher ground disc (invisible except for soft shadows) + grid above it
+          const groundDisc = new THREE.Mesh(
+            new THREE.CircleGeometry(14, 48),
+            new THREE.ShadowMaterial({ opacity: 0.38 })
+          );
+          groundDisc.rotation.x = -Math.PI / 2;
+          groundDisc.position.y = 0;
+          groundDisc.receiveShadow = true;
+          scene.add(groundDisc);
+
+          const grid = new THREE.GridHelper(24, 24, 0x00F0FF, 0x1A1A2E);
+          grid.position.y = 0.002;
+          grid.material.opacity = 0.28;
+          grid.material.transparent = true;
+          scene.add(grid);
+
+          window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+          });
+
+          // ─── AI-GENERATED PART 1: Scene Objects (retopology-optimized) ───
+          // [auto-healed] We need to output a function buildSceneObjects(scene, THREE) that creates all 3D objects for the scene: "Cyber Tank 3D: Voxel Warfare with tank controls and enemy tanks [Scope: single room, ONE core mechanic, ONE win condition, HUD shows score + win text]". The style requires a sleek, multi-part, high-detail model with 10-20 articulated sub-meshes. Must use only Three.js built-in geometries, specific palette, materials with metalness, roughness, emissive, etc. Must name each mesh, set position, rotation, scale, add to scene, castShadow, etc. Return array of created meshes.
+
+      // [auto-healed] We need to output ONLY the raw function code inside ```javascript and ```.
+
+      // [auto-healed] Constraints: Must create at least 7 meshes with distinct geometries and positions. Actually the spec says "12-20 distinct sub-meshes" but also "Total sub-meshes ≤ 24". So we should aim for around 12-20.
+
+      // [auto-healed] Also must include ground? Probably a ground plane? The scene is single room, maybe include a floor? The function should create all 3D objects for the scene, including ground? Possibly include a ground plane with receiveShadow.
+
+      // [auto-healed] But the hero object is a cyber tank? The description says "Cyber Tank 3D: Voxel Warfare with tank controls and enemy tanks". So we need to build a tank? Or maybe a vehicle? The style mentions "hero body parts", "chassis, sloped hood, canopy, side intakes, wings/spoilers, vector thrusters, headlights, underglow ring". This sounds like a futuristic tank or hover vehicle.
+
+      // [auto-healed] We need to create a sleek multi-part model with 10-20 sub-meshes. Each sub-mesh should be a separate mesh with distinct geometry.
+
+      // [auto-healed] We need to use the palette colors: Sleek metallic carbon (#14161A), titanium slate (#2C3E50), cyber cyan (#00F0FF), neon magenta (#FF007F), warm gold (#D4AC0D), ice blue (#AED6F1), crimson red (#C0392B). Use these for materials.
+
+      // [auto-healed] Materials: MeshStandardMaterial only. Hero body parts get high metalness (0.75-0.90) and low roughness (0.12-0.30). Glass/canopies get opacity 0.55-0.70 with transparent: true. Emissive trim: accent trim strips, thruster rings, headlights must use explicit emissive colors (#00F0FF, #FF007F, #00FFCC) with emissiveIntensity 2.5-4.0.
+
+      Lighting: Hemisphere + IBL environment + cyan key light (shadows enabled) + magenta fill light + crimson point rim light. But we are only building objects, not lights? The function is to create all 3D objects for this scene. Should we also create lights? The instruction says "buildSceneObjects(scene, THREE)" and "create all 3D objects for this scene". Likely includes lights? But the style says "Lighting: Hemisphere + IBL environment + cyan key light ...". However, we are only to output geometry and materials. The function should probably create the lights as well? The prompt says "The function must create all 3D objects for this scene: ..." It doesn't explicitly say to create lights, but the lighting description might be for us to incorporate. But the function signature is buildSceneObjects(scene, THREE). We can add lights to the scene.
+
+      But the constraints: "Use ONLY Three.js built-in geometries ..." So we can also create lights? Lights are not geometries. But we can create them.
+
+      However, the output must be only the function code. We need to include everything needed.
+
+      We also need to ensure each mesh has castShadow = true (except large ground pieces receiveShadow = true). So we should set castShadow = true for all meshes, and for ground plane set receiveShadow = true.
+
+      We need to position objects with explicit .position.set, .rotation.set, .scale.set.
+
+      We need to return an array of all created meshes.
+
+      We need to create at least 7 meshes with distinct geometries and positions. But we should aim for 12-20.
+
+      We need to follow style: sleek, multi-part, high-detail model.
+
+      Let's design a futuristic tank or hover vehicle. Sub-meshes could include:
+
+      1. Main chassis (base) - perhaps a elongated box or custom shape using BoxGeometry.
+      2. Sloped hood - a box with rotation.
+      3. Canopy glass - a rounded shape? Could use a cylinder or sphere segment? Maybe a Torus? Or a plane? Use a BoxGeometry with transparency.
+      4. Side intakes - maybe two cylinders or boxes.
+      5. Rear wing spoiler - a thin box.
+      6. Vector thruster pods - maybe 4 cylinders with emissive rings (torus).
+      7. Headlights - small spheres or cylinders with emissive.
+      8. Underglow ring - a Torus or RingGeometry with emissive.
+      9. Trim panels - thin boxes.
+      10. Treads? Maybe not, but we can add some details.
+
+      We need to use distinct geometries: BoxGeometry, SphereGeometry, CylinderGeometry, ConeGeometry, TorusGeometry, PlaneGeometry, RingGeometry, etc.
+
+      // [commentary] We can also create a ground plane.
+
+      But the hero object should sit on a pedestal or hover slightly over a glowing cybernetic ring (y: 0.2 to 0.5). So we can create a pedestal (cylinder) and a glowing ring (Torus) under the tank.
+
+      We need to name each mesh: mesh.name = 'descriptive-name'.
+
+      We need to use the palette colors. For body parts, use carbon (#14161A) or titanium slate (#2C3E50) with high metalness. For trim, use cyber cyan (#00F0FF) or neon magenta (#FF007F) emissive.
+
+      We need to set materials accordingly.
+
+      We also need to create lights: Hemisphere, IBL environment? But we can't set environment easily; maybe just create a HemisphereLight and a few point lights.
+
+      But the function signature only receives scene and THREE. We can create lights and add to scene.
+
+      The prompt says "Lighting: Hemisphere + IBL environment + cyan key light (shadows enabled) + magenta fill light + crimson point rim light." So we should create these lights.
+
+      But we must ensure that the function returns an array of created meshes. Should we include lights in the array? The instruction says "Return an array of created meshes: return [mesh1, mesh2, ...];" So probably only meshes, not lights. But we can create lights separately and not include them in the return array. Or include them? The phrase "created meshes" suggests only meshes. But we can still create lights and add to scene, but not include in return array. However, the function is supposed to create all 3D objects for the scene. Lights are objects, but they are not meshes. The instruction says "create all 3D objects", which could include lights. But the return type is array of meshes. So we can create lights and add to scene, but not return them.
+
+      We need to ensure the code is clean, no placeholders, no TODOs.
+
+      We need to output only the function code inside ```javascript and ```.
+
+      Let's plan the meshes:
+
+      // [commentary] We'll create a ground plane (large, receiveShadow). Then a pedestal (cylinder). Then the tank composed of multiple parts.
+
+      Tank parts:
+
+      - Chassis: main body, a box with rounded edges? Use BoxGeometry with dimensions maybe 2 x 0.8 x 1.2? Position at y=0.5 above pedestal? Actually the tank should sit on pedestal, so its lowest point at y=0? Or the pedestal top at y=0? The grounding says "Main hero object sits naturally on a pedestal/platform or hovers slightly over a glowing cybernetic ring (y: 0.2 to 0.5)." So we can have the tank's lowest point at y=0.2 or something.
+
+      Better: Create a pedestal cylinder at y=0 (height 0.2). Then place tank on top, so its bottom at y=0.2. Or we can have the tank hover with a ring underneath.
+
+      // [commentary] We'll create a glowing ring (Torus) at y=0.1, and the tank sits on it? Or hover above.
+
+      Let's do: pedestal cylinder (radius 1.5, height 0.2) at y=0.1 (so top at y=0.2). Then tank bottom at y=0.2.
+
+      Alternatively, skip pedestal and just have a glowing ring at y=0, and tank sits on it? But the ring is thin, so maybe not.
+
+      // [commentary] We'll create a platform (cylinder) as base.
+
+      Then tank parts:
+
+      1. 'main-chassis': BoxGeometry(2.0, 0.6, 1.2) with metalness, etc. Position: (0, 0.5, 0) maybe? Actually if pedestal top is at y=0.2, we can set chassis position y = 0.2 + 0.3 = 0.5? Wait, the chassis height is 0.6, so if we set its bottom at y=0.2, its center y should be 0.2 + 0.3 = 0.5. So position.set(0, 0.5, 0).
+
+      2. 'sloped-hood': BoxGeometry(1.2, 0.4, 0.8) rotated slightly? Or we can use a box with rotation on X to slope? But we can't easily create sloped shape with BoxGeometry; we can rotate it to appear sloped. Or use a CylinderGeometry oriented horizontally? Better to use a BoxGeometry and set rotation.x to create a slope? Actually a box rotated can look like a wedge. We can set rotation.x = -0.2 etc. But we need explicit rotation.set.
+
+      // [commentary] We'll create a sloped hood as a box with rotation.
+
+      3. 'canopy-glass': Use a CylinderGeometry or a Torus? Maybe a rounded shape: use a SphereGeometry sliced? Or a TorusKnot? Simpler: use a CylinderGeometry with small height and radius, then set rotation and position to look like a canopy. Or use a BoxGeometry with transparency. But we need glass material with opacity.
+
+      // [commentary] We can create a canopy using a CylinderGeometry(0.8, 0.8, 0.4, 20) rotated 90 degrees to lie horizontally? Actually a cylinder oriented along X or Y? We can set rotation.x = Math.PI/2 to make it vertical? Wait, default cylinder is along Y. If we rotate by X 90°, it becomes along Z. Then we can scale to flatten.
+
+      Better: Use a TorusGeometry for a canopy? Not typical.
+
+      Maybe use a SphereGeometry(0.5, 0.5, 0.5, 16, 12) and scale it to be elongated? But sphere is too round.
+
+      // [commentary] We can use a BoxGeometry with bevel? Not available.
+
+      Simplify: Use a CylinderGeometry with radiusTop = radiusBottom = 0.6, height = 0.3, then rotate and scale to make a canopy. Or use a ConeGeometry? Not.
+
+      Alternatively, use a PlaneGeometry and shape? Not.
+
+      // [commentary] We can use a TorusKnotGeometry for decorative element? Not.
+
+      Maybe use a RingGeometry? Not.
+
+      // [commentary] We'll create a canopy as a CylinderGeometry(0.7, 0.7, 0.35, 20) rotated 90° around X so it lies horizontally, then scale Y to flatten? Actually if we rotate 90° around X, the cylinder's axis becomes Z. Then we can scale Z to make it thin? That would make a disc. Not good.
+
+      Better: Use a SphereGeometry(0.6, 0.6, 0.4, 16, 12) and scale it to be elongated along X? That could approximate a canopy.
+
+      // [commentary] We can also use a BoxGeometry with a separate glass pane.
+
+      Maybe we create a canopy frame and a glass pane. The glass pane can be a thin BoxGeometry with transparent material.
+
+      // [commentary] We'll do: 'canopy-frame' as a BoxGeometry, and 'canopy-glass' as a thin BoxGeometry with transparent material.
+
+      But we need 12-20 sub-meshes. So we can break into many parts.
+
+      Let's list possible meshes:
+
+      1. Ground plane (large)
+      2. Pedestal cylinder
+      3. Glowing ring (Torus) under tank
+      4. Main chassis (Box)
+      5. Sloped hood (Box rotated)
+      6. Canopy frame (Box)
+      7. Canopy glass (Box transparent)
+      8. Left side intake (Cylinder or Box)
+      9. Right side intake (Cylinder or Box)
+      10. Rear wing spoiler (Box)
+      11. Left thruster pod (Cylinder)
+      12. Right thruster pod (Cylinder)
+      13. Left thruster ring (Torus emissive)
+      14. Right thruster ring (Torus emissive)
+      15. Left headlight (Sphere emissive)
+      16. Right headlight (Sphere emissive)
+      17. Underglow ring (Torus emissive)
+      18. Trim panel (Box)
+      19. Another trim panel (Box)
+      20. Maybe a small antenna or something.
+
+      We need to ensure distinct geometries, but we can reuse geometries with different parameters.
+
+      We must use only Three.js built-in geometries.
+
+      We must set castShadow = true for all meshes, and for ground plane receiveShadow = true.
+
+      We must use MeshStandardMaterial.
+
+      We must use the palette colors.
+
+      We must set explicit position, rotation, scale for each mesh.
+
+      We must name each mesh.
+
+      We must return array of all created meshes (including ground? Probably all meshes we create).
+
+      We should also create lights? The function is to create all 3D objects, so we can create lights but they are not meshes, so maybe not include in return array. But the return array should contain meshes. We'll create lights separately and add to scene.
+
+      But the prompt says "Return an array of created meshes: return [mesh1, mesh2, ...];" So we should only include meshes.
+
+      Now, let's design the scene.
+
+      // [commentary] First, create ground: PlaneGeometry(50, 50) rotated -90° around X, position y=0, receiveShadow, castShadow false? Actually ground should receiveShadow, not cast. So set castShadow = false, receiveShadow = true.
+
+      But the rule says "castShadow = true (large ground pieces: receiveShadow = true)". So for large ground pieces, we set receiveShadow = true, but castShadow maybe false? The rule says "EVERY mesh MUST be added to scene via scene.add(mesh) AND castShadow = true (large ground pieces: receiveShadow = true)." This is ambiguous: it says every mesh must have castShadow = true, but for large ground pieces also receiveShadow = true. So we should set castShadow = true for all meshes, including ground? But ground casting shadow doesn't make sense, but we can set it anyway. We'll set castShadow = true for all meshes, and for ground also receiveShadow = true.
+
+      Now, pedestal: CylinderGeometry(1.5, 1.5, 0.2, 20) at y=0.1 (so bottom at y=0, top at y=0.2). CastShadow true.
+
+      Glowing ring: TorusGeometry(1.6, 0.1, 12, 20) at y=0.2? Or maybe at y=0.15? The ring should be under the tank, maybe at y=0.2 (top of pedestal). We'll set position y=0.2, rotation.x = Math.PI/2 to make it horizontal? Actually TorusGeometry by default lies in XY plane? In Three.js, TorusGeometry default is in XY plane, with torus rotation around Z? Actually a torus is drawn in the XY plane, with the tube circling around Z axis. So it's horizontal already. So we can just set y=0.2.
+
+      But the ring should be emissive cyber cyan or magenta.
+
+      Now tank parts:
+
+      // [commentary] We'll place tank on top of pedestal, so its bottom at y=0.2.
+
+      Main chassis: BoxGeometry(2.0, 0.6, 1.2). Position: y = 0.2 + 0.3 = 0.5. So set position (0, 0.5, 0). Material: carbon (#14161A) with metalness 0.8, roughness 0.2.
+
+      Sloped hood: BoxGeometry(1.2, 0.4, 0.8). We want it at front of tank. Let's say tank faces positive Z? We'll orient tank forward along negative Z? We can decide. Let's set forward as negative Z. So hood at front (negative Z). Position: (0, 0.5, -0.6). Rotate around X to slope: rotation.x = 0.3? Actually to slope the hood, we can rotate it so its top is forward. We'll set rotation.x = 0.2. Material: titanium slate (#2C3E50) with metalness 0.7, roughness 0.3.
+
+      Canopy frame: BoxGeometry(1.0, 0.2, 0.8) at (0, 0.7, 0.2) maybe? Actually canopy should be on top of chassis. We'll place it at y = 0.5 + 0.3 = 0.8? Chassis top is at y=0.5+0.3=0.8. So canopy frame can sit at y=0.8, maybe height 0.2, so center y=0.9. We'll set position (0, 0.9, 0.2). Material: dark carbon.
+
+      Canopy glass: BoxGeometry(0.9, 0.15, 0.7) with transparent material, opacity 0.6, color cyber cyan? Or ice blue. We'll use cyber cyan with opacity 0.6. Position same as frame but slightly offset? We can place inside frame. Set position (0, 0.9, 0.2). Material: MeshStandardMaterial with transparent, opacity 0.6, color #00F0FF, metalness 0.1, roughness 0.1.
+
+      Side intakes: two cylinders? Or boxes. Let's use CylinderGeometry(0.3, 0.3, 0.6, 16) oriented horizontally along Z? Actually intake should be on side. We'll create left and right. Position: left side at x = -0.8, y = 0.5, z = -0.2. Rotate around Y to be horizontal? Cylinder default axis is Y. If we rotate 90° around X, it becomes along Z. So we can set rotation.x = Math.PI/2. Then it points forward/backward. We'll set rotation.x = Math.PI/2, then scale maybe. Material: titanium slate with emissive trim? Maybe add an emissive ring inside? We can just use metal.
+
+      Rear wing spoiler: BoxGeometry(1.8, 0.1, 0.3) at rear (positive Z). Position: (0, 0.7, 0.8). Rotation maybe slight angle. Material: carbon.
+
+      Thruster pods: we need 4 vector thruster pods. Could be two on each side? We'll create two thruster pods at rear, left and right. Each pod: CylinderGeometry(0.2, 0.2, 0.4, 16) oriented along Z? Rotate around X to point backward. Then at the end, a Torus emissive ring. So for each pod, we need a cylinder and a torus.
+
+      Left thruster pod: position at x = -0.7, y = 0.5, z = 0.9. Rotation.x = Math.PI/2 (so cylinder axis along Z). Then thruster ring: TorusGeometry(0.25, 0.05, 12, 20) at same position but maybe slightly behind? The torus should be at the rear end of the cylinder. So set z = 0.9 + 0.2 = 1.1? Actually cylinder length 0.4, so if center at z=0.9, ends at 0.7 and 1.1. So ring at z=1.1. Emissive magenta.
+
+      Right thruster pod: similar at x=0.7.
+
+      We also need underglow ring: a TorusGeometry beneath the tank, maybe at y=0.2 (just above pedestal). But we already have a glowing ring there? We can combine. The underglow ring could be the same as the glowing ring. Or we can have a separate ring. Let's have a glowing cybernetic ring at y=0.2, which serves as underglow. That's one mesh.
+
+      Headlights: two small spheres at front, emissive cyan. Position: left headlight at x=-0.5, y=0.4, z=-0.8; right at x=0.5, y=0.4, z=-0.8. Use SphereGeometry(0.1, 8, 6) maybe low segments for performance. Emissive cyan.
+
+      Trim panels: thin boxes with emissive edges? We can add a few thin boxes along chassis edges with emissive color.
+
+      We also need to create lights: HemisphereLight, maybe a cyan key light, magenta fill, crimson rim light.
+
+      But we must ensure the function returns an array of all created meshes. So we'll collect all meshes into an array and return.
+
+      Now, we need to write the code.
+
+      // [commentary] We'll define materials using the palette.
+
+      Let's define colors as hex values:
+
+      carbon: 0x14161A
+      titanium: 0x2C3E50
+      cyan: 0x00F0FF
+      magenta: 0xFF007F
+      gold: 0xD4AC0D
+      iceblue: 0xAED6F1
+      crimson: 0xC0392B
+
+      // [commentary] We'll create materials:
+
+      const carbonMat = new THREE.MeshStandardMaterial({ color: 0x14161A, metalness: 0.85, roughness: 0.15 });
+      const titaniumMat = new THREE.MeshStandardMaterial({ color: 0x2C3E50, metalness: 0.75, roughness: 0.25 });
+      const cyanEmissiveMat = new THREE.MeshStandardMaterial({ color: 0x00F0FF, emissive: 0x00F0FF, emissiveIntensity: 3.0, metalness: 0.5, roughness: 0.3 });
+      const magentaEmissiveMat = new THREE.MeshStandardMaterial({ color: 0xFF007F, emissive: 0xFF007F, emissiveIntensity: 3.5, metalness: 0.5, roughness: 0.3 });
+      const glassMat = new THREE.MeshStandardMaterial({ color: 0x00F0FF, transparent: true, opacity: 0.6, metalness: 0.1, roughness: 0.1 });
+      const goldMat = new THREE.MeshStandardMaterial({ color: 0xD4AC0D, metalness: 0.9, roughness: 0.2 });
+      const iceBlueMat = new THREE.MeshStandardMaterial({ color: 0xAED6F1, metalness: 0.6, roughness: 0.3 });
+      const crimsonMat = new THREE.MeshStandardMaterial({ color: 0xC0392B, metalness: 0.7, roughness: 0.3 });
+
+      // [commentary] We'll also need a ground material: dark carbon maybe.
+
+      Now, create meshes.
+
+      // [commentary] We'll create ground first.
+
+      const groundGeometry = new THREE.PlaneGeometry(50, 50);
+      const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x14161A, metalness: 0.5, roughness: 0.8 });
+      const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+      ground.rotation.x = -Math.PI/2;
+      ground.position.set(0, 0, 0);
+      ground.castShadow = true;
+      ground.receiveShadow = true;
+      ground.name = 'ground';
+      scene.add(ground);
+
+      Pedestal:
+
+      const pedestalGeometry = new THREE.CylinderGeometry(1.5, 1.5, 0.2, 20);
+      const pedestalMaterial = new THREE.MeshStandardMaterial({ color: 0x2C3E50, metalness: 0.7, roughness: 0.3 });
+      const pedestal = new THREE.Mesh(pedestalGeometry, pedestalMaterial);
+      pedestal.position.set(0, 0.1, 0); // bottom at y=0, top at y=0.2
+      pedestal.castShadow = true;
+      pedestal.name = 'pedestal';
+      scene.add(pedestal);
+
+      Glowing ring (underglow):
+
+      const ringGeometry = new THREE.TorusGeometry(1.6, 0.1, 12, 20);
+      const ringMaterial = new THREE.MeshStandardMaterial({ color: 0x00F0FF, emissive: 0x00F0FF, emissiveIntensity: 3.0, metalness: 0.5, roughness: 0.3 });
+      const underglowRing = new THREE.Mesh(ringGeometry, ringMaterial);
+      underglowRing.position.set(0, 0.2, 0);
+      underglowRing.castShadow = true;
+      underglowRing.name = 'underglow-ring';
+      scene.add(underglowRing);
+
+      Now tank chassis:
+
+      const chassisGeometry = new THREE.BoxGeometry(2.0, 0.6, 1.2);
+      const chassis = new THREE.Mesh(chassisGeometry, carbonMat);
+      chassis.position.set(0, 0.5, 0); // bottom at 0.2, top at 0.8
+      chassis.castShadow = true;
+      chassis.name = 'main-chassis';
+      scene.add(chassis);
+
+      Sloped hood:
+
+      const hoodGeometry = new THREE.BoxGeometry(1.2, 0.4, 0.8);
+      const hood = new THREE.Mesh(hoodGeometry, titaniumMat);
+      hood.position.set(0, 0.5, -0.6);
+      hood.rotation.set(0.2, 0, 0); // slope
+      hood.castShadow = true;
+      hood.name = 'sloped-hood';
+      scene.add(hood);
+
+      Canopy frame:
+
+      const canopyFrameGeometry = new THREE.BoxGeometry(1.0, 0.2, 0.8);
+      const canopyFrame = new THREE.Mesh(canopyFrameGeometry, carbonMat);
+      canopyFrame.position.set(0, 0.9, 0.2);
+      canopyFrame.castShadow = true;
+      canopyFrame.name = 'canopy-frame';
+      scene.add(canopyFrame);
+
+      Canopy glass:
+
+      const canopyGlassGeometry = new THREE.BoxGeometry(0.9, 0.15, 0.7);
+      const canopyGlass = new THREE.Mesh(canopyGlassGeometry, glassMat);
+      canopyGlass.position.set(0, 0.9, 0.2);
+      canopyGlass.castShadow = true;
+      canopyGlass.name = 'canopy-glass';
+      scene.add(can
+
+          // ─── AI-GENERATED PART 2: Animation Logic ───
+          // [auto-healed] We need to output a function `animateScene(meshes, clock, THREE)` that animates the given meshes. The meshes are presumably created elsewhere (maybe from a scene description). We must not create any meshes, only animate existing ones. The function receives `meshes` array (length 7) and a THREE.Clock object, and THREE library. We need to use the clock to get elapsed time.
+
+      // [auto-healed] We must follow rules: subtle idle motion, hero rotates slowly (≤0.4 rad/s) or bobs gently; supports pulse/oscillate with small amplitude (±0.12 units, ±0.25 rad max). Use Math.sin/Math.cos with elapsed time. Phase-offset each mesh (i * 0.7). Access meshes by index with guard. Do not move base position away from grounded spot; oscillate around it. No scene creation, no object allocations per frame, reuse temp vars. No placeholders, TODO, conversational text. Output only the function code inside ```javascript and ```.
+
+      // [auto-healed] We need to interpret the meshes. The inventory says: count=7, geometries=[PlaneGeometry, CylinderGeometry, TorusGeometry, BoxGeometry], names=[carbonMat, titaniumMat, cyanEmissiveMat, magentaEmissiveMat, glassMat, goldMat, iceBlueMat, crimsonMat, groundMaterial, ground, pedestalMaterial, pedestal], scene.add calls=8. That seems like there are 7 meshes but multiple materials? Actually the names list includes many materials and ground, pedestal. But the meshes count is 7. Possibly the meshes are: ground, pedestal, and 5 other objects? Or maybe the meshes are the 7 objects with those materials? The names list includes 13 items, but that might be the list of all materials and objects? It says "names=[carbonMat, titaniumMat, cyanEmissiveMat, magentaEmissiveMat, glassMat, goldMat, iceBlueMat, crimsonMat, groundMaterial, ground, pedestalMaterial, pedestal]" That's 12 names. But count=7 meshes. Possibly the meshes are: ground, pedestal, and 5 others? Or maybe the meshes are the 7 objects: carbonMat, titaniumMat, etc. But those are materials, not meshes. The inventory says "MESH INVENTORY FROM PART 1 (ground truth — animate THESE): count=7, geometries=[PlaneGeometry, CylinderGeometry, TorusGeometry, BoxGeometry], names=[...], scene.add calls=8." So there are 7 meshes, with those geometries, and they have names (maybe the names of the meshes). The names list includes both materials and objects? Possibly the meshes are named after the materials? Or the list includes all names in the scene, but we only have 7 meshes. The scene.add calls=8 suggests there are 8 objects added to scene, but count=7? Maybe one is a group? But we must only animate the 7 meshes.
+
+      // [auto-healed] We need to infer which mesh is which. The geometries: PlaneGeometry, CylinderGeometry, TorusGeometry, BoxGeometry. So among the 7 meshes, there is at least one plane (ground?), one cylinder, one torus, one box. Possibly the ground is a plane, pedestal is a cylinder, and other meshes are box, torus, etc. The names include "ground", "pedestal", and materials like carbonMat, titaniumMat, etc. Maybe the meshes are named after the materials? Or the meshes are the objects that use those materials. But we don't have to know exactly; we just need to animate each mesh with subtle motion, phase-offset.
+
+      // [commentary] We can treat each mesh individually: for each mesh i, apply a gentle oscillation: maybe rotation around Y axis for hero? The hero is probably one of the meshes. Which one is hero? Possibly the tank? But we have no info. We can just apply a gentle bobbing or rotation to all meshes, but with different amplitudes/phases. The rule says: "hero rotates slowly (≤0.4 rad/s) or bobs gently; supports pulse/oscillate with SMALL amplitude (±0.12 units, ±0.25 rad max)." So we can apply rotation to some meshes, and translation to others. But we must not move base position away from grounded spot, so we can oscillate position vertically (bob) or rotate in place.
+
+      // [auto-healed] We need to ensure we don't exceed amplitude limits. Use Math.sin with elapsed time * speed, multiplied by amplitude.
+
+      // [auto-healed] We should reuse temp variables to avoid allocations. Use local variables for time, sin, cos, etc.
+
+      // [auto-healed] We need to output only the function code.
+
+      // [auto-healed] Let's design:
+
+      function animateScene(meshes, clock, THREE) {
+          const time = clock.getElapsedTime();
+          // For each mesh, apply subtle motion
+          for (let i = 0; i < meshes.length; i++) {
+              const mesh = meshes[i];
+              if (!mesh) continue;
+              // Phase offset
+      const phase = i * 0.7;
+              // Gentle bobbing for all? Or rotate some?
+              // We can alternate: even indices rotate, odd indices bob?
+              // But must be subtle.
+              // Use sin with small amplitude.
+              // For rotation: mesh.rotation.y += 0.4 * delta? But we need to use time directly for deterministic motion.
+              // We can set rotation.y = Math.sin(time * 0.5 + phase) * 0.25; // max rad 0.25
+              // Or for bobbing: mesh.position.y = baseY + Math.sin(time * 0.5 + phase) * 0.12;
+              // But we must not store baseY per frame; we can compute initial position once? But we can't allocate outside. We can store base position on the mesh itself? The rule says no object allocations inside the
+      function body per-frame. We could store base position as a property on the mesh the first time we see it, but that would be an allocation? Setting a property is not allocation of a new object, but it's modifying the mesh. That might be acceptable. But the rule says "NO object allocations inside the function body per-frame (reuse temp vars)." So we can't create new objects each frame. We can, however, store data on the mesh itself (like mesh.userData.baseY) if it's not set, but that would be a property assignment, not an object allocation. That's probably fine. But to be safe, we can just oscillate around the current position? But if we oscillate around current position, the mesh will drift because we add delta each frame. Instead, we should compute absolute position based on time, but we need the base position. We can store base position once on the mesh, e.g., if (!mesh.userData.baseY) mesh.userData.baseY = mesh.position.y; Then use that. That's not per-frame allocation.
+
+      Alternatively, we can use a separate array to store base positions, but that would be allocated outside the function? We can't allocate inside the function per frame, but we can allocate once outside? The function is called each frame, so any allocation inside the function would happen each frame. So we should avoid any array push, object creation, etc. Using mesh.userData is fine because it's just setting a property if not present; that's not creating a new object each frame (the userData object already exists or we assign a primitive). Actually, mesh.userData is an object that exists; we can set a property on it. That's not allocating a new object per frame. So we can do:
+
+      if (mesh.userData.baseY === undefined) {
+          mesh.userData.baseY = mesh.position.y;
+      }
+      }
+      }
+
+          // ─── AI-GENERATED PART 2b: Game Logic (single mechanic + win) ───
+          function buildGameLogic(scene, pieces) {
+      // [auto-healed] User Safety: safe
+      }
+
+          // ─── DETERMINISTIC: Execute Parts & Render Loop ───
+          let sceneMeshes = [];
+          try {
+            if (typeof buildSceneObjects === 'function') {
+              const result = buildSceneObjects(scene, THREE);
+              sceneMeshes = Array.isArray(result) ? result : [];
+            }
+          } catch (e) {
+            console.warn('[SIS 3D] Object generation error:', e);
+          }
+
+          // Wire game logic if present (SIS integration step — never AI-assembled)
+          let game = null;
+          try {
+            if (typeof buildGameLogic === 'function' && sceneMeshes.length > 0) {
+              game = buildGameLogic(scene, sceneMeshes, THREE);
+            }
+          } catch (e) {
+            console.warn('[SIS 3D] Game-logic init error (scene still renders):', e);
+          }
+
+          // Raycasting hover tooltip
+          const raycaster = new THREE.Raycaster();
+          const pointer = new THREE.Vector2();
+          const tooltip = document.getElementById('tooltip');
+          renderer.domElement.addEventListener('pointermove', (e) => {
+            pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+            pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(pointer, camera);
+            const hits = raycaster.intersectObjects(sceneMeshes, false);
+            if (hits.length > 0) {
+              const name = hits[0].object.name || hits[0].object.geometry?.type || 'Object';
+              tooltip.style.display = 'block';
+              tooltip.style.left = e.clientX + 12 + 'px';
+              tooltip.style.top = e.clientY + 12 + 'px';
+              tooltip.textContent = name;
+            } else {
+              tooltip.style.display = 'none';
+            }
+          });
+
+          const clock = new THREE.Clock();
+          const hudInfo = document.getElementById('hud-info');
+          const hudScore = document.getElementById('hud-score');
+          const hudLives = document.getElementById('hud-lives');
+          const hudWin = document.getElementById('hud-win');
+          const btnRestart = document.getElementById('btn-restart');
+          const optNote = " | Retopo: 2 clamped";
+          if (hudInfo) hudInfo.textContent = `Objects: ${sceneMeshes.length}${game ? ' | GAME: 1 mechanic' : ''} | Interactive 3D | 60 FPS${optNote}`;
+          if (btnRestart) btnRestart.addEventListener('click', () => {
+            try { if (game && typeof game.reset === 'function') game.reset(); } catch (e) {}
+            if (hudWin) hudWin.style.display = 'none';
+            btnRestart.style.display = 'none';
+          });
+
+          function animate() {
+            requestAnimationFrame(animate);
+            const dt = Math.min(clock.getDelta(), 0.05);
+            try {
+              if (typeof animateScene === 'function') {
+                animateScene(sceneMeshes, clock, THREE);
+              }
+            } catch (e) { /* animation error — scene still renders */ }
+            try {
+              if (game && typeof game.update === 'function') {
+                game.update(dt);
+                const score = typeof game.getScore === 'function' ? game.getScore() : 0;
+                const lives = typeof game.getLives === 'function' ? game.getLives() : 3;
+                const won = typeof game.hasWon === 'function' && game.hasWon();
+                const lost = typeof game.hasLost === 'function' && game.hasLost();
+                if (hudScore) hudScore.textContent = `SCORE ${score}/5`;
+                if (hudLives) hudLives.textContent = `LIVES ${lives}`;
+                if ((won || lost) && hudWin) {
+                  hudWin.style.display = 'block';
+                  hudWin.textContent = won ? '★ YOU WIN ★' : '✖ GAME OVER';
+                  hudWin.style.color = won ? '#FFD700' : '#FF6B6B';
+                  if (btnRestart) btnRestart.style.display = 'inline-block';
+                }
+                if (hudInfo) hudInfo.textContent = `Objects: ${sceneMeshes.length} | 60 FPS${optNote}`;
+              }
+            } catch (e) { /* game-logic error — scene still renders */ }
+            controls.update();
+            renderer.render(scene, camera);
+          }
+          animate();
+    </script>
+  </body>
+  <!-- SIS-QUALITY score=0.63 passed=false meshes=19 -->
+</html>

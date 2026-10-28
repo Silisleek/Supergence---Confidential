@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Core Reactor Test - JARVIS HUD</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #080b10;
+        color: #fff;
+        font-family: 'JetBrains Mono', monospace;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+      .container {
+        text-align: center;
+      }
+      button {
+        padding: 10px 20px;
+        margin: 10px;
+        background: #00f0ff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        color: #080b10;
+        font-weight: bold;
+      }
+      button:hover {
+        opacity: 0.8;
+      }
+      .state-info {
+        margin-top: 20px;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>JARVIS HUD Core Reactor</h1>
+      <div id="reactor-container" style="width: 250px; height: 250px; margin: 20px auto"></div>
+      <div>
+        <button id="cycle-btn">Cycle State</button>
+        <button id="reset-btn">Reset</button>
+      </div>
+      <div class="state-info">
+        <p>Current State: <span id="current-state">idle</span></p>
+        <p>Connected to State: <span id="ws-status">false</span></p>
+      </div>
+    </div>
+
+    <script type="import">
+      import { CoreReactor } from './client/src/components/CoreReactor.js';
+      import { state } from './client/src/state/store.js';
+
+      const container = document.getElementById('reactor-container');
+      const stateLabel = document.getElementById('current-state');
+      const wsStatus = document.getElementById('ws-status');
+
+      // Create CoreReactor instance
+      const reactor = new CoreReactor(container, {
+        theme: 'cyan',
+        transitionSpeed: 40
+      });
+
+      // Wire up button handlers
+      document.getElementById('cycle-btn').addEventListener('click', () => {
+        reactor.cycleState();
+      });
+
+      document.getElementById('reset-btn').addEventListener('click', () => {
+        reactor.setState('idle');
+      });
+
+      // Listen for state changes
+      container.addEventListener('reactor-state-change', (e) => {
+        stateLabel.textContent = e.detail.state;
+      });
+
+      // Also sync with global state
+      const unsubscribe = state.subscribe('agentActivity', (activity) => {
+        if (activity?.cycleState) {
+          reactor.setState(activity.cycleState);
+        }
+      });
+
+      // Initialize
+      wsStatus.textContent = state.get('wsConnected');
+
+      console.log('Core Reactor Test Page Loaded');
+    </script>
+  </body>
+</html>

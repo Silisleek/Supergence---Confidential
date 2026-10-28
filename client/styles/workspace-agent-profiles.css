@@ -1,0 +1,148 @@
+.sg-mascot {
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  vertical-align: middle;
+  align-items: center;
+  justify-content: center;
+}
+.sg-mascot img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: scale(1.42);
+  filter: drop-shadow(0 3px 8px color-mix(in srgb, var(--mascot-color, #b7bbdf) 18%, transparent));
+  animation: sg-mascot-float 6s ease-in-out infinite;
+}
+.sg-mascot[data-mascot-state='thinking'] img {
+  animation: sg-mascot-think 1.6s ease-in-out infinite;
+}
+.sg-mascot[data-mascot-state='replying'] img {
+  animation: sg-mascot-reply 0.9s ease-in-out infinite;
+}
+.resp-agent-indicator:has(~ .sg-mascot),
+.resp-agent-indicator:has(+ .resp-agent-name) {
+  display: none;
+}
+.sg-profiles-dialog {
+  width: min(620px, calc(100vw - 32px));
+  max-height: 86dvh;
+  overflow-y: auto;
+  padding: 28px;
+  background: var(--shell-panel);
+  color: var(--shell-text);
+}
+.sg-profiles-dialog > .shell-icon-button {
+  float: right;
+}
+.sg-profiles-editor h2 {
+  font: 32px var(--font-editorial, Georgia, serif);
+  font-weight: 400;
+  margin: 8px 0 10px;
+}
+.sg-profile-note {
+  color: var(--shell-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.sg-profile-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 20px;
+  margin: 16px 0;
+  border: 0;
+  border-radius: 16px;
+  background: var(--shell-surface);
+  animation: sg-profile-enter 0.2s ease-out both;
+}
+.sg-profile-card label {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--shell-muted);
+}
+.sg-profile-heading {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.sg-profile-heading .sg-mascot {
+  width: 52px;
+  height: 52px;
+}
+.sg-profile-heading strong {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--shell-text);
+}
+.sg-profile-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.sg-profiles-trigger {
+  margin: 18px;
+}
+.sg-profile-card .learning-input {
+  min-width: 0;
+  width: 100%;
+}
+@keyframes sg-mascot-float {
+  0%,
+  100% {
+    transform: translateY(0) scale(1.42) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-2px) scale(1.44) rotate(2deg);
+  }
+}
+@keyframes sg-mascot-think {
+  0%,
+  100% {
+    transform: rotate(-9deg) scale(1.35);
+    opacity: 0.72;
+  }
+  50% {
+    transform: rotate(9deg) scale(1.5);
+    opacity: 1;
+  }
+}
+@keyframes sg-mascot-reply {
+  0%,
+  100% {
+    transform: scale(1.35, 1.4);
+  }
+  50% {
+    transform: scale(1.48, 1.33);
+  }
+}
+@keyframes sg-profile-enter {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (max-width: 520px) {
+  .sg-profile-card {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+  .sg-profile-heading,
+  .sg-profile-actions {
+    grid-column: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sg-mascot img,
+  .sg-profile-card {
+    animation: none !important;
+  }
+}
