@@ -494,7 +494,19 @@ app.use('/workspace', (req, res, next) => {
     return res.status(403).end();
   }
   if (!fs.existsSync(fullPath) || !fs.statSync(fullPath).isFile()) return res.status(404).end();
-  if (!/\.html?$/i.test(relative)) return res.sendFile(fullPath);
+  if (/\.html?$/i.test(relative) && relative.includes('/')) {
+    try {
+      const grantUrl = projectPreview.issueGrant(relative);
+      if (grantUrl) return res.redirect(307, grantUrl);
+    } catch (_) {}
+  }
+  if (!/\.html?$/i.test(relative)) {
+    return res.sendFile(fullPath, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
+  }
   try {
     const content = preparePreviewHtml(fs.readFileSync(fullPath, 'utf8'));
     res.setHeader('Content-Type', 'text/html; charset=utf-8');

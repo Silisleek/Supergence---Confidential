@@ -8,6 +8,8 @@ const {
   shell,
   dialog,
   Notification,
+  screen,
+  nativeTheme,
 } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -19,6 +21,9 @@ const { isTrustedApplicationUrl } = require('./navigation-policy.cjs');
 app.name = 'Supergence';
 app.setAppUserModelId('com.supergence.sis');
 
+// Enforce dark mode for native Windows title bar and OS dialogs
+nativeTheme.themeSource = 'dark';
+
 const appDataRoot = app.getPath('appData');
 const defaultUserDataDir = process.env.SIS_USER_DATA_DIR
   ? path.resolve(process.env.SIS_USER_DATA_DIR)
@@ -28,6 +33,9 @@ app.setPath('userData', defaultUserDataDir);
 // Dynamic user-defined path loader
 function loadStoragePaths() {
   const configLocations = [
+    ...(process.env.PORTABLE_EXECUTABLE_DIR
+      ? [path.join(process.env.PORTABLE_EXECUTABLE_DIR, 'supergence-config.json')]
+      : []),
     path.join(defaultUserDataDir, 'supergence-config.json'),
     path.join(path.dirname(process.execPath), 'supergence-config.json'),
     path.join(__dirname, '../supergence-config.json'),
@@ -235,21 +243,63 @@ function createStartupWindow() {
   void startupWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
 }
 
-function createMainWindow() {
+function getSanitizedWindowState() {
   const savedState = loadWindowState();
+
+  // Guard against multi-monitor disconnection leaving window off-screen
+  try {
+    const displays = screen.getAllDisplays();
+    if (savedState.x !== undefined && savedState.y !== undefined) {
+      const isVisible = displays.some((d) => {
+        const { x, y, width, height } = d.bounds;
+        return (
+          savedState.x >= x - 50 &&
+          savedState.x < x + width - 100 &&
+          savedState.y >= y - 50 &&
+          savedState.y < y + height - 100
+        );
+      });
+      if (!isVisible) {
+        delete savedState.x;
+        delete savedState.y;
+      }
+    }
+  } catch (_) {}
+
+  // Responsive defaults bounded to the primary display's workArea
+  try {
+    const primary = screen.getPrimaryDisplay();
+    const { width: maxW, height: maxH } = primary.workAreaSize;
+    if (!savedState.width || savedState.width > maxW) {
+      savedState.width = Math.min(1400, Math.max(900, Math.floor(maxW * 0.95)));
+    }
+    if (!savedState.height || savedState.height > maxH) {
+      savedState.height = Math.min(900, Math.max(580, Math.floor(maxH * 0.92)));
+    }
+  } catch (_) {
+    savedState.width = savedState.width || 1280;
+    savedState.height = savedState.height || 800;
+  }
+
+  return savedState;
+}
+
+function createMainWindow() {
+  const savedState = getSanitizedWindowState();
 
   const iconPath = path.join(__dirname, '../resources/icon.ico');
   const pngIconPath = path.join(__dirname, '../resources/icon.png');
   const appIcon = fs.existsSync(iconPath) ? iconPath : pngIconPath;
 
   mainWindow = new BrowserWindow({
-    width: savedState.width || 1400,
-    height: savedState.height || 900,
+    width: savedState.width,
+    height: savedState.height,
     x: savedState.x,
     y: savedState.y,
-    minWidth: 1024,
-    minHeight: 700,
-    frame: false, // Frameless custom Windows 11 title bar
+    minWidth: 800,
+    minHeight: 560,
+    frame: true, // Native Windows frame with caption buttons, snap layouts, and multi-monitor dragging
+    autoHideMenuBar: true, // Clean modern appearance without legacy menu bar
     backgroundColor: '#030812',
     backgroundMaterial: 'mica', // Windows 11 Mica glass effect
     show: false, // Show once ready-to-show

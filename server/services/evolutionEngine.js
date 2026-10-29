@@ -58,6 +58,12 @@ function targetPath(root, relative) {
     throw new Error(
       'Change targets must be client/, server/extensions/, workspace/projects/, or docs/. Core security and credentials are protected.',
     );
+  if (relative.startsWith('workspace/')) {
+    const wsRoot = process.env.SIS_WORKSPACE_DIR
+      ? path.resolve(process.env.SIS_WORKSPACE_DIR)
+      : path.resolve(root, 'workspace');
+    return confined(wsRoot, relative.slice('workspace/'.length));
+  }
   return confined(root, relative);
 }
 const read = (file) => (fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : null);

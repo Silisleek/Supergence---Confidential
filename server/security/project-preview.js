@@ -21,33 +21,36 @@ export function createProjectPreviewService({
     for (const [key, grant] of grants) if (grant.expires <= now()) grants.delete(key);
     while (grants.size >= maxGrants) grants.delete(grants.keys().next().value);
   }
+  function issueGrant(relativePath) {
+    if (!filesEnabled()) throw new Error('File access is disabled in Access settings.');
+    const relative = String(relativePath || '')
+      .replaceAll('\\', '/')
+      .replace(/^\/+/, '');
+    const segments = relative.split('/');
+    if (
+      segments.length < 2 ||
+      segments.some((part) => !part || part === '.' || part === '..') ||
+      !/\.html?$/i.test(relative)
+    )
+      throw new Error('Multi-file previews require an HTML file inside a project folder.');
+    const file = resolveWithinRoot(workspace.baseRoot, relative);
+    if (!fs.statSync(file).isFile()) throw new Error('Preview file is not a regular file.');
+    const root = resolveWithinRoot(workspace.baseRoot, path.dirname(relative));
+    prune();
+    const token = randomBytes(32).toString('hex');
+    grants.set(token, { root, expires: now() + lifetimeMs });
+    return `/__project-preview/${token}/${encodeURIComponent(path.basename(relative))}`;
+  }
   function issue(req, res) {
     try {
-      if (!filesEnabled())
-        return res.status(403).json({ error: 'File access is disabled in Access settings.' });
-      const relative = String(req.body?.path || '').replaceAll('\\', '/');
-      const segments = relative.split('/');
-      if (
-        segments.length < 2 ||
-        segments.some((part) => !part || part === '.' || part === '..') ||
-        !/\.html?$/i.test(relative)
-      )
-        return res
-          .status(400)
-          .json({ error: 'Multi-file previews require an HTML file inside a project folder.' });
-      const file = resolveWithinRoot(workspace.baseRoot, relative);
-      if (!fs.statSync(file).isFile()) throw new Error('Preview file is not a regular file.');
-      const root = resolveWithinRoot(workspace.baseRoot, path.dirname(relative));
-      prune();
-      const token = randomBytes(32).toString('hex');
-      grants.set(token, { root, expires: now() + lifetimeMs });
+      const url = issueGrant(req.body?.path);
       res.setHeader('Cache-Control', 'no-store');
       res.json({
-        url: `/__project-preview/${token}/${encodeURIComponent(path.basename(relative))}`,
+        url,
         networkRestricted: true,
       });
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      res.status(error.message.includes('disabled') ? 403 : 400).json({ error: error.message });
     }
   }
   function serve(req, res) {
@@ -96,5 +99,5 @@ export function createProjectPreviewService({
       return res.status(error.code === 'ENOENT' ? 404 : 403).end();
     }
   }
-  return { issue, serve, revokeAll: () => grants.clear() };
+  return { issue, issueGrant, serve, revokeAll: () => grants.clear() };
 }

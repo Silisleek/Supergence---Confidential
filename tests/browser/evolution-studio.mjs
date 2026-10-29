@@ -146,7 +146,13 @@ try {
   assert.match(await applied.text(), /Reviewed calculator/);
   await page.getByRole('button', { name: 'Roll back change', exact: true }).click();
   await page.locator('.evo-detail .evo-state-rolled-back').waitFor();
-  await assert.rejects(fs.access(path.resolve(projectRoot, 'index.html')), { code: 'ENOENT' });
+  const wsRoot = process.env.SIS_WORKSPACE_DIR
+    ? path.resolve(process.env.SIS_WORKSPACE_DIR)
+    : path.resolve('workspace');
+  await assert.rejects(
+    fs.access(path.resolve(wsRoot, 'projects', path.basename(projectRoot), 'index.html')),
+    { code: 'ENOENT' },
+  );
   checks.push(
     'explicit UI approval applies the verified files; rollback removes the new project files',
   );

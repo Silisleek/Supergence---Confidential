@@ -226,22 +226,32 @@ try {
     saved.messages.at(-1).toolCalls.find((t) => t.tool === 'run_command').output.exitCode,
     0,
   );
+  const memoryWs = process.env.SIS_WORKSPACE_DIR
+    ? path.resolve(process.env.SIS_WORKSPACE_DIR)
+    : path.resolve('workspace');
   for (const file of files)
-    assert.equal(await fs.readFile(path.resolve('workspace', file.filepath), 'utf8'), file.content);
+    assert.equal(await fs.readFile(path.resolve(memoryWs, file.filepath), 'utf8'), file.content);
   assert.ok(contextualFallbacks > 0);
   const htmlArtifact = saved.messages
     .at(-1)
     .artifacts.find((artifact) => artifact.url?.endsWith('/index.html'));
   assert.equal(htmlArtifact.url, `/workspace/${root}/index.html`);
-  const embedded = page
-    .locator(`iframe.chat-artifact-preview[src$="/workspace/${root}/index.html"]`)
-    .first()
-    .contentFrame();
-  await embedded.locator('#counter').waitFor();
+  const openProjectPreview = page.getByRole('button', { name: 'Open project preview' }).first();
+  await openProjectPreview.waitFor({ timeout: 30000 });
+  await openProjectPreview.click();
+  const embedded = page.locator('iframe.chat-artifact-preview').last().contentFrame();
+  await embedded.locator('#counter').waitFor({ timeout: 30000 });
   const project = await browser.newPage();
   await project.goto(`${baseURL}/workspace/${root}/index.html`);
+  await project.locator('#counter').waitFor({ timeout: 30000 });
   await project.keyboard.press('ArrowUp');
-  await project.waitForFunction(() => document.querySelector('#counter').textContent === '1');
+  await project.waitForFunction(
+    () => document.querySelector('#counter')?.textContent === '1',
+    null,
+    {
+      timeout: 15000,
+    },
+  );
   await project.close();
   await page.screenshot({ path: path.join(output, 'failed-request-then-yes.png'), fullPage: true });
   await submit(note);

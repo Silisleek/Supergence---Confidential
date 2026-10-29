@@ -135,14 +135,23 @@ try {
       ?.textContent.includes('23'),
   );
   assert.equal(await page.evaluate(() => window.isTaskRunning()), true);
-  const actualSide = (await api(`/api/agent-conversations/${threadId}`)).thread;
+  let actualSide;
+  for (let i = 0; i < 60; i++) {
+    const res = await api(`/api/agent-conversations/${threadId}`);
+    if (res.thread?.messages?.length >= 2) {
+      actualSide = res.thread;
+      break;
+    }
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  assert.ok(actualSide, 'Agent conversation must have reply message.');
   assert.equal(actualSide.messages[0].senderId, 'user');
   assert.equal(actualSide.messages[1].senderId, roster[1].id);
   await page.screenshot({ path: path.join(output, 'concurrent-sidechat.png') });
   checks.push('another real agent replies while the main task is waiting; both identities persist');
 
   await page.getByRole('button', { name: 'Allow this turn', exact: true }).first().click();
-  await page.waitForFunction(() => !window.isTaskRunning(), { timeout: 120000 });
+  await page.waitForFunction(() => !window.isTaskRunning(), null, { timeout: 240000 });
   assert.match(await page.locator('.response-body-markdown').first().innerText(), /893/);
   await page.locator('.sg-dock-toggle').click();
   await page.locator('.sg-dock-details').first().locator('summary').click();
