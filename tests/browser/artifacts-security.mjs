@@ -6,13 +6,18 @@ import { chromium } from 'playwright-core';
 
 const base = process.env.SIS_BASE_URL;
 const root = process.env.SIS_WORKSPACE_DIR;
-if (!base || !root)
-  throw new Error('Use an isolated backend and set SIS_BASE_URL and SIS_WORKSPACE_DIR.');
+const dataRoot = process.env.SIS_DATA_DIR;
+if (!base || !root || !dataRoot)
+  throw new Error(
+    'Use an isolated backend and set SIS_BASE_URL, SIS_DATA_DIR and SIS_WORKSPACE_DIR.',
+  );
 const name = `artifact');window.__vaultInjected=1;('${randomUUID()}.html`;
 const fixture = path.join(root, name);
 const benchmark = path.join(root, 'benchmark_results.html');
 const conversationId = `security-${randomUUID()}`;
 const conversation = `/api/conversations/${conversationId}/workspace`;
+const skillId = `security-${randomUUID()}`;
+const skillFile = path.join(dataRoot, 'skills', 'candidates', `${skillId}.json`);
 const request = (url, options) => fetch(new URL(url, base), options);
 const access = await (await request('/api/access')).json();
 if (!access.settings?.files)
@@ -20,12 +25,22 @@ if (!access.settings?.files)
 await fs.mkdir(root, { recursive: true });
 let fixtureCreated = false,
   benchmarkCreated = false,
+  skillCreated = false,
   browser;
 try {
   await fs.writeFile(fixture, '<title>Workspace fixture</title>', { flag: 'wx' });
   fixtureCreated = true;
   await fs.writeFile(benchmark, '<title>Benchmark fixture</title>', { flag: 'wx' });
   benchmarkCreated = true;
+  await fs.mkdir(path.dirname(skillFile), { recursive: true });
+  await fs.writeFile(
+    skillFile,
+    JSON.stringify({ id: skillId, name: 'Isolated skill fixture', domain: 'testing' }),
+    { flag: 'wx' },
+  );
+  skillCreated = true;
+  const skills = await (await request('/api/mastery/skills')).json();
+  assert.ok(skills.skills.some((skill) => skill.id === skillId));
   let artifacts;
   const deadline = Date.now() + 15000;
   while (Date.now() < deadline) {
@@ -100,6 +115,22 @@ try {
   ])
     assert.equal((await request(url)).status, 403, url);
   assert.equal((await request(conversation, { method: 'POST' })).status, 403);
+  for (const url of [
+    '/api/github/clone',
+    '/api/github/fetch',
+    `/api/mastery/candidates/${skillId}/verify`,
+  ])
+    assert.equal(
+      (
+        await request(url, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: '{}',
+        })
+      ).status,
+      403,
+      url,
+    );
   let packet;
   do {
     packet = await reader.read();
@@ -107,15 +138,33 @@ try {
   await page.evaluate(() => window.refreshArtifactsVault());
   assert.match(await page.locator('#vaultEmptyNotice').innerText(), /unavailable/i);
   assert.equal(await page.locator('#vaultPreviewIframe').getAttribute('src'), null);
+  await request('/api/access', {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ files: true, terminal: false }),
+  });
+  for (const url of ['/api/github/clone', `/api/mastery/candidates/${skillId}/verify`])
+    assert.equal(
+      (
+        await request(url, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: '{}',
+        })
+      ).status,
+      403,
+      url,
+    );
   console.log('Artifact routes use the configured workspace and respect file-access settings.');
 } finally {
   await browser?.close();
   await request('/api/access', {
     method: 'PATCH',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ files: access.settings.files }),
+    body: JSON.stringify({ files: access.settings.files, terminal: access.settings.terminal }),
   });
   if (fixtureCreated) await fs.unlink(fixture).catch(() => {});
   if (benchmarkCreated) await fs.unlink(benchmark).catch(() => {});
+  if (skillCreated) await fs.unlink(skillFile).catch(() => {});
   await fs.rmdir(path.join(root, 'chats', conversationId)).catch(() => {});
 }

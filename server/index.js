@@ -207,6 +207,7 @@ try {
 }
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const dataRoot = path.resolve(process.env.SIS_DATA_DIR || path.join(__dirname, '../data'));
 const app = express();
 const server = createServer(app);
 server.timeout = 15 * 60 * 1000;
@@ -991,7 +992,7 @@ function _readJsonDir(dir) {
       .filter((f) => f.endsWith('.json'))
       .map((f) => {
         try {
-          return JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
+          return JSON.parse(fs.readFileSync(resolveWithinRoot(dir, f), 'utf8'));
         } catch {
           return null;
         }
@@ -1015,8 +1016,8 @@ let _skillCorpusCache = { key: null, skills: [] };
 
 function _getSkillCorpus() {
   const dirs = [
-    path.join(__dirname, '../data/skills/learned'),
-    path.join(__dirname, '../data/skills/candidates'),
+    path.join(dataRoot, 'skills/learned'),
+    path.join(dataRoot, 'skills/candidates'),
   ];
   // Directory mtime moves on add/remove; the file count catches a rewrite in
   // place that the timestamp granularity could miss.
@@ -1160,26 +1161,36 @@ app.post('/api/mastery/unknowns/:id/resolve', (req, res) => {
  */
 app.post('/api/mastery/candidates/:skillId/verify', async (req, res) => {
   try {
+    if (!runtimeAccess.settings.files || !runtimeAccess.settings.terminal)
+      return res.status(403).json({ error: 'File and terminal access are required to verify a candidate.' });
+    if (runtimeAccess.settings.mode === 'ask-before-executing')
+      await runtimeAccess.authorize('verify_skill_code', { skillId: req.params.skillId });
     // Candidates live where the old learner wrote them, under `learned/`.
     // Look in both stores so a file is found by its record, not its folder.
     const dirs = [
-      path.join(__dirname, '../data/skills/candidates'),
-      path.join(__dirname, '../data/skills/learned'),
+      path.join(dataRoot, 'skills/candidates'),
+      path.join(dataRoot, 'skills/learned'),
     ];
     let fullPath = null;
+    let skill = null;
     for (const dir of dirs) {
       if (!fs.existsSync(dir)) continue;
-      const file = fs
-        .readdirSync(dir)
-        .find((f) => f.endsWith('.json') && f.includes(req.params.skillId));
-      if (file) {
-        fullPath = path.join(dir, file);
-        break;
+      for (const file of fs.readdirSync(dir)) {
+        if (!file.endsWith('.json') || !file.includes(req.params.skillId)) continue;
+        try {
+          const candidatePath = resolveWithinRoot(dir, file);
+          const candidate = JSON.parse(fs.readFileSync(candidatePath, 'utf8'));
+          if (candidate.id === req.params.skillId) {
+            fullPath = candidatePath;
+            skill = candidate;
+            break;
+          }
+        } catch (_) {}
       }
+      if (skill) break;
     }
     if (!fullPath) return res.status(404).json({ error: 'candidate not found' });
 
-    const skill = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
     const code = skill.executableCodeSnippet || '';
     const { testCode = '' } = req.body || {};
 
@@ -1236,7 +1247,7 @@ app.post('/api/mastery/candidates/:skillId/verify', async (req, res) => {
 
     fs.writeFileSync(fullPath, JSON.stringify(skill, null, 2), 'utf8');
     if (hasPassingOracle(skill)) {
-      const learnedDir = path.join(__dirname, '../data/skills/learned');
+      const learnedDir = path.join(dataRoot, 'skills/learned');
       fs.mkdirSync(learnedDir, { recursive: true });
       const learnedPath = path.join(learnedDir, path.basename(fullPath));
       if (path.resolve(learnedPath) !== path.resolve(fullPath))
@@ -1971,6 +1982,10 @@ app.get('/api/github/file', async (req, res) => {
 
 app.post('/api/github/clone', async (req, res) => {
   try {
+    if (!runtimeAccess.settings.files || !runtimeAccess.settings.terminal)
+      return res.status(403).json({ error: 'File and terminal access are required to clone a repository.' });
+    if (runtimeAccess.settings.mode === 'ask-before-executing')
+      await runtimeAccess.authorize('execute_file', { operation: 'clone repository', repo: req.body?.repo });
     const { repo, dest, branch, useZip } = req.body;
     if (!repo) return res.status(400).json({ error: 'Repository repo required' });
     const result = await githubManager.cloneRepo(repo, {
@@ -1993,6 +2008,8 @@ app.post('/api/github/clone', async (req, res) => {
 
 app.post('/api/github/fetch', async (req, res) => {
   try {
+    if (!runtimeAccess.settings.files)
+      return res.status(403).json({ error: 'File access is disabled in Access settings.' });
     const { repo, path: fp, dest, ref } = req.body;
     if (!repo || !fp) return res.status(400).json({ error: 'Both repo and path required' });
     const result = await githubManager.downloadFile(repo, fp, {
@@ -2388,7 +2405,7 @@ app.get('/api/improvement/autonomous/theory/:filename', (req, res) => {
 
 app.get('/api/improvement/autonomous/research-digests', (req, res) => {
   try {
-    const researchDir = path.join(__dirname, '../data/research');
+    const researchDir = path.join(dataRoot, 'research');
     if (!fs.existsSync(researchDir)) return res.json({ count: 0, digests: [] });
     const files = fs
       .readdirSync(researchDir)

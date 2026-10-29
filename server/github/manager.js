@@ -4,21 +4,23 @@
 
 import fs from 'fs';
 import path from 'path';
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
-import { fileURLToPath } from 'url';
 import workspace from '../workspace/manager.js';
+import { resolveWithinRoot } from '../utils/path-confinement.js';
+import { childEnvironment } from '../security/child-environment.js';
 
-const execAsync = promisify(exec);
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const WORKSPACE_DIR = process.env.SIS_WORKSPACE_DIR ? path.resolve(process.env.SIS_WORKSPACE_DIR) : path.resolve(__dirname, '../../workspace');
-
-class GitHubManager {
-  constructor() {
-    this.workspaceDir = WORKSPACE_DIR;
+const execFileAsync = promisify(execFile);
+export class GitHubManager {
+  constructor({ runGit = execFileAsync } = {}) {
+    this.runGit = runGit;
     if (!fs.existsSync(this.workspaceDir)) {
       fs.mkdirSync(this.workspaceDir, { recursive: true });
     }
+  }
+
+  get workspaceDir() {
+    return workspace.baseRoot;
   }
 
   /**
@@ -60,13 +62,7 @@ class GitHubManager {
     const clean = String(relPath || '')
       .replace(/^workspace[\\\/]/i, '')
       .replace(/^[\\\/]+/, '');
-    const full = path.resolve(this.workspaceDir, clean);
-    const normRoot = path.resolve(this.workspaceDir).toLowerCase();
-    const normFull = full.toLowerCase();
-    if (normFull !== normRoot && !normFull.startsWith(normRoot + path.sep)) {
-      throw new Error(`Target path "${relPath}" escapes workspace boundary`);
-    }
-    return full;
+    return resolveWithinRoot(this.workspaceDir, clean);
   }
 
   /**
@@ -385,6 +381,7 @@ class GitHubManager {
       downloadedBuffer = Buffer.from(data.content || '', 'base64');
     }
 
+    this.safeWorkspaceJoin(destRelative);
     fs.writeFileSync(destFull, downloadedBuffer);
     const stat = fs.statSync(destFull);
 
@@ -489,12 +486,13 @@ class GitHubManager {
       };
     }
 
-    const branchFlag = options.branch ? `--branch ${JSON.stringify(options.branch)} ` : '';
     const gitUrl = `https://github.com/${full}.git`;
-    const cmd = `git clone --depth 1 ${branchFlag}${gitUrl} "${destFull}"`;
+    const args = ['clone', '--depth', '1'];
+    if (options.branch) args.push(`--branch=${options.branch}`);
+    args.push('--', gitUrl, destFull);
 
     try {
-      await execAsync(cmd, { cwd: this.workspaceDir, timeout: 120000 });
+      await this.runGit('git', args, { cwd: this.workspaceDir, timeout: 120000, env: childEnvironment() });
       const items = workspace.listDir(targetDirName, false);
       return {
         success: true,
