@@ -3,7 +3,7 @@ import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import { chromium } from 'playwright-core';
 import OpenAI from 'openai';
-import { getNextGroqClient } from '../../server/api/openrouter.js';
+import { resolveClientAndModel } from '../../server/api/openrouter.js';
 import workspace from '../../server/workspace/manager.js';
 import { creationBenchmarks } from '../../server/quality/creation-benchmarks.js';
 
@@ -169,7 +169,7 @@ try {
                 apiKey: process.env.BENCHMARK_API_KEY || 'local',
                 maxRetries: 0,
               })
-            : getNextGroqClient(system)?.client;
+            : resolveClientAndModel(null, system)?.client;
           if (!client) throw new Error('No direct benchmark provider configured.');
           const result = await client.chat.completions.create(
             {
