@@ -234,6 +234,11 @@ app.use('/api/workspace', (req, res, next) => {
     return res.status(403).json({ error: 'File access is disabled in Access settings.' });
   next();
 });
+app.use('/api/artifacts', (_req, res, next) => {
+  if (!runtimeAccess.settings.files)
+    return res.status(403).json({ error: 'File access is disabled in Access settings.' });
+  next();
+});
 app.post('/api/workspace/preview-grants', projectPreview.issue);
 
 // Aggressive cache-busting headers to prevent stale browser caches across updates
@@ -1800,8 +1805,12 @@ app.get('/api/coder/elite-benchmark', async (req, res) => {
 // ─── Frontier 14-Benchmark Evaluator Routes ───
 app.get('/api/benchmarks/frontier-results', async (req, res) => {
   try {
-    const p = path.resolve(__dirname, '../workspace/benchmark_results.html');
+    if (!runtimeAccess.settings.files)
+      return res.status(403).json({ error: 'File access is disabled in Access settings.' });
+    const p = resolveWithinRoot(workspace.baseRoot, 'benchmark_results.html');
     if (fs.existsSync(p)) {
+      res.setHeader('Content-Security-Policy', 'sandbox allow-scripts');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
       res.sendFile(p);
     } else {
       res.status(404).json({ error: 'Frontier benchmarks not yet executed' });
@@ -2659,15 +2668,17 @@ function getArtifactCategory(ext) {
 
 let _artifactsCache = null;
 let _artifactsCacheTime = 0;
+let _artifactsCacheRoot = null;
 const _htmlTitleCache = new Map();
 
 function getCachedOrFreshArtifacts() {
   const now = Date.now();
-  if (_artifactsCache && now - _artifactsCacheTime < 6000) {
+  if (_artifactsCache && _artifactsCacheRoot === workspace.baseRoot && now - _artifactsCacheTime < 6000) {
     return _artifactsCache;
   }
 
-  const wsDir = path.join(__dirname, '../workspace');
+  const wsDir = workspace.baseRoot;
+  _artifactsCacheRoot = wsDir;
   if (!fs.existsSync(wsDir)) {
     _artifactsCache = [];
     _artifactsCacheTime = now;
@@ -2682,8 +2693,8 @@ function getCachedOrFreshArtifacts() {
     const ext = path.extname(f).toLowerCase();
     const category = getArtifactCategory(ext);
 
-    const full = path.join(wsDir, f);
     try {
+      const full = resolveWithinRoot(wsDir, f);
       const stat = fs.statSync(full);
       if (!stat.isFile()) continue;
 
@@ -2692,7 +2703,7 @@ function getCachedOrFreshArtifacts() {
         .replace(/[_-]/g, ' ')
         .toUpperCase();
       if (ext === '.html') {
-        const cached = _htmlTitleCache.get(f);
+        const cached = _htmlTitleCache.get(full);
         if (cached && cached.mtime === stat.mtimeMs) {
           title = cached.title;
         } else {
@@ -2705,7 +2716,7 @@ function getCachedOrFreshArtifacts() {
             const tm = sample.match(/<title>([^<]+)<\/title>/i);
             if (tm && tm[1]) title = tm[1];
           } catch (_) {}
-          _htmlTitleCache.set(f, { mtime: stat.mtimeMs, title });
+          _htmlTitleCache.set(full, { mtime: stat.mtimeMs, title });
         }
       }
 
@@ -2714,7 +2725,7 @@ function getCachedOrFreshArtifacts() {
         title,
         ext,
         category,
-        src: `/workspace/${f}`,
+        src: `/workspace/${encodeURIComponent(f)}`,
         size: stat.size,
         sizeFormatted: formatArtifactBytes(stat.size),
         mtime: stat.mtimeMs,
@@ -2796,12 +2807,20 @@ app.get('/api/artifacts/content', (req, res) => {
     if (!filename || typeof filename !== 'string') {
       return res.status(400).json({ error: 'file parameter is required' });
     }
-    const safeName = path.basename(filename);
-    const fullPath = path.join(__dirname, '../workspace', safeName);
+    if (filename !== path.basename(filename) || filename.includes('\\') || filename.startsWith('.'))
+      return res.status(400).json({ error: 'A workspace artifact filename is required.' });
+    let fullPath;
+    try {
+      fullPath = resolveWithinRoot(workspace.baseRoot, filename);
+    } catch {
+      return res.status(403).json({ error: 'Artifact path is not accessible.' });
+    }
+    const safeName = filename;
     if (!fs.existsSync(fullPath)) {
       return res.status(404).json({ error: 'File not found in workspace' });
     }
     const stat = fs.statSync(fullPath);
+    if (!stat.isFile()) return res.status(404).json({ error: 'File not found in workspace' });
     if (stat.size > 2 * 1024 * 1024) {
       return res.status(400).json({ error: 'File too large for inline text preview (>2MB)' });
     }
@@ -4499,7 +4518,7 @@ wss.on('connection', (ws) => {
         `\n🧠 Supergence (SIS) Server running on http://localhost:${activePort} [build ${BUILD}]`,
       );
       console.log(`🔌 WebSocket on ws://localhost:${activePort}`);
-      console.log(`📁 Workspace at ./workspace/`);
+      console.log(`📁 Workspace at ${workspace.baseRoot}`);
       console.log(`⚡ Real-Time Mid-Task Steering Active`);
       console.log(`\nReady for connections...\n`);
       if (process.env.SIS_DESKTOP_SESSION !== '1')

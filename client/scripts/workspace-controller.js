@@ -4910,6 +4910,34 @@ let currentVaultSearch = '';
 let currentVaultArtifacts = [];
 let activePreviewFilename = null;
 
+function clearVaultPreview() {
+  activePreviewFilename = null;
+  const iframe = document.getElementById('vaultPreviewIframe');
+  if (iframe) {
+    iframe.removeAttribute('src');
+    iframe.style.display = 'none';
+  }
+  const image = document.getElementById('vaultPreviewImage');
+  if (image) {
+    image.removeAttribute('src');
+    image.style.display = 'none';
+  }
+  const code = document.getElementById('vaultPreviewCode');
+  if (code) {
+    code.textContent = '';
+    code.style.display = 'none';
+  }
+  for (const id of ['vaultPreviewOpenTabBtn', 'vaultPreviewDownloadBtn']) {
+    const link = document.getElementById(id);
+    if (link) {
+      link.removeAttribute('href');
+      link.style.display = 'none';
+    }
+  }
+  const title = document.getElementById('vaultPreviewTitle');
+  if (title) title.textContent = '';
+}
+
 window.openArtifactsVaultModal = function () {
   toggleArtifactsVaultModal(true);
 };
@@ -4930,12 +4958,21 @@ async function loadVaultArtifacts() {
   try {
     const url = `/api/artifacts?type=${encodeURIComponent(currentVaultType)}&limit=300${currentVaultSearch ? `&search=${encodeURIComponent(currentVaultSearch)}` : ''}`;
     const res = await fetch(url);
+    if (!res.ok) throw new Error(`Artifacts unavailable (HTTP ${res.status})`);
     const items = await res.json();
     if (reqId === vaultRequestId && Array.isArray(items)) {
       currentVaultArtifacts = items;
       renderVaultGrid();
     }
-  } catch (_) {}
+  } catch (error) {
+    if (reqId === vaultRequestId) {
+      currentVaultArtifacts = [];
+      clearVaultPreview();
+      renderVaultGrid();
+      const notice = document.getElementById('vaultEmptyNotice');
+      if (notice) notice.textContent = error.message;
+    }
+  }
 }
 
 window.setVaultTypeFilter = function (type, btn) {
@@ -4961,12 +4998,14 @@ window.refreshArtifactsVault = async function () {
   const reqId = ++vaultRequestId;
   try {
     const sRes = await fetch('/api/artifacts/stats');
+    if (!sRes.ok) throw new Error(`Artifacts unavailable (HTTP ${sRes.status})`);
     const stats = await sRes.json();
     updateVaultStatsBadges(stats);
 
     const aRes = await fetch(
       `/api/artifacts?type=${encodeURIComponent(currentVaultType)}&limit=400${currentVaultSearch ? `&search=${encodeURIComponent(currentVaultSearch)}` : ''}`,
     );
+    if (!aRes.ok) throw new Error(`Artifacts unavailable (HTTP ${aRes.status})`);
     const items = await aRes.json();
     if (reqId === vaultRequestId && Array.isArray(items)) {
       currentVaultArtifacts = items;
@@ -4974,6 +5013,13 @@ window.refreshArtifactsVault = async function () {
     }
   } catch (err) {
     console.warn('[ArtifactsVault] Error refreshing:', err);
+    if (reqId === vaultRequestId) {
+      currentVaultArtifacts = [];
+      clearVaultPreview();
+      renderVaultGrid();
+      const notice = document.getElementById('vaultEmptyNotice');
+      if (notice) notice.textContent = err.message;
+    }
   }
 };
 
@@ -5020,13 +5066,16 @@ function renderVaultGrid() {
 
   if (filtered.length === 0) {
     grid.innerHTML = '';
-    if (emptyNotice) emptyNotice.style.display = 'block';
+    if (emptyNotice) {
+      emptyNotice.textContent = 'No artifacts found.';
+      emptyNotice.style.display = 'block';
+    }
     return;
   }
   if (emptyNotice) emptyNotice.style.display = 'none';
 
   let html = '';
-  filtered.forEach((art) => {
+  filtered.forEach((art, index) => {
     const isActive = activePreviewFilename === art.filename;
     let catColor = '#38BDF8';
     let catIcon = '📦';
@@ -5061,13 +5110,13 @@ function renderVaultGrid() {
       : '';
 
     html += `
-          <div class="vault-artifact-card ${isActive ? 'active' : ''}" onclick="previewVaultArtifact('${art.filename}', '${art.src}', '${art.ext}', '${art.category}', '${escapeHtml(art.title).replace(/'/g, "\\'")}')">
+          <div class="vault-artifact-card ${isActive ? 'active' : ''}" data-artifact-index="${index}">
             <div>
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                 <span style="font-size:9.5px; font-weight:700; color:${catColor}; background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:4px; border:1px solid ${catColor}40;">
-                  ${catIcon} ${catLabel}
+                  ${catIcon} ${escapeHtml(catLabel)}
                 </span>
-                <span style="font-size:10px; color:#64748B; font-family:monospace;">${art.sizeFormatted || ''}</span>
+                <span style="font-size:10px; color:#64748B; font-family:monospace;">${escapeHtml(art.sizeFormatted || '')}</span>
               </div>
               <div style="font-size:12px; font-weight:700; color:#F8FAFC; margin-bottom:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(art.title)}">
                 ${escapeHtml(art.title)}
@@ -5079,14 +5128,14 @@ function renderVaultGrid() {
 
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; border-top:1px solid rgba(255,255,255,0.06); padding-top:8px;">
               <span style="font-size:9.5px; color:#64748B;">${dateStr}</span>
-              <div style="display:flex; gap:6px;" onclick="event.stopPropagation()">
-                <button onclick="previewVaultArtifact('${art.filename}', '${art.src}', '${art.ext}', '${art.category}', '${escapeHtml(art.title).replace(/'/g, "\\'")}')" style="background:rgba(56,189,248,0.12); color:#38BDF8; border:1px solid rgba(56,189,248,0.3); border-radius:6px; padding:3px 8px; font-size:10.5px; font-weight:600; cursor:pointer;">
+              <div style="display:flex; gap:6px;">
+                <button type="button" style="background:rgba(56,189,248,0.12); color:#38BDF8; border:1px solid rgba(56,189,248,0.3); border-radius:6px; padding:3px 8px; font-size:10.5px; font-weight:600; cursor:pointer;">
                   ▶ Preview
                 </button>
-                <a href="${art.src}" target="_blank" style="background:rgba(255,255,255,0.06); color:#FFF; border-radius:6px; padding:3px 7px; font-size:10.5px; text-decoration:none;" title="Open in new window">
+                <a href="${escapeHtml(art.src)}" target="_blank" rel="noopener noreferrer" style="background:rgba(255,255,255,0.06); color:#FFF; border-radius:6px; padding:3px 7px; font-size:10.5px; text-decoration:none;" title="Open in new window">
                   ↗
                 </a>
-                <a href="${art.src}" download style="background:rgba(255,255,255,0.06); color:#FFF; border-radius:6px; padding:3px 7px; font-size:10.5px; text-decoration:none;" title="Download file">
+                <a href="${escapeHtml(art.src)}" download style="background:rgba(255,255,255,0.06); color:#FFF; border-radius:6px; padding:3px 7px; font-size:10.5px; text-decoration:none;" title="Download file">
                   ⬇
                 </a>
               </div>
@@ -5097,10 +5146,14 @@ function renderVaultGrid() {
 
   grid.innerHTML = html;
 
-  if (!activePreviewFilename && filtered.length > 0) {
-    const first = filtered[0];
-    previewVaultArtifact(first.filename, first.src, first.ext, first.category, first.title);
-  }
+  grid.querySelectorAll('.vault-artifact-card').forEach((card) => {
+    const art = filtered[Number(card.dataset.artifactIndex)];
+    card.dataset.artifactFilename = art.filename;
+    card.addEventListener('click', (event) => {
+      if (event.target.closest('a')) return;
+      previewVaultArtifact(art.filename, art.src, art.ext, art.category, art.title);
+    });
+  });
 }
 
 window.previewVaultArtifact = async function (filename, src, ext, category, title) {
@@ -5132,6 +5185,7 @@ window.previewVaultArtifact = async function (filename, src, ext, category, titl
     if (code) code.style.display = 'none';
     if (img) img.style.display = 'none';
     if (iframe) {
+      iframe.setAttribute('sandbox', 'allow-scripts allow-forms allow-downloads allow-pointer-lock');
       iframe.src = src;
       iframe.style.display = 'block';
     }
@@ -5150,6 +5204,7 @@ window.previewVaultArtifact = async function (filename, src, ext, category, titl
       code.style.display = 'block';
       try {
         const res = await fetch(`/api/artifacts/content?file=${encodeURIComponent(filename)}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         code.textContent = data.content || '(Empty file)';
       } catch (err) {
@@ -5160,15 +5215,23 @@ window.previewVaultArtifact = async function (filename, src, ext, category, titl
 
   const cards = document.querySelectorAll('.vault-artifact-card');
   cards.forEach((c) => {
-    if (c.innerHTML.includes(filename)) c.classList.add('active');
+    if (c.dataset.artifactFilename === filename) c.classList.add('active');
     else c.classList.remove('active');
   });
 };
 
 fetch('/api/artifacts/stats')
-  .then((r) => r.json())
+  .then((r) => {
+    if (!r.ok) throw new Error('Artifacts unavailable');
+    return r.json();
+  })
   .then(updateVaultStatsBadges)
-  .catch(() => {});
+  .catch(() => {
+    for (const id of ['homeArtifactsCountBadge', 'workspaceArtifactsCountBadge']) {
+      const badge = document.getElementById(id);
+      if (badge) badge.textContent = 'Unavailable';
+    }
+  });
 
 // Auto-boot into Enterprise Workspace immediately
 async function bootEnterpriseWorkspace() {
