@@ -1,3 +1,5 @@
+import { sessionAuth } from './session-auth.js';
+
 // Browser origins must be the app itself or the local Vite development server.
 export function isLocalRequest(req) {
   const address = req.socket?.remoteAddress || '';
@@ -12,20 +14,11 @@ export function isLocalRequest(req) {
   const origin = req.headers.origin;
   if (!origin) return true;
   if (origin === 'null') {
-    const referer = req.headers.referer;
-    if (referer) {
-      try {
-        const refUrl = new URL(referer);
-        if (
-          ['localhost', '127.0.0.1', '[::1]'].includes(refUrl.hostname) &&
-          refUrl.port === host.port &&
-          refUrl.pathname.startsWith('/workspace/')
-        ) {
-          return true;
-        }
-      } catch {}
-    }
-    return false;
+    const pathname = String(req.url || '').split('?')[0];
+    const bearerOnly = { headers: { authorization: req.headers.authorization } };
+    return ['GET', 'HEAD'].includes(req.method) &&
+      (pathname.startsWith('/workspace/') || pathname.startsWith('/vendor/three/')) &&
+      sessionAuth.authorized(bearerOnly);
   }
   try {
     const parsed = new URL(origin);

@@ -37,6 +37,7 @@ try {
     });
   }, files[0]);
   const preview = page.locator('.chat-artifact').first();
+  await preview.getByRole('button', { name: 'Open HTML preview' }).click();
   await preview.locator('.chat-artifact-status').filter({ hasText: 'Preview loaded' }).waitFor();
   const frame = preview.locator('iframe').contentFrame();
   assert.equal(await frame.locator('output').innerText(), '32.81 ft');

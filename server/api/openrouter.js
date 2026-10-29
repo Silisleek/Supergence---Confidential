@@ -8,6 +8,7 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import { setTimeout as delay } from 'node:timers/promises';
 
 dotenv.config();
 
@@ -413,20 +414,6 @@ async function createCompletionWithRetry(params, signal) {
       } catch (error) {
         signal?.throwIfAborted();
         lastError = error;
-        const errMsg = String(error?.message || '').toLowerCase();
-        const isTimeout =
-          error.name === 'APIConnectionTimeoutError' ||
-          errMsg.includes('timed out') ||
-          errMsg.includes('timeout');
-        const isTransient =
-          error.status === 502 ||
-          error.status === 503 ||
-          errMsg.includes('502') ||
-          errMsg.includes('503') ||
-          errMsg.includes('stream_failed') ||
-          errMsg.includes("supplier's end") ||
-          isTimeout;
-
         if (entry.name === 'configuredRouter') {
           // If transient 502/503/timeout, wait for reset cooldown and retry reqModel before moving to next candidate
           let currentErr = lastError;
@@ -442,11 +429,6 @@ async function createCompletionWithRetry(params, signal) {
               currentErr.name === 'APIConnectionTimeoutError' ||
               currentMsg.includes('timed out') ||
               currentMsg.includes('timeout');
-              currentMsg.includes('502') ||
-              currentMsg.includes('503') ||
-              currentErr.name === 'APIConnectionTimeoutError' ||
-              currentMsg.includes('timed out') ||
-              currentMsg.includes('timeout');
             if (!currentTransient) break;
 
             const cooldown = parseResetCooldownSeconds(String(currentErr?.message || ''));
@@ -457,9 +439,7 @@ async function createCompletionWithRetry(params, signal) {
             console.warn(
               `[AI Gateway] Local router transient notice on ${reqModel} (${currentErr.status || currentErr.message}). Retrying in ${waitSeconds}s...`,
             );
-            await new Promise((r) =>
-              setTimeout(r, Math.min(waitSeconds * 1000, Math.max(0, deadline - Date.now()))),
-            );
+            await delay(Math.min(waitSeconds * 1000, Math.max(0, deadline - Date.now())), undefined, { signal });
             const retryTimeout = deadline - Date.now();
             if (retryTimeout <= 0) break;
             try {
@@ -471,6 +451,7 @@ async function createCompletionWithRetry(params, signal) {
               });
               if (retryRes) return retryRes;
             } catch (rErr) {
+              signal?.throwIfAborted();
               currentErr = rErr;
               lastError = rErr;
             }
@@ -547,10 +528,11 @@ function isModelUnavailable(error) {
   );
 }
 
-async function waitForSlot() {
+async function waitForSlot(signal) {
   while (!canMakeRequest()) {
-    await new Promise((r) => setTimeout(r, 100));
+    await delay(100, undefined, { signal });
   }
+  signal?.throwIfAborted();
   rateLimiter.requests.push(Date.now());
 }
 
@@ -581,7 +563,7 @@ export async function callAI({
   signal = undefined,
 }) {
   signal?.throwIfAborted();
-  await waitForSlot();
+  await waitForSlot(signal);
   signal?.throwIfAborted();
 
   const resolved = resolveClientAndModel(byok, model);
@@ -636,8 +618,8 @@ export async function callAI({
       // recovers it instead of failing the whole part (coder/3D/verifier).
       if (!isStreamCutError(e)) throw e;
       console.warn('[AI Gateway] Non-stream response cut, retrying once...');
-      await new Promise((r) => setTimeout(r, 200));
-      await waitForSlot();
+      await delay(200, undefined, { signal });
+      await waitForSlot(signal);
       response = await createCompletionWithRetry(params, signal);
     }
     // Provider reasoning fields remain private; they are not a final answer.

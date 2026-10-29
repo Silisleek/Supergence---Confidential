@@ -8,7 +8,31 @@ import {
   validateProjectModule,
   validateProjectPlan,
   generateBrowserProject,
+  projectPreviewHeaders,
+  routeProjectPreview,
 } from '../../server/services/browserProjectBuilder.js';
+test('project preflight credentials are limited to its own local files and Three.js', () => {
+  const options = { origin: 'http://127.0.0.1:3009', directory: 'projects/room', secret: 'fixture' };
+  const request = (url, method = 'GET') => ({ url: () => url, method: () => method, headers: () => ({ accept: '*/*' }) });
+  assert.equal(projectPreviewHeaders(request('http://127.0.0.1:3009/workspace/projects/room/main.js'), options).authorization, 'Bearer fixture');
+  assert.equal(projectPreviewHeaders(request('http://127.0.0.1:3009/vendor/three/build/three.module.js'), options).authorization, 'Bearer fixture');
+  for (const url of ['https://attacker.example/workspace/projects/room/main.js', 'http://127.0.0.1:3010/workspace/projects/room/main.js', 'http://127.0.0.1:3009/api/settings', 'http://127.0.0.1:3009/workspace/projects/other/private.txt', 'http://127.0.0.1:3009/workspace/projects/room/%2e%2e%2fprivate.txt'])
+    assert.equal(projectPreviewHeaders(request(url), options), null);
+  assert.equal(projectPreviewHeaders(request('http://127.0.0.1:3009/workspace/projects/room/main.js', 'POST'), options), null);
+});
+test('project preflight does not carry credentials across redirects', async () => {
+  const options = { origin: 'http://127.0.0.1:3009', directory: 'demo', secret: 'fixture' };
+  const response = { status: () => 302 };
+  let fetched, fulfilled;
+  await routeProjectPreview({
+    request: () => ({ url: () => 'http://127.0.0.1:3009/workspace/demo/file.js', method: () => 'GET', headers: () => ({}) }),
+    fetch: async (value) => { fetched = value; return response; },
+    fulfill: async (value) => { fulfilled = value; },
+  }, options);
+  assert.equal(fetched.maxRedirects, 0);
+  assert.equal(fetched.headers.authorization, 'Bearer fixture');
+  assert.equal(fulfilled.response, response);
+});
 test('module contracts reject full applications and wrong exports before browser initialization', async () => {
   await assert.rejects(
     validateProjectModule('const scene={};requestAnimationFrame(()=>{});', 'materials.js'),

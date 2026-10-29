@@ -12,11 +12,14 @@ test('HTTP and WebSocket require the same private session', async (t) => {
   const app = express();
   app.use(localBoundary, session.middleware);
   app.get('/api/private', (_req, res) => res.json({ ok: true }));
+  app.get('/workspace/private.txt', (_req, res) => res.send('private'));
   const server = http.createServer(app);
   const ws = new WebSocketServer({ server, verifyClient: ({ req }) => isLocalRequest(req) && session.authorized(req) });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   t.after(() => { ws.clients.forEach((client) => client.terminate()); ws.close(); server.close(); });
   const url = `http://127.0.0.1:${server.address().port}`;
+  assert.equal((await fetch(`${url}/workspace/private.txt`, { headers: { referer: `${url}/workspace/preview.html` } })).status, 401);
+  assert.equal((await fetch(`${url}/api/private`, { headers: { origin: 'null', referer: `${url}/workspace/preview.html` } })).status, 403);
   assert.equal((await fetch(`${url}/api/private`)).status, 401);
   assert.equal((await fetch(`${url}/__session?token=${'b'.repeat(64)}`, { redirect: 'manual' })).status, 401);
   const pairing = await fetch(`${url}/__session?token=${secret}`, { redirect: 'manual' });

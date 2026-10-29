@@ -24,22 +24,6 @@ export function createSessionAuth(secret = process.env.SIS_SESSION_SECRET || ran
     const cookie = cookies.map((item) => item.trim()).find((item) => item.startsWith(`${name}=`));
     return matches(bearer) || matches(cookie?.slice(name.length + 1));
   }
-  function isWorkspacePreviewSubresource(req) {
-    if (!req.path.startsWith('/workspace/')) return false;
-    const referer = req.headers.referer;
-    if (!referer) return false;
-    try {
-      const refUrl = new URL(referer);
-      const host = new URL(`http://${req.headers.host}`);
-      return (
-        ['localhost', '127.0.0.1', '[::1]'].includes(refUrl.hostname) &&
-        refUrl.port === host.port &&
-        refUrl.pathname.startsWith('/workspace/')
-      );
-    } catch {
-      return false;
-    }
-  }
   function middleware(req, res, next) {
     if (req.path === '/__session' && req.method === 'GET') {
       if (!matches(req.query.token)) return res.status(401).send('Invalid session link.');
@@ -48,7 +32,7 @@ export function createSessionAuth(secret = process.env.SIS_SESSION_SECRET || ran
       res.setHeader('Set-Cookie', `${cookieName(req)}=${secret}; Path=/; HttpOnly; SameSite=Strict`);
       return res.redirect(303, '/');
     }
-    if (!authorized(req) && !isWorkspacePreviewSubresource(req)) return res.status(401).json({ error: 'Open the session link printed by Supergence to connect.' });
+    if (!authorized(req)) return res.status(401).json({ error: 'Open the session link printed by Supergence to connect.' });
     next();
   }
   return { secret, authorized, middleware };

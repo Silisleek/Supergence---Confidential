@@ -23,6 +23,10 @@ export default defineConfig(({ mode, command }) => {
         ],
       },
       proxy: {
+        '/__project-preview': {
+          target: `http://127.0.0.1:${backendPort}`,
+          changeOrigin: true,
+        },
         '/__session': {
           target: `http://127.0.0.1:${backendPort}`,
           changeOrigin: true,

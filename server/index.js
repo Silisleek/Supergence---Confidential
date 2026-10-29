@@ -14,6 +14,7 @@ import { registerConversationWorkspaceRoutes } from './routes/conversation-works
 import { runtimeAccess } from './services/runtimeAccess.js';
 import { childEnvironment } from './security/child-environment.js';
 import { assertBrowserEnabled, browserAccessMiddleware } from './security/browser-access.js';
+import { createProjectPreviewService } from './security/project-preview.js';
 import { registerAgentProfileRoutes } from './routes/agent-profiles.js';
 import { registerAgentConversationRoutes } from './routes/agent-conversations.js';
 import { configureAgentConversationRuntime } from './services/agentConversations.js';
@@ -214,6 +215,16 @@ server.requestTimeout = 15 * 60 * 1000;
 server.keepAliveTimeout = 65000;
 const PORT = process.env.PORT || 3001;
 
+const projectPreview = createProjectPreviewService({
+  workspace,
+  vendorRoot: path.join(__dirname, '../node_modules/three'),
+  transformHtml: preparePreviewHtml,
+  filesEnabled: () => runtimeAccess.settings.files,
+});
+runtimeAccess.onChange((next, previous) => {
+  if (previous.files && !next.files) projectPreview.revokeAll();
+});
+app.use('/__project-preview', projectPreview.serve);
 app.use(localBoundary);
 app.use(sessionAuth.middleware);
 app.use(express.json({ limit: '50mb' }));
@@ -223,6 +234,7 @@ app.use('/api/workspace', (req, res, next) => {
     return res.status(403).json({ error: 'File access is disabled in Access settings.' });
   next();
 });
+app.post('/api/workspace/preview-grants', projectPreview.issue);
 
 // Aggressive cache-busting headers to prevent stale browser caches across updates
 app.use((req, res, next) => {
@@ -245,7 +257,10 @@ const resourcesPath = path.join(__dirname, '../resources');
 
 registerPageRoutes(app);
 
-app.use('/vendor/three', express.static(path.join(__dirname, '../node_modules/three')));
+app.use('/vendor/three', (_req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  next();
+}, express.static(path.join(__dirname, '../node_modules/three')));
 app.use(express.static(clientPath, { etag: false, lastModified: false, maxAge: 0 }));
 if (fs.existsSync(distPath)) {
   app.use(express.static(distPath, { etag: false, lastModified: false, maxAge: 0 }));
@@ -392,7 +407,8 @@ const PREVIEW_PROBE_SCRIPT = `
 
   window.addEventListener('error', function(e) {
     try {
-      var msg = e.message || 'JavaScript runtime error';
+      var resource = e.target && e.target !== window && (e.target.src || e.target.href);
+      var msg = e.message || (resource ? 'A preview resource could not load.' : 'JavaScript runtime error');
       if (isBenign(msg)) return;
       window.parent.postMessage({
         type: 'sis-preview-error',
@@ -403,7 +419,7 @@ const PREVIEW_PROBE_SCRIPT = `
         stack: e.error ? (e.error.stack || '') : ''
       }, '*');
     } catch (_) {}
-  });
+  }, true);
 
   window.addEventListener('unhandledrejection', function(e) {
     try {
@@ -423,6 +439,19 @@ const PREVIEW_PROBE_SCRIPT = `
 })();
 </script>
 `;
+
+function preparePreviewHtml(source, vendorPrefix = null) {
+  let content = injectImportmapIfNeeded(source);
+  if (vendorPrefix) content = content.replaceAll('"/vendor/three/', `"${vendorPrefix}/`);
+  if (!content.includes('sis-diagnostic-probe')) {
+    if (/<head\b[^>]*>/i.test(content)) content = content.replace(/<head\b[^>]*>/i, (head) => `${head}\n${PREVIEW_PROBE_SCRIPT}`);
+    else if (/<script\b/i.test(content)) content = content.replace(/<script\b/i, (script) => `${PREVIEW_PROBE_SCRIPT}\n${script}`);
+    else if (content.includes('</body>')) content = content.replace('</body>', `${PREVIEW_PROBE_SCRIPT}\n</body>`);
+    else if (content.includes('</html>')) content = content.replace('</html>', `${PREVIEW_PROBE_SCRIPT}\n</html>`);
+    else content += `\n${PREVIEW_PROBE_SCRIPT}`;
+  }
+  return content;
+}
 
 // Serve existing workspace previews without following linked paths.
 app.use('/workspace', (req, res, next) => {
@@ -444,12 +473,7 @@ app.use('/workspace', (req, res, next) => {
   if (!fs.existsSync(fullPath) || !fs.statSync(fullPath).isFile()) return res.status(404).end();
   if (!/\.html?$/i.test(relative)) return res.sendFile(fullPath);
   try {
-    let content = injectImportmapIfNeeded(fs.readFileSync(fullPath, 'utf8'));
-    if (!content.includes('sis-diagnostic-probe')) {
-      if (content.includes('</body>')) content = content.replace('</body>', `${PREVIEW_PROBE_SCRIPT}\n</body>`);
-      else if (content.includes('</html>')) content = content.replace('</html>', `${PREVIEW_PROBE_SCRIPT}\n</html>`);
-      else content += `\n${PREVIEW_PROBE_SCRIPT}`;
-    }
+    const content = preparePreviewHtml(fs.readFileSync(fullPath, 'utf8'));
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     return res.send(content);
   } catch (error) {

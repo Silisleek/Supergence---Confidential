@@ -83,6 +83,23 @@ try{
 </script></html>`;
 export { runtimeHTML as projectRuntimeHTML };
 
+export function projectPreviewHeaders(request, { origin, directory, secret }) {
+  const target = new URL(request.url());
+  if (target.origin !== origin || !['GET', 'HEAD'].includes(request.method())) return null;
+  let pathname;
+  try { pathname = decodeURIComponent(target.pathname); } catch { return null; }
+  if (pathname.includes('\\') || pathname.split('/').some((segment) => segment === '.' || segment === '..')) return null;
+  if (!(pathname.startsWith(`/workspace/${directory}/`) || pathname.startsWith('/vendor/three/'))) return null;
+  return { ...request.headers(), authorization: `Bearer ${secret}` };
+}
+
+export async function routeProjectPreview(route, options) {
+  const headers = projectPreviewHeaders(route.request(), options);
+  if (!headers) return route.continue();
+  const response = await route.fetch({ headers, maxRedirects: 0 });
+  return route.fulfill({ response });
+}
+
 async function inspectProject(directory, fullPath) {
   const port = Number(process.env.ACTIVE_SERVER_PORT);
   if (!port)
@@ -92,11 +109,10 @@ async function inspectProject(directory, fullPath) {
   const browser = await chromium.launch({ channel: 'chrome', headless: true });
   try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 960 } });
-    if (sessionAuth?.secret) {
-      await page.setExtraHTTPHeaders({
-        authorization: `Bearer ${sessionAuth.secret}`,
-      });
-    }
+    const origin = `http://127.0.0.1:${port}`;
+    await page.route(`${origin}/**`, (route) =>
+      routeProjectPreview(route, { origin, directory, secret: sessionAuth.secret }),
+    );
     const errors = [],
       warnings = [];
     page.on('pageerror', (error) => errors.push(error.stack || error.message));
