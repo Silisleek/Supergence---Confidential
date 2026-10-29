@@ -11,7 +11,9 @@ import { synthesizeSplit3DGame } from './split-game-generator.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const sharedWorkspaceRoot = process.env.SIS_WORKSPACE_DIR ? path.resolve(process.env.SIS_WORKSPACE_DIR) : path.resolve(__dirname, '../../workspace');
+const sharedWorkspaceRoot = process.env.SIS_WORKSPACE_DIR
+  ? path.resolve(process.env.SIS_WORKSPACE_DIR)
+  : path.resolve(__dirname, '../../workspace');
 const workspaceRoot = () => currentWorkspace()?.root || sharedWorkspaceRoot;
 
 export class Studio3DGameEngine {

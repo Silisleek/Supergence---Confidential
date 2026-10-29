@@ -30,7 +30,12 @@ const DATA_DIR = process.env.SIS_DATA_DIR
   ? path.resolve(process.env.SIS_DATA_DIR)
   : path.join(ROOT_DIR, 'data');
 function profileDirectory(agentId, desktop = false) {
-  if (typeof agentId !== 'string' || !/^agent-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(agentId) || agentId.length > 100 || agentId.endsWith('-desktop'))
+  if (
+    typeof agentId !== 'string' ||
+    !/^agent-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(agentId) ||
+    agentId.length > 100 ||
+    agentId.endsWith('-desktop')
+  )
     throw new Error('Invalid agent ID for browser profile.');
   const base = resolveWithinRoot(DATA_DIR, 'browser-profiles');
   const profile = resolveWithinRoot(base, desktop ? `${agentId}-desktop` : agentId);
@@ -395,7 +400,8 @@ export class AgentBrowserManager {
   async createSession(agentId, generation) {
     const checkAccess = () => {
       assertBrowserEnabled();
-      if (generation !== this.browserGeneration) throw new Error('Browser access was revoked during launch.');
+      if (generation !== this.browserGeneration)
+        throw new Error('Browser access was revoked during launch.');
     };
     checkAccess();
     const agentProfileDir = profileDirectory(agentId);
@@ -454,122 +460,127 @@ export class AgentBrowserManager {
         ],
       });
     } catch (launchErr) {
-      throw new Error(`Unable to open the browser profile for ${agentId}: ${launchErr.message}`, { cause: launchErr });
-    }
-
-    try {
-    checkAccess();
-    for (const host of ['127.0.0.1', 'localhost']) {
-      await context.route(`http://${host}:${this.serverPort}/workspace/**`, (route) =>
-        route.continue({
-          headers: { ...route.request().headers(), authorization: `Bearer ${sessionAuth.secret}` },
-        }),
-      );
-    }
-    const pages = context.pages();
-    const initialPage = pages.length > 0 ? pages[0] : await context.newPage();
-
-    // Context-wide stealth & anti-automation detection scripts
-    await context.addInitScript(() => {
-      try {
-        Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-        window.navigator.chrome = {
-          runtime: {},
-          app: {},
-          csi: () => {},
-          loadTimes: () => {},
-        };
-        Object.defineProperty(navigator, 'plugins', {
-          get: () => [1, 2, 3, 4, 5],
-        });
-        Object.defineProperty(navigator, 'languages', {
-          get: () => ['en-US', 'en'],
-        });
-      } catch (_) {}
-    });
-    await context.addInitScript(this._generateCursorInjectionScript(meta));
-
-    const tabId = 'tab-' + Math.random().toString(36).substring(2, 9);
-    const startUrl = this.getHomeUrl(agentId);
-
-    const initialTab = {
-      id: tabId,
-      title: `${meta.name}'s Chrome Home`,
-      url: startUrl,
-      page: initialPage,
-      cdpSession: null,
-      createdAt: Date.now(),
-    };
-
-    const session = {
-      agentId,
-      meta,
-      context,
-      page: initialPage,
-      cdpSession: null,
-      tabs: [initialTab],
-      activeTabId: tabId,
-      currentUrl: startUrl,
-      pageTitle: `${meta.name}'s Chrome Home`,
-      isLoading: false,
-      canGoBack: false,
-      canGoForward: false,
-      cursor: {
-        x: 640,
-        y: 400,
-        visible: true,
-        action: 'idle',
-        label: `${meta.name} ${meta.avatar}`,
-        targetSelector: null,
-        timestamp: Date.now(),
-      },
-      lastScreenshot: null,
-      lastScreenshotTime: 0,
-      activeTask: null,
-      isExecuting: false,
-      history: [],
-    };
-
-    this._attachPageListeners(session, initialTab);
-    await this._attachCdpScreencast(session, initialTab);
-
-    // Auto-track new tabs opened by links or scripts (e.g. target="_blank")
-    context.on('page', async (newPage) => {
-      try {
-        if (session.tabs.some((t) => t.page === newPage)) return;
-        const newTabId = 'tab-' + Math.random().toString(36).substring(2, 9);
-        await newPage
-          .addInitScript(() => {
-            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-          })
-          .catch(() => {});
-        await newPage.addInitScript(this._generateCursorInjectionScript(meta)).catch(() => {});
-        if (session.tabs.some((t) => t.page === newPage)) return;
-        const newTabObj = {
-          id: newTabId,
-          title: 'New Tab',
-          url: newPage.url(),
-          page: newPage,
-          cdpSession: null,
-          createdAt: Date.now(),
-        };
-        this._attachPageListeners(session, newTabObj);
-        session.tabs.push(newTabObj);
-        await this.switchTab(agentId, newTabId);
-      } catch (_) {}
-    });
-
-    checkAccess();
-    this.sessions.set(agentId, session);
-
-    // Initial navigation to agent's default home tab if non-blank
-    if (startUrl && startUrl !== 'about:blank') {
-      this.navigate(agentId, startUrl).catch((e) => {
-        console.warn(`[AgentBrowserManager] Initial home nav notice for ${agentId}:`, e.message);
+      throw new Error(`Unable to open the browser profile for ${agentId}: ${launchErr.message}`, {
+        cause: launchErr,
       });
     }
 
-    return session;
+    try {
+      checkAccess();
+      for (const host of ['127.0.0.1', 'localhost']) {
+        await context.route(`http://${host}:${this.serverPort}/workspace/**`, (route) =>
+          route.continue({
+            headers: {
+              ...route.request().headers(),
+              authorization: `Bearer ${sessionAuth.secret}`,
+            },
+          }),
+        );
+      }
+      const pages = context.pages();
+      const initialPage = pages.length > 0 ? pages[0] : await context.newPage();
+
+      // Context-wide stealth & anti-automation detection scripts
+      await context.addInitScript(() => {
+        try {
+          Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+          window.navigator.chrome = {
+            runtime: {},
+            app: {},
+            csi: () => {},
+            loadTimes: () => {},
+          };
+          Object.defineProperty(navigator, 'plugins', {
+            get: () => [1, 2, 3, 4, 5],
+          });
+          Object.defineProperty(navigator, 'languages', {
+            get: () => ['en-US', 'en'],
+          });
+        } catch (_) {}
+      });
+      await context.addInitScript(this._generateCursorInjectionScript(meta));
+
+      const tabId = 'tab-' + Math.random().toString(36).substring(2, 9);
+      const startUrl = this.getHomeUrl(agentId);
+
+      const initialTab = {
+        id: tabId,
+        title: `${meta.name}'s Chrome Home`,
+        url: startUrl,
+        page: initialPage,
+        cdpSession: null,
+        createdAt: Date.now(),
+      };
+
+      const session = {
+        agentId,
+        meta,
+        context,
+        page: initialPage,
+        cdpSession: null,
+        tabs: [initialTab],
+        activeTabId: tabId,
+        currentUrl: startUrl,
+        pageTitle: `${meta.name}'s Chrome Home`,
+        isLoading: false,
+        canGoBack: false,
+        canGoForward: false,
+        cursor: {
+          x: 640,
+          y: 400,
+          visible: true,
+          action: 'idle',
+          label: `${meta.name} ${meta.avatar}`,
+          targetSelector: null,
+          timestamp: Date.now(),
+        },
+        lastScreenshot: null,
+        lastScreenshotTime: 0,
+        activeTask: null,
+        isExecuting: false,
+        history: [],
+      };
+
+      this._attachPageListeners(session, initialTab);
+      await this._attachCdpScreencast(session, initialTab);
+
+      // Auto-track new tabs opened by links or scripts (e.g. target="_blank")
+      context.on('page', async (newPage) => {
+        try {
+          if (session.tabs.some((t) => t.page === newPage)) return;
+          const newTabId = 'tab-' + Math.random().toString(36).substring(2, 9);
+          await newPage
+            .addInitScript(() => {
+              Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+            })
+            .catch(() => {});
+          await newPage.addInitScript(this._generateCursorInjectionScript(meta)).catch(() => {});
+          if (session.tabs.some((t) => t.page === newPage)) return;
+          const newTabObj = {
+            id: newTabId,
+            title: 'New Tab',
+            url: newPage.url(),
+            page: newPage,
+            cdpSession: null,
+            createdAt: Date.now(),
+          };
+          this._attachPageListeners(session, newTabObj);
+          session.tabs.push(newTabObj);
+          await this.switchTab(agentId, newTabId);
+        } catch (_) {}
+      });
+
+      checkAccess();
+      this.sessions.set(agentId, session);
+
+      // Initial navigation to agent's default home tab if non-blank
+      if (startUrl && startUrl !== 'about:blank') {
+        this.navigate(agentId, startUrl).catch((e) => {
+          console.warn(`[AgentBrowserManager] Initial home nav notice for ${agentId}:`, e.message);
+        });
+      }
+
+      return session;
     } catch (error) {
       await context.close().catch(() => {});
       throw error;
@@ -986,13 +997,14 @@ export class AgentBrowserManager {
       }
     }
 
-    if (isActive()) this.broadcast('agent-browser-state', {
-      agentId,
-      status: 'NAVIGATING',
-      url: cleanUrl,
-      title: 'Loading...',
-      timestamp: Date.now(),
-    });
+    if (isActive())
+      this.broadcast('agent-browser-state', {
+        agentId,
+        status: 'NAVIGATING',
+        url: cleanUrl,
+        title: 'Loading...',
+        timestamp: Date.now(),
+      });
 
     try {
       await page.goto(cleanUrl, {
@@ -1002,7 +1014,10 @@ export class AgentBrowserManager {
 
       const pageUrl = page.url();
       const pageTitle = await page.title();
-      if (tab) { tab.url = pageUrl; tab.title = pageTitle; }
+      if (tab) {
+        tab.url = pageUrl;
+        tab.title = pageTitle;
+      }
       if (isActive()) {
         session.currentUrl = pageUrl;
         session.pageTitle = pageTitle;
@@ -1027,15 +1042,16 @@ export class AgentBrowserManager {
         await this._captureAndBroadcastFrame(session);
       }
 
-      if (isActive()) this.broadcast('agent-browser-state', {
-        agentId,
-        status: 'READY',
-        url: pageUrl,
-        title: pageTitle,
-        activeTabId: session.activeTabId,
-        tabs: this.getTabs(agentId),
-        timestamp: Date.now(),
-      });
+      if (isActive())
+        this.broadcast('agent-browser-state', {
+          agentId,
+          status: 'READY',
+          url: pageUrl,
+          title: pageTitle,
+          activeTabId: session.activeTabId,
+          tabs: this.getTabs(agentId),
+          timestamp: Date.now(),
+        });
 
       return {
         success: true,
@@ -1046,14 +1062,15 @@ export class AgentBrowserManager {
     } catch (err) {
       if (isActive()) session.isLoading = false;
       console.warn(`[AgentBrowserManager] Navigation error on ${cleanUrl}:`, err.message);
-      if (isActive()) this.broadcast('agent-browser-state', {
-        agentId,
-        status: 'ERROR',
-        error: err.message,
-        url: session.currentUrl,
-        title: session.pageTitle,
-        timestamp: Date.now(),
-      });
+      if (isActive())
+        this.broadcast('agent-browser-state', {
+          agentId,
+          status: 'ERROR',
+          error: err.message,
+          url: session.currentUrl,
+          title: session.pageTitle,
+          timestamp: Date.now(),
+        });
       return {
         success: false,
         agentId,
@@ -1644,10 +1661,16 @@ export class AgentBrowserManager {
       const agentProfileDir = profileDirectory(agentId);
       const filepath = resolveWithinRoot(agentProfileDir, customFilepath || 'cookies.enc.json');
       const cookies = await session.context.cookies();
-      const envelope = enterpriseVault.encrypt(cookies, { persist: false, context: `browser-cookies:${agentId}` });
+      const envelope = enterpriseVault.encrypt(cookies, {
+        persist: false,
+        context: `browser-cookies:${agentId}`,
+      });
       const temporary = `${filepath}.${randomUUID()}.tmp`;
       try {
-        fs.writeFileSync(temporary, JSON.stringify({ version: 1, encrypted: true, envelope }), { flag: 'wx', mode: 0o600 });
+        fs.writeFileSync(temporary, JSON.stringify({ version: 1, encrypted: true, envelope }), {
+          flag: 'wx',
+          mode: 0o600,
+        });
         fs.renameSync(temporary, filepath);
       } finally {
         if (fs.existsSync(temporary)) fs.unlinkSync(temporary);
@@ -1663,18 +1686,26 @@ export class AgentBrowserManager {
     try {
       const agentProfileDir = profileDirectory(agentId);
       const encryptedPath = resolveWithinRoot(agentProfileDir, 'cookies.enc.json');
-      const filepath = resolveWithinRoot(agentProfileDir, customFilepath ||
-        (fs.existsSync(encryptedPath) ? 'cookies.enc.json' : 'cookies.json'));
+      const filepath = resolveWithinRoot(
+        agentProfileDir,
+        customFilepath || (fs.existsSync(encryptedPath) ? 'cookies.enc.json' : 'cookies.json'),
+      );
       if (!fs.existsSync(filepath)) {
         return { success: false, agentId, error: `Cookie file not found at ${filepath}` };
       }
       const raw = fs.readFileSync(filepath, 'utf8');
       const payload = JSON.parse(raw);
       const legacyPlaintext = Array.isArray(payload);
-      if (!legacyPlaintext && (payload?.version !== 1 || payload.encrypted !== true ||
-          payload.envelope?.context !== `browser-cookies:${agentId}`))
+      if (
+        !legacyPlaintext &&
+        (payload?.version !== 1 ||
+          payload.encrypted !== true ||
+          payload.envelope?.context !== `browser-cookies:${agentId}`)
+      )
         throw new Error('Invalid encrypted cookie export.');
-      const cookies = legacyPlaintext ? payload : enterpriseVault.decrypt(payload.envelope, { parseJSON: true });
+      const cookies = legacyPlaintext
+        ? payload
+        : enterpriseVault.decrypt(payload.envelope, { parseJSON: true });
       if (Array.isArray(cookies)) {
         await session.context.addCookies(cookies);
         return { success: true, agentId, cookieCount: cookies.length, filepath, legacyPlaintext };
@@ -4000,7 +4031,9 @@ Always output valid JSON ONLY with this schema:
       Promise.all(sessions.map((session) => Promise.resolve().then(() => session.context.close()))),
       Promise.allSettled(pending),
     ]).then(() => undefined);
-    this.revocation.catch((error) => console.error('[AgentBrowserManager] Browser revocation failed:', error.message));
+    this.revocation.catch((error) =>
+      console.error('[AgentBrowserManager] Browser revocation failed:', error.message),
+    );
     return this.revocation;
   }
 

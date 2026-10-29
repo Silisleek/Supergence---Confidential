@@ -14,7 +14,11 @@ test('local boundary rejects remote clients, hostile origins and rebinding hosts
   assert.equal(isLocalRequest(request('evil.example:3009')), false);
   assert.equal(isLocalRequest(request('localhost:3009', null, '192.168.1.2')), false);
   assert.equal(isLocalRequest(request('localhost:3009', 'null')), false);
-  const preview = { ...request('localhost:3009', 'null'), method: 'GET', url: '/workspace/project/index.js' };
+  const preview = {
+    ...request('localhost:3009', 'null'),
+    method: 'GET',
+    url: '/workspace/project/index.js',
+  };
   assert.equal(isLocalRequest(preview), false);
   preview.headers.authorization = `Bearer ${sessionAuth.secret}`;
   assert.equal(isLocalRequest(preview), true);

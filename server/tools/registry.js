@@ -92,7 +92,9 @@ function resolveWorkspaceHtmlFile(filepath) {
     return null;
   }
 
-  const clean = String(filepath).trim().replace(/^workspace[\\\/]/i, '');
+  const clean = String(filepath)
+    .trim()
+    .replace(/^workspace[\\\/]/i, '');
   const candidate = resolveWithinRoot(root, clean);
   if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) return candidate;
   return null;
@@ -878,7 +880,8 @@ function playProceduralSound(ctx) {
           keyboardPattern: hasControls,
           animationFramePattern: hasRAF,
         },
-        limitation: 'Text matches can include comments and do not establish actual scene contents, rendering, draw calls, or frame rate.',
+        limitation:
+          'Text matches can include comments and do not establish actual scene contents, rendering, draw calls, or frame rate.',
         status: 'SOURCE_ANALYZED',
       };
     },
@@ -2555,7 +2558,10 @@ function playProceduralSound(ctx) {
           if (resolvedFile) {
             targetUrl = pathToFileURL(resolvedFile).href;
           } else {
-            return { success: false, error: 'No workspace HTML file is available for a screenshot.' };
+            return {
+              success: false,
+              error: 'No workspace HTML file is available for a screenshot.',
+            };
           }
         }
 
@@ -2582,7 +2588,9 @@ function playProceduralSound(ctx) {
               path: outPath,
               size: fs.statSync(outPath).size,
               targetUrl,
-              limitation: selector ? 'The screenshot captures the viewport; selector-specific capture is not available.' : undefined,
+              limitation: selector
+                ? 'The screenshot captures the viewport; selector-specific capture is not available.'
+                : undefined,
               message: `Visual screenshot captured successfully: ${safeName}`,
             };
           }
@@ -2597,8 +2605,12 @@ function playProceduralSound(ctx) {
           error: `Screenshot failed: ${err.message}`,
         };
       } finally {
-        try { if (temporaryPath && fs.existsSync(temporaryPath)) fs.unlinkSync(temporaryPath); } catch (_) {}
-        try { if (profileDir) fs.rmSync(profileDir, { recursive: true, force: true }); } catch (_) {}
+        try {
+          if (temporaryPath && fs.existsSync(temporaryPath)) fs.unlinkSync(temporaryPath);
+        } catch (_) {}
+        try {
+          if (profileDir) fs.rmSync(profileDir, { recursive: true, force: true });
+        } catch (_) {}
       }
     },
   },
@@ -3795,8 +3807,7 @@ function playProceduralSound(ctx) {
 
   browser_load_cookies: {
     name: 'browser_load_cookies',
-    description:
-      'Load a cookie export from the agent browser profile after explicit review.',
+    description: 'Load a cookie export from the agent browser profile after explicit review.',
     parameters: {
       agentId: { type: 'string', description: 'Agent ID owning session' },
       filepath: { type: 'string', description: 'Optional path inside this agent browser profile' },
@@ -3811,16 +3822,14 @@ function playProceduralSound(ctx) {
   analyze_image_multiperspective: {
     name: 'analyze_image_multiperspective',
     description:
-      'Generate thermal colormap, depth model, and original image packaged into a complete .zip artifact bundle for any image file.',
+      'Create warm-tinted and inverted-blur visual effects for a workspace image, with the original in a ZIP bundle. These effects do not measure temperature or depth.',
     parameters: {
       image_path: { type: 'string', description: 'Path to target image file' },
     },
     required: ['image_path'],
     execute: async (args = {}) => {
       const { processImage } = await import('../interpreter/index.js');
-      const target = path.isAbsolute(args.image_path)
-        ? args.image_path
-        : path.resolve(workspaceRoot(), args.image_path);
+      const target = resolveWithinRoot(workspaceRoot(), args.image_path);
       return await processImage(target);
     },
   },
@@ -4414,6 +4423,11 @@ class ToolRegistry {
   isToolExposableToModel(tool) {
     if (!tool || !tool.name || typeof tool.execute !== 'function') return false;
     if (tool.quarantined) return false;
+    if (
+      (tool.name.startsWith('figcraft_') || tool.name === 'open_design_to_figcraft') &&
+      !supergenceDesignEngine.figcraftAvailable()
+    )
+      return false;
 
     // Built-in registry tools are always exposed.
     if (!tool.isDynamicSkill && !tool.isDynamicCustom && !tool.isAdaForged) return true;

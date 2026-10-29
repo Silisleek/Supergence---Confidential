@@ -26,8 +26,12 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_ROOT = process.env.SIS_DATA_DIR ? path.resolve(process.env.SIS_DATA_DIR) : path.resolve(__dirname, '../../data');
-const WORKSPACE_ROOT = process.env.SIS_WORKSPACE_DIR ? path.resolve(process.env.SIS_WORKSPACE_DIR) : path.resolve(__dirname, '../../workspace');
+const DATA_ROOT = process.env.SIS_DATA_DIR
+  ? path.resolve(process.env.SIS_DATA_DIR)
+  : path.resolve(__dirname, '../../data');
+const WORKSPACE_ROOT = process.env.SIS_WORKSPACE_DIR
+  ? path.resolve(process.env.SIS_WORKSPACE_DIR)
+  : path.resolve(__dirname, '../../workspace');
 const STATE_FILE = path.join(DATA_ROOT, 'improvement/autonomous-learning.json');
 
 // Default cycle interval: 3 minutes (180000 ms) for non-stop 24/7 continuous self-learning
@@ -894,8 +898,7 @@ $$\\forall t \\ge 0, \\quad \\frac{d\\Phi(t)}{dt} \\le -\\alpha \\Phi(t) + \\bet
 
       // 1. Sync generated theories from system or shared theories directory
       const workspaceTheoriesDir =
-        this.currentSystem?.paths?.wsTheoriesDir ||
-        path.join(WORKSPACE_ROOT, 'theories');
+        this.currentSystem?.paths?.wsTheoriesDir || path.join(WORKSPACE_ROOT, 'theories');
       if (!fs.existsSync(workspaceTheoriesDir))
         fs.mkdirSync(workspaceTheoriesDir, { recursive: true });
 
@@ -997,8 +1000,7 @@ $$\\forall t \\ge 0, \\quad \\frac{d\\Phi(t)}{dt} \\le -\\alpha \\Phi(t) + \\bet
               : [];
 
             const codeProtoName = file.replace(/\.md$/, '_prototype.js');
-            const wsRoot =
-              this.currentSystem?.paths?.workspaceDir || WORKSPACE_ROOT;
+            const wsRoot = this.currentSystem?.paths?.workspaceDir || WORKSPACE_ROOT;
             const codeProtoPath = path.join(wsRoot, codeProtoName);
             const hasCode = fs.existsSync(codeProtoPath);
 
@@ -2909,10 +2911,7 @@ ${(synthData.pitfalls || []).map((p) => `- ⚠️ ${p}`).join('\n')}
           ? Number(verification.reward.toFixed(4))
           : null;
 
-      const skillsDir = path.join(
-        DATA_ROOT,
-        isObserved ? 'skills/learned' : 'skills/candidates',
-      );
+      const skillsDir = path.join(DATA_ROOT, isObserved ? 'skills/learned' : 'skills/candidates');
       if (!fs.existsSync(skillsDir)) fs.mkdirSync(skillsDir, { recursive: true });
 
       const fullPath = path.join(skillsDir, filename);
@@ -4261,10 +4260,8 @@ Output JSON only in this exact schema:
     }
 
     // PERSIST FILES ON DISK (Both in theories and workspace/theories for instant editor access)
-    const theoriesDir =
-        this.currentSystem?.paths?.theoriesDir || path.join(DATA_ROOT, 'theories');
-    const workspaceDir =
-        this.currentSystem?.paths?.workspaceDir || WORKSPACE_ROOT;
+    const theoriesDir = this.currentSystem?.paths?.theoriesDir || path.join(DATA_ROOT, 'theories');
+    const workspaceDir = this.currentSystem?.paths?.workspaceDir || WORKSPACE_ROOT;
     const workspaceTheoriesDir =
       this.currentSystem?.paths?.wsTheoriesDir || path.join(workspaceDir, 'theories');
     if (!fs.existsSync(theoriesDir)) fs.mkdirSync(theoriesDir, { recursive: true });

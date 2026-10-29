@@ -6,7 +6,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ARC_DIR = process.env.SIS_DATA_DIR ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'benchmarks/arc_tasks') : path.resolve(__dirname, '../../data/benchmarks/arc_tasks');
+const ARC_DIR = process.env.SIS_DATA_DIR
+  ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'benchmarks/arc_tasks')
+  : path.resolve(__dirname, '../../data/benchmarks/arc_tasks');
 
 if (!fs.existsSync(ARC_DIR)) {
   fs.mkdirSync(ARC_DIR, { recursive: true });

@@ -16,9 +16,11 @@ export function isLocalRequest(req) {
   if (origin === 'null') {
     const pathname = String(req.url || '').split('?')[0];
     const bearerOnly = { headers: { authorization: req.headers.authorization } };
-    return ['GET', 'HEAD'].includes(req.method) &&
+    return (
+      ['GET', 'HEAD'].includes(req.method) &&
       (pathname.startsWith('/workspace/') || pathname.startsWith('/vendor/three/')) &&
-      sessionAuth.authorized(bearerOnly);
+      sessionAuth.authorized(bearerOnly)
+    );
   }
   try {
     const parsed = new URL(origin);

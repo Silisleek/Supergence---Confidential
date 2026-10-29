@@ -74,9 +74,7 @@ export function conversationMessages(
     if (m === first) continue;
     const isRejectedProposal = m.content && /^Rejected proposal:/i.test(m.content.trim());
     const originalContent =
-      projectExecution &&
-      m.role === 'assistant' &&
-      (m.toolCalls?.length || isRejectedProposal)
+      projectExecution && m.role === 'assistant' && (m.toolCalls?.length || isRejectedProposal)
         ? `Saved project attempt: ${m.status || 'unknown'}. ${m.error || ''} Actual tool actions: ${JSON.stringify((m.toolCalls || []).map((call) => ({ tool: call.tool, status: call.status, filepath: call.args?.filepath || call.args?.path, error: call.output?.error, exitCode: call.output?.exitCode })))}. The source and execution checkpoint supplies the saved file interfaces. Earlier planning and rejected proposals remain in durable history; continue from actual files and results.`
         : m.content || `Previous attempt did not finish: ${m.error || 'interrupted'}`;
     const content =

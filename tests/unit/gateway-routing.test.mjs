@@ -10,17 +10,20 @@ import { promisify } from 'node:util';
 const execute = promisify(execFile);
 const gateway = new URL('../../server/api/openrouter.js', import.meta.url).href;
 
-test('cancellation interrupts provider retry backoff before another request', { timeout: 20000 }, async () => {
-  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'sis-router-abort-'));
-  let requests = 0;
-  const server = http.createServer((_req, res) => {
-    requests++;
-    res.writeHead(503, { 'content-type': 'application/json' });
-    res.end(JSON.stringify({ error: { message: 'Temporary 503; reset after 30s' } }));
-  });
-  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
-  const base = `http://127.0.0.1:${server.address().port}/v1`;
-  const code = `
+test(
+  'cancellation interrupts provider retry backoff before another request',
+  { timeout: 20000 },
+  async () => {
+    const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'sis-router-abort-'));
+    let requests = 0;
+    const server = http.createServer((_req, res) => {
+      requests++;
+      res.writeHead(503, { 'content-type': 'application/json' });
+      res.end(JSON.stringify({ error: { message: 'Temporary 503; reset after 30s' } }));
+    });
+    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const base = `http://127.0.0.1:${server.address().port}/v1`;
+    const code = `
     import assert from 'node:assert/strict';
     const controller = new AbortController();
     const originalWarn = console.warn;
@@ -31,28 +34,42 @@ test('cancellation interrupts provider retry backoff before another request', { 
     process.send('cancelled');
     process.exit(0);
   `;
-  try {
-    const child = spawn(process.execPath, ['--input-type=module', '-e', code], {
-      cwd: directory,
-      env: { ...process.env, OPENROUTER_BASE_URL: base, OPENROUTER_API_KEY: 'fixture', LOCAL_ROUTER_API_KEY: 'fixture', OPENCODE_API_KEY: '', FALLBACK_MODELS: '', SIS_DATA_DIR: directory },
-      stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
-    });
-    let cancelled = false;
-    let stderr = '';
-    child.stderr.on('data', (chunk) => { stderr += chunk; });
-    child.on('message', (message) => {
-      if (message === 'retrying') child.send('abort');
-      if (message === 'cancelled') cancelled = true;
-    });
-    const exitCode = await new Promise((resolve, reject) => { child.once('error', reject); child.once('exit', resolve); });
-    assert.equal(exitCode, 0, stderr);
-    assert.equal(cancelled, true);
-    assert.equal(requests, 1);
-  } finally {
-    await new Promise((resolve) => server.close(resolve));
-    await fs.rm(directory, { recursive: true, force: true });
-  }
-});
+    try {
+      const child = spawn(process.execPath, ['--input-type=module', '-e', code], {
+        cwd: directory,
+        env: {
+          ...process.env,
+          OPENROUTER_BASE_URL: base,
+          OPENROUTER_API_KEY: 'fixture',
+          LOCAL_ROUTER_API_KEY: 'fixture',
+          OPENCODE_API_KEY: '',
+          FALLBACK_MODELS: '',
+          SIS_DATA_DIR: directory,
+        },
+        stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
+      });
+      let cancelled = false;
+      let stderr = '';
+      child.stderr.on('data', (chunk) => {
+        stderr += chunk;
+      });
+      child.on('message', (message) => {
+        if (message === 'retrying') child.send('abort');
+        if (message === 'cancelled') cancelled = true;
+      });
+      const exitCode = await new Promise((resolve, reject) => {
+        child.once('error', reject);
+        child.once('exit', resolve);
+      });
+      assert.equal(exitCode, 0, stderr);
+      assert.equal(cancelled, true);
+      assert.equal(requests, 1);
+    } finally {
+      await new Promise((resolve) => server.close(resolve));
+      await fs.rm(directory, { recursive: true, force: true });
+    }
+  },
+);
 
 test('explicit process configuration takes precedence over the dotenv file', async () => {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'sis-env-priority-'));

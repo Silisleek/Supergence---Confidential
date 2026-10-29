@@ -13,7 +13,9 @@ import { quickAI, DEFAULT_MODEL, PREMIUM_MODEL } from '../api/openrouter.js';
 import { safeLearningAI, extractCleanJSON } from '../improvement/learning-resilience.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const RSI_DATA_DIR = process.env.SIS_DATA_DIR ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'rsi') : path.join(__dirname, '../../data/rsi');
+const RSI_DATA_DIR = process.env.SIS_DATA_DIR
+  ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'rsi')
+  : path.join(__dirname, '../../data/rsi');
 const EVALUATOR_STATE_FILE = path.join(RSI_DATA_DIR, 'red-queen-evaluator.json');
 
 // Default epoch size: advance evaluator every 12 candidate evaluations

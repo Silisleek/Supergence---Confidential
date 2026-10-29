@@ -8,6 +8,10 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
+import workspace from '../workspace/manager.js';
+import { resolveWithinRoot } from '../utils/path-confinement.js';
+import { childEnvironment } from '../security/child-environment.js';
+import { randomUUID } from 'node:crypto';
 
 const execFileAsync = promisify(execFile);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -15,8 +19,10 @@ const ROOT_DIR = path.resolve(__dirname, '../../');
 const OPEN_DESIGN_DIR = path.join(ROOT_DIR, 'integrations', 'open-design');
 const FIGCRAFT_DIR = path.join(ROOT_DIR, 'integrations', 'figcraft');
 const FIGCRAFT_CLI = path.join(FIGCRAFT_DIR, 'bin', 'figcraft-cli.exe');
-const sharedWorkspaceRoot = path.resolve(ROOT_DIR, 'workspace');
-const workspaceRoot = () => currentWorkspace()?.root || sharedWorkspaceRoot;
+const figcraftExecutable = () =>
+  process.env.SIS_FIGCRAFT_CLI ? path.resolve(process.env.SIS_FIGCRAFT_CLI) : FIGCRAFT_CLI;
+const workspaceRoot = () => currentWorkspace()?.root || workspace.baseRoot;
+const workspacePath = (candidate) => resolveWithinRoot(workspaceRoot(), candidate);
 
 export class SupergenceDesignEngine {
   constructor() {
@@ -47,29 +53,55 @@ export class SupergenceDesignEngine {
    * Run FigCraft CLI to export, render, or inspect native .figcraft vector designs
    */
   async runFigcraft(command, args = []) {
-    if (!fs.existsSync(FIGCRAFT_CLI)) {
-      throw new Error(`FigCraft CLI not found at ${FIGCRAFT_CLI}`);
+    const executable = figcraftExecutable();
+    if (!this.figcraftAvailable()) {
+      throw new Error(
+        'FigCraft CLI is unavailable. Install it separately and set SIS_FIGCRAFT_CLI to its executable path.',
+      );
     }
-    const { stdout, stderr } = await execFileAsync(FIGCRAFT_CLI, [command, ...args]);
+    const { stdout, stderr } = await execFileAsync(executable, [command, ...args], {
+      env: childEnvironment(),
+      timeout: 120000,
+    });
     if (stderr && !stdout) throw new Error(stderr);
     return stdout.trim();
   }
 
+  figcraftAvailable() {
+    try {
+      return fs.statSync(figcraftExecutable()).isFile();
+    } catch {
+      return false;
+    }
+  }
+
   async getFigcraftInfo(filePath) {
-    const raw = await this.runFigcraft('info', [filePath, '--json']);
+    const raw = await this.runFigcraft('info', [workspacePath(filePath), '--json']);
     return JSON.parse(raw);
   }
 
   async exportFigcraft(filePath, outDir, format = 'svg') {
-    return await this.runFigcraft('export', [filePath, '-o', outDir, '--format', format]);
+    return await this.runFigcraft('export', [
+      workspacePath(filePath),
+      '-o',
+      workspacePath(outDir),
+      '--format',
+      format,
+    ]);
   }
 
   async renderFigcraft(filePath, outPng) {
-    return await this.runFigcraft('render', [filePath, '-o', outPng, '--scale', '2']);
+    return await this.runFigcraft('render', [
+      workspacePath(filePath),
+      '-o',
+      workspacePath(outPng),
+      '--scale',
+      '2',
+    ]);
   }
 
   async convertFigcraft(inPath, outPath) {
-    return await this.runFigcraft('convert', [inPath, outPath]);
+    return await this.runFigcraft('convert', [workspacePath(inPath), workspacePath(outPath)]);
   }
 
   /**
@@ -79,15 +111,15 @@ export class SupergenceDesignEngine {
     if (!Array.isArray(commands) || commands.length === 0) {
       throw new Error('Commands array must be a non-empty list of { command, params }');
     }
-    const tempScriptPath = path.join(
-      workspaceRoot(),
-      `figcraft_script_${Date.now()}_${Math.random().toString(36).slice(2, 7)}.json`,
-    );
+    const tempScriptPath = workspacePath(`figcraft_script_${randomUUID()}.json`);
     try {
-      fs.writeFileSync(tempScriptPath, JSON.stringify(commands, null, 2), 'utf8');
+      fs.writeFileSync(tempScriptPath, JSON.stringify(commands, null, 2), {
+        encoding: 'utf8',
+        flag: 'wx',
+      });
       const args = ['run', tempScriptPath];
-      if (inFigcraftPath) args.push('--in', inFigcraftPath);
-      if (outFigcraftPath) args.push('--out', outFigcraftPath);
+      if (inFigcraftPath) args.push('--in', workspacePath(inFigcraftPath));
+      if (outFigcraftPath) args.push('--out', workspacePath(outFigcraftPath));
       const raw = await this.runFigcraft(args[0], args.slice(1));
       return { success: true, log: raw };
     } finally {
@@ -111,8 +143,9 @@ export class SupergenceDesignEngine {
       '',
     );
     const filename = spec.filename || `design_${slug}_${Date.now().toString().slice(-4)}.figcraft`;
-    const outFigcraftPath = path.join(workspaceRoot(), filename);
-    const outPngPath = path.join(workspaceRoot(), filename.replace(/\.figcraft$/, '.png'));
+    if (!/\.figcraft$/i.test(filename)) throw new Error('Design filename must end in .figcraft.');
+    const outFigcraftPath = workspacePath(filename);
+    const outPngPath = workspacePath(filename.replace(/\.figcraft$/i, '.png'));
 
     const bgFill = spec.backgroundColor || '#07090E';
     const primaryColor = spec.primaryColor || '#6366F1';

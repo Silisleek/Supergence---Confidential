@@ -138,6 +138,8 @@ try {
     'extract_archive',
     'screenshot',
     'execute_code_sandbox',
+    'analyze_image_multiperspective',
+    'figcraft_inspect_file',
   ]) {
     const response = await request('/api/tools/execute', {
       method: 'POST',
@@ -170,7 +172,13 @@ try {
       403,
       url,
     );
-  for (const tool of ['github_clone', 'execute_code_sandbox', 'code_expert_eval']) {
+  for (const tool of [
+    'github_clone',
+    'execute_code_sandbox',
+    'code_expert_eval',
+    'figcraft_inspect_file',
+    'open_design_to_figcraft',
+  ]) {
     const response = await request('/api/tools/execute', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },

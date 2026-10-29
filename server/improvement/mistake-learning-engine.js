@@ -23,7 +23,10 @@ import brain from '../orchestrator/brain.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, '../../');
-const DATA_DIR = path.join(process.env.SIS_DATA_DIR ? path.resolve(process.env.SIS_DATA_DIR) : path.join(ROOT_DIR, 'data'), 'memory');
+const DATA_DIR = path.join(
+  process.env.SIS_DATA_DIR ? path.resolve(process.env.SIS_DATA_DIR) : path.join(ROOT_DIR, 'data'),
+  'memory',
+);
 const MISTAKES_LEDGER_FILE = path.join(DATA_DIR, 'mistakes-ledger.json');
 
 // Foundational Invariant Rules (Hard Grounding against previous user corrections)

@@ -45,7 +45,10 @@ test('configured data and workspace paths are used by core memory and systems', 
     assert.equal(value.bootstrap, path.join(data, 'improvement', 'bootstrapper-state.json'));
     assert.equal(value.directives, path.join(data, 'improvement', 'evolved-directives.json'));
     assert.equal(value.exemplars, path.join(data, 'improvement', 'exemplar-bank.json'));
-    assert.equal(value.subconscious, path.join(data, 'improvement', 'subconscious-latent-matrix.json'));
+    assert.equal(
+      value.subconscious,
+      path.join(data, 'improvement', 'subconscious-latent-matrix.json'),
+    );
     assert.equal(value.learner, path.join(data, 'improvement', 'autonomous-learning.json'));
     assert.equal((await fs.stat(path.join(data, 'memory', 'mistakes-ledger.json'))).isFile(), true);
     assert.equal((await fs.stat(path.join(workspace, 'theories'))).isDirectory(), true);

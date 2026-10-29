@@ -9,7 +9,9 @@ if (!baseURL || !dataDir)
   throw new Error('Set SIS_BASE_URL and SIS_DATA_DIR for an isolated backend.');
 const relativeRoot = path.relative(os.tmpdir(), path.resolve(dataDir));
 if (!/^sis-fresh-profile-[^\\/]+[\\/]data$/i.test(relativeRoot))
-  throw new Error('This test requires a fresh sis-fresh-profile-* directory under the OS temporary directory.');
+  throw new Error(
+    'This test requires a fresh sis-fresh-profile-* directory under the OS temporary directory.',
+  );
 const call = async (route, method = 'GET', body) => {
   const response = await fetch(new URL(route, baseURL), {
     method,

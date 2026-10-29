@@ -263,10 +263,14 @@ const resourcesPath = path.join(__dirname, '../resources');
 
 registerPageRoutes(app);
 
-app.use('/vendor/three', (_req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  next();
-}, express.static(path.join(__dirname, '../node_modules/three')));
+app.use(
+  '/vendor/three',
+  (_req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    next();
+  },
+  express.static(path.join(__dirname, '../node_modules/three')),
+);
 app.use(express.static(clientPath, { etag: false, lastModified: false, maxAge: 0 }));
 if (fs.existsSync(distPath)) {
   app.use(express.static(distPath, { etag: false, lastModified: false, maxAge: 0 }));
@@ -383,18 +387,22 @@ app.post('/api/verification/run-task', async (req, res) => {
     return res.status(403).json({ error: error.message });
   }
   const start = Date.now();
-  exec(cmd, { cwd: path.join(__dirname, '..'), timeout: 30000, env: childEnvironment() }, (error, stdout, stderr) => {
-    const elapsed = Date.now() - start;
-    res.json({
-      success: !error,
-      task,
-      command: cmd,
-      exitCode: error ? error.code || 1 : 0,
-      stdout: stdout || '',
-      stderr: stderr || '',
-      elapsedMs: elapsed,
-    });
-  });
+  exec(
+    cmd,
+    { cwd: path.join(__dirname, '..'), timeout: 30000, env: childEnvironment() },
+    (error, stdout, stderr) => {
+      const elapsed = Date.now() - start;
+      res.json({
+        success: !error,
+        task,
+        command: cmd,
+        exitCode: error ? error.code || 1 : 0,
+        stdout: stdout || '',
+        stderr: stderr || '',
+        elapsedMs: elapsed,
+      });
+    },
+  );
 });
 
 // Error-interception probe script for live preview artifacts
@@ -450,10 +458,14 @@ function preparePreviewHtml(source, vendorPrefix = null) {
   let content = injectImportmapIfNeeded(source);
   if (vendorPrefix) content = content.replaceAll('"/vendor/three/', `"${vendorPrefix}/`);
   if (!content.includes('sis-diagnostic-probe')) {
-    if (/<head\b[^>]*>/i.test(content)) content = content.replace(/<head\b[^>]*>/i, (head) => `${head}\n${PREVIEW_PROBE_SCRIPT}`);
-    else if (/<script\b/i.test(content)) content = content.replace(/<script\b/i, (script) => `${PREVIEW_PROBE_SCRIPT}\n${script}`);
-    else if (content.includes('</body>')) content = content.replace('</body>', `${PREVIEW_PROBE_SCRIPT}\n</body>`);
-    else if (content.includes('</html>')) content = content.replace('</html>', `${PREVIEW_PROBE_SCRIPT}\n</html>`);
+    if (/<head\b[^>]*>/i.test(content))
+      content = content.replace(/<head\b[^>]*>/i, (head) => `${head}\n${PREVIEW_PROBE_SCRIPT}`);
+    else if (/<script\b/i.test(content))
+      content = content.replace(/<script\b/i, (script) => `${PREVIEW_PROBE_SCRIPT}\n${script}`);
+    else if (content.includes('</body>'))
+      content = content.replace('</body>', `${PREVIEW_PROBE_SCRIPT}\n</body>`);
+    else if (content.includes('</html>'))
+      content = content.replace('</html>', `${PREVIEW_PROBE_SCRIPT}\n</html>`);
     else content += `\n${PREVIEW_PROBE_SCRIPT}`;
   }
   return content;
@@ -463,7 +475,10 @@ function preparePreviewHtml(source, vendorPrefix = null) {
 app.use('/workspace', (req, res, next) => {
   if (!runtimeAccess.settings.files)
     return res.status(403).json({ error: 'File access is disabled in Access settings.' });
-  res.setHeader('Content-Security-Policy', 'sandbox allow-scripts allow-forms allow-downloads allow-pointer-lock');
+  res.setHeader(
+    'Content-Security-Policy',
+    'sandbox allow-scripts allow-forms allow-downloads allow-pointer-lock',
+  );
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', '*');
@@ -1015,10 +1030,7 @@ function _readJsonDir(dir) {
 let _skillCorpusCache = { key: null, skills: [] };
 
 function _getSkillCorpus() {
-  const dirs = [
-    path.join(dataRoot, 'skills/learned'),
-    path.join(dataRoot, 'skills/candidates'),
-  ];
+  const dirs = [path.join(dataRoot, 'skills/learned'), path.join(dataRoot, 'skills/candidates')];
   // Directory mtime moves on add/remove; the file count catches a rewrite in
   // place that the timestamp granularity could miss.
   const key = dirs
@@ -1162,15 +1174,14 @@ app.post('/api/mastery/unknowns/:id/resolve', (req, res) => {
 app.post('/api/mastery/candidates/:skillId/verify', async (req, res) => {
   try {
     if (!runtimeAccess.settings.files || !runtimeAccess.settings.terminal)
-      return res.status(403).json({ error: 'File and terminal access are required to verify a candidate.' });
+      return res
+        .status(403)
+        .json({ error: 'File and terminal access are required to verify a candidate.' });
     if (runtimeAccess.settings.mode === 'ask-before-executing')
       await runtimeAccess.authorize('verify_skill_code', { skillId: req.params.skillId });
     // Candidates live where the old learner wrote them, under `learned/`.
     // Look in both stores so a file is found by its record, not its folder.
-    const dirs = [
-      path.join(dataRoot, 'skills/candidates'),
-      path.join(dataRoot, 'skills/learned'),
-    ];
+    const dirs = [path.join(dataRoot, 'skills/candidates'), path.join(dataRoot, 'skills/learned')];
     let fullPath = null;
     let skill = null;
     for (const dir of dirs) {
@@ -1736,15 +1747,22 @@ app.post('/api/workspace/command', async (req, res) => {
 app.post('/api/workspace/execute', async (req, res) => {
   try {
     const { filename, language } = req.body || {};
-    if (typeof filename !== 'string' || filename !== path.basename(filename) || !/^[\p{L}\p{N}_. -]+$/u.test(filename))
+    if (
+      typeof filename !== 'string' ||
+      filename !== path.basename(filename) ||
+      !/^[\p{L}\p{N}_. -]+$/u.test(filename)
+    )
       return res.status(400).json({ error: 'A valid workspace filename is required.' });
     if (!runtimeAccess.settings.terminal)
       return res.status(403).json({ error: 'terminal access is disabled in Access settings.' });
 
     const cleanFn = filename;
     let fullPath;
-    try { fullPath = resolveWithinRoot(workspace.root, cleanFn); }
-    catch { return res.status(403).json({ error: 'File path is not accessible.' }); }
+    try {
+      fullPath = resolveWithinRoot(workspace.root, cleanFn);
+    } catch {
+      return res.status(403).json({ error: 'File path is not accessible.' });
+    }
     if (!fs.existsSync(fullPath)) {
       return res.status(404).json({ error: `File not found: ${cleanFn}` });
     }
@@ -1753,7 +1771,10 @@ app.post('/api/workspace/execute', async (req, res) => {
     const ext = path.extname(cleanFn).slice(1).toLowerCase();
     const lang = language || ext || 'javascript';
     if (runtimeAccess.settings.mode === 'ask-before-executing') {
-      await runtimeAccess.authorize('verify_and_execute_code', { filename: cleanFn, language: lang });
+      await runtimeAccess.authorize('verify_and_execute_code', {
+        filename: cleanFn,
+        language: lang,
+      });
     }
 
     let runCmd = null;
@@ -1983,9 +2004,14 @@ app.get('/api/github/file', async (req, res) => {
 app.post('/api/github/clone', async (req, res) => {
   try {
     if (!runtimeAccess.settings.files || !runtimeAccess.settings.terminal)
-      return res.status(403).json({ error: 'File and terminal access are required to clone a repository.' });
+      return res
+        .status(403)
+        .json({ error: 'File and terminal access are required to clone a repository.' });
     if (runtimeAccess.settings.mode === 'ask-before-executing')
-      await runtimeAccess.authorize('execute_file', { operation: 'clone repository', repo: req.body?.repo });
+      await runtimeAccess.authorize('execute_file', {
+        operation: 'clone repository',
+        repo: req.body?.repo,
+      });
     const { repo, dest, branch, useZip } = req.body;
     if (!repo) return res.status(400).json({ error: 'Repository repo required' });
     const result = await githubManager.cloneRepo(repo, {
@@ -2694,7 +2720,11 @@ const _htmlTitleCache = new Map();
 
 function getCachedOrFreshArtifacts() {
   const now = Date.now();
-  if (_artifactsCache && _artifactsCacheRoot === workspace.baseRoot && now - _artifactsCacheTime < 6000) {
+  if (
+    _artifactsCache &&
+    _artifactsCacheRoot === workspace.baseRoot &&
+    now - _artifactsCacheTime < 6000
+  ) {
     return _artifactsCache;
   }
 
@@ -4031,7 +4061,10 @@ app.use('/api', (req, res) =>
 );
 
 // ─── WebSocket Server ───
-const wss = new WebSocketServer({ server, verifyClient: ({ req }) => isLocalRequest(req) && sessionAuth.authorized(req) });
+const wss = new WebSocketServer({
+  server,
+  verifyClient: ({ req }) => isLocalRequest(req) && sessionAuth.authorized(req),
+});
 
 wss.on('connection', (ws) => {
   console.log('[WS] Client connected');
@@ -4543,7 +4576,9 @@ wss.on('connection', (ws) => {
       console.log(`⚡ Real-Time Mid-Task Steering Active`);
       console.log(`\nReady for connections...\n`);
       if (process.env.SIS_DESKTOP_SESSION !== '1')
-        console.log(`Open this private session link: http://127.0.0.1:${activePort}/__session?token=${sessionAuth.secret}`);
+        console.log(
+          `Open this private session link: http://127.0.0.1:${activePort}/__session?token=${sessionAuth.secret}`,
+        );
       setTimeout(
         () =>
           sisUnifiedSystem

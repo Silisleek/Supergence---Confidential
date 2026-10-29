@@ -9,7 +9,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const sharedWorkspaceRoot = process.env.SIS_WORKSPACE_DIR ? path.resolve(process.env.SIS_WORKSPACE_DIR) : path.resolve(__dirname, '../../workspace');
+const sharedWorkspaceRoot = process.env.SIS_WORKSPACE_DIR
+  ? path.resolve(process.env.SIS_WORKSPACE_DIR)
+  : path.resolve(__dirname, '../../workspace');
 const workspaceRoot = () => currentWorkspace()?.root || sharedWorkspaceRoot;
 
 export class CodeToVideoEngine {

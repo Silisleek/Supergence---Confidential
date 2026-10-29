@@ -12,7 +12,12 @@ const manager = new AgentBrowserManager();
 const agentId = 'agent-custom-cookiecheck';
 try {
   const session = await manager.getOrCreateSession(agentId);
-  const cookie = { name: 'verification', value: 'private-fixture-value', domain: 'example.com', path: '/' };
+  const cookie = {
+    name: 'verification',
+    value: 'private-fixture-value',
+    domain: 'example.com',
+    path: '/',
+  };
   await session.context.addCookies([cookie]);
   const saved = await manager.saveCookies(agentId);
   assert.equal(saved.success, true, saved.error);
@@ -21,7 +26,10 @@ try {
   assert.equal((await session.context.cookies()).length, 0);
   const restored = await manager.loadCookies(agentId);
   assert.equal(restored.success, true, restored.error);
-  assert.equal((await session.context.cookies()).find((item) => item.name === cookie.name)?.value, cookie.value);
+  assert.equal(
+    (await session.context.cookies()).find((item) => item.name === cookie.name)?.value,
+    cookie.value,
+  );
   runtimeAccess.update({ browser: false });
   await manager.revocation;
   assert.equal(session.page.isClosed(), true);

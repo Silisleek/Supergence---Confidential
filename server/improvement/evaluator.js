@@ -10,7 +10,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_ROOT = process.env.SIS_DATA_DIR ? path.resolve(process.env.SIS_DATA_DIR) : path.resolve(__dirname, '../../data');
+const DATA_ROOT = process.env.SIS_DATA_DIR
+  ? path.resolve(process.env.SIS_DATA_DIR)
+  : path.resolve(__dirname, '../../data');
 
 const EVAL_PROMPT = `You are the Self-Improvement Evaluator for SIS (Superintelligence System).
 

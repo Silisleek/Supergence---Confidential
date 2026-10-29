@@ -5,56 +5,58 @@ import fs from 'fs';
 import path from 'path';
 import archiver from 'archiver';
 import shortTermMemory from '../memory/short-term.js';
+import { resolveWithinRoot } from '../utils/path-confinement.js';
+import { randomUUID } from 'node:crypto';
 
 // ─── PART A: Media Processing (Original) ───
 
 /**
- * Process an image file — generate thermal map, depth estimate, and store in .zip bundle
+ * Create visual effects and a ZIP bundle without implying measured temperature or depth.
  */
 export async function processImage(imagePath) {
   const filename = path.basename(imagePath);
-  const outputDir = path.join(path.dirname(imagePath), `${filename}_analysis`);
-
-  if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
+  const parent = path.dirname(path.resolve(imagePath));
+  let temporaryZip;
 
   try {
+    const input = resolveWithinRoot(parent, filename);
+    const outputDir = resolveWithinRoot(parent, `${filename}_analysis`);
+    fs.mkdirSync(outputDir, { recursive: true });
     const sharp = (await import('sharp')).default;
-    const image = sharp(imagePath);
-    const metadata = await image.metadata();
+    const metadata = await sharp(input).metadata();
 
-    // 1. Generate thermal/heatmap visualization
-    const thermalPath = path.join(outputDir, 'thermal.png');
-    await image
+    const warmTintPath = resolveWithinRoot(outputDir, 'warm-tint.png');
+    await sharp(input)
       .greyscale()
       .modulate({ brightness: 1.2 })
       .tint({ r: 255, g: 100, b: 0 })
-      .toFile(thermalPath);
+      .toFile(warmTintPath);
 
-    // 2. Generate depth estimation (approximation using blur + edges)
-    const depthPath = path.join(outputDir, 'depth.png');
-    await image.greyscale().blur(3).negate().normalize().toFile(depthPath);
+    const invertedBlurPath = resolveWithinRoot(outputDir, 'inverted-blur.png');
+    await sharp(input).greyscale().blur(3).negate().normalize().toFile(invertedBlurPath);
 
     // 3. Copy original
-    const originalPath = path.join(outputDir, 'original.png');
-    await image.toFile(originalPath);
+    const originalPath = resolveWithinRoot(outputDir, 'original.png');
+    await sharp(input).png().toFile(originalPath);
 
     // 4. Package into .zip bundle per foundation prompt specification
-    const zipPath = path.join(outputDir, `${path.parse(filename).name}_bundle.zip`);
-    try {
-      await new Promise((resolve, reject) => {
-        const output = fs.createWriteStream(zipPath);
-        const archive = archiver('zip', { zlib: { level: 9 } });
-        output.on('close', resolve);
-        archive.on('error', reject);
-        archive.pipe(output);
-        if (fs.existsSync(thermalPath)) archive.file(thermalPath, { name: 'thermal_map.png' });
-        if (fs.existsSync(depthPath)) archive.file(depthPath, { name: 'depth_model.png' });
-        if (fs.existsSync(originalPath)) archive.file(originalPath, { name: 'original.png' });
-        archive.finalize();
-      });
-    } catch (zipErr) {
-      console.warn('[Interpreter] Zip creation warning:', zipErr.message);
-    }
+    const zipPath = resolveWithinRoot(outputDir, `${path.parse(filename).name}_bundle.zip`);
+    temporaryZip = resolveWithinRoot(outputDir, `.bundle-${randomUUID()}.tmp`);
+    await new Promise((resolve, reject) => {
+      const output = fs.createWriteStream(temporaryZip, { flags: 'wx' });
+      const archive = archiver('zip', { zlib: { level: 9 } });
+      output.on('close', resolve);
+      output.on('error', reject);
+      archive.on('error', reject);
+      archive.on('warning', reject);
+      archive.pipe(output);
+      archive.file(warmTintPath, { name: 'warm_tint.png' });
+      archive.file(invertedBlurPath, { name: 'inverted_blur.png' });
+      archive.file(originalPath, { name: 'original.png' });
+      archive.finalize();
+    });
+    resolveWithinRoot(outputDir, path.basename(zipPath));
+    fs.renameSync(temporaryZip, zipPath);
 
     const analysis = {
       filename,
@@ -62,11 +64,13 @@ export async function processImage(imagePath) {
       height: metadata.height,
       format: metadata.format,
       channels: metadata.channels,
-      thermalPath,
-      depthPath,
+      warmTintPath,
+      invertedBlurPath,
       originalPath,
-      zipPath: fs.existsSync(zipPath) ? zipPath : null,
+      zipPath,
       analysisDir: outputDir,
+      limitation:
+        'The warm tint and inverted blur are visual effects; neither measures temperature or depth.',
     };
 
     shortTermMemory.store(
@@ -94,6 +98,10 @@ export async function processImage(imagePath) {
       'interpreter',
     );
     return analysis;
+  } finally {
+    try {
+      if (temporaryZip && fs.existsSync(temporaryZip)) fs.unlinkSync(temporaryZip);
+    } catch (_) {}
   }
 }
 

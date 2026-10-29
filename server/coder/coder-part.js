@@ -18,7 +18,9 @@ import { isExplicitBuildOrSaveIntent } from '../orchestrator/intent.js';
 import { perfectionistCoderEngine } from './perfectionist-coder-engine.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const WORKSPACE_DIR = process.env.SIS_WORKSPACE_DIR ? path.resolve(process.env.SIS_WORKSPACE_DIR) : path.join(__dirname, '../../workspace');
+const WORKSPACE_DIR = process.env.SIS_WORKSPACE_DIR
+  ? path.resolve(process.env.SIS_WORKSPACE_DIR)
+  : path.join(__dirname, '../../workspace');
 
 export class CoderPart extends BasePart {
   constructor(config = {}) {

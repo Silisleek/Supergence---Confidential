@@ -26,7 +26,8 @@ test('workspace file operations reject junctions and preserve outside files', (t
   try {
     fs.symlinkSync(outside, link, process.platform === 'win32' ? 'junction' : 'dir');
   } catch (error) {
-    if (['EPERM', 'EACCES', 'ENOTSUP'].includes(error.code)) return t.skip('Cannot create a test link.');
+    if (['EPERM', 'EACCES', 'ENOTSUP'].includes(error.code))
+      return t.skip('Cannot create a test link.');
     throw error;
   }
   assert.equal(workspace.readFile('linked/protected.txt'), null);
@@ -35,14 +36,24 @@ test('workspace file operations reject junctions and preserve outside files', (t
   assert.throws(() => resolveWithinRoot(link, 'protected.txt'), /Linked paths/);
   assert.equal(fs.readFileSync(path.join(outside, 'protected.txt'), 'utf8'), 'unchanged');
   assert.equal(fs.existsSync(path.join(outside, 'new.txt')), false);
-  assert.equal(workspace.listDir('').some((item) => item.name === 'linked'), false);
-  assert.equal(workspace.getTree('').some((item) => item.name === 'linked'), false);
-  assert.equal(workspace.searchFiles('linked').some((item) => item.name === 'linked'), false);
+  assert.equal(
+    workspace.listDir('').some((item) => item.name === 'linked'),
+    false,
+  );
+  assert.equal(
+    workspace.getTree('').some((item) => item.name === 'linked'),
+    false,
+  );
+  assert.equal(
+    workspace.searchFiles('linked').some((item) => item.name === 'linked'),
+    false,
+  );
   assert.equal(resolveWithinRoot(inside, 'normal.txt'), path.join(inside, 'normal.txt'));
 });
 
 test('archive extraction cannot follow a pre-existing junction outside the workspace', async (t) => {
-  if (process.platform !== 'win32') return t.skip('Current archive implementation uses PowerShell.');
+  if (process.platform !== 'win32')
+    return t.skip('Current archive implementation uses PowerShell.');
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sis-archive-boundary-'));
   const previous = workspace.baseRoot;
   const inside = path.join(root, 'workspace');
@@ -60,13 +71,20 @@ test('archive extraction cannot follow a pre-existing junction outside the works
   try {
     fs.symlinkSync(outside, path.join(inside, 'extract', 'linked'), 'junction');
   } catch (error) {
-    if (['EPERM', 'EACCES', 'ENOTSUP'].includes(error.code)) return t.skip('Cannot create a test link.');
+    if (['EPERM', 'EACCES', 'ENOTSUP'].includes(error.code))
+      return t.skip('Cannot create a test link.');
     throw error;
   }
-  fs.writeFileSync(path.join(inside, 'attack.zip'), zipSync({ 'linked/probe.txt': strToU8('probe') }));
+  fs.writeFileSync(
+    path.join(inside, 'attack.zip'),
+    zipSync({ 'linked/probe.txt': strToU8('probe') }),
+  );
   await assert.rejects(workspace.extractZip('attack.zip', 'extract'));
   assert.equal(fs.existsSync(path.join(outside, 'probe.txt')), false);
-  fs.writeFileSync(path.join(inside, 'traversal.zip'), zipSync({ '../escaped.txt': strToU8('probe') }));
+  fs.writeFileSync(
+    path.join(inside, 'traversal.zip'),
+    zipSync({ '../escaped.txt': strToU8('probe') }),
+  );
   await assert.rejects(workspace.extractZip('traversal.zip', 'extract'));
   assert.equal(fs.existsSync(path.join(inside, 'escaped.txt')), false);
   fs.writeFileSync(path.join(inside, 'safe.zip'), zipSync({ 'normal.txt': strToU8('safe') }));

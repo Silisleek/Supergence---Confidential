@@ -18,7 +18,9 @@ const KEY_LENGTH = 32; // 256 bits key
 export class EnterpriseVault {
   constructor({
     directory = process.env.SIS_VAULT_DIR ||
-      (process.env.SIS_DATA_DIR ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'security') : SECURITY_DIR),
+      (process.env.SIS_DATA_DIR
+        ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'security')
+        : SECURITY_DIR),
   } = {}) {
     this.directory = path.resolve(directory);
     this.vaultFile = path.join(this.directory, 'vault.enc');
@@ -453,9 +455,11 @@ export class EnterpriseVault {
       integrityFailures: this.stats.integrityFailures,
       storageDirectory: this.directory,
       vaultEncrypted: true,
-      encryptionScope: 'Vault records and explicitly encrypted envelopes only; other application data may be plaintext.',
+      encryptionScope:
+        'Vault records and explicitly encrypted envelopes only; other application data may be plaintext.',
       memoryZeroizationActive: false,
-      keyStorage: 'Installation key file protected by operating-system file permissions; not an OS keychain.',
+      keyStorage:
+        'Installation key file protected by operating-system file permissions; not an OS keychain.',
       legacyKeyVersions: Object.values(this.keyring.keys).filter(
         (meta) => meta.keySource !== 'installation',
       ).length,

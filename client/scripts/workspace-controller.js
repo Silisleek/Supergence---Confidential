@@ -717,7 +717,10 @@ async function executeTurnInWorkspace(
       }
     }
 
-    if (activeResponseBody && (data.taskStatus === 'error' || data.success === false || data.error)) {
+    if (
+      activeResponseBody &&
+      (data.taskStatus === 'error' || data.success === false || data.error)
+    ) {
       const existingNotice = activeResponseBody.querySelector('.chat-stream-notice');
       if (!existingNotice) {
         const notice = document.createElement('p');
@@ -1287,10 +1290,13 @@ window.loadWorkspaceConversation = async function (convId) {
               curTurnEl.querySelector('.workspace-deck-slot'),
               artifacts,
             );
-            window.SupergenceResultSummary?.render(curTurnEl.querySelector('.workspace-deck-slot'), {
-              ...msg,
-              artifacts,
-            });
+            window.SupergenceResultSummary?.render(
+              curTurnEl.querySelector('.workspace-deck-slot'),
+              {
+                ...msg,
+                artifacts,
+              },
+            );
           }
         }
       });
@@ -4215,7 +4221,10 @@ window.loadHeroArtifact = function (art) {
       freshIframe.style.minHeight = '0';
       freshIframe.style.border = 'none';
       freshIframe.style.display = 'block';
-      freshIframe.setAttribute('sandbox', 'allow-scripts allow-forms allow-downloads allow-pointer-lock');
+      freshIframe.setAttribute(
+        'sandbox',
+        'allow-scripts allow-forms allow-downloads allow-pointer-lock',
+      );
       freshIframe.allow = 'fullscreen';
 
       if (isVectorDesign && art.url) {
@@ -5185,7 +5194,10 @@ window.previewVaultArtifact = async function (filename, src, ext, category, titl
     if (code) code.style.display = 'none';
     if (img) img.style.display = 'none';
     if (iframe) {
-      iframe.setAttribute('sandbox', 'allow-scripts allow-forms allow-downloads allow-pointer-lock');
+      iframe.setAttribute(
+        'sandbox',
+        'allow-scripts allow-forms allow-downloads allow-pointer-lock',
+      );
       iframe.src = src;
       iframe.style.display = 'block';
     }

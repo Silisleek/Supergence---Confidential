@@ -9,7 +9,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const RSI_DATA_DIR = process.env.SIS_DATA_DIR ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'rsi') : path.join(__dirname, '../../data/rsi');
+const RSI_DATA_DIR = process.env.SIS_DATA_DIR
+  ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'rsi')
+  : path.join(__dirname, '../../data/rsi');
 const ARCHIVE_FILE = path.join(RSI_DATA_DIR, 'clade-archive.json');
 
 // Ensure directory exists

@@ -16,7 +16,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_ROOT = process.env.SIS_DATA_DIR ? path.resolve(process.env.SIS_DATA_DIR) : path.resolve(__dirname, '../../data');
+const DATA_ROOT = process.env.SIS_DATA_DIR
+  ? path.resolve(process.env.SIS_DATA_DIR)
+  : path.resolve(__dirname, '../../data');
 
 // How often to run each cycle type
 const CYCLE_INTERVALS = {

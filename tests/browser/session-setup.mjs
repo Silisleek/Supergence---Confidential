@@ -21,14 +21,18 @@ chromium.launch = async (...args) => {
   const newContext = browser.newContext.bind(browser);
   browser.newContext = async (...options) => {
     const context = await newContext(...options);
-    const response = await context.request.get(`${origin}/__session?token=${secret}`, { maxRedirects: 0 });
+    const response = await context.request.get(`${origin}/__session?token=${secret}`, {
+      maxRedirects: 0,
+    });
     if (response.status() !== 303) throw new Error('Could not authenticate browser test session.');
     return context;
   };
   const newPage = browser.newPage.bind(browser);
   browser.newPage = async (...options) => {
     const page = await newPage(...options);
-    const response = await page.context().request.get(`${origin}/__session?token=${secret}`, { maxRedirects: 0 });
+    const response = await page
+      .context()
+      .request.get(`${origin}/__session?token=${secret}`, { maxRedirects: 0 });
     if (response.status() !== 303) throw new Error('Could not authenticate browser test session.');
     return page;
   };

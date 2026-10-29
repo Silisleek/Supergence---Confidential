@@ -20,7 +20,9 @@ import {
 import sandbox from '../coder/sandbox.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const RSI_DATA_DIR = process.env.SIS_DATA_DIR ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'rsi') : path.join(__dirname, '../../data/rsi');
+const RSI_DATA_DIR = process.env.SIS_DATA_DIR
+  ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'rsi')
+  : path.join(__dirname, '../../data/rsi');
 const PROGRAMS_FILE = path.join(RSI_DATA_DIR, 'alpha-evolve-programs.json');
 
 export class AlphaEvolveEngine {

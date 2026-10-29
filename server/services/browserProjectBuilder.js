@@ -87,9 +87,18 @@ export function projectPreviewHeaders(request, { origin, directory, secret }) {
   const target = new URL(request.url());
   if (target.origin !== origin || !['GET', 'HEAD'].includes(request.method())) return null;
   let pathname;
-  try { pathname = decodeURIComponent(target.pathname); } catch { return null; }
-  if (pathname.includes('\\') || pathname.split('/').some((segment) => segment === '.' || segment === '..')) return null;
-  if (!(pathname.startsWith(`/workspace/${directory}/`) || pathname.startsWith('/vendor/three/'))) return null;
+  try {
+    pathname = decodeURIComponent(target.pathname);
+  } catch {
+    return null;
+  }
+  if (
+    pathname.includes('\\') ||
+    pathname.split('/').some((segment) => segment === '.' || segment === '..')
+  )
+    return null;
+  if (!(pathname.startsWith(`/workspace/${directory}/`) || pathname.startsWith('/vendor/three/')))
+    return null;
   return { ...request.headers(), authorization: `Bearer ${secret}` };
 }
 

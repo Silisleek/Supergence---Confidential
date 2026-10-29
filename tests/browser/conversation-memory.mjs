@@ -293,7 +293,8 @@ try {
   );
   console.log('Passed 8 conversation memory and action recovery browser checks.');
 } finally {
-  if (originalAccess) await page.request.patch(`${baseURL}/api/access`, { data: originalAccess }).catch(() => {});
+  if (originalAccess)
+    await page.request.patch(`${baseURL}/api/access`, { data: originalAccess }).catch(() => {});
   if (original && token && !original.hasKey)
     await config({
       provider: {

@@ -41,7 +41,9 @@ const opencodeCreds = getOpenCodeCredentials();
 
 function parseResetCooldownSeconds(msg) {
   if (!msg) return 0;
-  const minSecMatch = msg.match(/reset after\s+(?:(\d+)\s*m(?:in(?:ute)?s?)?\s*)?(\d+)\s*s(?:ec(?:ond)?s?)?/i);
+  const minSecMatch = msg.match(
+    /reset after\s+(?:(\d+)\s*m(?:in(?:ute)?s?)?\s*)?(\d+)\s*s(?:ec(?:ond)?s?)?/i,
+  );
   if (minSecMatch) {
     const mins = minSecMatch[1] ? parseInt(minSecMatch[1], 10) : 0;
     const secs = parseInt(minSecMatch[2], 10);
@@ -439,7 +441,11 @@ async function createCompletionWithRetry(params, signal) {
             console.warn(
               `[AI Gateway] Local router transient notice on ${reqModel} (${currentErr.status || currentErr.message}). Retrying in ${waitSeconds}s...`,
             );
-            await delay(Math.min(waitSeconds * 1000, Math.max(0, deadline - Date.now())), undefined, { signal });
+            await delay(
+              Math.min(waitSeconds * 1000, Math.max(0, deadline - Date.now())),
+              undefined,
+              { signal },
+            );
             const retryTimeout = deadline - Date.now();
             if (retryTimeout <= 0) break;
             try {

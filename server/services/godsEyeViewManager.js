@@ -12,7 +12,10 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, '../../');
-const CACHE_DIR = path.join(process.env.SIS_DATA_DIR ? path.resolve(process.env.SIS_DATA_DIR) : path.join(ROOT_DIR, 'data'), 'gev-cache');
+const CACHE_DIR = path.join(
+  process.env.SIS_DATA_DIR ? path.resolve(process.env.SIS_DATA_DIR) : path.join(ROOT_DIR, 'data'),
+  'gev-cache',
+);
 
 export class GodsEyeViewManager {
   constructor() {

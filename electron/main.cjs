@@ -308,14 +308,19 @@ function createMainWindow() {
           if (!isMainFrame) return;
           try {
             const next = new URL(nextUrl);
-            if (next.origin === parsed.origin && (next.pathname.startsWith('/workspace/') || next.pathname === '/guide.html')) return;
+            if (
+              next.origin === parsed.origin &&
+              (next.pathname.startsWith('/workspace/') || next.pathname === '/guide.html')
+            )
+              return;
           } catch (_) {}
           event.preventDefault();
         };
         preview.webContents.on('will-navigate', restrictPreview);
         preview.webContents.on('will-redirect', restrictPreview);
         void preview.loadURL(parsed.href);
-      } else if (['http:', 'https:'].includes(parsed.protocol)) void shell.openExternal(parsed.href);
+      } else if (['http:', 'https:'].includes(parsed.protocol))
+        void shell.openExternal(parsed.href);
     } catch (_) {}
     return { action: 'deny' };
   });

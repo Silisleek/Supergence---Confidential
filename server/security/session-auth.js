@@ -9,8 +9,11 @@ function cookieName(req) {
   }
 }
 
-export function createSessionAuth(secret = process.env.SIS_SESSION_SECRET || randomBytes(32).toString('hex')) {
-  if (!/^[a-f0-9]{64}$/i.test(secret)) throw new Error('SIS_SESSION_SECRET must be 64 hexadecimal characters.');
+export function createSessionAuth(
+  secret = process.env.SIS_SESSION_SECRET || randomBytes(32).toString('hex'),
+) {
+  if (!/^[a-f0-9]{64}$/i.test(secret))
+    throw new Error('SIS_SESSION_SECRET must be 64 hexadecimal characters.');
   const expected = Buffer.from(secret, 'hex');
   function matches(value) {
     if (typeof value !== 'string' || !/^[a-f0-9]{64}$/i.test(value)) return false;
@@ -29,10 +32,16 @@ export function createSessionAuth(secret = process.env.SIS_SESSION_SECRET || ran
       if (!matches(req.query.token)) return res.status(401).send('Invalid session link.');
       res.setHeader('Cache-Control', 'no-store');
       res.setHeader('Referrer-Policy', 'no-referrer');
-      res.setHeader('Set-Cookie', `${cookieName(req)}=${secret}; Path=/; HttpOnly; SameSite=Strict`);
+      res.setHeader(
+        'Set-Cookie',
+        `${cookieName(req)}=${secret}; Path=/; HttpOnly; SameSite=Strict`,
+      );
       return res.redirect(303, '/');
     }
-    if (!authorized(req)) return res.status(401).json({ error: 'Open the session link printed by Supergence to connect.' });
+    if (!authorized(req))
+      return res
+        .status(401)
+        .json({ error: 'Open the session link printed by Supergence to connect.' });
     next();
   }
   return { secret, authorized, middleware };

@@ -8,7 +8,9 @@ import { fileURLToPath } from 'url';
 import hybridSearch from '../memory/hybrid-search.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DB_PATH = process.env.SIS_DATA_DIR ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'improvement/patterns.json') : path.join(__dirname, '../../data/improvement/patterns.json');
+const DB_PATH = process.env.SIS_DATA_DIR
+  ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'improvement/patterns.json')
+  : path.join(__dirname, '../../data/improvement/patterns.json');
 
 class PatternLibrary {
   constructor() {

@@ -143,7 +143,13 @@ export class OpenClawController {
     try {
       // Use powershell on Windows, /bin/sh on POSIX
       const isWin = process.platform === 'win32';
-      const executionOptions = { cwd, timeout, maxBuffer: 10 * 1024 * 1024, windowsHide: true, env: childEnvironment() };
+      const executionOptions = {
+        cwd,
+        timeout,
+        maxBuffer: 10 * 1024 * 1024,
+        windowsHide: true,
+        env: childEnvironment(),
+      };
       // Pass the script as one process argument. Wrapping/escaping it through
       // cmd.exe first changes nested quotes and can turn commands into strings.
       const { stdout, stderr } = isWin

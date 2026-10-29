@@ -11,7 +11,9 @@ const DEFAULT_DIR = path.resolve(__dirname, '../../data/security');
 export class EnterpriseAuditTrail {
   constructor({
     directory = process.env.SIS_AUDIT_DIR ||
-      (process.env.SIS_DATA_DIR ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'security') : DEFAULT_DIR),
+      (process.env.SIS_DATA_DIR
+        ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'security')
+        : DEFAULT_DIR),
   } = {}) {
     this.chain = [];
     this.genesisHash = '0000000000000000000000000000000000000000000000000000000000000000';

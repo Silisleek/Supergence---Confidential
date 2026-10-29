@@ -23,14 +23,21 @@ const app = await electron.launch({
   timeout: 150000,
 });
 let diagnostics = '';
-app.process().stdout?.on('data', (chunk) => { diagnostics += chunk.toString(); process.stdout.write(chunk); });
-app.process().stderr?.on('data', (chunk) => { diagnostics += chunk.toString(); process.stderr.write(chunk); });
+app.process().stdout?.on('data', (chunk) => {
+  diagnostics += chunk.toString();
+  process.stdout.write(chunk);
+});
+app.process().stderr?.on('data', (chunk) => {
+  diagnostics += chunk.toString();
+  process.stderr.write(chunk);
+});
 try {
   const first = await app.firstWindow({ timeout: 150000 });
   await first.waitForURL('data:**', { timeout: 30000 });
   assert.equal(await first.locator('h1').innerText(), 'Starting Supergence');
-  const page = app.windows().find((window) => window !== first) ||
-    await app.waitForEvent('window', { timeout: 300000 });
+  const page =
+    app.windows().find((window) => window !== first) ||
+    (await app.waitForEvent('window', { timeout: 300000 }));
   page.on('pageerror', (error) => console.error('[Desktop page error]', error.message));
   page.on('requestfailed', (request) =>
     console.error('[Desktop request failed]', request.url(), request.failure()?.errorText),
@@ -85,8 +92,12 @@ try {
   await preview.close();
   await app.evaluate(({ BrowserWindow }, url) => {
     globalThis.__navigationAttempted = false;
-    const target = BrowserWindow.getAllWindows().find((window) =>
-      !window.isDestroyed() && !window.webContents.isDestroyed() && window.webContents.getURL() === url);
+    const target = BrowserWindow.getAllWindows().find(
+      (window) =>
+        !window.isDestroyed() &&
+        !window.webContents.isDestroyed() &&
+        window.webContents.getURL() === url,
+    );
     if (!target) throw new Error('Main desktop window was not found.');
     target.webContents.on('will-navigate', () => {
       globalThis.__navigationAttempted = true;

@@ -113,7 +113,9 @@ try {
     },
     { conversationId, query },
   );
-  await page.waitForFunction(() => window.__qaDisconnected === true, undefined, { timeout: 360000 });
+  await page.waitForFunction(() => window.__qaDisconnected === true, undefined, {
+    timeout: 360000,
+  });
   await page.waitForFunction(() => document.body.dataset.agentWorking === 'false', undefined, {
     timeout: 360000,
   });

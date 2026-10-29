@@ -17,7 +17,14 @@ test('browser profile IDs and linked profile folders cannot redirect launches or
   const { AgentBrowserManager } = await import('../../server/services/agentBrowserManager.js');
   const manager = new AgentBrowserManager();
   t.after(async () => await fs.rm(root, { recursive: true, force: true }));
-  for (const id of ['../outside', 'agent-../outside', 'agent-x/../../outside', 'agent-x-desktop', '', null]) {
+  for (const id of [
+    '../outside',
+    'agent-../outside',
+    'agent-x/../../outside',
+    'agent-x-desktop',
+    '',
+    null,
+  ]) {
     await assert.rejects(manager.getOrCreateSession(id), /Invalid agent ID/);
   }
   const profiles = path.join(data, 'browser-profiles');
@@ -32,11 +39,21 @@ test('browser profile IDs and linked profile folders cannot redirect launches or
   await fs.unlink(linked);
   await fs.unlink(desktop);
 
-  const cookie = { name: 'session', value: 'private-fixture-token', domain: 'example.com', path: '/' };
+  const cookie = {
+    name: 'session',
+    value: 'private-fixture-token',
+    domain: 'example.com',
+    path: '/',
+  };
   let loaded;
   manager.sessions.set('agent-custom-abc', {
     page: { isClosed: () => false },
-    context: { cookies: async () => [cookie], addCookies: async (value) => { loaded = value; } },
+    context: {
+      cookies: async () => [cookie],
+      addCookies: async (value) => {
+        loaded = value;
+      },
+    },
   });
   const saved = await manager.saveCookies('agent-custom-abc');
   assert.equal(saved.success, true);
@@ -60,17 +77,26 @@ test('browser profile IDs and linked profile folders cannot redirect launches or
   const firstPage = { isClosed: () => false };
   const secondPage = {
     isClosed: () => false,
-    goto: async (url) => { secondPage.current = url; },
+    goto: async (url) => {
+      secondPage.current = url;
+    },
     url: () => secondPage.current,
     title: async () => 'Second page',
   };
   const firstTab = { id: 'first', page: firstPage, url: 'https://first.example', title: 'First' };
   const secondTab = { id: 'second', page: secondPage, url: 'about:blank', title: 'Second' };
   manager.sessions.set('agent-custom-nav', {
-    context: {}, page: firstPage, activeTabId: 'first', tabs: [firstTab, secondTab],
-    currentUrl: firstTab.url, pageTitle: firstTab.title, history: [],
+    context: {},
+    page: firstPage,
+    activeTabId: 'first',
+    tabs: [firstTab, secondTab],
+    currentUrl: firstTab.url,
+    pageTitle: firstTab.title,
+    history: [],
   });
-  const result = await manager.navigate('agent-custom-nav', 'https://second.example', { tabId: 'second' });
+  const result = await manager.navigate('agent-custom-nav', 'https://second.example', {
+    tabId: 'second',
+  });
   assert.equal(result.url, 'https://second.example');
   assert.equal(secondTab.url, 'https://second.example');
   assert.equal(firstTab.url, 'https://first.example');
@@ -81,14 +107,21 @@ test('browser profile IDs and linked profile folders cannot redirect launches or
   const originalLaunch = chromium.launchPersistentContext;
   let releaseLaunch;
   let closed = false;
-  chromium.launchPersistentContext = () => new Promise((resolve) => { releaseLaunch = resolve; });
+  chromium.launchPersistentContext = () =>
+    new Promise((resolve) => {
+      releaseLaunch = resolve;
+    });
   try {
     const opening = manager.getOrCreateSession('agent-custom-race');
     await Promise.resolve();
     assert.equal(typeof releaseLaunch, 'function');
     runtimeAccess.update({ browser: false });
     runtimeAccess.update({ browser: true });
-    releaseLaunch({ close: async () => { closed = true; } });
+    releaseLaunch({
+      close: async () => {
+        closed = true;
+      },
+    });
     await assert.rejects(opening, /revoked/);
     await manager.revocation;
     assert.equal(closed, true);

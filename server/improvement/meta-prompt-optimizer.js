@@ -9,7 +9,9 @@ import { fileURLToPath } from 'url';
 import { quickAI, DEFAULT_MODEL } from '../api/openrouter.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DIRECTIVES_FILE = process.env.SIS_DATA_DIR ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'improvement/evolved-directives.json') : path.join(__dirname, '../../data/improvement/evolved-directives.json');
+const DIRECTIVES_FILE = process.env.SIS_DATA_DIR
+  ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'improvement/evolved-directives.json')
+  : path.join(__dirname, '../../data/improvement/evolved-directives.json');
 
 // Ensure directory exists
 if (!fs.existsSync(path.dirname(DIRECTIVES_FILE))) {

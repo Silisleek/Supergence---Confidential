@@ -78,7 +78,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const WORKSPACE_DIR = process.env.SIS_WORKSPACE_DIR ? path.resolve(process.env.SIS_WORKSPACE_DIR) : path.join(__dirname, '../../workspace');
+const WORKSPACE_DIR = process.env.SIS_WORKSPACE_DIR
+  ? path.resolve(process.env.SIS_WORKSPACE_DIR)
+  : path.join(__dirname, '../../workspace');
 if (!fs.existsSync(WORKSPACE_DIR)) fs.mkdirSync(WORKSPACE_DIR, { recursive: true });
 
 function getMessageText(msg) {

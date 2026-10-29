@@ -5,7 +5,8 @@ import path from 'node:path';
 
 const baseURL = process.env.SIS_BASE_URL;
 const dataDir = process.env.SIS_DATA_DIR;
-if (!baseURL || !dataDir) throw new Error('Set SIS_BASE_URL and SIS_DATA_DIR for an isolated backend.');
+if (!baseURL || !dataDir)
+  throw new Error('Set SIS_BASE_URL and SIS_DATA_DIR for an isolated backend.');
 const relative = path.relative(os.tmpdir(), path.resolve(dataDir));
 if (!/^sis-corrupt-profile-[^\\/]+[\\/]data$/i.test(relative))
   throw new Error('This test requires a sis-corrupt-profile-* temporary directory.');

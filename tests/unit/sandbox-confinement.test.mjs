@@ -18,9 +18,14 @@ test('coder sandbox confines run IDs, cleanup, and staged imports to the configu
   await assert.rejects(sandbox.execute({ code: '' }, '../../outside'), /Invalid sandbox run ID/);
   sandbox.cleanup('../../outside');
   assert.equal(await fs.readFile(secret, 'utf8'), 'outside marker');
-  const result = await sandbox.execute({ targetFile: 'check.js', code: "// from './../../../outside/secret.js'\nconsole.log('ok');" }, 'safe_run');
+  const result = await sandbox.execute(
+    { targetFile: 'check.js', code: "// from './../../../outside/secret.js'\nconsole.log('ok');" },
+    'safe_run',
+  );
   assert.equal(result.success, true, result.error);
-  await assert.rejects(fs.stat(path.join(workspace, '.sandbox', 'safe_run', 'secret.js')), { code: 'ENOENT' });
+  await assert.rejects(fs.stat(path.join(workspace, '.sandbox', 'safe_run', 'secret.js')), {
+    code: 'ENOENT',
+  });
   assert.equal(await fs.readFile(secret, 'utf8'), 'outside marker');
   sandbox.cleanup('safe_run');
   await assert.rejects(fs.stat(path.join(workspace, '.sandbox', 'safe_run')), { code: 'ENOENT' });

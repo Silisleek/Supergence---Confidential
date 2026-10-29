@@ -5,8 +5,9 @@
   let draftCount = 0;
   window.addEventListener('message', (event) => {
     if (event.data?.type !== 'sis-preview-error' || typeof event.data.message !== 'string') return;
-    const frame = [...document.querySelectorAll('.chat-artifact iframe.chat-artifact-preview')]
-      .find((candidate) => candidate.contentWindow === event.source);
+    const frame = [
+      ...document.querySelectorAll('.chat-artifact iframe.chat-artifact-preview'),
+    ].find((candidate) => candidate.contentWindow === event.source);
     const card = frame?.closest('.chat-artifact');
     const status = card?.querySelector('.chat-artifact-status');
     if (!status) return;
@@ -383,48 +384,67 @@
         }
         code.textContent = isImage || isPDF ? `${filename}\n${url?.href || ''}` : content || '';
         if (frame) {
-          if (url && isHTML && url.origin === location.origin && url.pathname.startsWith('/workspace/')) {
+          if (
+            url &&
+            isHTML &&
+            url.origin === location.origin &&
+            url.pathname.startsWith('/workspace/')
+          ) {
             const relative = decodeURIComponent(url.pathname.slice('/workspace/'.length));
             if (relative.includes('/')) {
-              const notice = element('p', 'chat-artifact-preview-notice',
-                'This preview can read files in its project folder and may navigate to external sites. Open only code you trust.');
-              const open = button('Open project preview', async () => {
-                open.disabled = true;
-                try {
-                  const grant = await request('/api/workspace/preview-grants', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ path: relative }),
-                  });
-                  previewNetworkRestricted = Boolean(grant.networkRestricted);
-                  frame.src = grant.url;
-                  notice.remove();
-                  open.remove();
-                  status.textContent = `${filename} · Opening preview…`;
-                  card.dataset.state = 'loaded';
-                  frame.hidden = false;
-                } catch (error) {
-                  status.textContent = `Preview unavailable: ${error.message}`;
-                  card.dataset.state = 'error';
-                  open.disabled = false;
-                }
-              }, 'chat-artifact-open-preview');
+              const notice = element(
+                'p',
+                'chat-artifact-preview-notice',
+                'This preview can read files in its project folder and may navigate to external sites. Open only code you trust.',
+              );
+              const open = button(
+                'Open project preview',
+                async () => {
+                  open.disabled = true;
+                  try {
+                    const grant = await request('/api/workspace/preview-grants', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ path: relative }),
+                    });
+                    previewNetworkRestricted = Boolean(grant.networkRestricted);
+                    frame.src = grant.url;
+                    notice.remove();
+                    open.remove();
+                    status.textContent = `${filename} · Opening preview…`;
+                    card.dataset.state = 'loaded';
+                    frame.hidden = false;
+                  } catch (error) {
+                    status.textContent = `Preview unavailable: ${error.message}`;
+                    card.dataset.state = 'error';
+                    open.disabled = false;
+                  }
+                },
+                'chat-artifact-open-preview',
+              );
               frame.hidden = true;
               body.insertBefore(notice, frame);
               body.insertBefore(open, frame);
               status.textContent = `${filename} · Preview requires confirmation`;
               card.dataset.state = 'awaiting-preview';
             } else {
-              const notice = element('p', 'chat-artifact-preview-notice',
-                'This preview runs code that may contact external sites. Open only code you trust.');
-              const open = button('Open HTML preview', () => {
-                frame.src = url.href;
-                frame.hidden = false;
-                notice.remove();
-                open.remove();
-                status.textContent = `${filename} · Opening preview…`;
-                card.dataset.state = 'loaded';
-              }, 'chat-artifact-open-preview');
+              const notice = element(
+                'p',
+                'chat-artifact-preview-notice',
+                'This preview runs code that may contact external sites. Open only code you trust.',
+              );
+              const open = button(
+                'Open HTML preview',
+                () => {
+                  frame.src = url.href;
+                  frame.hidden = false;
+                  notice.remove();
+                  open.remove();
+                  status.textContent = `${filename} · Opening preview…`;
+                  card.dataset.state = 'loaded';
+                },
+                'chat-artifact-open-preview',
+              );
               frame.hidden = true;
               body.insertBefore(notice, frame);
               body.insertBefore(open, frame);
@@ -433,29 +453,36 @@
             }
           } else if (url && !isHTML) frame.src = url.href;
           else if (isHTML) {
-            const notice = element('p', 'chat-artifact-preview-notice',
-              'This preview runs code that may contact external sites. Open only code you trust.');
-            const open = button('Open HTML preview', () => {
-              if (url) frame.src = url.href;
-              else frame.srcdoc = content;
-              frame.hidden = false;
-              notice.remove();
-              open.remove();
-              status.textContent = `${filename} · Opening preview…`;
-              card.dataset.state = 'loaded';
-            }, 'chat-artifact-open-preview');
+            const notice = element(
+              'p',
+              'chat-artifact-preview-notice',
+              'This preview runs code that may contact external sites. Open only code you trust.',
+            );
+            const open = button(
+              'Open HTML preview',
+              () => {
+                if (url) frame.src = url.href;
+                else frame.srcdoc = content;
+                frame.hidden = false;
+                notice.remove();
+                open.remove();
+                status.textContent = `${filename} · Opening preview…`;
+                card.dataset.state = 'loaded';
+              },
+              'chat-artifact-open-preview',
+            );
             frame.hidden = true;
             body.insertBefore(notice, frame);
             body.insertBefore(open, frame);
             status.textContent = `${filename} · Preview requires confirmation`;
             card.dataset.state = 'awaiting-preview';
-          }
-          else throw new Error('This preview requires a saved file.');
+          } else throw new Error('This preview requires a saved file.');
         }
         if (card.dataset.state !== 'error' && card.dataset.state !== 'awaiting-preview')
           status.textContent = `${filename} · ${isPreview ? 'Opening preview…' : 'Loaded · Not run'}`;
         if (run) run.disabled = false;
-        if (card.dataset.state !== 'error' && card.dataset.state !== 'awaiting-preview') card.dataset.state = 'loaded';
+        if (card.dataset.state !== 'error' && card.dataset.state !== 'awaiting-preview')
+          card.dataset.state = 'loaded';
       } catch (error) {
         status.textContent = error.message;
         card.dataset.state = 'error';

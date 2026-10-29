@@ -12,7 +12,9 @@ import shortTermMemory from '../memory/short-term.js';
 import { childEnvironment } from '../security/child-environment.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const sharedWorkspaceRoot = process.env.SIS_WORKSPACE_DIR ? path.resolve(process.env.SIS_WORKSPACE_DIR) : path.join(__dirname, '../../workspace');
+const sharedWorkspaceRoot = process.env.SIS_WORKSPACE_DIR
+  ? path.resolve(process.env.SIS_WORKSPACE_DIR)
+  : path.join(__dirname, '../../workspace');
 const workspaceRoot = () => currentWorkspace()?.root || sharedWorkspaceRoot;
 const workspaceUrl = (filename) =>
   '/workspace/' +

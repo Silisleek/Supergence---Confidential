@@ -55,6 +55,7 @@ PORT=3001
 - **`DEFAULT_MODEL`**: The primary model ID to use for inference.
 - **`FALLBACK_MODEL`**: Optional secondary model ID to fallback to if the primary model is busy or unavailable.
 - **`PORT`**: Port for the Express server (defaults to 3001; automatically shifts if the port is busy).
+- **`SIS_FIGCRAFT_CLI`**: Optional absolute path to a separately installed FigCraft CLI executable. The CLI is not included in this repository or the packaged app; FigCraft tools are unavailable unless this path is configured or a CLI is installed at `integrations/figcraft/bin/figcraft-cli.exe`.
 
 Vault data and its installation key are stored in the selected data directory under `security/`.
 Back up that key together with encrypted records: losing it makes those records unreadable. The

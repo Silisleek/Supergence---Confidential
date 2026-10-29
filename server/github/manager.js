@@ -492,7 +492,11 @@ export class GitHubManager {
     args.push('--', gitUrl, destFull);
 
     try {
-      await this.runGit('git', args, { cwd: this.workspaceDir, timeout: 120000, env: childEnvironment() });
+      await this.runGit('git', args, {
+        cwd: this.workspaceDir,
+        timeout: 120000,
+        env: childEnvironment(),
+      });
       const items = workspace.listDir(targetDirName, false);
       return {
         success: true,

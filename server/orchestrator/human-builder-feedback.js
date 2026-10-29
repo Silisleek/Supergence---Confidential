@@ -13,7 +13,9 @@ import humanVisionObserver from './human-vision-observer.js';
 import neuromodulators from './neuromodulators.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const WORKSPACE_DIR = process.env.SIS_WORKSPACE_DIR ? path.resolve(process.env.SIS_WORKSPACE_DIR) : path.join(__dirname, '../../workspace');
+const WORKSPACE_DIR = process.env.SIS_WORKSPACE_DIR
+  ? path.resolve(process.env.SIS_WORKSPACE_DIR)
+  : path.join(__dirname, '../../workspace');
 
 class HumanBuilderFeedback extends EventEmitter {
   constructor() {
