@@ -11,7 +11,7 @@ import codingExpertEngine from '../coder/coding-expert-engine.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const sharedWorkspaceRoot = path.resolve(__dirname, '../../workspace');
+const sharedWorkspaceRoot = process.env.SIS_WORKSPACE_DIR ? path.resolve(process.env.SIS_WORKSPACE_DIR) : path.resolve(__dirname, '../../workspace');
 const workspaceRoot = () => currentWorkspace()?.root || sharedWorkspaceRoot;
 
 let _brainCache = null;

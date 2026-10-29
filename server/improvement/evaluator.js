@@ -10,6 +10,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const DATA_ROOT = process.env.SIS_DATA_DIR ? path.resolve(process.env.SIS_DATA_DIR) : path.resolve(__dirname, '../../data');
 
 const EVAL_PROMPT = `You are the Self-Improvement Evaluator for SIS (Superintelligence System).
 
@@ -65,7 +66,7 @@ class InteractionEvaluator {
 
   _loadStats() {
     try {
-      const statsPath = path.join(__dirname, '../../data/improvement/eval-stats.json');
+      const statsPath = path.join(DATA_ROOT, 'improvement/eval-stats.json');
       if (fs.existsSync(statsPath)) {
         const data = JSON.parse(fs.readFileSync(statsPath, 'utf8'));
         this.stats = { ...this.stats, ...data.stats };
@@ -73,7 +74,7 @@ class InteractionEvaluator {
       }
       // Seed scoreHistory from autonomous-learning cycles if empty
       if (!this.stats.scoreHistory || this.stats.scoreHistory.length === 0) {
-        const autoPath = path.join(__dirname, '../../data/improvement/autonomous-learning.json');
+        const autoPath = path.join(DATA_ROOT, 'improvement/autonomous-learning.json');
         if (fs.existsSync(autoPath)) {
           const autoData = JSON.parse(fs.readFileSync(autoPath, 'utf8'));
           if (autoData.recentCycles && autoData.recentCycles.length > 0) {
@@ -97,7 +98,7 @@ class InteractionEvaluator {
 
   _saveStats() {
     try {
-      const statsPath = path.join(__dirname, '../../data/improvement/eval-stats.json');
+      const statsPath = path.join(DATA_ROOT, 'improvement/eval-stats.json');
       const dir = path.dirname(statsPath);
       if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
       fs.writeFileSync(

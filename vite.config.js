@@ -10,6 +10,7 @@ export default defineConfig(({ mode, command }) => {
     publicDir: command === 'build' ? '../.cache/vite-public' : false,
     plugins: [],
     server: {
+      host: '127.0.0.1',
       port: 5173,
       watch: {
         ignored: [
@@ -22,28 +23,32 @@ export default defineConfig(({ mode, command }) => {
         ],
       },
       proxy: {
+        '/__session': {
+          target: `http://127.0.0.1:${backendPort}`,
+          changeOrigin: true,
+        },
         '/vendor/three': {
-          target: `http://localhost:${backendPort}`,
+          target: `http://127.0.0.1:${backendPort}`,
           changeOrigin: true,
         },
         '/api': {
-          target: `http://localhost:${backendPort}`,
+          target: `http://127.0.0.1:${backendPort}`,
           changeOrigin: true,
         },
         '/workspace': {
-          target: `http://localhost:${backendPort}`,
+          target: `http://127.0.0.1:${backendPort}`,
           changeOrigin: true,
         },
         '/release': {
-          target: `http://localhost:${backendPort}`,
+          target: `http://127.0.0.1:${backendPort}`,
           changeOrigin: true,
         },
         '/download': {
-          target: `http://localhost:${backendPort}`,
+          target: `http://127.0.0.1:${backendPort}`,
           changeOrigin: true,
         },
         '/ws': {
-          target: `ws://localhost:${backendPort}`,
+          target: `ws://127.0.0.1:${backendPort}`,
           ws: true,
           changeOrigin: true,
         },

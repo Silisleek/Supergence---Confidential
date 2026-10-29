@@ -79,6 +79,8 @@ test('90-minute scheduling uses actual evidence, prevents overlap, deduplicates 
     },
   };
   const service = await new ProactiveSuggestions(dependencies).init({ schedule: false });
+  assert.equal(service.snapshot().settings.enabled, false);
+  await service.update({ enabled: true, desktopNotifications: true });
   assert.equal(service.snapshot().nextCheckAt, now + 90 * 60000);
   await service.tick();
   assert.equal(scans, 0);
@@ -121,6 +123,7 @@ test('revoking activity and folders during a check discards the old result befor
       called++;
     },
   }).init({ schedule: false });
+  await service.update({ enabled: true, activity: true });
   const pending = service.check();
   await service.update({ enabled: false, activity: false });
   release();
@@ -146,6 +149,7 @@ test('provider failure creates no invented suggestion or notification', async (t
       deliveries++;
     },
   }).init({ schedule: false });
+  await service.update({ enabled: true });
   await service.check();
   assert.equal(deliveries, 0);
   assert.equal(service.snapshot().inbox.length, 0);

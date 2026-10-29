@@ -302,3 +302,55 @@ img.chat-artifact-preview {
     scroll-behavior: auto !important;
   }
 }
+.workspace-result-summary {
+  margin: 12px 0;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
+  color: inherit;
+  overflow-wrap: anywhere;
+}
+.workspace-result-summary h3,
+.workspace-result-summary h4 {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+.workspace-result-summary h4 {
+  margin-top: 14px;
+}
+.workspace-result-summary p,
+.workspace-result-summary ul {
+  margin: 6px 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.workspace-result-summary ul {
+  padding-left: 20px;
+}
+.workspace-result-state {
+  font-weight: 600;
+}
+.workspace-result-note {
+  opacity: 0.75;
+}
+.workspace-result-details {
+  margin: 5px 0 10px;
+}
+.workspace-result-details summary {
+  cursor: pointer;
+}
+.workspace-result-details h5 {
+  margin: 8px 0 4px;
+  font-size: 12px;
+}
+.workspace-result-details pre {
+  max-height: 240px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: 10px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.2);
+  font-size: 12px;
+}

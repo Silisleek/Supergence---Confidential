@@ -1,0 +1,40 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import http from 'node:http';
+import express from 'express';
+import { WebSocket, WebSocketServer } from 'ws';
+import { createSessionAuth } from '../../server/security/session-auth.js';
+import { localBoundary, isLocalRequest } from '../../server/security/local-boundary.js';
+
+test('HTTP and WebSocket require the same private session', async (t) => {
+  const secret = 'a'.repeat(64);
+  const session = createSessionAuth(secret);
+  const app = express();
+  app.use(localBoundary, session.middleware);
+  app.get('/api/private', (_req, res) => res.json({ ok: true }));
+  const server = http.createServer(app);
+  const ws = new WebSocketServer({ server, verifyClient: ({ req }) => isLocalRequest(req) && session.authorized(req) });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  t.after(() => { ws.clients.forEach((client) => client.terminate()); ws.close(); server.close(); });
+  const url = `http://127.0.0.1:${server.address().port}`;
+  assert.equal((await fetch(`${url}/api/private`)).status, 401);
+  assert.equal((await fetch(`${url}/__session?token=${'b'.repeat(64)}`, { redirect: 'manual' })).status, 401);
+  const pairing = await fetch(`${url}/__session?token=${secret}`, { redirect: 'manual' });
+  assert.equal(pairing.status, 303);
+  assert.equal(pairing.headers.get('location'), '/');
+  const cookie = pairing.headers.get('set-cookie');
+  assert.match(cookie, /HttpOnly; SameSite=Strict/);
+  assert.equal((await fetch(`${url}/api/private`, { headers: { cookie } })).status, 200);
+  assert.equal((await fetch(`${url}/api/private`, { headers: { authorization: `Bearer ${secret}` } })).status, 200);
+  assert.equal((await fetch(`${url}/api/private`, { headers: { cookie, origin: 'https://attacker.example' } })).status, 403);
+  const rejected = new WebSocket(url.replace('http:', 'ws:'));
+  await new Promise((resolve, reject) => {
+    rejected.on('open', () => reject(new Error('Unauthenticated WebSocket was accepted.')));
+    rejected.on('unexpected-response', (_request, response) => response.statusCode === 401 ? resolve() : reject(new Error(`Unexpected status ${response.statusCode}`)));
+    rejected.on('error', reject);
+  });
+  const accepted = new WebSocket(url.replace('http:', 'ws:'), { headers: { cookie } });
+  await new Promise((resolve, reject) => { accepted.once('open', resolve); accepted.once('error', reject); });
+  accepted.close();
+  assert.throws(() => createSessionAuth('weak'), /64 hexadecimal/);
+});

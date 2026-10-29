@@ -57,6 +57,7 @@ class LongTermMemory {
       this._saveTimer = null;
       try {
         const payload = this.tree.toJSON();
+        await fs.promises.mkdir(path.dirname(this.storagePath), { recursive: true });
         await fs.promises.writeFile(this.storagePath, JSON.stringify(payload, null, 2), 'utf8');
       } catch (e) {
         console.error('[LTM] Save error:', e.message);

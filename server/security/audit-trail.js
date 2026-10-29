@@ -1,6 +1,4 @@
-// SIS Enterprise 1.0 — Tamper-Evident Cryptographic Audit Ledger (SOC-2 Type II / ISO-27001)
-// Implements an immutable SHA-256 Merkle-linked audit trail.
-// Any retro-active modification or deletion breaks hash chain integrity verification.
+// SHA-256 and HMAC linked audit ledger. This is not a compliance certification.
 
 import crypto from 'crypto';
 import fs from 'fs';
@@ -8,16 +6,20 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const AUDIT_FILE = path.resolve(__dirname, '../../data/security/audit-ledger.json');
-const SIGNING_KEY_FILE = path.resolve(__dirname, '../../data/security/audit.key');
+const DEFAULT_DIR = path.resolve(__dirname, '../../data/security');
 
 export class EnterpriseAuditTrail {
-  constructor() {
+  constructor({
+    directory = process.env.SIS_AUDIT_DIR ||
+      (process.env.SIS_DATA_DIR ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'security') : DEFAULT_DIR),
+  } = {}) {
     this.chain = [];
     this.genesisHash = '0000000000000000000000000000000000000000000000000000000000000000';
+    this.filePath = path.join(directory, 'audit-ledger.json');
+    this.signingKeyFile = path.join(directory, 'audit.key');
     this.signingKey = this._loadOrGenerateSigningKey();
-    this.filePath = AUDIT_FILE;
     this._load();
+    this.writable = this.verifyChainIntegrity().isValid;
   }
 
   _loadOrGenerateSigningKey() {
@@ -25,16 +27,19 @@ export class EnterpriseAuditTrail {
       if (process.env.SIS_AUDIT_SIGNING_KEY) {
         return process.env.SIS_AUDIT_SIGNING_KEY;
       }
-      if (fs.existsSync(SIGNING_KEY_FILE)) {
-        return fs.readFileSync(SIGNING_KEY_FILE, 'utf8').trim();
+      if (fs.existsSync(this.signingKeyFile)) {
+        const key = fs.readFileSync(this.signingKeyFile, 'utf8').trim();
+        if (!key) throw new Error('Audit signing key is empty.');
+        return key;
       }
-      const dir = path.dirname(SIGNING_KEY_FILE);
+      if (fs.existsSync(this.filePath)) throw new Error('Audit signing key is missing.');
+      const dir = path.dirname(this.signingKeyFile);
       if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
       const newKey = crypto.randomBytes(32).toString('hex');
-      fs.writeFileSync(SIGNING_KEY_FILE, newKey, { mode: 0o600 });
+      fs.writeFileSync(this.signingKeyFile, newKey, { flag: 'wx', mode: 0o600 });
       return newKey;
-    } catch (_) {
-      return 'SIS_ENTERPRISE_AUDIT_STABLE_HMAC_KEY_2026';
+    } catch (error) {
+      throw new Error(`Audit signing key unavailable: ${error.message}`, { cause: error });
     }
   }
 
@@ -45,18 +50,12 @@ export class EnterpriseAuditTrail {
         const data = JSON.parse(raw);
         if (Array.isArray(data.chain) && data.chain.length > 0) {
           this.chain = data.chain;
-          // Verify key match; if key was first saved or migrated, align signatures
-          if (this.chain[0] && this._signHash(this.chain[0].hash) !== this.chain[0].signature) {
-            for (const entry of this.chain) {
-              entry.signature = this._signHash(entry.hash);
-            }
-            this._save();
-          }
           return;
         }
+        throw new Error('Audit ledger has no valid chain.');
       }
     } catch (err) {
-      console.warn('[AuditTrail] Load notice:', err.message);
+      throw new Error(`Audit ledger could not be loaded: ${err.message}`, { cause: err });
     }
 
     // Initialize Genesis Block if fresh
@@ -64,19 +63,22 @@ export class EnterpriseAuditTrail {
   }
 
   _save() {
+    const temporary = `${this.filePath}.${crypto.randomUUID()}.tmp`;
     try {
       const dir = path.dirname(this.filePath);
       if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
       const payload = {
-        standard: 'SOC-2 Type II / ISO-27001 Cryptographic Ledger',
+        standard: 'SHA-256 and HMAC linked ledger',
         totalEvents: this.chain.length,
         merkleRoot: this.getMerkleRoot(),
-        lastVerifiedAt: Date.now(),
-        chain: this.chain.slice(-500), // Keep last 500 in working buffer
+        chain: this.chain,
       };
-      fs.writeFileSync(this.filePath, JSON.stringify(payload, null, 2), { mode: 0o600 });
+      fs.writeFileSync(temporary, JSON.stringify(payload, null, 2), { flag: 'wx', mode: 0o600 });
+      fs.renameSync(temporary, this.filePath);
     } catch (err) {
-      console.error('[AuditTrail] Save error:', err.message);
+      throw new Error(`Audit ledger could not be saved: ${err.message}`, { cause: err });
+    } finally {
+      if (fs.existsSync(temporary)) fs.unlinkSync(temporary);
     }
   }
 
@@ -89,8 +91,7 @@ export class EnterpriseAuditTrail {
       action: 'INITIALIZE_IMMUTABLE_AUDIT_LEDGER',
       details: {
         architecture: 'SHA-256 Merkle-Linked Chain',
-        fipsCompliant: true,
-        soc2Compliance: 'CC6.1, CC6.8, CC7.2 Active',
+        complianceStatus: 'unverified',
       },
       prevHash: this.genesisHash,
     };
@@ -113,6 +114,8 @@ export class EnterpriseAuditTrail {
    * Append a new tamper-evident audit record to the cryptographic ledger
    */
   logEvent(eventType, actor, action, details = {}) {
+    if (!this.writable)
+      throw new Error('Audit ledger integrity is invalid; no new event was written.');
     const prevEntry = this.chain[this.chain.length - 1];
     const prevHash = prevEntry ? prevEntry.hash : this.genesisHash;
     const index = this.chain.length;
@@ -131,7 +134,12 @@ export class EnterpriseAuditTrail {
     entry.signature = this._signHash(entry.hash);
 
     this.chain.push(entry);
-    this._save();
+    try {
+      this._save();
+    } catch (error) {
+      this.chain.pop();
+      throw error;
+    }
 
     return entry;
   }
@@ -158,8 +166,21 @@ export class EnterpriseAuditTrail {
     let isValid = true;
     const violations = [];
 
+    if (
+      !this.chain.length ||
+      this.chain[0].index !== 0 ||
+      this.chain[0].prevHash !== this.genesisHash
+    ) {
+      isValid = false;
+      violations.push({ index: 0, error: 'Genesis record is missing or invalid' });
+    }
+
     for (let i = 0; i < this.chain.length; i++) {
       const current = this.chain[i];
+      if (current.index !== i) {
+        isValid = false;
+        violations.push({ index: i, error: 'Record index is missing or out of sequence' });
+      }
       const recomputedHash = this._computeHash(current);
 
       // 1. Verify Entry Hash
@@ -245,7 +266,8 @@ export class EnterpriseAuditTrail {
       genesisHash: this.genesisHash,
       latestHash: this.chain[this.chain.length - 1]?.hash || null,
       lastEventAt: this.chain[this.chain.length - 1]?.timestamp || null,
-      tamperProofActive: true,
+      tamperProofActive: false,
+      writable: this.writable,
     };
   }
 }

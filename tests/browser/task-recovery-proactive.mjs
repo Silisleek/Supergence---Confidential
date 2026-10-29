@@ -64,6 +64,7 @@ await page.addInitScript(() => {
   };
 });
 try {
+  await page.request.patch(`${baseURL}/api/access`, { data: { mode: 'full-access' } });
   await page.goto(baseURL, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => window.__sisWorkspaceReady && window.SupergenceTasks);
   await page.getByRole('button', { name: 'Suggestions and proactive settings' }).click();
@@ -79,6 +80,9 @@ try {
   await page.screenshot({ path: path.join(output, 'suggestions.png') });
   const inbox = await (await fetch(`${baseURL}/api/proactive-suggestions`)).json();
   await dialog.locator('summary').click();
+  if (!(await dialog.locator('[name=enabled]').isChecked())) {
+    await dialog.locator('[name=enabled]').check();
+  }
   await dialog.locator('[name=intervalMinutes]').selectOption('120');
   await dialog.locator('[name=activity]').uncheck();
   await dialog.getByRole('button', { name: 'Save settings', exact: true }).click();
@@ -109,8 +113,8 @@ try {
     },
     { conversationId, query },
   );
-  await page.waitForFunction(() => window.__qaDisconnected === true, { timeout: 360000 });
-  await page.waitForFunction(() => document.body.dataset.agentWorking === 'false', {
+  await page.waitForFunction(() => window.__qaDisconnected === true, undefined, { timeout: 360000 });
+  await page.waitForFunction(() => document.body.dataset.agentWorking === 'false', undefined, {
     timeout: 360000,
   });
   assert.equal(
@@ -153,7 +157,7 @@ try {
     return (await response.json()).status === 'running';
   });
   await page.getByRole('button', { name: 'Stop task', exact: true }).click();
-  await page.waitForFunction(() => document.body.dataset.agentWorking === 'false', {
+  await page.waitForFunction(() => document.body.dataset.agentWorking === 'false', undefined, {
     timeout: 90000,
   });
   const stopRequest = requests.find((r) => r.conversationId === stopConversation);

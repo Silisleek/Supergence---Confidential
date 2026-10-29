@@ -10,6 +10,35 @@ import { promisify } from 'node:util';
 const execute = promisify(execFile);
 const gateway = new URL('../../server/api/openrouter.js', import.meta.url).href;
 
+test('explicit process configuration takes precedence over the dotenv file', async () => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'sis-env-priority-'));
+  try {
+    await fs.writeFile(path.join(directory, '.env'), 'PORT=19999\nDEFAULT_MODEL=from-file\n');
+    const { stdout } = await execute(
+      process.execPath,
+      [
+        '--input-type=module',
+        '-e',
+        `await import(${JSON.stringify(gateway)}); console.log('CHECK', process.env.PORT, process.env.DEFAULT_MODEL);`,
+      ],
+      {
+        cwd: directory,
+        env: {
+          ...process.env,
+          PORT: '31888',
+          DEFAULT_MODEL: 'from-process',
+          SIS_DATA_DIR: directory,
+        },
+      },
+    );
+    assert.match(stdout, /CHECK 31888 from-process/);
+  } finally {
+    const relative = path.relative(os.tmpdir(), directory);
+    assert.ok(relative && !relative.startsWith('..') && !path.isAbsolute(relative));
+    await fs.rm(directory, { recursive: true, force: true });
+  }
+});
+
 test('configured gateway receives selected models, tool calls and streams despite legacy Groq keys', async () => {
   const requests = [];
   const server = http.createServer(async (req, res) => {

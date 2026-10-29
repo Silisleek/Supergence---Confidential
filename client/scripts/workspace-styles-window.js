@@ -150,8 +150,8 @@
 
         <section class="sw-pane" id="swPanePaths" role="tabpanel" hidden>
           <div class="sw-card">
-            <h3 class="sw-card-title">Filesystem Paths &amp; Sandboxes</h3>
-            <p class="sw-card-desc">Supergence isolates tasks and builds within designated project sandboxes.</p>
+            <h3 class="sw-card-title">Filesystem Paths &amp; Workspaces</h3>
+            <p class="sw-card-desc">Task files are organized in workspaces. Commands run with your operating system permissions and are not OS-isolated.</p>
 
             <div class="sw-path-item">
               <span class="sw-path-label">Workspace Base</span>

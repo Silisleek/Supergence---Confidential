@@ -7,7 +7,7 @@ import { publicToolArguments } from './assistantStream.js';
 import { actionMonitor, assessAction } from '../security/action-monitor.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const defaults = { mode: 'full-access', browser: true, terminal: true, files: true };
+const defaults = { mode: 'approve-for-me', browser: true, terminal: true, files: true };
 const sourceReviewFindings = new Set([
   'Live application source modification requires review',
   'Shell command may modify live application source',
@@ -17,16 +17,18 @@ export const accessModes = ['full-access', 'approve-for-me', 'ask-before-executi
 export function operationPolicy(name, args = {}) {
   const tool = String(name).toLowerCase();
   const capabilities = new Set();
-  if (/browser|web_|search_web|navigate|crawl/.test(tool)) capabilities.add('browser');
+  if (/browser|web_|search_web|navigate|crawl|capture_screen/.test(tool))
+    capabilities.add('browser');
   if (
-    /file|directory|knowledge|memory|skill|artifact|design|generate|build|retain|forge|dynamic_tool|evolution/.test(
+    /file|folder|directory|knowledge|memory|skill|artifact|design|generate|build|retain|forge|dynamic_tool|evolution/.test(
       tool,
     ) ||
+    /^browser_(?:save|load)_cookies$/.test(tool) ||
     (/workspace/.test(tool) && !/browser/.test(tool))
   )
     capabilities.add('files');
   if (
-    /exec|shell|terminal|command|sandbox|verify.*code|verify_evolution|run_|openclaw|forge|synthesiz|generate_|build_|start_/.test(
+    /exec|shell|terminal|command|sandbox|verify.*code|verify_evolution|run_|openclaw|forge|synthesiz|generate_|build_|start_|launch_application|kill_process/.test(
       tool,
     )
   )
@@ -58,6 +60,7 @@ export class RuntimeAccess {
     this.timeoutMs = timeoutMs;
     this.context = new AsyncLocalStorage();
     this.pending = new Map();
+    this.listeners = new Set();
     this.audit = [];
     this.settings = { ...defaults };
     try {
@@ -80,10 +83,12 @@ export class RuntimeAccess {
   }
   update(patch) {
     const next = this.validate(patch);
+    const previous = this.settings;
     fs.mkdirSync(path.dirname(this.file), { recursive: true });
     fs.writeFileSync(`${this.file}.tmp`, JSON.stringify(next, null, 2));
     fs.renameSync(`${this.file}.tmp`, this.file);
     this.settings = next;
+    for (const listener of this.listeners) listener(next, previous);
     // A capability revoked while an action awaits approval cancels that action.
     for (const [id, entry] of this.pending) {
       if (entry.capabilities.some((cap) => next[cap] === false)) this.resolve(id, false);
@@ -94,6 +99,10 @@ export class RuntimeAccess {
         this.resolve(id, true, 'full-access');
     }
     return this.snapshot();
+  }
+  onChange(listener) {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
   }
   currentContext() {
     return this.context.getStore() || {};

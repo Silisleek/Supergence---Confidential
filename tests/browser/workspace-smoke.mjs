@@ -49,6 +49,7 @@ try {
 
   for (const asset of [
     'workspace-controller.js',
+    'workspace-result-summary.js',
     'feature-catalog.js',
     'feature-actions.js',
     'continuous-dock.js',
@@ -113,7 +114,11 @@ try {
   await page.evaluate(() => window.toggleWorkspaceTreeModal(true, 'memory'));
   await page.locator('#treePaneMemory .memory-kpi-grid').waitFor({ timeout: 30000 });
   assert.match(await page.locator('#inspectNodeConfidence').innerText(), /Unavailable/);
-  assert.equal((await page.locator('#memoryGraphSvg g').count()) > 0, true);
+  const graph = await (await page.request.get(`${baseURL}/api/memory/graph`)).json();
+  if (Array.isArray(graph.nodes) && graph.nodes.length)
+    assert.ok((await page.locator('#memoryGraphSvg g').count()) > 0);
+  else
+    assert.match(await page.locator('#memoryGraphSvg').textContent(), /No memory nodes available/);
   await page.keyboard.press('Escape');
   await page.locator('#workspaceTreeModal').waitFor({ state: 'hidden' });
 

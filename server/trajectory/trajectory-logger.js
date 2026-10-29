@@ -3,7 +3,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const TRAJECTORY_DIR = path.resolve(__dirname, '../../data/trajectories');
+const TRAJECTORY_DIR = process.env.SIS_DATA_DIR
+  ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'trajectories')
+  : path.resolve(__dirname, '../../data/trajectories');
 
 if (!fs.existsSync(TRAJECTORY_DIR)) {
   fs.mkdirSync(TRAJECTORY_DIR, { recursive: true });

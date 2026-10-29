@@ -14,10 +14,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const SUBCONSCIOUS_FILE = path.join(
-  __dirname,
-  '../../data/improvement/subconscious-latent-matrix.json',
-);
+const SUBCONSCIOUS_FILE = process.env.SIS_DATA_DIR
+  ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'improvement/subconscious-latent-matrix.json')
+  : path.join(__dirname, '../../data/improvement/subconscious-latent-matrix.json');
 
 // Ensure directory exists
 if (!fs.existsSync(path.dirname(SUBCONSCIOUS_FILE))) {

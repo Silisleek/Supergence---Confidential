@@ -658,6 +658,7 @@ async function executeTurnInWorkspace(
       error: data.error,
       artifacts: data.artifacts || [],
       toolCalls: data.toolCalls || [],
+      completionAudit: data.completionAudit || null,
       agent: data.primaryAgent || null,
     });
 
@@ -716,11 +717,24 @@ async function executeTurnInWorkspace(
       }
     }
 
+    if (activeResponseBody && (data.taskStatus === 'error' || data.success === false || data.error)) {
+      const existingNotice = activeResponseBody.querySelector('.chat-stream-notice');
+      if (!existingNotice) {
+        const notice = document.createElement('p');
+        notice.className = 'chat-stream-notice';
+        notice.setAttribute('role', 'status');
+        notice.textContent =
+          data.error || 'This attempt did not finish. Your request remains saved.';
+        activeResponseBody.append(notice);
+      }
+    }
+
     // Results belong to this turn, including interactive previews and real execution output.
     if (activeDeckSlot) {
       const raw = data.interactiveUI?.artifacts || data.artifacts || [];
       const artifacts = Array.isArray(raw) ? raw : Object.values(raw || {});
       window.ChatArtifacts?.render(activeDeckSlot, artifacts);
+      window.SupergenceResultSummary?.render(activeDeckSlot, { ...data, artifacts });
     }
     const trace = activeWorkTreeSection;
     if (trace && activeWorkTreeBody?.children.length) trace.style.display = '';
@@ -1273,6 +1287,10 @@ window.loadWorkspaceConversation = async function (convId) {
               curTurnEl.querySelector('.workspace-deck-slot'),
               artifacts,
             );
+            window.SupergenceResultSummary?.render(curTurnEl.querySelector('.workspace-deck-slot'), {
+              ...msg,
+              artifacts,
+            });
           }
         }
       });
@@ -4197,7 +4215,8 @@ window.loadHeroArtifact = function (art) {
       freshIframe.style.minHeight = '0';
       freshIframe.style.border = 'none';
       freshIframe.style.display = 'block';
-      freshIframe.allow = 'autoplay; fullscreen; camera; microphone';
+      freshIframe.setAttribute('sandbox', 'allow-scripts allow-forms allow-downloads allow-pointer-lock');
+      freshIframe.allow = 'fullscreen';
 
       if (isVectorDesign && art.url) {
         freshIframe.srcdoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>

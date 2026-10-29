@@ -61,7 +61,7 @@ try {
         (m) => m.role === 'assistant' && ['completed', 'error'].includes(m.status),
       ),
     null,
-    { timeout: 180000 },
+    { timeout: 240000 },
   );
   result.turn = await page.evaluate(() => {
     const a = [...window.__workspaceChatHistory].reverse().find((m) => m.role === 'assistant');

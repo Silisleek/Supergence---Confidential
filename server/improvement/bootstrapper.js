@@ -17,7 +17,7 @@ import exemplarBank from './exemplar-bank.js';
 import longTermMemory from '../memory/long-term.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const BOOTSTRAP_FILE = path.join(__dirname, '../../data/improvement/bootstrapper-state.json');
+const BOOTSTRAP_FILE = process.env.SIS_DATA_DIR ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'improvement/bootstrapper-state.json') : path.join(__dirname, '../../data/improvement/bootstrapper-state.json');
 
 if (!fs.existsSync(path.dirname(BOOTSTRAP_FILE))) {
   fs.mkdirSync(path.dirname(BOOTSTRAP_FILE), { recursive: true });

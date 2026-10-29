@@ -11,7 +11,7 @@ import { threeCreationContract } from './creation-contract.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const WORKSPACE_DIR = path.resolve(__dirname, '../../workspace');
+const WORKSPACE_DIR = process.env.SIS_WORKSPACE_DIR ? path.resolve(process.env.SIS_WORKSPACE_DIR) : path.resolve(__dirname, '../../workspace');
 
 /**
  * Validate that a JavaScript snippet is syntactically sound

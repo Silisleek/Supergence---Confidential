@@ -24,7 +24,7 @@ export function resumableTaskError(error) {
     return false;
   const text = String(error?.message || error);
   if (
-    /declined|approval expired|access.*disabled|invalid.*(?:ID|path)|API key|unauthorized|forbidden|quota|billing|\b40[13]\b/i.test(
+    /declined|approval expired|access.*disabled|invalid.*(?:ID|path)|API key|unauthorized|forbidden|quota|billing|\b40[13]\b|did not produce a valid tool action after retry/i.test(
       text,
     )
   )

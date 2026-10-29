@@ -9,9 +9,12 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DEFAULT_PROFILE_PATH = path.join(__dirname, '../../data/improvement/user-focus-profile.json');
-const DEFAULT_CONVERSATIONS_DIR = path.join(__dirname, '../../data/conversations');
-const LEARNED_SKILLS_DIR = path.join(__dirname, '../../data/skills/learned');
+const DATA_DIR = process.env.SIS_DATA_DIR
+  ? path.resolve(process.env.SIS_DATA_DIR)
+  : path.resolve(__dirname, '../../data');
+const DEFAULT_PROFILE_PATH = path.join(DATA_DIR, 'improvement/user-focus-profile.json');
+const DEFAULT_CONVERSATIONS_DIR = path.join(DATA_DIR, 'conversations');
+const LEARNED_SKILLS_DIR = path.join(DATA_DIR, 'skills/learned');
 
 // Ensure storage directories exist
 if (!fs.existsSync(path.dirname(DEFAULT_PROFILE_PATH))) {

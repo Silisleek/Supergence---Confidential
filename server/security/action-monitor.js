@@ -7,6 +7,8 @@ export function assessAction(tool, args = {}) {
   const value =
     JSON.stringify(args, (_key, value) => (typeof value === 'function' ? undefined : value)) || '';
   const findings = [];
+  if (/^browser_(?:save|load)_cookies$/.test(tool))
+    findings.push('Browser session cookie export or import requires explicit review');
   // File bodies are saved as data, not executed by these tools. A packager's
   // exclusion list mentioning ".env" is not a read of that file. Actual target
   // paths and embedded credential values still receive their normal screening.

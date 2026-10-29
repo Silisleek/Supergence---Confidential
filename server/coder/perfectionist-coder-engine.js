@@ -37,7 +37,7 @@ import sandbox from './sandbox.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const WORKSPACE_DIR = path.resolve(__dirname, '../../workspace');
+const WORKSPACE_DIR = process.env.SIS_WORKSPACE_DIR ? path.resolve(process.env.SIS_WORKSPACE_DIR) : path.resolve(__dirname, '../../workspace');
 const SCREENSHOTS_DIR = path.join(WORKSPACE_DIR, 'screenshots');
 
 if (!fs.existsSync(SCREENSHOTS_DIR)) {

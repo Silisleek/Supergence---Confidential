@@ -13,7 +13,7 @@ import { fileURLToPath } from 'url';
 import { EventEmitter } from 'events';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const WORKSPACE_DIR = path.join(__dirname, '../../workspace');
+const WORKSPACE_DIR = process.env.SIS_WORKSPACE_DIR ? path.resolve(process.env.SIS_WORKSPACE_DIR) : path.join(__dirname, '../../workspace');
 
 class HumanVisionObserver extends EventEmitter {
   constructor() {

@@ -45,7 +45,16 @@ const fixture = http.createServer(async (req, res) => {
     const messages = input.messages || [],
       latestUser = [...messages].reverse().find((m) => m.role === 'user')?.content || '';
     let message = { role: 'assistant', content: 'Fixture request received.' };
-    if (latestUser === task)
+    if (messages.some((m) => m.role === 'system' && m.content.includes('completion reviewer'))) {
+      message = {
+        role: 'assistant',
+        content: JSON.stringify({
+          status: 'complete',
+          remaining: [],
+          reason: 'All requested files and regression tests verified.',
+        }),
+      };
+    } else if (latestUser === task)
       message.content = offer; // Initial missing-action failure must persist.
     else if (latestUser === 'Yes') {
       assert.ok(
@@ -143,7 +152,7 @@ const page = await browser.newPage({ viewport: { width: 1500, height: 1000 } });
 page.setDefaultTimeout(60000);
 const errors = [];
 page.on('pageerror', (error) => errors.push(error.message));
-let token, original, currentConversation, noteSource;
+let token, original, originalAccess, currentConversation, noteSource;
 const conversations = [];
 async function config(patch) {
   const result = await page.request.patch(`${baseURL}/api/evolution/settings`, {
@@ -177,6 +186,8 @@ try {
     false,
     'Do not replace an existing saved provider secret. Use an isolated test backend instead.',
   );
+  originalAccess = (await (await page.request.get(`${baseURL}/api/access`)).json()).settings;
+  await page.request.patch(`${baseURL}/api/access`, { data: { mode: 'full-access' } });
   await config({
     provider: {
       enabled: true,
@@ -282,6 +293,7 @@ try {
   );
   console.log('Passed 8 conversation memory and action recovery browser checks.');
 } finally {
+  if (originalAccess) await page.request.patch(`${baseURL}/api/access`, { data: originalAccess }).catch(() => {});
   if (original && token && !original.hasKey)
     await config({
       provider: {

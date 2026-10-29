@@ -13,7 +13,7 @@ import userFocusTracker from './user-focus-tracker.js';
 import autonomousRulesEngine from '../orchestrator/autonomous-rules-engine.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const STATE_FILE = path.join(__dirname, '../../data/improvement/internet-learning-state.json');
+const STATE_FILE = process.env.SIS_DATA_DIR ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'improvement/internet-learning-state.json') : path.join(__dirname, '../../data/improvement/internet-learning-state.json');
 
 export class InternetLearningEngine {
   constructor() {

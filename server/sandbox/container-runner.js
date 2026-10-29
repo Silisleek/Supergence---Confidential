@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs';
+import { childEnvironment } from '../security/child-environment.js';
 
 export class ContainerRunner {
   constructor({ workspaceDir, useDocker = false, dockerImage = 'node:20-slim' } = {}) {
@@ -75,13 +76,12 @@ export class ContainerRunner {
       const child = spawn(execCmd, execArgs, {
         cwd: workingDir,
         shell: useShell,
-        env: {
-          ...process.env,
+        env: childEnvironment({
           NODE_ENV: 'test',
           PYTHONIOENCODING: 'utf-8',
           PYTHONUTF8: '1',
           ...(options.env || {}),
-        },
+        }),
       });
 
       let stdout = '';

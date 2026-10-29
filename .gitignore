@@ -80,8 +80,8 @@ references/
 backups/
 
 # Private runtime state and generated output
-data/
-workspace/
+/data/
+/workspace/
 .sandbox/
 artifacts/
 tests/.temp_test/

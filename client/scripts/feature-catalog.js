@@ -469,7 +469,7 @@ const fiftyFeaturesList = [
     title: 'Sandboxed OS Shell Execution Console',
     firstBadge: 'CATALOG',
     tech: 'OpenClaw Sandboxed Terminal',
-    desc: 'Runs native PowerShell/Bash commands inside a monitored cybernetic sandbox with real-time stdout/stderr streaming.',
+    desc: 'Runs native PowerShell/Bash commands with real-time stdout/stderr streaming. Commands use your operating system permissions.',
   },
   {
     id: 'feat-47',

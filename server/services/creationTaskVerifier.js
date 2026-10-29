@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { chromium } from 'playwright-core';
 import { creationBenchmarks } from '../quality/creation-benchmarks.js';
 import { studioPath } from './creationStudio.js';
+import { sessionAuth } from '../security/session-auth.js';
 
 export async function verifyCreationTask({ filename, task }) {
   const suite = creationBenchmarks.find((suite) => suite.id === task);
@@ -27,6 +28,11 @@ export async function verifyCreationTask({ filename, task }) {
       viewport: { width: 1440, height: 960 },
       acceptDownloads: true,
     });
+    if (sessionAuth?.secret) {
+      await page.setExtraHTTPHeaders({
+        authorization: `Bearer ${sessionAuth.secret}`,
+      });
+    }
     page.setDefaultTimeout(7000);
     page.on('pageerror', (error) => errors.push(error.message));
     page.on('console', (message) => {

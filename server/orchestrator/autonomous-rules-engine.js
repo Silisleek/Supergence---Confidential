@@ -10,7 +10,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const RULES_DIR = path.resolve(__dirname, '../../data/rules');
+const RULES_DIR = process.env.SIS_DATA_DIR
+  ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'rules')
+  : path.resolve(__dirname, '../../data/rules');
 const RULES_FILE = path.join(RULES_DIR, 'operational-rules.json');
 const RULES_MD = path.join(RULES_DIR, 'RULES.md');
 

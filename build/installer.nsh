@@ -22,14 +22,6 @@
   CreateDirectory "$APPDATA\Supergence\data\tools\custom"
   CreateDirectory "$APPDATA\Supergence\workspace"
 
-  ; Write supergence-config.json with chosen installation directory
-  FileOpen $0 "$APPDATA\Supergence\supergence-config.json" w
-  FileWrite $0 '{"installPath":"$INSTDIR","dataPath":"$APPDATA\\Supergence\\data","workspacePath":"$APPDATA\\Supergence\\workspace","version":"1.0.0"}'
-  FileClose $0
-
-  ; Copy config to installation directory
-  CopyFiles "$APPDATA\Supergence\supergence-config.json" "$INSTDIR\supergence-config.json"
-
   ; Refresh Windows Shell so shell:appsfolder updates immediately
   System::Call 'shell32.dll::SHChangeNotify(i 0x08000000, i 0, i 0, i 0)'
 !macroend

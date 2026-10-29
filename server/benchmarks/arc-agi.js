@@ -8,7 +8,7 @@ import patternEngine from '../orchestrator/pattern-recognition.js';
 import mathExpertEngine from '../orchestrator/math-expert.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ARC_DIR = path.resolve(__dirname, '../../data/benchmarks/arc_tasks');
+const ARC_DIR = process.env.SIS_DATA_DIR ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'benchmarks/arc_tasks') : path.resolve(__dirname, '../../data/benchmarks/arc_tasks');
 
 export class ArcAgiBenchmark {
   constructor() {

@@ -8,7 +8,13 @@ import { randomUUID } from 'crypto';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '../../');
-const SYSTEMS_BASE_DIR = path.resolve(PROJECT_ROOT, 'data', 'systems');
+const DATA_ROOT = process.env.SIS_DATA_DIR
+  ? path.resolve(process.env.SIS_DATA_DIR)
+  : path.resolve(PROJECT_ROOT, 'data');
+const WORKSPACE_ROOT = process.env.SIS_WORKSPACE_DIR
+  ? path.resolve(process.env.SIS_WORKSPACE_DIR)
+  : path.resolve(PROJECT_ROOT, 'workspace');
+const SYSTEMS_BASE_DIR = path.resolve(DATA_ROOT, 'systems');
 const SYSTEMS_META_FILE = path.resolve(SYSTEMS_BASE_DIR, 'systems-registry.json');
 
 // Ensure base systems directory exists
@@ -50,14 +56,14 @@ export class SystemManager {
       trainingLevel: 10,
       trainingSessions: [],
       paths: {
-        workspaceDir: path.resolve(PROJECT_ROOT, 'workspace'),
-        stmPath: path.resolve(PROJECT_ROOT, 'data', 'memory', 'short-term.json'),
-        ltmPath: path.resolve(PROJECT_ROOT, 'data', 'memory', 'long-term.json'),
-        graphPath: path.resolve(PROJECT_ROOT, 'data', 'memory', 'knowledge-graph.json'),
-        convDir: path.resolve(PROJECT_ROOT, 'data', 'conversations'),
-        theoriesDir: path.resolve(PROJECT_ROOT, 'data', 'theories'),
-        wsTheoriesDir: path.resolve(PROJECT_ROOT, 'workspace', 'theories'),
-        learnerPath: path.resolve(PROJECT_ROOT, 'data', 'improvement', 'autonomous-learning.json'),
+        workspaceDir: WORKSPACE_ROOT,
+        stmPath: path.resolve(DATA_ROOT, 'memory', 'short-term.json'),
+        ltmPath: path.resolve(DATA_ROOT, 'memory', 'long-term.json'),
+        graphPath: path.resolve(DATA_ROOT, 'memory', 'knowledge-graph.json'),
+        convDir: path.resolve(DATA_ROOT, 'conversations'),
+        theoriesDir: path.resolve(DATA_ROOT, 'theories'),
+        wsTheoriesDir: path.resolve(WORKSPACE_ROOT, 'theories'),
+        learnerPath: path.resolve(DATA_ROOT, 'improvement', 'autonomous-learning.json'),
       },
     };
     this.systems.set('default', defaultSys);

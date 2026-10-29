@@ -12,7 +12,10 @@ import codingExpertEngine from '../coder/coding-expert-engine.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, '../../');
-const GOALS_DIR = path.join(ROOT_DIR, 'data', 'goals');
+const GOALS_DIR = path.join(
+  process.env.SIS_DATA_DIR ? path.resolve(process.env.SIS_DATA_DIR) : path.join(ROOT_DIR, 'data'),
+  'goals',
+);
 const GOALS_FILE = path.join(GOALS_DIR, 'goals.json');
 
 const STEP_KIND = {

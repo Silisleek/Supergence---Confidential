@@ -11,7 +11,7 @@ import workspace from '../workspace/manager.js';
 
 const execAsync = promisify(exec);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const WORKSPACE_DIR = path.resolve(__dirname, '../../workspace');
+const WORKSPACE_DIR = process.env.SIS_WORKSPACE_DIR ? path.resolve(process.env.SIS_WORKSPACE_DIR) : path.resolve(__dirname, '../../workspace');
 
 class GitHubManager {
   constructor() {

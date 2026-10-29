@@ -13,7 +13,7 @@ import knowledgeGraph from '../memory/knowledge-graph.js';
 import neuromodulators from './neuromodulators.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const SCHEMAS_PATH = path.join(__dirname, '../../data/improvement/human-schemas.json');
+const SCHEMAS_PATH = process.env.SIS_DATA_DIR ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'improvement/human-schemas.json') : path.join(__dirname, '../../data/improvement/human-schemas.json');
 
 class HumanLearningEngine extends EventEmitter {
   constructor() {

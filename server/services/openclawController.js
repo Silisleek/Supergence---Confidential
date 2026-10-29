@@ -12,15 +12,18 @@ import os from 'os';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { exec, execFile } from 'child_process';
+import { exec, execFile, spawn } from 'child_process';
 import { promisify } from 'util';
 import brain from '../orchestrator/brain.js';
+import { childEnvironment } from '../security/child-environment.js';
 
 const execAsync = promisify(exec);
 const execFileAsync = promisify(execFile);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, '../../');
-const WORKSPACE_DIR = path.join(ROOT_DIR, 'workspace');
+const WORKSPACE_DIR = process.env.SIS_WORKSPACE_DIR
+  ? path.resolve(process.env.SIS_WORKSPACE_DIR)
+  : path.join(ROOT_DIR, 'workspace');
 
 export class OpenClawController {
   constructor() {
@@ -140,7 +143,7 @@ export class OpenClawController {
     try {
       // Use powershell on Windows, /bin/sh on POSIX
       const isWin = process.platform === 'win32';
-      const executionOptions = { cwd, timeout, maxBuffer: 10 * 1024 * 1024, windowsHide: true };
+      const executionOptions = { cwd, timeout, maxBuffer: 10 * 1024 * 1024, windowsHide: true, env: childEnvironment() };
       // Pass the script as one process argument. Wrapping/escaping it through
       // cmd.exe first changes nested quotes and can turn commands into strings.
       const { stdout, stderr } = isWin
@@ -333,14 +336,23 @@ export class OpenClawController {
 
     try {
       const cleanApp = appName.trim();
-      let cmd = '';
-      if (process.platform === 'win32') {
-        cmd = `powershell -NoProfile -Command "Start-Process '${cleanApp}' ${args ? `-ArgumentList '${args}'` : ''}"`;
-      } else {
-        cmd = `${cleanApp} ${args} &`;
-      }
-
-      await execAsync(cmd);
+      const argv = Array.isArray(args) ? args : args ? [args] : [];
+      if (!argv.every((argument) => typeof argument === 'string'))
+        throw new Error('Application arguments must be strings.');
+      await new Promise((resolve, reject) => {
+        const child = spawn(cleanApp, argv, {
+          shell: false,
+          detached: true,
+          windowsHide: true,
+          stdio: 'ignore',
+          env: childEnvironment(),
+        });
+        child.once('error', reject);
+        child.once('spawn', () => {
+          child.unref();
+          resolve();
+        });
+      });
       const res = {
         success: true,
         app: cleanApp,

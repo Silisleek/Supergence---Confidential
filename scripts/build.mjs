@@ -15,6 +15,7 @@ const classicScripts = [
   'workspace-shell.js',
   'creation-studio.js',
   'chat-artifacts.js',
+  'workspace-result-summary.js',
   'workspace-learning.js',
   'workspace-evolution.js',
   'workspace-cockpit.js',

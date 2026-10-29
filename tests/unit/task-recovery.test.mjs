@@ -112,6 +112,7 @@ test('an explicit user stop is durable and never auto-resumes', async (t) => {
 test('Full access authorizes ordinary application source edits and resolves a waiting source-only review', async (t) => {
   const { directory } = fixture(t);
   const access = new RuntimeAccess({ directory, timeoutMs: 1000 });
+  access.update({ mode: 'full-access' });
   await access.authorize('write_file', {
     path: 'client/example.js',
     content: 'export const value=1;',
@@ -186,6 +187,7 @@ test('conversation turns double checks unfinished task and continues until compl
 test('full access overrides permission pauses and review prompts', async (t) => {
   const { directory } = fixture(t);
   const access = new RuntimeAccess({ directory });
+  access.update({ mode: 'full-access' });
   assert.equal(access.settings.mode, 'full-access');
 
   const complete = async () => ({

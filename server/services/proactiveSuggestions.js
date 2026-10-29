@@ -85,11 +85,11 @@ export class ProactiveSuggestions {
     this.file = path.join(directory, 'proactive-suggestions.json');
     this.state = {
       settings: {
-        enabled: true,
-        folders: keys,
+        enabled: false,
+        folders: ['workspace'],
         intervalMinutes: 90,
-        activity: true,
-        desktopNotifications: true,
+        activity: false,
+        desktopNotifications: false,
       },
       inbox: [],
       nextCheckAt: null,
@@ -103,9 +103,12 @@ export class ProactiveSuggestions {
     try {
       const saved = JSON.parse(await fs.readFile(this.file, 'utf8'));
       this.state = { ...this.state, ...saved, settings: this.validate(saved.settings) };
+      // Earlier releases enabled observation by default without an opt-in.
+      if (saved.consentVersion !== 1) this.state.settings.enabled = false;
     } catch (error) {
       if (error.code !== 'ENOENT') throw error;
     }
+    this.state.consentVersion = 1;
     this.roots = await this.folders(this.workspace);
     if (!this.state.nextCheckAt)
       this.state.nextCheckAt = this.clock() + this.state.settings.intervalMinutes * 60000;

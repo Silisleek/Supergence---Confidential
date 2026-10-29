@@ -9,7 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
-dotenv.config({ override: true });
+dotenv.config();
 
 // Auto-discover OpenCode credentials from environment or local OpenCode CLI auth
 function getOpenCodeCredentials() {
@@ -37,6 +37,25 @@ function getOpenCodeCredentials() {
 }
 
 const opencodeCreds = getOpenCodeCredentials();
+
+function parseResetCooldownSeconds(msg) {
+  if (!msg) return 0;
+  const minSecMatch = msg.match(/reset after\s+(?:(\d+)\s*m(?:in(?:ute)?s?)?\s*)?(\d+)\s*s(?:ec(?:ond)?s?)?/i);
+  if (minSecMatch) {
+    const mins = minSecMatch[1] ? parseInt(minSecMatch[1], 10) : 0;
+    const secs = parseInt(minSecMatch[2], 10);
+    return mins * 60 + secs;
+  }
+  const minOnlyMatch = msg.match(/reset after\s+(\d+)\s*m(?:in(?:ute)?s?)?/i);
+  if (minOnlyMatch) {
+    return parseInt(minOnlyMatch[1], 10) * 60;
+  }
+  const secOnlyMatch = msg.match(/reset after\s+(\d+)\s*s/i);
+  if (secOnlyMatch) {
+    return parseInt(secOnlyMatch[1], 10);
+  }
+  return 0;
+}
 
 const DEFAULT_MODEL = normalizeRouterModel(process.env.DEFAULT_MODEL || 'opus-4.6');
 const FALLBACK_MODEL = process.env.FALLBACK_MODEL || process.env.FALLBACK_MODELS || '';
@@ -404,21 +423,45 @@ async function createCompletionWithRetry(params, signal) {
           error.status === 503 ||
           errMsg.includes('502') ||
           errMsg.includes('503') ||
+          errMsg.includes('stream_failed') ||
+          errMsg.includes("supplier's end") ||
           isTimeout;
 
         if (entry.name === 'configuredRouter') {
-          // If transient 502/503/timeout, wait for reset cooldown and retry reqModel once before moving to next candidate
-          if (isTransient && Date.now() < deadline) {
-            const resetMatch = errMsg.match(/reset after (\d+)s/i);
-            const waitSeconds = resetMatch ? Math.min(parseInt(resetMatch[1], 10) + 1, 15) : 5;
+          // If transient 502/503/timeout, wait for reset cooldown and retry reqModel before moving to next candidate
+          let currentErr = lastError;
+          while (Date.now() < deadline) {
+            const currentMsg = String(currentErr?.message || '').toLowerCase();
+            const currentTransient =
+              currentErr.status === 502 ||
+              currentErr.status === 503 ||
+              currentMsg.includes('502') ||
+              currentMsg.includes('503') ||
+              currentMsg.includes('stream_failed') ||
+              currentMsg.includes("supplier's end") ||
+              currentErr.name === 'APIConnectionTimeoutError' ||
+              currentMsg.includes('timed out') ||
+              currentMsg.includes('timeout');
+              currentMsg.includes('502') ||
+              currentMsg.includes('503') ||
+              currentErr.name === 'APIConnectionTimeoutError' ||
+              currentMsg.includes('timed out') ||
+              currentMsg.includes('timeout');
+            if (!currentTransient) break;
+
+            const cooldown = parseResetCooldownSeconds(String(currentErr?.message || ''));
+            const maxWait = Math.max(1, Math.floor((deadline - Date.now()) / 1000));
+            const waitSeconds = cooldown > 0 ? Math.min(cooldown + 2, maxWait) : 5;
+            if (Date.now() + waitSeconds * 1000 >= deadline) break;
+
             console.warn(
-              `[AI Gateway] Local router transient notice on ${reqModel} (${error.status || error.message}). Retrying in ${waitSeconds}s...`,
+              `[AI Gateway] Local router transient notice on ${reqModel} (${currentErr.status || currentErr.message}). Retrying in ${waitSeconds}s...`,
             );
             await new Promise((r) =>
               setTimeout(r, Math.min(waitSeconds * 1000, Math.max(0, deadline - Date.now()))),
             );
             const retryTimeout = deadline - Date.now();
-            if (retryTimeout <= 0) continue;
+            if (retryTimeout <= 0) break;
             try {
               const retryRes = await compatibleCompletion(entry.client, runParams, {
                 timeout: retryTimeout,
@@ -428,6 +471,7 @@ async function createCompletionWithRetry(params, signal) {
               });
               if (retryRes) return retryRes;
             } catch (rErr) {
+              currentErr = rErr;
               lastError = rErr;
             }
           }
@@ -628,6 +672,8 @@ function isStreamCutError(error) {
     m.includes('socket hang up') ||
     m.includes('terminated') ||
     m.includes('network') ||
+    m.includes('stream_failed') ||
+    m.includes("supplier's end") ||
     error?.code === 'ECONNRESET' ||
     error?.name === 'AbortError'
   );

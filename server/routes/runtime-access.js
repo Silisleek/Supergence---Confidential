@@ -1,10 +1,12 @@
 import { runtimeAccess } from '../services/runtimeAccess.js';
 
-export function registerRuntimeAccessRoutes(app) {
+export function registerRuntimeAccessRoutes(app, { waitForBrowserShutdown = async () => {} } = {}) {
   app.get('/api/access', (_req, res) => res.json({ success: true, ...runtimeAccess.snapshot() }));
-  app.patch('/api/access', (req, res) => {
+  app.patch('/api/access', async (req, res) => {
     try {
-      res.json({ success: true, ...runtimeAccess.update(req.body) });
+      runtimeAccess.update(req.body);
+      if (!runtimeAccess.settings.browser) await waitForBrowserShutdown();
+      res.json({ success: true, ...runtimeAccess.snapshot() });
     } catch (error) {
       res.status(400).json({ success: false, error: error.message });
     }

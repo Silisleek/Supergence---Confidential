@@ -20,8 +20,11 @@ import userFocusTracker from './user-focus-tracker.js';
 import subconscious from '../orchestrator/subconscious.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const AUDIT_FILE = path.join(__dirname, '../../data/improvement/conversation-dataset-audit.json');
-const CONVERSATIONS_DIR = path.join(__dirname, '../../data/conversations');
+const DATA_DIR = process.env.SIS_DATA_DIR
+  ? path.resolve(process.env.SIS_DATA_DIR)
+  : path.resolve(__dirname, '../../data');
+const AUDIT_FILE = path.join(DATA_DIR, 'improvement/conversation-dataset-audit.json');
+const CONVERSATIONS_DIR = path.join(DATA_DIR, 'conversations');
 
 // Ensure directory exists
 if (!fs.existsSync(path.dirname(AUDIT_FILE))) {

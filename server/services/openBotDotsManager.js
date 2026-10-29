@@ -12,8 +12,13 @@ import { quickAI, DEFAULT_MODEL, PREMIUM_MODEL } from '../api/openrouter.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, '../../');
-const DATA_DIR = path.join(ROOT_DIR, 'data');
-const SPACES_DIR = path.join(ROOT_DIR, 'workspace', 'spaces');
+const DATA_DIR = process.env.SIS_DATA_DIR
+  ? path.resolve(process.env.SIS_DATA_DIR)
+  : path.join(ROOT_DIR, 'data');
+const SPACES_DIR = path.join(
+  process.env.SIS_WORKSPACE_DIR ? path.resolve(process.env.SIS_WORKSPACE_DIR) : path.join(ROOT_DIR, 'workspace'),
+  'spaces',
+);
 const AGENTS_STORE_FILE = path.join(DATA_DIR, 'openbot-dots-agents.json');
 
 export class OpenBotDotsManager {

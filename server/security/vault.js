@@ -1,6 +1,4 @@
-// SIS Enterprise 1.0 — Cryptographic Vault & Envelope Encryption Subsystem
-// Billion-Dollar Enterprise Grade: AES-256-GCM Authenticated Encryption with PBKDF2 Key Derivation
-// Follows NIST SP 800-38D, SP 800-57, and FIPS 140-3 architecture guidelines.
+// AES-256-GCM vault and JSON envelope encryption.
 
 import crypto from 'crypto';
 import fs from 'fs';
@@ -9,8 +7,6 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SECURITY_DIR = path.resolve(__dirname, '../../data/security');
-const VAULT_FILE = path.join(SECURITY_DIR, 'vault.enc');
-const KEYRING_FILE = path.join(SECURITY_DIR, 'keyring.json');
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 12; // 96 bits for GCM
@@ -20,14 +16,21 @@ const PBKDF2_ITERATIONS = 100000;
 const KEY_LENGTH = 32; // 256 bits key
 
 export class EnterpriseVault {
-  constructor() {
+  constructor({
+    directory = process.env.SIS_VAULT_DIR ||
+      (process.env.SIS_DATA_DIR ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'security') : SECURITY_DIR),
+  } = {}) {
+    this.directory = path.resolve(directory);
+    this.vaultFile = path.join(this.directory, 'vault.enc');
+    this.keyringFile = path.join(this.directory, 'keyring.json');
+    this.installationSecretFile = path.join(this.directory, 'installation.key');
     this.keyring = {
       activeVersion: 1,
       createdAt: Date.now(),
       rotatedAt: null,
       keys: {}, // version -> { salt, iterations, createdAt }
     };
-    this.masterKeys = new Map(); // version -> Buffer (in-memory only, zeroized on unload)
+    this.masterKeys = new Map(); // version -> Buffer held in process memory
     this.records = new Map(); // id -> { ciphertext, iv, authTag, keyVersion, metadata, updatedAt }
     this.stats = {
       totalEncryptedRecords: 0,
@@ -44,18 +47,19 @@ export class EnterpriseVault {
   }
 
   _initializeDirectory() {
-    if (!fs.existsSync(SECURITY_DIR)) {
-      fs.mkdirSync(SECURITY_DIR, { recursive: true });
+    if (!fs.existsSync(this.directory)) {
+      fs.mkdirSync(this.directory, { recursive: true });
       try {
-        fs.chmodSync(SECURITY_DIR, 0o700);
+        fs.chmodSync(this.directory, 0o700);
       } catch (_) {}
     }
   }
 
   _loadOrGenerateKeyring() {
     try {
-      if (fs.existsSync(KEYRING_FILE)) {
-        const raw = fs.readFileSync(KEYRING_FILE, 'utf8');
+      const existing = fs.existsSync(this.keyringFile);
+      if (existing) {
+        const raw = fs.readFileSync(this.keyringFile, 'utf8');
         this.keyring = JSON.parse(raw);
       } else {
         // Generate initial Version 1 Keyring
@@ -64,17 +68,31 @@ export class EnterpriseVault {
           salt,
           iterations: PBKDF2_ITERATIONS,
           createdAt: Date.now(),
+          keySource: process.env.SIS_MASTER_SECRET ? 'legacy' : 'installation',
         };
         this.keyring.activeVersion = 1;
-        this._saveKeyring();
       }
 
-      // Derive in-memory Master Key for active versions using machine entropy
-      const machineEntropy = `${process.env.SIS_MASTER_SECRET || 'SIS_ENTERPRISE_SECRET_KEY_999'}_${process.platform}_${process.arch}`;
+      const hasInstallationKeys = Object.values(this.keyring.keys).some(
+        (meta) => meta.keySource === 'installation',
+      );
+      if (hasInstallationKeys && existing && !fs.existsSync(this.installationSecretFile))
+        throw new Error('Vault installation key is missing; encrypted data was not modified.');
+      this.allowSecretCreation = !hasInstallationKeys || !existing;
+      if (!process.env.SIS_MASTER_SECRET && existing && !hasInstallationKeys) {
+        const nextVersion = this.keyring.activeVersion + 1;
+        this.keyring.keys[String(nextVersion)] = {
+          salt: crypto.randomBytes(SALT_LENGTH).toString('hex'),
+          iterations: PBKDF2_ITERATIONS,
+          createdAt: Date.now(),
+          keySource: 'installation',
+        };
+        this.keyring.activeVersion = nextVersion;
+      }
       for (const [ver, meta] of Object.entries(this.keyring.keys)) {
         const saltBuf = Buffer.from(meta.salt, 'hex');
         const derivedKey = crypto.pbkdf2Sync(
-          machineEntropy,
+          this._secretFor(meta),
           saltBuf,
           meta.iterations || PBKDF2_ITERATIONS,
           KEY_LENGTH,
@@ -82,33 +100,58 @@ export class EnterpriseVault {
         );
         this.masterKeys.set(Number(ver), derivedKey);
       }
+      if (!existing || (!process.env.SIS_MASTER_SECRET && !hasInstallationKeys))
+        this._saveKeyring();
+      this.allowSecretCreation = false;
     } catch (err) {
-      console.error('[EnterpriseVault] Keyring initialization error:', err.message);
-      // Fallback: ephemeral master key
-      const ephemeralSalt = crypto.randomBytes(SALT_LENGTH);
-      const derived = crypto.pbkdf2Sync(
-        'ephemeral_fallback',
-        ephemeralSalt,
-        10000,
-        KEY_LENGTH,
-        'sha512',
-      );
-      this.masterKeys.set(1, derived);
+      throw new Error(`Vault keyring initialization failed: ${err.message}`, { cause: err });
     }
   }
 
-  _saveKeyring() {
+  _secretFor(meta) {
+    if (meta.keySource !== 'installation')
+      return `${process.env.SIS_MASTER_SECRET || 'SIS_ENTERPRISE_SECRET_KEY_999'}_${process.platform}_${process.arch}`;
+    let secret;
     try {
-      fs.writeFileSync(KEYRING_FILE, JSON.stringify(this.keyring, null, 2), { mode: 0o600 });
-    } catch (e) {
-      console.warn('[EnterpriseVault] Could not persist keyring:', e.message);
+      secret = fs.readFileSync(this.installationSecretFile, 'utf8');
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+      if (!this.allowSecretCreation)
+        throw new Error('Vault installation key is missing; encrypted data was not modified.', {
+          cause: error,
+        });
+      try {
+        fs.writeFileSync(this.installationSecretFile, crypto.randomBytes(32).toString('hex'), {
+          flag: 'wx',
+          mode: 0o600,
+        });
+      } catch (createError) {
+        if (createError.code !== 'EEXIST') throw createError;
+      }
+      secret = fs.readFileSync(this.installationSecretFile, 'utf8');
+    }
+    if (!/^[0-9a-f]{64}$/.test(secret))
+      throw new Error('Vault installation key is invalid; encrypted data was not modified.');
+    return secret;
+  }
+
+  _saveKeyring() {
+    const temporary = `${this.keyringFile}.${crypto.randomUUID()}.tmp`;
+    try {
+      fs.writeFileSync(temporary, JSON.stringify(this.keyring, null, 2), {
+        flag: 'wx',
+        mode: 0o600,
+      });
+      fs.renameSync(temporary, this.keyringFile);
+    } finally {
+      if (fs.existsSync(temporary)) fs.unlinkSync(temporary);
     }
   }
 
   _loadVaultRecords() {
     try {
-      if (fs.existsSync(VAULT_FILE)) {
-        const raw = fs.readFileSync(VAULT_FILE, 'utf8');
+      if (fs.existsSync(this.vaultFile)) {
+        const raw = fs.readFileSync(this.vaultFile, 'utf8');
         const data = JSON.parse(raw);
         if (data.records && typeof data.records === 'object') {
           for (const [id, rec] of Object.entries(data.records)) {
@@ -134,7 +177,7 @@ export class EnterpriseVault {
         count: this.records.size,
         records: recordsObj,
       };
-      fs.writeFileSync(VAULT_FILE, JSON.stringify(payload, null, 2), { mode: 0o600 });
+      fs.writeFileSync(this.vaultFile, JSON.stringify(payload, null, 2), { mode: 0o600 });
     } catch (err) {
       console.error('[EnterpriseVault] Vault persist error:', err.message);
     }
@@ -263,24 +306,25 @@ export class EnterpriseVault {
     const nextVersion = this.keyring.activeVersion + 1;
     const newSalt = crypto.randomBytes(SALT_LENGTH).toString('hex');
 
-    this.keyring.keys[String(nextVersion)] = {
+    const nextMeta = {
       salt: newSalt,
       iterations: PBKDF2_ITERATIONS,
       createdAt: Date.now(),
+      keySource: process.env.SIS_MASTER_SECRET ? 'legacy' : 'installation',
     };
-    this.keyring.activeVersion = nextVersion;
-    this.keyring.rotatedAt = Date.now();
 
     // Derive and load new key
-    const machineEntropy = `${process.env.SIS_MASTER_SECRET || 'SIS_ENTERPRISE_SECRET_KEY_999'}_${process.platform}_${process.arch}`;
     const saltBuf = Buffer.from(newSalt, 'hex');
     const newKey = crypto.pbkdf2Sync(
-      machineEntropy,
+      this._secretFor(nextMeta),
       saltBuf,
       PBKDF2_ITERATIONS,
       KEY_LENGTH,
       'sha512',
     );
+    this.keyring.keys[String(nextVersion)] = nextMeta;
+    this.keyring.activeVersion = nextVersion;
+    this.keyring.rotatedAt = Date.now();
     this.masterKeys.set(nextVersion, newKey);
 
     // Re-encrypt existing records
@@ -399,16 +443,22 @@ export class EnterpriseVault {
     return {
       status: 'active',
       algorithm: ALGORITHM.toUpperCase(),
-      fipsCompliant: true,
+      fipsCompliant: false,
+      fipsModeEnabled: crypto.getFips() === 1,
       keyringVersion: this.keyring.activeVersion,
       keyRotations: this.stats.keyRotations,
       totalEncryptedRecords: this.records.size,
       totalDecryptionOps: this.stats.totalDecryptionOps,
       totalEncryptionOps: this.stats.totalEncryptionOps,
       integrityFailures: this.stats.integrityFailures,
-      storageDirectory: SECURITY_DIR,
+      storageDirectory: this.directory,
       vaultEncrypted: true,
-      memoryZeroizationActive: true,
+      encryptionScope: 'Vault records and explicitly encrypted envelopes only; other application data may be plaintext.',
+      memoryZeroizationActive: false,
+      keyStorage: 'Installation key file protected by operating-system file permissions; not an OS keychain.',
+      legacyKeyVersions: Object.values(this.keyring.keys).filter(
+        (meta) => meta.keySource !== 'installation',
+      ).length,
       lastRotatedAt: this.keyring.rotatedAt,
     };
   }

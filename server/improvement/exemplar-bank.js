@@ -9,7 +9,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const EXEMPLAR_FILE = path.join(__dirname, '../../data/improvement/exemplar-bank.json');
+const EXEMPLAR_FILE = process.env.SIS_DATA_DIR ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'improvement/exemplar-bank.json') : path.join(__dirname, '../../data/improvement/exemplar-bank.json');
 
 if (!fs.existsSync(path.dirname(EXEMPLAR_FILE))) {
   fs.mkdirSync(path.dirname(EXEMPLAR_FILE), { recursive: true });

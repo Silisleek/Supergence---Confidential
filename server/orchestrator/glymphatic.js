@@ -3,15 +3,10 @@
 // deep sleep (NREM). Flushes cognitive debris, prunes dead memories, clears
 // orphaned context, and defragments memory trees to prevent mental bloat.
 
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import shortTermMemory from '../memory/short-term.js';
 import longTermMemory from '../memory/long-term.js';
 import knowledgeGraph from '../memory/knowledge-graph.js';
 import brainLifecycle, { BRAIN_STATES } from './brain-lifecycle.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 class GlymphaticDaemon {
   constructor() {
@@ -77,26 +72,6 @@ class GlymphaticDaemon {
         prunedMemories += removed || 0;
       } catch (err) {
         console.warn('[Glymphatics] STM cleanup warning:', err.message);
-      }
-
-      // 2. Prune Sandbox & Stale Run Folders
-      try {
-        const sandboxDir = path.join(__dirname, '../../workspace/.sandbox');
-        if (fs.existsSync(sandboxDir)) {
-          const entries = fs.readdirSync(sandboxDir);
-          const now = Date.now();
-          for (const entry of entries) {
-            const fullPath = path.join(sandboxDir, entry);
-            const stat = fs.statSync(fullPath);
-            // If older than 1 hour, purge
-            if (now - stat.mtimeMs > 60 * 60 * 1000) {
-              fs.rmSync(fullPath, { recursive: true, force: true });
-              removedFiles++;
-            }
-          }
-        }
-      } catch (err) {
-        console.warn('[Glymphatics] Sandbox purge warning:', err.message);
       }
 
       // 3. Compact Knowledge Graph isolated nodes

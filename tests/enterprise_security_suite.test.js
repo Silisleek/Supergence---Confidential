@@ -2,14 +2,22 @@
 // Verifies AES-256-GCM Envelope Encryption, AAD Context Binding, Key Rotation, and Merkle Tamper Detection
 
 import assert from 'assert';
-import enterpriseVault from '../server/security/vault.js';
-import enterpriseAuditTrail, { EnterpriseAuditTrail } from '../server/security/audit-trail.js';
-import governanceScanner from '../server/security/governance.js';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'sis-enterprise-test-'));
+process.env.SIS_VAULT_DIR = path.join(fixtureRoot, 'vault');
+process.env.SIS_AUDIT_DIR = path.join(fixtureRoot, 'audit');
+const { default: enterpriseVault } = await import('../server/security/vault.js');
+const { default: enterpriseAuditTrail, EnterpriseAuditTrail } =
+  await import('../server/security/audit-trail.js');
+const { default: governanceScanner } = await import('../server/security/governance.js');
 
 async function runTestSuite() {
   console.log('================================================================');
   console.log('SIS ENTERPRISE SECURITY & CRYPTOGRAPHIC INVARIANT TEST SUITE');
-  console.log('Tier-1 Billion-Dollar Standard (FIPS 140-3, SOC-2, ISO-27001)');
+  console.log('Cryptographic checks do not establish compliance or certification.');
   console.log('================================================================\n');
 
   let passed = 0;
@@ -76,7 +84,7 @@ async function runTestSuite() {
 
   // 4. Secure File Envelope Serialization & Deserialization
   await test('4. Secure File Envelope Serialization & Deserialization', async () => {
-    const testFile = 'data/security/_test_envelope.json';
+    const testFile = path.join(fixtureRoot, '_test_envelope.json');
     const testData = { project: 'SEAL_AUTONOMOUS', epoch: 999, timestamp: Date.now() };
 
     const writeOk = enterpriseVault.secureWriteJson(testFile, testData, {
@@ -102,7 +110,7 @@ async function runTestSuite() {
 
   // 6. Tamper Detection on Historical Ledger
   await test('6. Tamper Detection: Modifying historical ledger record breaks chain', async () => {
-    const testAudit = new EnterpriseAuditTrail();
+    const testAudit = new EnterpriseAuditTrail({ directory: path.join(fixtureRoot, 'tamper') });
     testAudit.chain = [];
     testAudit.genesisHash = '0000000000000000000000000000000000000000000000000000000000000000';
     testAudit._recordGenesis();
@@ -119,21 +127,27 @@ async function runTestSuite() {
     assert.ok(tamperedCheck.violationsCount > 0, 'Tamper violations count must be > 0');
   });
 
-  // 7. Multi-Regulatory Governance Score
-  await test('7. Multi-Standard Governance: 100% score on SOC-2, ISO-27001, GDPR, HIPAA', async () => {
+  // 7. No certification claims without an assessment
+  await test('7. Governance reports unassessed compliance as unavailable', async () => {
     const report = await governanceScanner.runComplianceAudit();
-    assert.strictEqual(report.complianceScore, 100, 'Compliance score is not 100%');
-    assert.strictEqual(report.passedControls, report.totalControls, 'Some controls failed');
+    assert.strictEqual(report.complianceScore, null);
+    assert.ok(
+      Object.values(report.frameworks).every((framework) => framework.status === 'unavailable'),
+    );
   });
 
   console.log(`\n================================================================`);
-  console.log(`TEST SUITE RESULTS: ${passed}/${total} TESTS PASSED (100% PASS RATE)`);
+  console.log(`TEST SUITE RESULTS: ${passed}/${total} TESTS PASSED`);
   console.log(`================================================================\n`);
 
-  if (passed !== total) process.exit(1);
+  if (passed !== total) process.exitCode = 1;
 }
 
-runTestSuite().catch((err) => {
-  console.error('Test Suite Fatal Error:', err);
-  process.exit(1);
-});
+try {
+  await runTestSuite();
+} finally {
+  const relative = path.relative(os.tmpdir(), fixtureRoot);
+  if (!relative || relative.startsWith('..') || path.isAbsolute(relative))
+    throw new Error('Refusing to clean up a fixture outside the temporary directory.');
+  fs.rmSync(fixtureRoot, { recursive: true, force: true });
+}

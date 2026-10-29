@@ -7,7 +7,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const STM_PATH = path.join(__dirname, '../../data/memory/short-term.json');
+const STM_PATH = process.env.SIS_DATA_DIR
+  ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'memory/short-term.json')
+  : path.join(__dirname, '../../data/memory/short-term.json');
 
 class ShortTermMemory {
   constructor() {

@@ -33,7 +33,10 @@ async function start(id, query) {
     { id, query },
   );
 }
+let originalAccess;
 try {
+  originalAccess = (await (await page.request.get(`${baseURL}/api/access`)).json()).settings;
+  await page.request.patch(`${baseURL}/api/access`, { data: { mode: 'full-access' } });
   await page.goto(baseURL, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => window.__sisWorkspaceReady && window.SupergenceChatWorkspace);
   const command = `node -e "const fs=require('fs');fs.mkdirSync('build',{recursive:true});fs.writeFileSync('build/report.txt','${marker}-ALPHA');console.log('FIRST-${marker}');setTimeout(()=>{console.error('ACTUAL-STDERR');console.log('LAST-${marker}')},8000)"`;
@@ -157,6 +160,8 @@ try {
   await fs.writeFile(path.join(output, 'results.json'), JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result, null, 2));
 } finally {
+  if (originalAccess)
+    await page.request.patch(`${baseURL}/api/access`, { data: originalAccess }).catch(() => {});
   for (const turn of turns) {
     const status = await (
       await fetch(

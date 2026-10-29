@@ -5,6 +5,7 @@ import sharp from 'sharp';
 import workspace from '../workspace/manager.js';
 import { workspaceEnvironment } from '../workspace/environment.js';
 import { inspectSceneGeometry } from './sceneGeometryInspection.js';
+import { sessionAuth } from '../security/session-auth.js';
 
 export const materialKinds = [
   'wood',
@@ -291,6 +292,11 @@ export async function verifyStudioArtifact({
     const page = await browser.newPage({
       viewport: { width: dimension(width, 1280), height: dimension(height, 800) },
     });
+    if (sessionAuth?.secret) {
+      await page.setExtraHTTPHeaders({
+        authorization: `Bearer ${sessionAuth.secret}`,
+      });
+    }
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     page.on('console', (message) => {

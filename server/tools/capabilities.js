@@ -16,7 +16,7 @@ import { ContainerRunner } from '../sandbox/container-runner.js';
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, '../../');
-const SANDBOX_BASE = path.join(ROOT_DIR, 'workspace', '.sandbox', 'forged');
+const SANDBOX_BASE = path.join(process.env.SIS_WORKSPACE_DIR ? path.resolve(process.env.SIS_WORKSPACE_DIR) : path.join(ROOT_DIR, 'workspace'), '.sandbox', 'forged');
 
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
 

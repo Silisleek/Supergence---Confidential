@@ -15,7 +15,7 @@ import { scanCodeForSlop } from '../../scripts/anti-slop.js';
 import { RewardVerifier } from '../trajectory/reward-verifier.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const WORKSPACE_DIR = path.resolve(__dirname, '../../workspace');
+const WORKSPACE_DIR = process.env.SIS_WORKSPACE_DIR ? path.resolve(process.env.SIS_WORKSPACE_DIR) : path.resolve(__dirname, '../../workspace');
 
 if (!fs.existsSync(WORKSPACE_DIR)) {
   fs.mkdirSync(WORKSPACE_DIR, { recursive: true });

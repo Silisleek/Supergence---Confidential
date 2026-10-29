@@ -3,24 +3,24 @@ import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import { fileURLToPath } from 'node:url';
-
-import { TrajectoryLogger } from '../server/trajectory/trajectory-logger.js';
-import { RewardVerifier } from '../server/trajectory/reward-verifier.js';
-import { DiffPatcher } from '../server/coder/diff-patcher.js';
-import { ContainerRunner } from '../server/sandbox/container-runner.js';
-import { WorktreeManager } from '../server/sandbox/worktree-manager.js';
-import { TddHarness } from '../server/coder/tdd-harness.js';
-import { AstParser } from '../server/lsp/ast-parser.js';
-import { LspClient } from '../server/lsp/lsp-client.js';
-import { BeamSearch } from '../server/search/beam-search.js';
-import empiricalGym from '../server/improvement/empirical-gym.js';
-import sandbox from '../server/coder/sandbox.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Source fixtures must live outside the protected tests tree. Each run gets its
 // own directory so concurrent verification cannot overwrite another run.
 const TEST_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'sis-integration-'));
+process.env.SIS_DATA_DIR = path.join(TEST_DIR, 'data');
+process.env.SIS_WORKSPACE_DIR = path.join(TEST_DIR, 'workspace');
+process.env.SIS_VAULT_DIR = path.join(TEST_DIR, 'vault');
+process.env.SIS_AUDIT_DIR = path.join(TEST_DIR, 'audit');
+const { TrajectoryLogger } = await import('../server/trajectory/trajectory-logger.js');
+const { RewardVerifier } = await import('../server/trajectory/reward-verifier.js');
+const { DiffPatcher } = await import('../server/coder/diff-patcher.js');
+const { ContainerRunner } = await import('../server/sandbox/container-runner.js');
+const { WorktreeManager } = await import('../server/sandbox/worktree-manager.js');
+const { TddHarness } = await import('../server/coder/tdd-harness.js');
+const { AstParser } = await import('../server/lsp/ast-parser.js');
+const { LspClient } = await import('../server/lsp/lsp-client.js');
+const { BeamSearch } = await import('../server/search/beam-search.js');
+const { default: empiricalGym } = await import('../server/improvement/empirical-gym.js');
+const { default: sandbox } = await import('../server/coder/sandbox.js');
 
 if (!fs.existsSync(TEST_DIR)) {
   fs.mkdirSync(TEST_DIR, { recursive: true });
@@ -80,7 +80,7 @@ await runTest('TrajectoryLogger: Records steps and exports DPO preference pairs'
   assert.ok(pair.chosen.length === 1);
   assert.ok(pair.rejected.length === 1);
 
-  const dpoPath = path.resolve(__dirname, '../data/trajectories/dpo_pairs.jsonl');
+  const dpoPath = path.join(process.env.SIS_DATA_DIR, 'trajectories', 'dpo_pairs.jsonl');
   assert.ok(fs.existsSync(dpoPath));
 });
 

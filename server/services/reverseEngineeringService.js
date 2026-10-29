@@ -3,6 +3,7 @@ import { spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { childEnvironment } from '../security/child-environment.js';
 
 const REA_VERSION = '6.5.0';
 const PROFILE = Object.freeze({
@@ -205,6 +206,7 @@ export class ReverseEngineeringService {
     return new Promise((resolve, reject) => {
       const child = spawn(process.execPath, args, {
         cwd: this.workspaceRoot,
+        env: childEnvironment(),
         shell: false,
         windowsHide: true,
         stdio: ['ignore', 'pipe', 'pipe'],
@@ -221,6 +223,7 @@ export class ReverseEngineeringService {
         if (process.platform === 'win32' && child.pid) {
           const killer = spawn('taskkill.exe', ['/pid', String(child.pid), '/t', '/f'], {
             shell: false,
+            env: childEnvironment(),
             windowsHide: true,
             stdio: 'ignore',
           });

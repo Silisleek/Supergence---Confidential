@@ -5,8 +5,11 @@ const baseURL = process.env.SIS_BASE_URL;
 if (!baseURL) throw new Error('Set SIS_BASE_URL to the startup banner URL.');
 await fs.mkdir('test-results/creation-studio', { recursive: true });
 const browser = await chromium.launch({ channel: 'chrome', headless: true });
+let originalAccess;
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  originalAccess = (await (await page.request.get(`${baseURL}/api/access`)).json()).settings;
+  await page.request.patch(`${baseURL}/api/access`, { data: { mode: 'full-access' } });
   page.setDefaultTimeout(90000);
   const response = await page.goto(baseURL, { waitUntil: 'domcontentloaded', timeout: 90000 });
   assert.equal(response.status(), 200);
@@ -92,5 +95,12 @@ try {
   assert.ok(badReport.errors.length > 0);
   console.log(JSON.stringify({ passed: true, report, brokenArtifactRejected: !badReport.passed }));
 } finally {
+  if (originalAccess) {
+    await fetch(`${baseURL}/api/access`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(originalAccess),
+    }).catch(() => {});
+  }
   await browser.close();
 }

@@ -52,7 +52,10 @@ const fixtureURL = `http://127.0.0.1:${fixture.address().port}/`;
 const browser = await chromium.launch({ channel: 'chrome', headless: true });
 const page = await browser.newPage();
 let conversationId;
+let originalAccess;
 try {
+  originalAccess = (await (await page.request.get(`${baseURL}/api/access`)).json()).settings;
+  await page.request.patch(`${baseURL}/api/access`, { data: { mode: 'full-access' } });
   await page.goto(baseURL, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => window.__sisWorkspaceReady);
   await page.locator('#shellNewConversation').click();
@@ -167,6 +170,8 @@ try {
   );
   console.log('Passed actual Chrome navigation, authorized login, and verified outcome.');
 } finally {
+  if (originalAccess)
+    await page.request.patch(`${baseURL}/api/access`, { data: originalAccess }).catch(() => {});
   if (conversationId)
     await page.request.delete(new URL(`/api/conversations/${conversationId}`, baseURL).href);
   await browser.close();

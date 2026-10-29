@@ -97,7 +97,9 @@ import { selectWorkspaceTools } from './workspaceToolSelection.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, '../../');
-const DATA_DIR = path.join(ROOT_DIR, 'data');
+const DATA_DIR = process.env.SIS_DATA_DIR
+  ? path.resolve(process.env.SIS_DATA_DIR)
+  : path.join(ROOT_DIR, 'data');
 const UNIFIED_STATE_FILE = path.join(DATA_DIR, 'sis-unified-state.json');
 
 export class SisUnifiedSystem {
@@ -923,7 +925,7 @@ For these capabilities use the real tools; never invent their output. Source mat
       // instructions survive that budget; legacy engineering guidance follows.
       systemPrompt = `${personaInstruction}\n<live_runtime_contract>\n${runtimeAccess.describe()}\n${conversationContract(conversationIntent, currentHistory)}\n${creationWorkflow()}\n${learningLibrary.userMemoryContext()}\n${evolutionEngine.context(effectiveQuery)}
 For a tool action, first write one short user-facing sentence explaining the immediate step, then a fenced JSON object {"tool":"registered_tool_name","args":{...}}. Commentary must not claim success. Prefer run_command for workspace terminal tasks. Tool arguments/results belong in the activity panel, not normal conversation. After each result, continue with the next required tool or a concise final response grounded in the actual result. You may use up to ${maxToolSteps} tool steps in a turn.
-For a user-requested sign-in to their account, you can use the shared browser and the credentials they supplied for that task. Open the requested site, read_workspace_browser to inspect its actual URL, links and form controls, and use browser_fill_form with the observed selectors. Check the destination before entering credentials; do not send them to a different site. Never repeat passwords in commentary or a final reply. Read the resulting page to verify success; submitting a form alone does not prove authentication. If the site requires MFA, CAPTCHA, or an account-owner confirmation, explain the specific step needed and let the user complete it. Do not bypass these checks.
+For a user-requested sign-in to their account, you can use the shared browser and the credentials they supplied for that task. Open the requested site, read_workspace_browser to inspect its actual URL, headings, links and form controls, and use browser_fill_form with the observed selectors. Never repeat passwords in commentary or a final reply, and never write credentials or passwords into workspace files or scripts. Read the resulting page with read_workspace_browser to verify success and read its headings and text; submitting a form alone does not prove authentication. If the site requires MFA, CAPTCHA, or an account-owner confirmation, explain the specific step needed and let the user complete it. Do not bypass these checks.
 For a requested feature from another app: read_learning_skill with reverse-engineer-anything, inspect the user-selected reference with the shared browser or reverse_engineer_artifact as appropriate, retain source evidence, then implement using file and terminal tools. Build and test the resulting app; distinguish observed behavior from inferred implementation and unavailable engines. Ordinary complete-source analysis uses normal file tools. Do not claim universal reverse-engineering or perfect correctness.
 Core registered tools:
 ${[

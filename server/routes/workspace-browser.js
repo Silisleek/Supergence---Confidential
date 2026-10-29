@@ -1,6 +1,8 @@
 import agentBrowserManager from '../services/agentBrowserManager.js';
+import { assertBrowserEnabled } from '../security/browser-access.js';
 
 export async function readWorkspaceBrowserPage(agentId = 'agent-supergence') {
+  assertBrowserEnabled();
   if (!/^[a-zA-Z0-9_-]{1,80}$/.test(agentId)) throw new Error('Invalid browser session.');
   const session = agentBrowserManager.sessions.get(agentId);
   if (!session?.page || session.page.isClosed()) throw new Error('Open the browser first.');
@@ -54,6 +56,13 @@ export async function readWorkspaceBrowserPage(agentId = 'agent-supergence') {
         .map((link) => ({
           text: (link.innerText || link.getAttribute('aria-label') || '').trim().slice(0, 200),
           url: link.href.slice(0, 2000),
+        })),
+      headings: Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6'))
+        .filter(visible)
+        .slice(0, 30)
+        .map((h) => ({
+          tag: h.localName,
+          text: (h.innerText || h.textContent || '').trim().slice(0, 300),
         })),
       text: (document.body?.innerText || '').slice(0, 20000),
     };

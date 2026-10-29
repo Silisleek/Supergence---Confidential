@@ -27,7 +27,9 @@ import {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, '../../');
-const DATA_DIR = path.join(ROOT_DIR, 'data');
+const DATA_DIR = process.env.SIS_DATA_DIR
+  ? path.resolve(process.env.SIS_DATA_DIR)
+  : path.join(ROOT_DIR, 'data');
 const TOOLS_STORE_FILE = path.join(DATA_DIR, 'ada-forged-tools.json');
 
 // Retained only to detect and purge tools written by the previous version,

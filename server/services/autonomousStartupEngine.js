@@ -17,9 +17,13 @@ import supergenceDesignEngine from './supergenceDesignEngine.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, '../../');
-const DATA_DIR = path.join(ROOT_DIR, 'data');
+const DATA_DIR = process.env.SIS_DATA_DIR
+  ? path.resolve(process.env.SIS_DATA_DIR)
+  : path.join(ROOT_DIR, 'data');
 const STARTUPS_DIR = path.join(DATA_DIR, 'startups');
-const WORKSPACE_DIR = path.join(ROOT_DIR, 'workspace');
+const WORKSPACE_DIR = process.env.SIS_WORKSPACE_DIR
+  ? path.resolve(process.env.SIS_WORKSPACE_DIR)
+  : path.join(ROOT_DIR, 'workspace');
 
 export class AutonomousStartupEngine {
   constructor() {

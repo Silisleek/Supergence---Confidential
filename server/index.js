@@ -1,4 +1,6 @@
 import { injectImportmapIfNeeded } from './workspace/preview-importmap.js';
+import { resolveWithinRoot } from './utils/path-confinement.js';
+import { sessionAuth } from './security/session-auth.js';
 import { registerLearningRoutes } from './routes/learning.js';
 import { registerEvolutionRoutes } from './routes/evolution.js';
 import { evolutionEngine } from './services/evolutionEngine.js';
@@ -10,6 +12,8 @@ import { registerRuntimeAccessRoutes } from './routes/runtime-access.js';
 import { registerProactiveSuggestionRoutes } from './routes/proactive-suggestions.js';
 import { registerConversationWorkspaceRoutes } from './routes/conversation-workspaces.js';
 import { runtimeAccess } from './services/runtimeAccess.js';
+import { childEnvironment } from './security/child-environment.js';
+import { assertBrowserEnabled, browserAccessMiddleware } from './security/browser-access.js';
 import { registerAgentProfileRoutes } from './routes/agent-profiles.js';
 import { registerAgentConversationRoutes } from './routes/agent-conversations.js';
 import { configureAgentConversationRuntime } from './services/agentConversations.js';
@@ -19,7 +23,7 @@ import { registerPageRoutes } from './routes/pages.js';
 
 import express from 'express';
 import { WebSocketServer } from 'ws';
-import cors from 'cors';
+import { localBoundary, isLocalRequest } from './security/local-boundary.js';
 import dotenv from 'dotenv';
 import OpenAI from 'openai';
 import { createServer } from 'http';
@@ -143,6 +147,7 @@ workspace.setBroadcast((type, data) => {
 
 // Wire Agent Personal Browser Swarm events directly into WebSocket broadcasts
 agentBrowserManager.setBroadcast((type, data) => {
+  if (!runtimeAccess.settings.browser) return;
   brain.broadcast(type, data);
 });
 
@@ -209,8 +214,15 @@ server.requestTimeout = 15 * 60 * 1000;
 server.keepAliveTimeout = 65000;
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
+app.use(localBoundary);
+app.use(sessionAuth.middleware);
 app.use(express.json({ limit: '50mb' }));
+app.use('/api/browser', browserAccessMiddleware);
+app.use('/api/workspace', (req, res, next) => {
+  if (req.path !== '/command' && !runtimeAccess.settings.files)
+    return res.status(403).json({ error: 'File access is disabled in Access settings.' });
+  next();
+});
 
 // Aggressive cache-busting headers to prevent stale browser caches across updates
 app.use((req, res, next) => {
@@ -344,8 +356,13 @@ app.post('/api/verification/run-task', async (req, res) => {
     return res.status(400).json({ error: 'Unknown verification task: ' + task });
   }
 
+  try {
+    await runtimeAccess.authorize('run_command', { command: cmd });
+  } catch (error) {
+    return res.status(403).json({ error: error.message });
+  }
   const start = Date.now();
-  exec(cmd, { cwd: path.join(__dirname, '..'), timeout: 30000 }, (error, stdout, stderr) => {
+  exec(cmd, { cwd: path.join(__dirname, '..'), timeout: 30000, env: childEnvironment() }, (error, stdout, stderr) => {
     const elapsed = Date.now() - start;
     res.json({
       success: !error,
@@ -407,149 +424,38 @@ const PREVIEW_PROBE_SCRIPT = `
 </script>
 `;
 
-// Serve workspace files statically for preview with diagnostic probe + importmap injection for HTML
-// If a requested .html file does not exist on disk, synthesize it on-demand to guarantee preview never 404s!
-app.use('/workspace', async (req, res, next) => {
-  const reqPath = req.path.split('?')[0];
-  console.log(
-    '[Workspace Route] reqPath:',
-    reqPath,
-    'req.url:',
-    req.url,
-    'req.originalUrl:',
-    req.originalUrl,
-  );
-  let cleanRel = reqPath;
-  if (cleanRel.startsWith('/workspace/')) {
-    cleanRel = cleanRel.replace(/^\/workspace\//, '');
+// Serve existing workspace previews without following linked paths.
+app.use('/workspace', (req, res, next) => {
+  res.setHeader('Content-Security-Policy', 'sandbox allow-scripts allow-forms allow-downloads allow-pointer-lock');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', '*');
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  if (!['GET', 'HEAD'].includes(req.method)) return res.status(405).end();
+  let relative;
+  let fullPath;
+  try {
+    relative = decodeURIComponent(req.path).replace(/^\/+/, '');
+    if (relative.includes('\\') || relative.includes('\0')) throw new Error('Invalid path');
+    fullPath = resolveWithinRoot(workspace.baseRoot, relative);
+  } catch (_) {
+    return res.status(403).end();
   }
-  // Express strips the mount path, so req.path for /workspace/foo.html is just /foo.html
-  const fullPath = path.join(workspace.root, cleanRel);
-  console.log(
-    '[Workspace Route] cleanRel:',
-    cleanRel,
-    'fullPath:',
-    fullPath,
-    'exists:',
-    fs.existsSync(fullPath),
-  );
-  if (fs.existsSync(fullPath) && fs.statSync(fullPath).isFile()) {
-    const isHtml = cleanRel.endsWith('.html') || cleanRel.endsWith('.htm');
-    if (!isHtml) {
-      return express.static(workspace.root)(req, res, next);
+  if (!fs.existsSync(fullPath) || !fs.statSync(fullPath).isFile()) return res.status(404).end();
+  if (!/\.html?$/i.test(relative)) return res.sendFile(fullPath);
+  try {
+    let content = injectImportmapIfNeeded(fs.readFileSync(fullPath, 'utf8'));
+    if (!content.includes('sis-diagnostic-probe')) {
+      if (content.includes('</body>')) content = content.replace('</body>', `${PREVIEW_PROBE_SCRIPT}\n</body>`);
+      else if (content.includes('</html>')) content = content.replace('</html>', `${PREVIEW_PROBE_SCRIPT}\n</html>`);
+      else content += `\n${PREVIEW_PROBE_SCRIPT}`;
     }
-    try {
-      let content = fs.readFileSync(fullPath, 'utf8');
-      // Inject Three.js importmap if file uses bare 'three' imports
-      content = injectImportmapIfNeeded(content);
-      if (!content.includes('sis-diagnostic-probe')) {
-        if (content.includes('</body>')) {
-          content = content.replace('</body>', `${PREVIEW_PROBE_SCRIPT}\n</body>`);
-        } else if (content.includes('</html>')) {
-          content = content.replace('</html>', `${PREVIEW_PROBE_SCRIPT}\n</html>`);
-        } else {
-          content += `\n${PREVIEW_PROBE_SCRIPT}`;
-        }
-      }
-      res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      return res.send(content);
-    } catch (err) {
-      console.warn('[Workspace Probe] Error reading preview file:', err.message);
-    }
-  } else if (cleanRel.endsWith('.html') || cleanRel.endsWith('.htm')) {
-    // Auto-materialize missing HTML simulation on-demand so preview never 404s!
-    const topicName = cleanRel.replace(/\.html$/i, '').replace(/[_-]/g, ' ');
-    console.log(
-      `[Workspace Route] ⚡ Auto-materializing missing preview file on-demand: "${cleanRel}"`,
-    );
-    try {
-      let synthesizedHtml = null;
-
-      // Check if requested artifact is a 3D Zebra, Equine or Biomechanical simulation
-      const isZebraSimulation = /zebra|equine|horse|animal|quadruped/i.test(topicName);
-      if (isZebraSimulation) {
-        console.log(
-          `[Workspace Route] 🦓 Engaging 3D Equine Zebra Anatomical Studio Engine for: "${topicName}"...`,
-        );
-        try {
-          const { buildUnifiedZebra3DHTML } = await import('./3d/zebra-3d-engine.js');
-          synthesizedHtml = buildUnifiedZebra3DHTML({
-            userPrompt: topicName,
-            gameTitle: 'Equus quagga — 3D Equine Anatomical Studio',
-          });
-        } catch (zErr) {
-          console.warn('[Workspace Route] Zebra 3D Engine notice:', zErr.message);
-        }
-      }
-
-      // Check if requested artifact is a 3D Game, Voxel World, or Spatial Simulation
-      const isGameOrVoxel =
-        !synthesizedHtml &&
-        /voxel|minecraft|craft|game|shooter|racer|orbit|space|combat|mech|simulation/i.test(
-          topicName,
-        );
-      if (isGameOrVoxel) {
-        console.log(`[Workspace Route] 🎮 Engaging Studio 3D Game Engine for: "${topicName}"...`);
-        try {
-          const { studio3DGameEngine } = await import('./3d/game-engine.js');
-          const meta = await studio3DGameEngine.synthesize3DGame({
-            prompt: topicName,
-            title: topicName.toUpperCase(),
-          });
-          if (meta && meta.filepath && fs.existsSync(meta.filepath)) {
-            synthesizedHtml = fs.readFileSync(meta.filepath, 'utf8');
-          }
-        } catch (gameErr) {
-          console.warn('[Workspace Route] Studio 3D Game Engine notice:', gameErr.message);
-        }
-      }
-
-      if (!synthesizedHtml) {
-        synthesizedHtml = await dynamicArtifactSynthesizer.synthesizeArtifact(
-          {
-            title: topicName.toUpperCase(),
-            hypothesis: `Dynamic visual interactive simulation for ${topicName}.`,
-            concepts: [topicName, 'Interactive Standalone Visual Simulation'],
-          },
-          { silent: true },
-        );
-      }
-
-      if (synthesizedHtml && synthesizedHtml.length > 100) {
-        fs.writeFileSync(fullPath, synthesizedHtml, 'utf8');
-        brain.broadcast('workspace-file-saved', {
-          filename: cleanRel,
-          language: 'html',
-          content: synthesizedHtml,
-          path: fullPath,
-          verified: true,
-          isInteractiveHtml: true,
-        });
-        brain.broadcast('workspace-update', { timestamp: Date.now() });
-
-        let content = synthesizedHtml;
-        // Inject Three.js importmap if file uses bare 'three' imports
-        content = injectImportmapIfNeeded(content);
-        if (!content.includes('sis-diagnostic-probe')) {
-          if (content.includes('</body>')) {
-            content = content.replace('</body>', `${PREVIEW_PROBE_SCRIPT}\n</body>`);
-          } else if (content.includes('</html>')) {
-            content = content.replace('</html>', `${PREVIEW_PROBE_SCRIPT}\n</html>`);
-          } else {
-            content += `\n${PREVIEW_PROBE_SCRIPT}`;
-          }
-        }
-        res.setHeader('Content-Type', 'text/html; charset=utf-8');
-        return res.send(content);
-      }
-    } catch (synthErr) {
-      console.error(
-        `[Workspace Route] Failed to auto-materialize "${cleanRel}":`,
-        synthErr.message,
-      );
-    }
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.send(content);
+  } catch (error) {
+    console.warn('[Workspace preview] Could not read file:', error.message);
+    return res.status(500).end();
   }
-  express.static(workspace.root)(req, res, next);
 });
 
 // ─── 1-Click Autonomous Auto-Healer Endpoint ───
@@ -617,7 +523,7 @@ evolutionEngine.research = async (topic) => {
   };
 };
 registerWorkspaceBrowserRoutes(app);
-registerRuntimeAccessRoutes(app);
+registerRuntimeAccessRoutes(app, { waitForBrowserShutdown: () => agentBrowserManager.revocation });
 registerConversationWorkspaceRoutes(app);
 await registerProactiveSuggestionRoutes(
   app,
@@ -1760,6 +1666,11 @@ app.post('/api/workspace/batch', async (req, res) => {
     const { operations } = req.body;
     if (!Array.isArray(operations))
       return res.status(400).json({ error: 'Operations array required' });
+    for (const operation of operations) {
+      if (!operation || typeof operation.action !== 'string')
+        return res.status(400).json({ error: 'Each operation requires an action.' });
+      await runtimeAccess.authorize(operation.action, operation);
+    }
     const result = await workspace.batchOperations(operations);
     brain.broadcast('workspace-update', { action: 'batch-executed', count: result.count });
     res.json(result);
@@ -1772,6 +1683,7 @@ app.post('/api/workspace/command', async (req, res) => {
   try {
     const { command, cwd, timeout } = req.body;
     if (!command) return res.status(400).json({ error: 'Command required' });
+    await runtimeAccess.authorize('run_command', { command, cwd, timeout });
     const result = await workspace.runCommand(command, cwd, timeout);
     res.json(result);
   } catch (err) {
@@ -1793,6 +1705,12 @@ app.post('/api/workspace/execute', async (req, res) => {
     const content = fs.readFileSync(fullPath, 'utf8');
     const ext = path.extname(cleanFn).slice(1).toLowerCase();
     const lang = language || ext || 'javascript';
+    if (!runtimeAccess.settings.terminal) {
+      return res.status(403).json({ error: 'terminal access is disabled in Access settings.' });
+    }
+    if (runtimeAccess.settings.mode === 'ask-before-executing') {
+      await runtimeAccess.authorize('verify_and_execute_code', { filename: cleanFn, language: lang });
+    }
 
     let runCmd = null;
     if (lang === 'python' || lang === 'py') {
@@ -3267,6 +3185,7 @@ app.get('/api/openclaw/processes', async (req, res) => {
 app.post('/api/openclaw/kill', async (req, res) => {
   try {
     const { pid, processName } = req.body || {};
+    await runtimeAccess.authorize('kill_process', { pid, processName });
     const result = await openclawController.killProcess(pid, processName);
     res.json({ success: true, result });
   } catch (err) {
@@ -3277,6 +3196,7 @@ app.post('/api/openclaw/kill', async (req, res) => {
 app.post('/api/openclaw/launch', async (req, res) => {
   try {
     const { appName, args } = req.body || {};
+    await runtimeAccess.authorize('launch_application', { appName, args });
     const result = await openclawController.launchApplication(appName, args);
     res.json(result);
   } catch (err) {
@@ -3287,6 +3207,7 @@ app.post('/api/openclaw/launch', async (req, res) => {
 app.get('/api/openclaw/files', async (req, res) => {
   try {
     const { dirPath } = req.query || {};
+    await runtimeAccess.authorize('list_local_directory', { path: dirPath });
     const result = await openclawController.exploreFileSystem(dirPath);
     res.json(result);
   } catch (err) {
@@ -3297,6 +3218,7 @@ app.get('/api/openclaw/files', async (req, res) => {
 app.post('/api/openclaw/read-file', async (req, res) => {
   try {
     const { filePath } = req.body || {};
+    await runtimeAccess.authorize('read_local_file', { path: filePath });
     const result = await openclawController.readFile(filePath);
     res.json(result);
   } catch (err) {
@@ -3307,6 +3229,7 @@ app.post('/api/openclaw/read-file', async (req, res) => {
 app.post('/api/openclaw/write-file', async (req, res) => {
   try {
     const { filePath, content } = req.body || {};
+    await runtimeAccess.authorize('write_local_file', { path: filePath, content });
     const result = await openclawController.writeFile(filePath, content);
     res.json(result);
   } catch (err) {
@@ -3317,6 +3240,7 @@ app.post('/api/openclaw/write-file', async (req, res) => {
 app.post('/api/openclaw/delete-file', async (req, res) => {
   try {
     const { filePath } = req.body || {};
+    await runtimeAccess.authorize('delete_local_file', { path: filePath });
     const result = await openclawController.deleteFile(filePath);
     res.json(result);
   } catch (err) {
@@ -3326,6 +3250,7 @@ app.post('/api/openclaw/delete-file', async (req, res) => {
 
 app.post('/api/openclaw/screenshot', async (req, res) => {
   try {
+    await runtimeAccess.authorize('capture_screen', {});
     const result = await openclawController.captureScreen();
     res.json(result);
   } catch (err) {
@@ -3335,6 +3260,7 @@ app.post('/api/openclaw/screenshot', async (req, res) => {
 
 app.get('/api/openclaw/desktop-screenshot', async (req, res) => {
   try {
+    await runtimeAccess.authorize('capture_screen', {});
     const result = await openclawController.captureScreen();
     let screenshotData = result.screenshot || null;
     if (!screenshotData && result.filePath && fs.existsSync(result.filePath)) {
@@ -4041,7 +3967,7 @@ app.use('/api', (req, res) =>
 );
 
 // ─── WebSocket Server ───
-const wss = new WebSocketServer({ server });
+const wss = new WebSocketServer({ server, verifyClient: ({ req }) => isLocalRequest(req) && sessionAuth.authorized(req) });
 
 wss.on('connection', (ws) => {
   console.log('[WS] Client connected');
@@ -4057,6 +3983,9 @@ wss.on('connection', (ws) => {
   ws.on('message', async (data) => {
     try {
       const msg = JSON.parse(data.toString());
+
+      if (typeof msg.type === 'string' && msg.type.startsWith('agent-browser-'))
+        assertBrowserEnabled();
 
       switch (msg.type) {
         case 'brain-state':
@@ -4502,18 +4431,6 @@ wss.on('connection', (ws) => {
 // ─── Initialize & Start ───
 // ─── Initialize & Start ───
 (async () => {
-  // Purge stale sandbox run dirs left by crashed/interrupted coder runs
-  try {
-    const sandboxDir = path.join(__dirname, '../workspace/.sandbox');
-    if (fs.existsSync(sandboxDir)) {
-      for (const entry of fs.readdirSync(sandboxDir)) {
-        fs.rmSync(path.join(sandboxDir, entry), { recursive: true, force: true });
-      }
-      console.log('✓ Stale sandbox dirs purged');
-    }
-  } catch (e) {
-    console.warn('[Boot] Sandbox purge skipped:', e.message);
-  }
   await brain.initialize();
   await configureEvolutionTools(evolutionEngine, toolRegistry)();
 
@@ -4546,9 +4463,11 @@ wss.on('connection', (ws) => {
       }
     });
 
-    server.listen(portToTry, '0.0.0.0', () => {
+    server.listen(portToTry, '127.0.0.1', () => {
       activePort = portToTry;
       process.env.ACTIVE_SERVER_PORT = String(activePort);
+      if (process.send && process.connected)
+        process.send({ type: 'supergence-backend-ready', port: activePort });
       try {
         agentBrowserManager.setServerPort(activePort);
       } catch (_) {}
@@ -4559,6 +4478,8 @@ wss.on('connection', (ws) => {
       console.log(`📁 Workspace at ./workspace/`);
       console.log(`⚡ Real-Time Mid-Task Steering Active`);
       console.log(`\nReady for connections...\n`);
+      if (process.env.SIS_DESKTOP_SESSION !== '1')
+        console.log(`Open this private session link: http://127.0.0.1:${activePort}/__session?token=${sessionAuth.secret}`);
       setTimeout(
         () =>
           sisUnifiedSystem

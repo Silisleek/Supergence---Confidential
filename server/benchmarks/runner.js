@@ -19,7 +19,7 @@ import { CyberSreBenchmarkSuite } from './cyber-sre-suite.js';
 import crossModelComparator from './cross-model-comparator.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const WORKSPACE_DIR = path.resolve(__dirname, '../../workspace');
+const WORKSPACE_DIR = process.env.SIS_WORKSPACE_DIR ? path.resolve(process.env.SIS_WORKSPACE_DIR) : path.resolve(__dirname, '../../workspace');
 const OUTPUT_HTML = path.join(WORKSPACE_DIR, 'benchmark_results.html');
 
 export async function runMasterFrontierBenchmarks() {

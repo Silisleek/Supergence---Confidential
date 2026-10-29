@@ -16,7 +16,7 @@ test('access persists defaults and rejects invalid settings', async () => {
   try {
     const access = new RuntimeAccess({ directory });
     assert.deepEqual(access.snapshot().settings, {
-      mode: 'full-access',
+      mode: 'approve-for-me',
       browser: true,
       terminal: true,
       files: true,
@@ -75,6 +75,33 @@ test('approve-for-me allows bounded routine work while terminal and unknown tool
     const revoked = access.authorize('run_command', { command: 'echo test' });
     access.update({ terminal: false });
     await assert.rejects(revoked, /declined/);
+  } finally {
+    await fs.rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('computer control and folder operations require the appropriate enabled capability', () => {
+  assert.ok(operationPolicy('capture_screen').capabilities.includes('browser'));
+  assert.ok(operationPolicy('kill_process').capabilities.includes('terminal'));
+  assert.ok(operationPolicy('launch_application').capabilities.includes('terminal'));
+  assert.ok(operationPolicy('delete_folder').capabilities.includes('files'));
+  assert.equal(operationPolicy('delete_local_file').routine, false);
+});
+
+test('cookie exports and imports require explicit review even in full access', async () => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'sis-cookie-access-'));
+  try {
+    const access = new RuntimeAccess({ directory, timeoutMs: 2000 });
+    access.update({ mode: 'full-access' });
+    for (const name of ['browser_save_cookies', 'browser_load_cookies']) {
+      const waiting = access.authorize(name, { agentId: 'agent-cs' });
+      const approval = access.snapshot().pending[0];
+      assert.match(approval.findings.join(' '), /explicit review/);
+      access.resolve(approval.id, false);
+      await assert.rejects(waiting, /declined/);
+    }
+    access.update({ files: false });
+    await assert.rejects(access.authorize('browser_save_cookies', { agentId: 'agent-cs' }), /files access is disabled/);
   } finally {
     await fs.rm(directory, { recursive: true, force: true });
   }

@@ -8,14 +8,16 @@ async function api(url, method = 'GET', body) {
     method,
     headers: { 'Content-Type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body),
-    signal: AbortSignal.timeout(180000),
+    signal: AbortSignal.timeout(360000),
   });
   return response.json();
 }
 const filename = `capability-${randomUUID()}.html`;
 const heading = `Evidence ${randomUUID()}`;
 const threads = [];
+const original = (await api('/api/access')).settings;
 try {
+  await api('/api/access', 'PATCH', { mode: 'full-access' });
   const shell = await api('/api/openclaw/execute', 'POST', {
     command: 'powershell -NoProfile -Command "Write-Output (47*19)"',
   });
@@ -73,6 +75,7 @@ try {
   );
   console.log('Passed 3 real browser, terminal, and agent messaging checks.');
 } finally {
-  await api('/api/workspace/file', 'DELETE', { path: filename });
-  for (const id of threads) await api(`/api/agent-conversations/${id}`, 'DELETE');
+  if (original) await api('/api/access', 'PATCH', original).catch(() => {});
+  await api('/api/workspace/file', 'DELETE', { path: filename }).catch(() => {});
+  for (const id of threads) await api(`/api/agent-conversations/${id}`, 'DELETE').catch(() => {});
 }

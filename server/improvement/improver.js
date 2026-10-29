@@ -16,6 +16,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const DATA_ROOT = process.env.SIS_DATA_DIR ? path.resolve(process.env.SIS_DATA_DIR) : path.resolve(__dirname, '../../data');
 
 // How often to run each cycle type
 const CYCLE_INTERVALS = {
@@ -557,7 +558,7 @@ Output plain text, no JSON.`,
 
   _loadLog() {
     try {
-      const logPath = path.join(__dirname, '../../data/improvement/improver-log.json');
+      const logPath = path.join(DATA_ROOT, 'improvement/improver-log.json');
       if (fs.existsSync(logPath)) {
         const raw = fs.readFileSync(logPath, 'utf8');
         const parsed = JSON.parse(raw);
@@ -570,7 +571,7 @@ Output plain text, no JSON.`,
 
     // Seed log from recent autonomous cycles if empty
     try {
-      const autoPath = path.join(__dirname, '../../data/improvement/autonomous-learning.json');
+      const autoPath = path.join(DATA_ROOT, 'improvement/autonomous-learning.json');
       if (fs.existsSync(autoPath)) {
         const autoData = JSON.parse(fs.readFileSync(autoPath, 'utf8'));
         if (autoData.recentCycles && autoData.recentCycles.length > 0) {
@@ -599,7 +600,7 @@ Output plain text, no JSON.`,
 
   _saveLog() {
     try {
-      const logPath = path.join(__dirname, '../../data/improvement/improver-log.json');
+      const logPath = path.join(DATA_ROOT, 'improvement/improver-log.json');
       const dir = path.dirname(logPath);
       if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
       fs.writeFileSync(logPath, JSON.stringify(this.improvementLog, null, 2), 'utf8');

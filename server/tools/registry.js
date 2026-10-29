@@ -1642,7 +1642,14 @@ function playProceduralSound(ctx) {
   run_command: {
     name: 'run_command',
     description: 'Run a shell command in the workspace (or a specific subfolder)',
-    parameters: { command: 'string', cwd: 'string', timeout: 'number' },
+    parameters: {
+      command: 'string',
+      cwd: 'string',
+      timeout: {
+        type: 'number',
+        description: 'Timeout in milliseconds; omit for the 60000 ms default.',
+      },
+    },
     execute: async ({ command, cwd = '', timeout }) => {
       if (!command) return { error: 'No command specified for run_command' };
       try {
@@ -3209,12 +3216,16 @@ function playProceduralSound(ctx) {
     description: 'Launch application or executable on the Windows host via OpenClaw.',
     parameters: {
       appName: { type: 'string', description: 'Application name or executable path' },
-      args: { type: 'string', description: 'Command-line arguments (optional)' },
+      args: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Arguments as separate strings; no shell is used.',
+      },
     },
     required: ['appName'],
     execute: async (args = {}) => {
       const openclawController = (await import('../services/openclawController.js')).default;
-      return await openclawController.launchApplication(args.appName, args.args || '');
+      return await openclawController.launchApplication(args.appName, args.args || []);
     },
   },
 
@@ -3284,7 +3295,9 @@ function playProceduralSound(ctx) {
     required: [],
     execute: async (args = {}) => {
       const section = (args.section || 'all').toLowerCase();
-      const dataDir = path.resolve(__dirname, '../../data');
+      const dataDir = process.env.SIS_DATA_DIR
+        ? path.resolve(process.env.SIS_DATA_DIR)
+        : path.resolve(__dirname, '../../data');
       const safeRead = (filename) => {
         try {
           const filePath = path.join(dataDir, filename);
@@ -3302,8 +3315,8 @@ function playProceduralSound(ctx) {
       if (section === 'identity') return identity || { message: 'No identity record found' };
       if (section === 'projects')
         return {
-          user: projects?.user || identity?.name || 'User',
-          primaryRepo: projects?.primaryRepo || 'SIS 1.0',
+          user: projects?.user || identity?.name || null,
+          primaryRepo: projects?.primaryRepo || null,
           activeWorkspaceFilesSample: projects?.activeWorkspaceFiles?.slice(0, 30) || [],
           totalFiles: projects?.activeWorkspaceFiles?.length || 0,
         };
@@ -3357,19 +3370,27 @@ function playProceduralSound(ctx) {
           error: `Invalid section "${section}". Supported: identity, interests, behaviour, past`,
         };
 
-      const dataDir = path.resolve(__dirname, '../../data');
+      const dataDir = process.env.SIS_DATA_DIR
+        ? path.resolve(process.env.SIS_DATA_DIR)
+        : path.resolve(__dirname, '../../data');
       const filePath = path.join(dataDir, filename);
-      let existing = {};
+      let existing;
       try {
-        existing = enterpriseVault.secureReadJson(filePath) || {};
-      } catch (_) {}
+        const read = enterpriseVault.secureReadJson(filePath);
+        if (fs.existsSync(filePath) && (!read || typeof read !== 'object' || Array.isArray(read)))
+          return { error: 'The existing profile could not be read; it was not changed.' };
+        existing = read || {};
+      } catch (_) {
+        return { error: 'The existing profile could not be read; it was not changed.' };
+      }
 
       const merged = { ...existing, ...updates, updatedAt: new Date().toISOString() };
-      enterpriseVault.secureWriteJson(filePath, merged, {
+      const saved = enterpriseVault.secureWriteJson(filePath, merged, {
         encrypt: true,
         context: `SIS_PROFILE_${filename.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`,
         classification: 'CONFIDENTIAL // TIER-1 ENTERPRISE PII',
       });
+      if (!saved) return { error: 'The profile could not be saved.' };
 
       try {
         enterpriseAuditTrail.recordEvent({
@@ -3771,10 +3792,10 @@ function playProceduralSound(ctx) {
   browser_save_cookies: {
     name: 'browser_save_cookies',
     description:
-      'Save persistent cookies and session tokens from the active browser context to disk.',
+      'Save an encrypted cookie export inside the agent browser profile after explicit review.',
     parameters: {
       agentId: { type: 'string', description: 'Agent ID owning session' },
-      filepath: { type: 'string', description: 'Optional custom file path' },
+      filepath: { type: 'string', description: 'Optional path inside this agent browser profile' },
     },
     execute: async (args = {}) => {
       const { default: agentBrowserManager } = await import('../services/agentBrowserManager.js');
@@ -3785,10 +3806,10 @@ function playProceduralSound(ctx) {
   browser_load_cookies: {
     name: 'browser_load_cookies',
     description:
-      'Load previously saved session cookies into the browser context so logins are preserved.',
+      'Load a cookie export from the agent browser profile after explicit review.',
     parameters: {
       agentId: { type: 'string', description: 'Agent ID owning session' },
-      filepath: { type: 'string', description: 'Optional custom file path' },
+      filepath: { type: 'string', description: 'Optional path inside this agent browser profile' },
     },
     execute: async (args = {}) => {
       const { default: agentBrowserManager } = await import('../services/agentBrowserManager.js');

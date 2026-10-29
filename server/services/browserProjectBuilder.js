@@ -6,6 +6,7 @@ import { chromium } from 'playwright-core';
 import { callAI, DEFAULT_MODEL } from '../api/openrouter.js';
 import { studioPath } from './creationStudio.js';
 import { threeCreationContract } from '../3d/creation-contract.js';
+import { sessionAuth } from '../security/session-auth.js';
 
 const digest = (value) => createHash('sha256').update(value).digest('hex');
 const unfence = (value) =>
@@ -90,8 +91,13 @@ async function inspectProject(directory, fullPath) {
     );
   const browser = await chromium.launch({ channel: 'chrome', headless: true });
   try {
-    const page = await browser.newPage({ viewport: { width: 1440, height: 960 } }),
-      errors = [],
+    const page = await browser.newPage({ viewport: { width: 1440, height: 960 } });
+    if (sessionAuth?.secret) {
+      await page.setExtraHTTPHeaders({
+        authorization: `Bearer ${sessionAuth.secret}`,
+      });
+    }
+    const errors = [],
       warnings = [];
     page.on('pageerror', (error) => errors.push(error.stack || error.message));
     page.on('console', (m) => {

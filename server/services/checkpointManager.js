@@ -13,7 +13,9 @@ import enterpriseAuditTrail from '../security/audit-trail.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, '../../');
-const DATA_DIR = path.join(ROOT_DIR, 'data');
+const DATA_DIR = process.env.SIS_DATA_DIR
+  ? path.resolve(process.env.SIS_DATA_DIR)
+  : path.join(ROOT_DIR, 'data');
 const CHECKPOINTS_FILE = path.join(DATA_DIR, 'supergence-checkpoints.json');
 
 export class CheckpointManager {

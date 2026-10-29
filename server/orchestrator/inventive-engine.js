@@ -23,8 +23,8 @@ import { extractCleanJSON, safeLearningAI } from '../improvement/learning-resili
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const WORKSPACE_DIR = path.resolve(__dirname, '../../workspace');
-const INVENTIONS_FILE = path.resolve(__dirname, '../../data/improvement/inventions.json');
+const WORKSPACE_DIR = process.env.SIS_WORKSPACE_DIR ? path.resolve(process.env.SIS_WORKSPACE_DIR) : path.resolve(__dirname, '../../workspace');
+const INVENTIONS_FILE = process.env.SIS_DATA_DIR ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'improvement/inventions.json') : path.resolve(__dirname, '../../data/improvement/inventions.json');
 
 class HumanInventiveEngine extends EventEmitter {
   constructor() {

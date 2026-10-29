@@ -9,9 +9,10 @@ import { fileURLToPath } from 'url';
 import { spawn, execSync } from 'child_process';
 import { quickAI, PREMIUM_MODEL } from '../api/openrouter.js';
 import shortTermMemory from '../memory/short-term.js';
+import { childEnvironment } from '../security/child-environment.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const sharedWorkspaceRoot = path.join(__dirname, '../../workspace');
+const sharedWorkspaceRoot = process.env.SIS_WORKSPACE_DIR ? path.resolve(process.env.SIS_WORKSPACE_DIR) : path.join(__dirname, '../../workspace');
 const workspaceRoot = () => currentWorkspace()?.root || sharedWorkspaceRoot;
 const workspaceUrl = (filename) =>
   '/workspace/' +
@@ -212,6 +213,7 @@ class BlenderEngine {
     try {
       const out = execSync('where blender', {
         encoding: 'utf8',
+        env: childEnvironment(),
         stdio: ['pipe', 'pipe', 'ignore'],
       }).trim();
       const firstLine = out.split(/\r?\n/)[0];
@@ -316,7 +318,7 @@ class BlenderEngine {
 
       const proc = spawn(exe, args, {
         cwd: options.cwd || workspaceRoot(),
-        env: { ...process.env, PYTHONUNBUFFERED: '1' },
+        env: childEnvironment({ PYTHONUNBUFFERED: '1' }),
         windowsHide: true,
       });
 
@@ -443,6 +445,7 @@ class BlenderEngine {
       detached: true,
       stdio: 'ignore',
       cwd: workspaceRoot(),
+      env: childEnvironment(),
     });
     child.unref();
 

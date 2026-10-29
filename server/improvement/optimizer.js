@@ -8,7 +8,7 @@ import { fileURLToPath } from 'url';
 import patternLibrary from './anti-patterns.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const OPT_PATH = path.join(__dirname, '../../data/improvement/optimizer.json');
+const OPT_PATH = process.env.SIS_DATA_DIR ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'improvement/optimizer.json') : path.join(__dirname, '../../data/improvement/optimizer.json');
 
 class RoutingOptimizer {
   constructor() {

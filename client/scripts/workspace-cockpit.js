@@ -90,8 +90,11 @@
   browser.mount().querySelector('.wb-footer').append(retainPage);
 
   browser.registerSection('files', async (container) => {
-    if (window.SupergenceChatWorkspace) return window.SupergenceChatWorkspace.render(container);
-    container.append(
+    if (window.SupergenceChatWorkspace) {
+      window.SupergenceChatWorkspace.render(container);
+    }
+    const sharedSection = make('section', 'cockpit-shared-files');
+    sharedSection.append(
       make('h2', '', 'Workspace files'),
       make(
         'p',
@@ -104,7 +107,9 @@
     search.placeholder = 'Search files';
     search.setAttribute('aria-label', 'Search workspace files');
     const results = make('div', 'cockpit-list');
-    container.append(search, results);
+    sharedSection.append(search, results);
+    const targetParent = container.querySelector('.cw-files') || container;
+    targetParent.append(sharedSection);
     let sequence = 0;
     let timer;
     async function render(query = '') {
@@ -121,12 +126,12 @@
             button('Open', () =>
               browser.open(`/workspace/${file.path.split('/').map(encodeURIComponent).join('/')}`),
             ),
-            button('Retain', async (event) => {
+            button('Retain file', async (event) => {
               const target = event.currentTarget;
               target.disabled = true;
               try {
                 await api('/api/learning/sources', { path: file.path });
-                target.textContent = 'Retained';
+                target.textContent = 'Retained file';
               } catch (error) {
                 target.textContent = 'Unavailable';
                 target.title = error.message;

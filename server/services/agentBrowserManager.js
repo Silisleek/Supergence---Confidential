@@ -15,12 +15,34 @@ import path from 'path';
 import fs from 'fs';
 import os from 'os';
 import { fileURLToPath } from 'url';
+import { sessionAuth } from '../security/session-auth.js';
+import { childEnvironment } from '../security/child-environment.js';
+import { resolveWithinRoot } from '../utils/path-confinement.js';
+import enterpriseVault from '../security/vault.js';
+import { randomUUID } from 'node:crypto';
+import { assertBrowserEnabled } from '../security/browser-access.js';
+import { runtimeAccess } from './runtimeAccess.js';
 import { quickAI, DEFAULT_MODEL } from '../api/openrouter.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, '../../');
-const DATA_DIR = path.join(ROOT_DIR, 'data');
-const SCREENSHOTS_DIR = path.join(ROOT_DIR, 'workspace', 'browser-previews');
+const DATA_DIR = process.env.SIS_DATA_DIR
+  ? path.resolve(process.env.SIS_DATA_DIR)
+  : path.join(ROOT_DIR, 'data');
+function profileDirectory(agentId, desktop = false) {
+  if (typeof agentId !== 'string' || !/^agent-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(agentId) || agentId.length > 100 || agentId.endsWith('-desktop'))
+    throw new Error('Invalid agent ID for browser profile.');
+  const base = resolveWithinRoot(DATA_DIR, 'browser-profiles');
+  const profile = resolveWithinRoot(base, desktop ? `${agentId}-desktop` : agentId);
+  fs.mkdirSync(profile, { recursive: true });
+  return resolveWithinRoot(base, profile);
+}
+const SCREENSHOTS_DIR = path.join(
+  process.env.SIS_WORKSPACE_DIR
+    ? path.resolve(process.env.SIS_WORKSPACE_DIR)
+    : path.join(ROOT_DIR, 'workspace'),
+  'browser-previews',
+);
 
 // Default Roster of Agents with distinct colors & avatars
 const AGENT_ROSTER_DEFAULTS = [
@@ -121,10 +143,16 @@ export class AgentBrowserManager {
     this.browser = null;
     this.isLaunching = false;
     this.sessions = new Map(); // agentId -> Session Object
+    this.launches = new Map();
+    this.browserGeneration = 0;
+    this.revocation = Promise.resolve();
     this.streamIntervals = new Map(); // agentId -> Interval for screencast / heartbeat
     this.activeSubscribers = new Set(); // WS clients actively watching streams
     this._broadcast = null;
     this._ensureDirectories();
+    this.unsubscribeAccess = runtimeAccess.onChange((next, previous) => {
+      if (previous.browser && !next.browser) this.revokeBrowserAccess();
+    });
   }
 
   setBroadcast(fn) {
@@ -165,14 +193,9 @@ export class AgentBrowserManager {
   }
 
   async launchNativeChrome(agentId = 'agent-cs', targetUrl = null, options = {}) {
+    assertBrowserEnabled();
     const meta = this._getAgentMeta(agentId);
-    const profilesBaseDir = path.join(DATA_DIR, 'browser-profiles');
-    // Dedicated GUI desktop profile to completely avoid conflict with Playwright background session
-    const desktopProfileDir = path.join(profilesBaseDir, `${agentId}-desktop`);
-    if (!fs.existsSync(desktopProfileDir)) {
-      fs.mkdirSync(desktopProfileDir, { recursive: true });
-    }
-    this._cleanProfileLocks(desktopProfileDir);
+    const desktopProfileDir = profileDirectory(agentId, true);
 
     const chromePaths = [
       'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
@@ -204,6 +227,7 @@ export class AgentBrowserManager {
     const child = spawn(executablePath, chromeArgs, {
       detached: true,
       stdio: 'ignore',
+      env: childEnvironment(),
       windowsHide: false,
     });
     child.unref();
@@ -213,6 +237,7 @@ export class AgentBrowserManager {
       setTimeout(() => {
         exec(
           `powershell -NoProfile -Command "$w = (Get-Process chrome -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -Last 1); if ($w) { (New-Object -ComObject WScript.Shell).AppActivate($w.Id) }"`,
+          { env: childEnvironment() },
           () => {},
         );
       }, 700);
@@ -237,20 +262,6 @@ export class AgentBrowserManager {
       profileDir: desktopProfileDir,
       mode: 'native_gui',
     };
-  }
-
-  _cleanProfileLocks(profileDir) {
-    try {
-      const lockFiles = ['SingletonLock', 'SingletonCookie', 'SingletonSocket', 'lockfile'];
-      for (const f of lockFiles) {
-        const lockPath = path.join(profileDir, f);
-        if (fs.existsSync(lockPath)) {
-          try {
-            fs.unlinkSync(lockPath);
-          } catch (_) {}
-        }
-      }
-    } catch (_) {}
   }
 
   // ─── Agent Metadata Lookup ───
@@ -365,22 +376,31 @@ export class AgentBrowserManager {
 
   // ─── Session Management: Personal Dedicated Persistent Google Chrome Profile ───
   async getOrCreateSession(agentId) {
-    if (this.sessions.has(agentId)) {
-      const existing = this.sessions.get(agentId);
-      if (existing.context && existing.page && !existing.page.isClosed()) {
-        return existing;
-      }
+    assertBrowserEnabled();
+    await this.revocation;
+    assertBrowserEnabled();
+    const existing = this.sessions.get(agentId);
+    if (existing?.context && existing.page && !existing.page.isClosed()) return existing;
+    if (this.launches.has(agentId)) return this.launches.get(agentId);
+    const generation = this.browserGeneration;
+    const launch = this.createSession(agentId, generation);
+    this.launches.set(agentId, launch);
+    try {
+      return await launch;
+    } finally {
+      if (this.launches.get(agentId) === launch) this.launches.delete(agentId);
     }
+  }
+
+  async createSession(agentId, generation) {
+    const checkAccess = () => {
+      assertBrowserEnabled();
+      if (generation !== this.browserGeneration) throw new Error('Browser access was revoked during launch.');
+    };
+    checkAccess();
+    const agentProfileDir = profileDirectory(agentId);
 
     const meta = this._getAgentMeta(agentId);
-    const profilesBaseDir = path.join(DATA_DIR, 'browser-profiles');
-    const agentProfileDir = path.join(profilesBaseDir, agentId);
-    if (!fs.existsSync(agentProfileDir)) {
-      fs.mkdirSync(agentProfileDir, { recursive: true });
-    }
-
-    this._cleanProfileLocks(agentProfileDir);
-
     const chromePaths = [
       'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
       'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
@@ -411,6 +431,7 @@ export class AgentBrowserManager {
     let context;
     try {
       context = await chromium.launchPersistentContext(agentProfileDir, {
+        env: childEnvironment(),
         executablePath,
         channel: executablePath ? undefined : 'chrome',
         headless: true,
@@ -433,38 +454,18 @@ export class AgentBrowserManager {
         ],
       });
     } catch (launchErr) {
-      console.warn(
-        `[AgentBrowserManager] Launch retry with cleaned lock for ${agentId}:`,
-        launchErr.message,
-      );
-      this._cleanProfileLocks(agentProfileDir);
-      try {
-        context = await chromium.launchPersistentContext(agentProfileDir, {
-          executablePath,
-          headless: true,
-          viewport: { width: 1280, height: 800 },
-          userAgent:
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-          args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
-        });
-      } catch (retryErr) {
-        console.warn(
-          `[AgentBrowserManager] Persistent context locked for ${agentId}, creating isolated context:`,
-          retryErr.message,
-        );
-        const browser = await chromium.launch({
-          executablePath,
-          headless: true,
-          args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
-        });
-        context = await browser.newContext({
-          viewport: { width: 1280, height: 800 },
-          userAgent:
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-        });
-      }
+      throw new Error(`Unable to open the browser profile for ${agentId}: ${launchErr.message}`, { cause: launchErr });
     }
 
+    try {
+    checkAccess();
+    for (const host of ['127.0.0.1', 'localhost']) {
+      await context.route(`http://${host}:${this.serverPort}/workspace/**`, (route) =>
+        route.continue({
+          headers: { ...route.request().headers(), authorization: `Bearer ${sessionAuth.secret}` },
+        }),
+      );
+    }
     const pages = context.pages();
     const initialPage = pages.length > 0 ? pages[0] : await context.newPage();
 
@@ -543,6 +544,7 @@ export class AgentBrowserManager {
           })
           .catch(() => {});
         await newPage.addInitScript(this._generateCursorInjectionScript(meta)).catch(() => {});
+        if (session.tabs.some((t) => t.page === newPage)) return;
         const newTabObj = {
           id: newTabId,
           title: 'New Tab',
@@ -557,6 +559,7 @@ export class AgentBrowserManager {
       } catch (_) {}
     });
 
+    checkAccess();
     this.sessions.set(agentId, session);
 
     // Initial navigation to agent's default home tab if non-blank
@@ -567,6 +570,10 @@ export class AgentBrowserManager {
     }
 
     return session;
+    } catch (error) {
+      await context.close().catch(() => {});
+      throw error;
+    }
   }
 
   // ─── Multi-Tab Operations ───
@@ -630,17 +637,18 @@ export class AgentBrowserManager {
 
     // Switch to new tab and navigate
     await this.switchTab(agentId, activeTabId);
-    await this.navigate(agentId, targetUrl);
+    const navigation = await this.navigate(agentId, targetUrl, { tabId: activeTabId });
 
     const tabs = this.getTabs(agentId);
-    this.broadcast('agent-browser-tabs', { agentId, activeTabId: activeTabId, tabs });
+    this.broadcast('agent-browser-tabs', { agentId, activeTabId: session.activeTabId, tabs });
 
     return {
-      success: true,
+      success: navigation.success,
       agentId,
       tabId: activeTabId,
-      url: session.currentUrl,
-      title: session.pageTitle,
+      url: navigation.url,
+      title: navigation.title,
+      ...(navigation.error ? { error: navigation.error } : {}),
       tabs,
     };
   }
@@ -961,9 +969,12 @@ export class AgentBrowserManager {
   }
 
   // ─── Navigation & URL Handling ───
-  async navigate(agentId, targetUrl) {
+  async navigate(agentId, targetUrl, options = {}) {
     const session = await this.getOrCreateSession(agentId);
-    session.isLoading = true;
+    const tab = session.tabs.find((item) => item.id === (options.tabId || session.activeTabId));
+    const page = tab?.page || session.page;
+    const isActive = () => session.page === page && session.activeTabId === tab?.id;
+    if (isActive()) session.isLoading = true;
 
     let cleanUrl = targetUrl.trim();
     if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
@@ -975,7 +986,7 @@ export class AgentBrowserManager {
       }
     }
 
-    this.broadcast('agent-browser-state', {
+    if (isActive()) this.broadcast('agent-browser-state', {
       agentId,
       status: 'NAVIGATING',
       url: cleanUrl,
@@ -984,43 +995,43 @@ export class AgentBrowserManager {
     });
 
     try {
-      await session.page.goto(cleanUrl, {
+      await page.goto(cleanUrl, {
         waitUntil: 'domcontentloaded',
         timeout: 35000,
       });
 
-      session.currentUrl = session.page.url();
-      session.pageTitle = await session.page.title();
-      session.isLoading = false;
+      const pageUrl = page.url();
+      const pageTitle = await page.title();
+      if (tab) { tab.url = pageUrl; tab.title = pageTitle; }
+      if (isActive()) {
+        session.currentUrl = pageUrl;
+        session.pageTitle = pageTitle;
+        session.isLoading = false;
+      }
       session.history.unshift({
-        url: session.currentUrl,
-        title: session.pageTitle,
+        url: pageUrl,
+        title: pageTitle,
         time: new Date().toISOString(),
       });
       if (session.history.length > 50) session.history.pop();
 
       // Keep active tab state synchronized
-      const activeTab = session.tabs
-        ? session.tabs.find((t) => t.id === session.activeTabId)
-        : null;
-      if (activeTab) {
-        activeTab.url = session.currentUrl;
-        activeTab.title = session.pageTitle;
-      }
       this.broadcast('agent-browser-tabs', {
         agentId,
         activeTabId: session.activeTabId,
         tabs: this.getTabs(agentId),
       });
 
-      await this._injectCursorIfNeeded(session);
-      await this._captureAndBroadcastFrame(session);
+      if (isActive()) {
+        await this._injectCursorIfNeeded(session);
+        await this._captureAndBroadcastFrame(session);
+      }
 
-      this.broadcast('agent-browser-state', {
+      if (isActive()) this.broadcast('agent-browser-state', {
         agentId,
         status: 'READY',
-        url: session.currentUrl,
-        title: session.pageTitle,
+        url: pageUrl,
+        title: pageTitle,
         activeTabId: session.activeTabId,
         tabs: this.getTabs(agentId),
         timestamp: Date.now(),
@@ -1029,13 +1040,13 @@ export class AgentBrowserManager {
       return {
         success: true,
         agentId,
-        url: session.currentUrl,
-        title: session.pageTitle,
+        url: pageUrl,
+        title: pageTitle,
       };
     } catch (err) {
-      session.isLoading = false;
+      if (isActive()) session.isLoading = false;
       console.warn(`[AgentBrowserManager] Navigation error on ${cleanUrl}:`, err.message);
-      this.broadcast('agent-browser-state', {
+      if (isActive()) this.broadcast('agent-browser-state', {
         agentId,
         status: 'ERROR',
         error: err.message,
@@ -1629,18 +1640,18 @@ export class AgentBrowserManager {
   // ─── Persistent Cookie & Session Management ───
   async saveCookies(agentId, customFilepath = null) {
     const session = await this.getOrCreateSession(agentId);
-    const profilesBaseDir = path.join(DATA_DIR, 'browser-profiles');
-    const agentProfileDir = path.join(profilesBaseDir, agentId);
-    const filepath = customFilepath
-      ? path.resolve(customFilepath)
-      : path.join(agentProfileDir, 'cookies.json');
-
     try {
+      const agentProfileDir = profileDirectory(agentId);
+      const filepath = resolveWithinRoot(agentProfileDir, customFilepath || 'cookies.enc.json');
       const cookies = await session.context.cookies();
-      fs.writeFileSync(filepath, JSON.stringify(cookies, null, 2), 'utf8');
-      console.log(
-        `[AgentBrowserManager] 🍪 Saved ${cookies.length} cookies for ${agentId} to ${filepath}`,
-      );
+      const envelope = enterpriseVault.encrypt(cookies, { persist: false, context: `browser-cookies:${agentId}` });
+      const temporary = `${filepath}.${randomUUID()}.tmp`;
+      try {
+        fs.writeFileSync(temporary, JSON.stringify({ version: 1, encrypted: true, envelope }), { flag: 'wx', mode: 0o600 });
+        fs.renameSync(temporary, filepath);
+      } finally {
+        if (fs.existsSync(temporary)) fs.unlinkSync(temporary);
+      }
       return { success: true, agentId, cookieCount: cookies.length, filepath };
     } catch (e) {
       return { success: false, agentId, error: e.message };
@@ -1649,24 +1660,24 @@ export class AgentBrowserManager {
 
   async loadCookies(agentId, customFilepath = null) {
     const session = await this.getOrCreateSession(agentId);
-    const profilesBaseDir = path.join(DATA_DIR, 'browser-profiles');
-    const agentProfileDir = path.join(profilesBaseDir, agentId);
-    const filepath = customFilepath
-      ? path.resolve(customFilepath)
-      : path.join(agentProfileDir, 'cookies.json');
-
     try {
+      const agentProfileDir = profileDirectory(agentId);
+      const encryptedPath = resolveWithinRoot(agentProfileDir, 'cookies.enc.json');
+      const filepath = resolveWithinRoot(agentProfileDir, customFilepath ||
+        (fs.existsSync(encryptedPath) ? 'cookies.enc.json' : 'cookies.json'));
       if (!fs.existsSync(filepath)) {
         return { success: false, agentId, error: `Cookie file not found at ${filepath}` };
       }
       const raw = fs.readFileSync(filepath, 'utf8');
-      const cookies = JSON.parse(raw);
+      const payload = JSON.parse(raw);
+      const legacyPlaintext = Array.isArray(payload);
+      if (!legacyPlaintext && (payload?.version !== 1 || payload.encrypted !== true ||
+          payload.envelope?.context !== `browser-cookies:${agentId}`))
+        throw new Error('Invalid encrypted cookie export.');
+      const cookies = legacyPlaintext ? payload : enterpriseVault.decrypt(payload.envelope, { parseJSON: true });
       if (Array.isArray(cookies)) {
         await session.context.addCookies(cookies);
-        console.log(
-          `[AgentBrowserManager] 🍪 Loaded ${cookies.length} cookies for ${agentId} from ${filepath}`,
-        );
-        return { success: true, agentId, cookieCount: cookies.length, filepath };
+        return { success: true, agentId, cookieCount: cookies.length, filepath, legacyPlaintext };
       }
       return { success: false, agentId, error: 'Malformed cookie file array' };
     } catch (e) {
@@ -3976,6 +3987,21 @@ Always output valid JSON ONLY with this schema:
       this.sessions.delete(agentId);
     }
     return { success: true, agentId };
+  }
+
+  revokeBrowserAccess() {
+    this.browserGeneration++;
+    const sessions = [...this.sessions.values()];
+    this.sessions.clear();
+    const pending = [...this.launches.values()];
+    const previous = this.revocation;
+    this.revocation = Promise.all([
+      previous,
+      Promise.all(sessions.map((session) => Promise.resolve().then(() => session.context.close()))),
+      Promise.allSettled(pending),
+    ]).then(() => undefined);
+    this.revocation.catch((error) => console.error('[AgentBrowserManager] Browser revocation failed:', error.message));
+    return this.revocation;
   }
 
   async shutdown() {

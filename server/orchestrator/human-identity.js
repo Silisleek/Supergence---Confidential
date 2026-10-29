@@ -11,7 +11,7 @@ import shortTermMemory from '../memory/short-term.js';
 import longTermMemory from '../memory/long-term.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const RAPPORT_FILE = path.resolve(__dirname, '../../data/memory/human-rapport.json');
+const RAPPORT_FILE = process.env.SIS_DATA_DIR ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'memory/human-rapport.json') : path.resolve(__dirname, '../../data/memory/human-rapport.json');
 
 // Ensure directory exists
 if (!fs.existsSync(path.dirname(RAPPORT_FILE))) {

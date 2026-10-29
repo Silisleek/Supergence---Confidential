@@ -299,7 +299,7 @@ console.log('TEST_PASS');
    * Solve SWE-bench task using SIS Coding Expert & Auto-Healer Loop
    */
   async solveAndVerifyTask(task) {
-    const sandboxDir = path.resolve(__dirname, '../../workspace/.sandbox');
+    const sandboxDir = path.join(process.env.SIS_WORKSPACE_DIR ? path.resolve(process.env.SIS_WORKSPACE_DIR) : path.resolve(__dirname, '../../workspace'), '.sandbox');
     if (!fs.existsSync(sandboxDir)) fs.mkdirSync(sandboxDir, { recursive: true });
 
     const baseName = `swe_${task.id.toLowerCase()}_${Date.now()}`;

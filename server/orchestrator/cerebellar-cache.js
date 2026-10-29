@@ -8,7 +8,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const CACHE_FILE = path.join(__dirname, '../../data/memory/cerebellar-cache.json');
+const CACHE_FILE = process.env.SIS_DATA_DIR ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'memory/cerebellar-cache.json') : path.join(__dirname, '../../data/memory/cerebellar-cache.json');
 
 // Normalization for robust pattern matching
 function normalizePrompt(prompt) {

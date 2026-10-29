@@ -30,7 +30,10 @@ function launch(args, options = {}) {
 
 // Start Vite only when Express announces its actual listening port. This also
 // works when Express falls back because another SIS instance occupies PORT.
-const backend = launch(['server/index.js'], { stdio: ['inherit', 'pipe', 'inherit'] });
+const backend = launch(['server/index.js'], {
+  stdio: ['inherit', 'pipe', 'inherit'],
+  env: { ...process.env, SIS_ALLOW_VITE_ORIGIN: '1' },
+});
 backend.stdout.on('data', (chunk) => {
   process.stdout.write(chunk);
   output = (output + chunk.toString()).slice(-8192);
@@ -38,7 +41,7 @@ backend.stdout.on('data', (chunk) => {
   if (!match || viteStarted || stopping) return;
   viteStarted = true;
   console.log(`[dev] Connecting Vite to the backend on port ${match[1]}.`);
-  launch(['node_modules/vite/bin/vite.js', '--host'], {
+  launch(['node_modules/vite/bin/vite.js', '--host', '127.0.0.1'], {
     env: { ...process.env, ACTIVE_SERVER_PORT: match[1] },
   });
 });

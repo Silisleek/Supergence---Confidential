@@ -10,7 +10,7 @@ import { SandboxRunner } from './sandbox.js';
 import autoHealer from '../orchestrator/auto-healer.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const WORKSPACE_DIR = path.resolve(__dirname, '../../workspace');
+const WORKSPACE_DIR = process.env.SIS_WORKSPACE_DIR ? path.resolve(process.env.SIS_WORKSPACE_DIR) : path.resolve(__dirname, '../../workspace');
 const SCREENSHOTS_DIR = path.join(WORKSPACE_DIR, 'screenshots');
 
 if (!fs.existsSync(SCREENSHOTS_DIR)) {

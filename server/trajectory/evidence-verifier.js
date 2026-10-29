@@ -24,7 +24,9 @@ import { RewardVerifier } from './reward-verifier.js';
 import { synthesizeOracle, ORACLE_SOURCE } from './oracle-synth.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const EVIDENCE_DIR = path.join(__dirname, '../../data/mastery');
+const EVIDENCE_DIR = process.env.SIS_DATA_DIR
+  ? path.join(path.resolve(process.env.SIS_DATA_DIR), 'mastery')
+  : path.join(__dirname, '../../data/mastery');
 const LEDGER_FILE = path.join(EVIDENCE_DIR, 'evidence-ledger.json');
 
 export const GRADE = Object.freeze({

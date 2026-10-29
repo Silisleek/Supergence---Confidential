@@ -3,16 +3,26 @@
 
 import fs from 'fs';
 import path from 'path';
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
 import { fileURLToPath } from 'url';
 import vm from 'vm';
 import { ContainerRunner } from '../sandbox/container-runner.js';
 import { resolveWithinRoot } from '../utils/path-confinement.js';
+import { childEnvironment } from '../security/child-environment.js';
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const SANDBOX_BASE = path.join(__dirname, '../../workspace/.sandbox');
+const WORKSPACE_ROOT = process.env.SIS_WORKSPACE_DIR
+  ? path.resolve(process.env.SIS_WORKSPACE_DIR)
+  : path.join(__dirname, '../../workspace');
+const SANDBOX_BASE = path.join(WORKSPACE_ROOT, '.sandbox');
+
+function runDirectory(base, runId) {
+  if (typeof runId !== 'string' || !/^[a-zA-Z0-9_-]{1,120}$/.test(runId))
+    throw new Error('Invalid sandbox run ID.');
+  return resolveWithinRoot(base, runId);
+}
 
 if (!fs.existsSync(SANDBOX_BASE)) {
   fs.mkdirSync(SANDBOX_BASE, { recursive: true });
@@ -57,7 +67,7 @@ export class SandboxRunner {
    * @returns {Promise<Object>} Verification results { success, stdout, stderr, exitCode, error }
    */
   async execute(draft, runId = `run_${Date.now()}`) {
-    const sandboxDir = path.join(this.baseDir, runId);
+    const sandboxDir = runDirectory(this.baseDir, runId);
     if (!fs.existsSync(sandboxDir)) fs.mkdirSync(sandboxDir, { recursive: true });
 
     const targetFile = draft.targetFile || 'main.js';
@@ -72,7 +82,7 @@ export class SandboxRunner {
 
     // Stage imported or closely matching sibling files (e.g. target is foo.test.ts -> copy foo.ts)
     // Avoid copying entire 6,000+ files from workspace root
-    const workspaceRoot = path.join(__dirname, '../../workspace');
+    const workspaceRoot = WORKSPACE_ROOT;
     try {
       const codeSample = `${draft.code || ''} ${draft.testCode || ''}`;
       const importMatches = [
@@ -87,8 +97,8 @@ export class SandboxRunner {
       for (const name of importedNames) {
         for (const ext of ['.ts', '.js', '.mjs', '.cjs', '.json', '']) {
           const candidate = name + ext;
-          const srcPath = path.join(workspaceRoot, candidate);
-          const destPath = path.join(sandboxDir, candidate);
+          const srcPath = resolveWithinRoot(workspaceRoot, candidate);
+          const destPath = resolveWithinRoot(sandboxDir, candidate);
           if (fs.existsSync(srcPath) && fs.statSync(srcPath).isFile() && !fs.existsSync(destPath)) {
             fs.copyFileSync(srcPath, destPath);
           }
@@ -171,9 +181,10 @@ export class SandboxRunner {
         return { success: true, stdout: `Skipped node --check for ${fileExt} file` };
       }
       try {
-        const { stdout, stderr } = await execAsync(`node --check "${filePath}"`, {
+        const { stdout, stderr } = await execFileAsync(process.execPath, ['--check', filePath], {
           cwd,
           timeout: 8000,
+          env: childEnvironment(),
         });
         return { success: !stderr, stdout, stderr };
       } catch (err) {
@@ -188,9 +199,10 @@ export class SandboxRunner {
 
     if (lang === 'python' || lang === 'py') {
       try {
-        const { stdout, stderr } = await execAsync(`python -m py_compile "${filePath}"`, {
+        const { stdout, stderr } = await execFileAsync('python', ['-m', 'py_compile', filePath], {
           cwd,
           timeout: 8000,
+          env: childEnvironment(),
         });
         return { success: true, stdout, stderr };
       } catch (err) {
@@ -345,7 +357,7 @@ export class SandboxRunner {
 
   cleanup(runId) {
     try {
-      const dir = path.join(this.baseDir, runId);
+      const dir = runDirectory(this.baseDir, runId);
       if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true, force: true });
     } catch {}
   }

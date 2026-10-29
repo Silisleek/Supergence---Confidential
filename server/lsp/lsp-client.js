@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { AstParser } from './ast-parser.js';
+import { childEnvironment } from '../security/child-environment.js';
 
 export class LspClient {
   constructor({ language = 'javascript', serverCommand = null, rootPath = process.cwd() } = {}) {
@@ -28,6 +29,7 @@ export class LspClient {
       const parts = this.serverCommand.split(' ');
       this.process = spawn(parts[0], parts.slice(1), {
         cwd: this.rootPath,
+        env: childEnvironment(),
         shell: process.platform === 'win32',
         stdio: ['pipe', 'pipe', 'pipe'],
       });
