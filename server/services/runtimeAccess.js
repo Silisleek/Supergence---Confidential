@@ -17,6 +17,18 @@ export const accessModes = ['full-access', 'approve-for-me', 'ask-before-executi
 export function operationPolicy(name, args = {}) {
   const tool = String(name).toLowerCase();
   const capabilities = new Set();
+  const evaluationFilename = String(args.filename || args.targetFile || 'module.js');
+  const evaluationLanguage = String(args.language || path.extname(evaluationFilename).slice(1) || 'javascript').toLowerCase();
+  const htmlEvaluation = tool === 'code_expert_eval' &&
+    (evaluationLanguage === 'html' || evaluationFilename.endsWith('.html'));
+  if (['grep_search', 'extract_archive', 'zip_create', 'github_clone', 'github_download_zip',
+    'dom_read', 'dom_interact', 'inspect_web_app_headless', 'screenshot', 'code_expert_eval',
+    'execute_code_sandbox', 'auto_heal_code', 'threejs_scene_profiler'].includes(tool)) capabilities.add('files');
+  if (['inspect_web_app_headless', 'screenshot'].includes(tool) || htmlEvaluation)
+    capabilities.add('browser');
+  if (['github_clone', 'execute_code_sandbox', 'auto_heal_code'].includes(tool) ||
+    (tool === 'code_expert_eval' && (!htmlEvaluation || args.autoHeal !== false)) ||
+    (tool === 'inspect_web_app_headless' && args.autoHeal === true)) capabilities.add('terminal');
   if (/browser|web_|search_web|navigate|crawl|capture_screen/.test(tool))
     capabilities.add('browser');
   if (

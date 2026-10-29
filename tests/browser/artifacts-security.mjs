@@ -131,6 +131,21 @@ try {
       403,
       url,
     );
+  for (const tool of [
+    'github_clone',
+    'github_download_zip',
+    'grep_search',
+    'extract_archive',
+    'screenshot',
+    'execute_code_sandbox',
+  ]) {
+    const response = await request('/api/tools/execute', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ tool, params: {} }),
+    });
+    assert.match((await response.json()).result.error, /files access is disabled/, tool);
+  }
   let packet;
   do {
     packet = await reader.read();
@@ -155,13 +170,38 @@ try {
       403,
       url,
     );
+  for (const tool of ['github_clone', 'execute_code_sandbox', 'code_expert_eval']) {
+    const response = await request('/api/tools/execute', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ tool, params: {} }),
+    });
+    assert.match((await response.json()).result.error, /terminal access is disabled/, tool);
+  }
+  await request('/api/access', {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ terminal: true, browser: false }),
+  });
+  for (const tool of ['screenshot', 'inspect_web_app_headless']) {
+    const response = await request('/api/tools/execute', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ tool, params: {} }),
+    });
+    assert.match((await response.json()).result.error, /browser access is disabled/, tool);
+  }
   console.log('Artifact routes use the configured workspace and respect file-access settings.');
 } finally {
   await browser?.close();
   await request('/api/access', {
     method: 'PATCH',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ files: access.settings.files, terminal: access.settings.terminal }),
+    body: JSON.stringify({
+      files: access.settings.files,
+      terminal: access.settings.terminal,
+      browser: access.settings.browser,
+    }),
   });
   if (fixtureCreated) await fs.unlink(fixture).catch(() => {});
   if (benchmarkCreated) await fs.unlink(benchmark).catch(() => {});

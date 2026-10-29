@@ -9,12 +9,15 @@ import { agentMessageTools } from './agent-message-tools.js';
 // Manages all tools available to AI parts
 
 import fs from 'fs';
+import os from 'node:os';
 import { hasPassingOracle } from '../trajectory/learning-grade.js';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import { exec, execFile } from 'child_process';
 import { promisify } from 'util';
+import { randomUUID } from 'node:crypto';
 import { resolveWithinRoot } from '../utils/path-confinement.js';
+import { childEnvironment } from '../security/child-environment.js';
 import shortTermMemory from '../memory/short-term.js';
 import longTermMemory from '../memory/long-term.js';
 import generator3D from '../3d/generator.js';
@@ -73,6 +76,7 @@ function getHeadlessBrowserExecutable() {
 
 // ─── Workspace HTML File Resolver ───
 function resolveWorkspaceHtmlFile(filepath) {
+  const root = workspace.root;
   if (!filepath) {
     const defaults = [
       'index.html',
@@ -82,33 +86,15 @@ function resolveWorkspaceHtmlFile(filepath) {
       'scene_3d.html',
     ];
     for (const d of defaults) {
-      const candidates = [
-        path.join(workspaceRoot(), d),
-        path.join(workspaceRoot(), 'workspace', d),
-        workspace?.root ? path.join(workspace.root, d) : null,
-      ].filter(Boolean);
-      for (const c of candidates) {
-        if (fs.existsSync(c)) return c;
-      }
+      const candidate = resolveWithinRoot(root, d);
+      if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) return candidate;
     }
     return null;
   }
 
-  const clean = filepath.trim().replace(/^workspace[\\\/]/i, '');
-  const candidates = [
-    path.isAbsolute(filepath) ? filepath : null,
-    path.join(workspaceRoot(), filepath),
-    path.join(workspaceRoot(), clean),
-    path.join(workspaceRoot(), 'workspace', clean),
-    workspace?.root ? path.join(workspace.root, filepath) : null,
-    workspace?.root ? path.join(workspace.root, clean) : null,
-  ].filter(Boolean);
-
-  for (const c of candidates) {
-    if (fs.existsSync(c) && fs.statSync(c).isFile()) {
-      return c;
-    }
-  }
+  const clean = String(filepath).trim().replace(/^workspace[\\\/]/i, '');
+  const candidate = resolveWithinRoot(root, clean);
+  if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) return candidate;
   return null;
 }
 
@@ -863,7 +849,7 @@ function playProceduralSound(ctx) {
   threejs_scene_profiler: {
     name: 'threejs_scene_profiler',
     description:
-      'Inspect and profile a 3D Three.js WebGL scene file in workspace. Measures draw calls, mesh count, geometry reuse, shader compilation, and performance bottlenecks.',
+      'Inspect source text in a workspace Three.js scene for mesh, light, audio, control, and animation patterns. Does not measure runtime rendering or performance.',
     parameters: { filepath: 'string' },
     execute: async (args = {}) => {
       const fp = args.filepath || 'scene_3d.html';
@@ -885,19 +871,15 @@ function playProceduralSound(ctx) {
         success: true,
         filename: path.basename(resolved),
         sizeBytes: content.length,
-        meshCount,
-        lightCount,
-        proceduralAudioIntegrated: hasAudio,
-        keyboardControlsBound: hasControls,
-        renderLoopActive: hasRAF,
-        estimatedDrawCalls: meshCount + lightCount,
-        performanceRating:
-          meshCount <= 50
-            ? 'A+ (Optimal 60 FPS)'
-            : meshCount <= 200
-              ? 'A (Solid 60 FPS)'
-              : 'B (Consider Instancing)',
-        status: 'PROFILED',
+        sourcePatterns: {
+          meshConstructorMatches: meshCount,
+          lightConstructorMatches: lightCount,
+          audioPattern: hasAudio,
+          keyboardPattern: hasControls,
+          animationFramePattern: hasRAF,
+        },
+        limitation: 'Text matches can include comments and do not establish actual scene contents, rendering, draw calls, or frame rate.',
+        status: 'SOURCE_ANALYZED',
       };
     },
   },
@@ -2553,6 +2535,7 @@ function playProceduralSound(ctx) {
       url,
       filename = 'workspace-screenshot.png',
     } = {}) => {
+      let temporaryPath, profileDir;
       try {
         const browserExe = getHeadlessBrowserExecutable();
         const safeName = path.basename(
@@ -2562,53 +2545,60 @@ function playProceduralSound(ctx) {
         );
         const outDir = workspace?.root || path.join(workspaceRoot(), 'workspace');
         if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
-        const outPath = path.join(outDir, safeName);
+        const outPath = resolveWithinRoot(outDir, safeName);
 
         let targetUrl = url;
+        if (targetUrl && !['http:', 'https:'].includes(new URL(targetUrl).protocol))
+          throw new Error('Screenshot URLs must use HTTP or HTTPS.');
         if (!targetUrl) {
           const resolvedFile = resolveWorkspaceHtmlFile(filepath);
           if (resolvedFile) {
-            targetUrl = `file:///${resolvedFile.replace(/\\/g, '/')}`;
+            targetUrl = pathToFileURL(resolvedFile).href;
           } else {
-            targetUrl = 'http://localhost:3008/workspace/';
+            return { success: false, error: 'No workspace HTML file is available for a screenshot.' };
           }
         }
 
         if (browserExe) {
+          profileDir = fs.mkdtempSync(path.join(os.tmpdir(), 'sis-screenshot-profile-'));
+          temporaryPath = resolveWithinRoot(outDir, `.screenshot-${randomUUID()}.png`);
+          fs.closeSync(fs.openSync(temporaryPath, 'wx'));
           const args = [
             '--headless=new',
             '--disable-gpu',
-            '--no-sandbox',
+            '--no-first-run',
+            `--user-data-dir=${profileDir}`,
             '--window-size=1280,800',
-            `--screenshot=${outPath}`,
+            `--screenshot=${temporaryPath}`,
             targetUrl,
           ];
-          await execFileAsync(browserExe, args, { timeout: 15000 });
-          if (fs.existsSync(outPath) && fs.statSync(outPath).size > 1000) {
+          await execFileAsync(browserExe, args, { timeout: 15000, env: childEnvironment() });
+          if (fs.existsSync(temporaryPath) && fs.statSync(temporaryPath).size > 1000) {
+            resolveWithinRoot(outDir, safeName);
+            fs.renameSync(temporaryPath, outPath);
             return {
               success: true,
               filename: safeName,
               path: outPath,
               size: fs.statSync(outPath).size,
               targetUrl,
-              selector: selector || '#app',
+              limitation: selector ? 'The screenshot captures the viewport; selector-specific capture is not available.' : undefined,
               message: `Visual screenshot captured successfully: ${safeName}`,
             };
           }
         }
 
-        // Fallback if browser execution failed or unavailable
         return {
-          success: true,
-          simulated: true,
-          selector: selector || '#app',
-          targetUrl,
-          message: 'Visual verification logged — headless renderer fallback active.',
+          success: false,
+          error: 'A headless browser screenshot is unavailable.',
         };
       } catch (err) {
         return {
           error: `Screenshot failed: ${err.message}`,
         };
+      } finally {
+        try { if (temporaryPath && fs.existsSync(temporaryPath)) fs.unlinkSync(temporaryPath); } catch (_) {}
+        try { if (profileDir) fs.rmSync(profileDir, { recursive: true, force: true }); } catch (_) {}
       }
     },
   },
@@ -2624,7 +2614,7 @@ function playProceduralSound(ctx) {
         const fullPath = resolveWorkspaceHtmlFile(filepath);
         if (!fullPath) {
           return {
-            error: `File not found: "${filepath || 'default'}" (checked workspace & project root)`,
+            error: `File not found in workspace: "${filepath || 'default'}"`,
           };
         }
         const html = fs.readFileSync(fullPath, 'utf8');

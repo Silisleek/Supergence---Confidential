@@ -88,6 +88,51 @@ test('computer control and folder operations require the appropriate enabled cap
   assert.equal(operationPolicy('delete_local_file').routine, false);
 });
 
+test('workspace and browser tools cannot bypass disabled capabilities', async (t) => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'sis-tool-access-'));
+  t.after(async () => fs.rm(directory, { recursive: true, force: true }));
+  const access = new RuntimeAccess({ directory });
+  access.update({ mode: 'full-access', files: false });
+  for (const tool of [
+    'github_clone',
+    'github_download_zip',
+    'github_fetch_to_workspace',
+    'grep_search',
+    'extract_archive',
+    'zip_create',
+    'dom_read',
+    'dom_interact',
+    'screenshot',
+    'inspect_web_app_headless',
+    'execute_code_sandbox',
+    'code_expert_eval',
+    'auto_heal_code',
+  ])
+    await assert.rejects(access.authorize(tool, {}), /files access is disabled/, tool);
+  access.update({ files: true, terminal: false });
+  for (const tool of ['github_clone', 'execute_code_sandbox', 'code_expert_eval', 'auto_heal_code'])
+    await assert.rejects(access.authorize(tool, {}), /terminal access is disabled/, tool);
+  await assert.rejects(
+    access.authorize('code_expert_eval', {
+      filename: 'demo.htm',
+      language: 'javascript',
+      autoHeal: false,
+    }),
+    /terminal access is disabled/,
+  );
+  await assert.rejects(
+    access.authorize('inspect_web_app_headless', { autoHeal: true }),
+    /terminal access is disabled/,
+  );
+  access.update({ terminal: true, browser: false });
+  for (const tool of ['screenshot', 'inspect_web_app_headless'])
+    await assert.rejects(access.authorize(tool, {}), /browser access is disabled/, tool);
+  await assert.rejects(
+    access.authorize('code_expert_eval', { filename: 'demo.html', autoHeal: false }),
+    /browser access is disabled/,
+  );
+});
+
 test('cookie exports and imports require explicit review even in full access', async () => {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'sis-cookie-access-'));
   try {
@@ -101,7 +146,10 @@ test('cookie exports and imports require explicit review even in full access', a
       await assert.rejects(waiting, /declined/);
     }
     access.update({ files: false });
-    await assert.rejects(access.authorize('browser_save_cookies', { agentId: 'agent-cs' }), /files access is disabled/);
+    await assert.rejects(
+      access.authorize('browser_save_cookies', { agentId: 'agent-cs' }),
+      /files access is disabled/,
+    );
   } finally {
     await fs.rm(directory, { recursive: true, force: true });
   }
