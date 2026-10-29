@@ -2,8 +2,18 @@ import fs from 'node:fs';
 import path from 'node:path';
 import workspace from '../workspace/manager.js';
 import { conversationWorkspaces, containedPath } from '../services/conversationWorkspaces.js';
+import { runtimeAccess } from '../services/runtimeAccess.js';
 
 export function registerConversationWorkspaceRoutes(app) {
+  const streams = new Set();
+  runtimeAccess.onChange((next, previous) => {
+    if (previous.files && !next.files) for (const stream of streams) stream.end();
+  });
+  app.use('/api/conversations/:id/workspace', (_req, res, next) => {
+    if (!runtimeAccess.settings.files)
+      return res.status(403).json({ error: 'File access is disabled in Access settings.' });
+    next();
+  });
   const record = (req) => conversationWorkspaces.ensure(workspace.baseRoot, req.params.id);
   app.post('/api/conversations/:id/workspace', (req, res) => {
     try {
@@ -64,6 +74,7 @@ export function registerConversationWorkspaceRoutes(app) {
     res.setHeader('Cache-Control', 'no-cache, no-transform');
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders();
+    streams.add(res);
     const send = (entry) =>
       res.write(`id: ${entry.sequence}\nevent: workspace\ndata: ${JSON.stringify(entry)}\n\n`);
     const after = Number(req.headers['last-event-id'] || req.query.after || 0);
@@ -76,6 +87,7 @@ export function registerConversationWorkspaceRoutes(app) {
     req.on('close', () => {
       clearInterval(timer);
       item.listeners.delete(send);
+      streams.delete(res);
     });
   });
 }

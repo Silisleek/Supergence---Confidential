@@ -11,6 +11,8 @@ if (!base || !root)
 const name = `artifact');window.__vaultInjected=1;('${randomUUID()}.html`;
 const fixture = path.join(root, name);
 const benchmark = path.join(root, 'benchmark_results.html');
+const conversationId = `security-${randomUUID()}`;
+const conversation = `/api/conversations/${conversationId}/workspace`;
 const request = (url, options) => fetch(new URL(url, base), options);
 const access = await (await request('/api/access')).json();
 if (!access.settings?.files)
@@ -39,6 +41,19 @@ try {
   assert.equal((await content.json()).content, '<title>Workspace fixture</title>');
   assert.equal((await request('/api/artifacts/content?file=..%2Fsecret')).status, 400);
   assert.equal((await request('/api/artifacts/content?file=.env')).status, 400);
+  assert.equal((await request(item.src)).status, 200);
+  assert.equal(
+    (
+      await request('/api/workspace/execute', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ filename: name, language: 'javascript' }),
+      })
+    ).status,
+    400,
+  );
+  assert.equal((await request(conversation, { method: 'POST' })).status, 200);
+  assert.equal((await request(`${conversation}/files`)).status, 200);
   const result = await request('/api/benchmarks/frontier-results');
   assert.equal(result.status, 200);
   assert.match(result.headers.get('content-security-policy'), /sandbox/);
@@ -64,6 +79,9 @@ try {
   assert.equal(await page.evaluate(() => window.__vaultInjected), undefined);
   assert.equal(await page.locator('#vaultPreviewIframe').getAttribute('src'), item.src);
   assert.match(await page.locator('#vaultPreviewIframe').getAttribute('sandbox'), /allow-scripts/);
+  const stream = await request(`${conversation}/events`, { signal: AbortSignal.timeout(10000) });
+  assert.equal(stream.status, 200);
+  const reader = stream.body.getReader();
   const changed = await request('/api/access', {
     method: 'PATCH',
     headers: { 'content-type': 'application/json' },
@@ -75,8 +93,17 @@ try {
     '/api/artifacts/stats',
     `/api/artifacts/content?file=${encodeURIComponent(name)}`,
     '/api/benchmarks/frontier-results',
+    item.src,
+    `${conversation}/files`,
+    `${conversation}/file?path=test.txt`,
+    `${conversation}/events`,
   ])
     assert.equal((await request(url)).status, 403, url);
+  assert.equal((await request(conversation, { method: 'POST' })).status, 403);
+  let packet;
+  do {
+    packet = await reader.read();
+  } while (!packet.done);
   await page.evaluate(() => window.refreshArtifactsVault());
   assert.match(await page.locator('#vaultEmptyNotice').innerText(), /unavailable/i);
   assert.equal(await page.locator('#vaultPreviewIframe').getAttribute('src'), null);
@@ -90,4 +117,5 @@ try {
   });
   if (fixtureCreated) await fs.unlink(fixture).catch(() => {});
   if (benchmarkCreated) await fs.unlink(benchmark).catch(() => {});
+  await fs.rmdir(path.join(root, 'chats', conversationId)).catch(() => {});
 }

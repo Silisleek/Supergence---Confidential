@@ -460,6 +460,8 @@ function preparePreviewHtml(source, vendorPrefix = null) {
 
 // Serve existing workspace previews without following linked paths.
 app.use('/workspace', (req, res, next) => {
+  if (!runtimeAccess.settings.files)
+    return res.status(403).json({ error: 'File access is disabled in Access settings.' });
   res.setHeader('Content-Security-Policy', 'sandbox allow-scripts allow-forms allow-downloads allow-pointer-lock');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
@@ -1723,10 +1725,15 @@ app.post('/api/workspace/command', async (req, res) => {
 app.post('/api/workspace/execute', async (req, res) => {
   try {
     const { filename, language } = req.body || {};
-    if (!filename) return res.status(400).json({ error: 'Filename required' });
+    if (typeof filename !== 'string' || filename !== path.basename(filename) || !/^[\p{L}\p{N}_. -]+$/u.test(filename))
+      return res.status(400).json({ error: 'A valid workspace filename is required.' });
+    if (!runtimeAccess.settings.terminal)
+      return res.status(403).json({ error: 'terminal access is disabled in Access settings.' });
 
-    const cleanFn = path.basename(filename);
-    const fullPath = path.join(workspace.root, cleanFn);
+    const cleanFn = filename;
+    let fullPath;
+    try { fullPath = resolveWithinRoot(workspace.root, cleanFn); }
+    catch { return res.status(403).json({ error: 'File path is not accessible.' }); }
     if (!fs.existsSync(fullPath)) {
       return res.status(404).json({ error: `File not found: ${cleanFn}` });
     }
@@ -1734,9 +1741,6 @@ app.post('/api/workspace/execute', async (req, res) => {
     const content = fs.readFileSync(fullPath, 'utf8');
     const ext = path.extname(cleanFn).slice(1).toLowerCase();
     const lang = language || ext || 'javascript';
-    if (!runtimeAccess.settings.terminal) {
-      return res.status(403).json({ error: 'terminal access is disabled in Access settings.' });
-    }
     if (runtimeAccess.settings.mode === 'ask-before-executing') {
       await runtimeAccess.authorize('verify_and_execute_code', { filename: cleanFn, language: lang });
     }
@@ -1764,7 +1768,7 @@ app.post('/api/workspace/execute', async (req, res) => {
       success: result.success,
       stdout: result.stdout || '',
       stderr: result.stderr || '',
-      exitCode: result.exitCode ?? 0,
+      exitCode: result.exitCode ?? null,
       phase: result.phase || 'runtime',
     });
   } catch (err) {
