@@ -31,6 +31,7 @@ const classicScripts = [
   'voice-input.js',
   'supergence-motion.js',
   'supergence-icons.js',
+  'silisleek.js',
 ];
 
 // Stage generated copies in Vite's public directory. Classic controllers keep

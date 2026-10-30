@@ -9,6 +9,23 @@ export function registerPageRoutes(app) {
   const pages = [
     [['/', '/classic', '/classic.html', '/classic-ui', '/liquid-glass'], 'client/index.html'],
     [
+      ['/silisleek', '/silisleek.html', '/silisleek/supergence', '/supergence-silisleek'],
+      'client/silisleek.html',
+    ],
+    [
+      [
+        '/installer',
+        '/installer.html',
+        '/download',
+        '/download.html',
+        '/downloads',
+        '/install',
+        '/install.html',
+      ],
+      'client/installer.html',
+    ],
+    [['/guide', '/guide.html', '/docs', '/documentation'], 'client/guide.html'],
+    [
       [
         '/workbench',
         '/workbench.html',

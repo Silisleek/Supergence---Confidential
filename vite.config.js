@@ -65,6 +65,8 @@ export default defineConfig(({ mode, command }) => {
         input: {
           app: fileURLToPath(new URL('./client/index.html', import.meta.url)),
           guide: fileURLToPath(new URL('./client/guide.html', import.meta.url)),
+          silisleek: fileURLToPath(new URL('./client/silisleek.html', import.meta.url)),
+          installer: fileURLToPath(new URL('./client/installer.html', import.meta.url)),
         },
         external: [
           'three',
