@@ -21,8 +21,8 @@ try {
 
   // Verify Hero headline
   const heroH1 = await page.locator('.sl-hero-title').innerText();
-  assert.match(heroH1, /Autonomous Superintelligence/i);
-  assert.match(heroH1, /Engineered for Reality/i);
+  assert.match(heroH1, /When intelligence reaches out/i);
+  assert.match(heroH1, /the future takes shape/i);
 
   // Verify Cockpit tabs exist and interactive switching works
   const cockpitNav = page.locator('#cockpitNav');

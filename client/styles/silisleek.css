@@ -1,47 +1,43 @@
 /* ==========================================================================
-   Supergence on Silisleek.com & Installer Hub Styles
-   Visual Direction: Ultra-dark cosmic obsidian, radiant copper/amber highlights,
-   Manrope UI typography + selective Instrument Serif display moments.
-   Strictly following client/Styles.md with enhanced dark futuristic aesthetics.
+   Supergence on Silisleek.com — Bespoke Awwwards Luxury Aesthetic
+   Strictly reverse-engineered from Qintara, Void/World, and Point-Cloud Art.
+   Pure Pitch-Black Void (#000000), Floating Capsule Navigation,
+   Halftone Matrix Creation Artwork, and Instrument Serif Editorial Accents.
    ========================================================================== */
 
 @import './supergence-tokens.css';
 @import './supergence-motion.css';
 
 :root {
-  /* Ultra-dark Obsidian Palette ("more dark" than charcoal) */
-  --sl-bg: #030406;
-  --sl-bg-subtle: #06080d;
-  --sl-surface: #0a0d14;
-  --sl-surface-raised: #0f131c;
-  --sl-surface-hover: #151b27;
-  --sl-border: rgba(224, 179, 140, 0.12);
-  --sl-border-strong: rgba(224, 179, 140, 0.28);
-  --sl-border-glow: rgba(224, 179, 140, 0.45);
+  --sl-void: #000000;
+  --sl-pure-black: #000000;
+  --sl-surface-glass: rgba(255, 255, 255, 0.04);
+  --sl-surface-raised: rgba(14, 17, 24, 0.7);
+  --sl-surface-card: #050609;
 
-  /* Text */
-  --sl-text: #f7eee5;
-  --sl-text-secondary: #c8cec7;
-  --sl-text-muted: #858d87;
-  --sl-text-subtle: #565d58;
+  --sl-hairline: rgba(255, 255, 255, 0.08);
+  --sl-hairline-bright: rgba(255, 255, 255, 0.16);
+
+  --sl-text: #ffffff;
+  --sl-text-secondary: #c5cbd1;
+  --sl-text-muted: #828a93;
+  --sl-text-subtle: #4e555e;
 
   /* Copper / Amber Accents from Styles.md */
   --sl-copper: #e0b38c;
   --sl-copper-light: #f0cca9;
   --sl-copper-bright: #ffbe85;
-  --sl-copper-glow: rgba(224, 179, 140, 0.18);
-  --sl-copper-ink: #160d07;
+  --sl-copper-glow: rgba(224, 179, 140, 0.25);
+  --sl-copper-ink: #000000;
 
-  /* Futuristic Cyber Accents */
-  --sl-cyan: #64b5f6;
-  --sl-cyan-glow: rgba(100, 181, 246, 0.16);
-  --sl-emerald: #81c784;
-  --sl-emerald-glow: rgba(129, 199, 132, 0.18);
-  --sl-ruby: #e57373;
+  /* Chromatic Flare Colors (Qintara Prism) */
+  --sl-violet: #a855f7;
+  --sl-cyan: #38bdf8;
+  --sl-emerald: #4ade80;
 
-  /* Fonts from Styles.md */
   --font-ui: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-editorial: 'Instrument Serif', Georgia, serif;
+  --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 *,
@@ -53,75 +49,66 @@
 }
 
 html {
+  font-family: var(--font-ui);
+  background-color: var(--sl-void);
+  color: var(--sl-text);
+  line-height: 1.6;
+  letter-spacing: -0.015em;
   scroll-behavior: smooth;
-  color-scheme: dark;
-  background-color: var(--sl-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body.sis-silisleek-page {
-  font-family: var(--font-ui);
+  background-color: var(--sl-void);
   color: var(--sl-text);
-  background-color: var(--sl-bg);
-  background-image:
-    radial-gradient(ellipse 90% 60% at 50% -15%, rgba(224, 179, 140, 0.08) 0%, transparent 75%),
-    radial-gradient(ellipse 60% 40% at 85% 30%, rgba(100, 181, 246, 0.04) 0%, transparent 60%),
-    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
-  background-size:
-    100% 100%,
-    100% 100%,
-    44px 44px,
-    44px 44px;
-  min-height: 100vh;
-  line-height: 1.65;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  position: relative;
+  min-height: 100vh;
 }
 
-/* Accessibility Skip Link */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--sl-copper);
+  outline-offset: 3px;
+}
+
 .sl-skip-link {
   position: absolute;
-  top: -100px;
-  left: 24px;
-  background: var(--sl-copper);
-  color: var(--sl-copper-ink);
-  padding: 12px 20px;
-  border-radius: 8px;
-  font-weight: 700;
-  z-index: 10000;
-  text-decoration: none;
+  top: -60px;
+  left: 20px;
+  background: #ffffff;
+  color: #000000;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  font-weight: 600;
+  z-index: 9999;
   transition: top 0.2s ease;
 }
 .sl-skip-link:focus {
-  top: 24px;
+  top: 20px;
 }
 
 /* ==========================================================================
-   Header & Navigation
+   1. Floating Capsule Navigation (Image 1 Qintara Exact Replica)
    ========================================================================== */
 .sl-header {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  width: 100%;
-  padding: 16px 24px;
-  background: rgba(3, 4, 6, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--sl-border);
-  transition:
-    background 0.3s ease,
-    border-color 0.3s ease;
+  position: fixed;
+  top: 20px;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  pointer-events: none;
+  padding: 0 28px;
 }
 
 .sl-nav-container {
-  max-width: 1360px;
+  max-width: 1320px;
   margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  pointer-events: auto;
 }
 
 .sl-brand {
@@ -129,267 +116,262 @@ body.sis-silisleek-page {
   align-items: center;
   gap: 12px;
   text-decoration: none;
-  color: var(--sl-text);
+  color: #ffffff;
+}
+.sl-brand-logo-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #ffffff;
 }
 
-.sl-logo {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  object-fit: contain;
-  filter: drop-shadow(0 0 12px rgba(224, 179, 140, 0.3));
-}
-
-.sl-brand-text {
-  display: flex;
-  flex-direction: column;
-}
-
-.sl-brand-title {
-  font-size: 1.15rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+/* Floating Center Capsule */
+.sl-capsule-nav {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 9999px;
+  padding: 4px 8px;
 }
 
-.sl-brand-org {
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  color: var(--sl-copper);
-  text-transform: uppercase;
-}
-
-.sl-nav-menu {
-  display: flex;
-  align-items: center;
-  gap: 28px;
-}
-
-.sl-nav-link {
-  color: var(--sl-text-secondary);
+.sl-nav-pill {
+  color: #8c939b;
   text-decoration: none;
-  font-size: 0.92rem;
+  font-size: 0.85rem;
   font-weight: 500;
-  transition: color 0.2s ease;
-  position: relative;
+  padding: 7px 18px;
+  border-radius: 9999px;
+  transition:
+    color 0.2s,
+    background 0.2s;
 }
-
-.sl-nav-link:hover,
-.sl-nav-link.active {
-  color: var(--sl-copper);
-}
-
-.sl-nav-link.active::after {
-  content: '';
-  position: absolute;
-  bottom: -6px;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: var(--sl-copper);
-  border-radius: 2px;
+.sl-nav-pill:hover,
+.sl-nav-pill.active {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .sl-nav-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
 }
 
-/* ==========================================================================
-   Buttons & Controls
-   ========================================================================== */
-.sl-btn {
+/* Stark White Pill Buttons (Qintara "Get started" / "See it in action") */
+.sl-btn-stark {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 8px;
-  padding: 11px 22px;
-  border-radius: 12px;
-  font-family: var(--font-ui);
-  font-size: 0.94rem;
+  background: #ffffff;
+  color: #000000;
   font-weight: 600;
+  font-size: 0.88rem;
   text-decoration: none;
+  padding: 9px 24px;
+  border-radius: 9999px;
+  border: none;
   cursor: pointer;
-  border: 1px solid transparent;
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  white-space: nowrap;
+  transition:
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.2s;
+}
+.sl-btn-stark:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 24px rgba(255, 255, 255, 0.28);
+  color: #000000;
 }
 
-.sl-btn-primary {
-  background: linear-gradient(135deg, var(--sl-copper-bright) 0%, var(--sl-copper) 100%);
-  color: var(--sl-copper-ink);
-  box-shadow:
-    0 4px 20px var(--sl-copper-glow),
-    0 0 0 1px rgba(255, 255, 255, 0.15) inset;
+.sl-btn-dark-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  font-weight: 500;
+  font-size: 0.88rem;
+  text-decoration: none;
+  padding: 9px 22px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sl-btn-dark-pill:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.24);
 }
 
-.sl-btn-primary:hover {
-  background: linear-gradient(135deg, #ffd3a6 0%, var(--sl-copper-light) 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(224, 179, 140, 0.32);
+.sl-pill-arrow {
+  display: inline-block;
+  transition: transform 0.2s ease;
 }
-
-.sl-btn-secondary {
-  background: var(--sl-surface-raised);
-  color: var(--sl-text);
-  border: 1px solid var(--sl-border);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-}
-
-.sl-btn-secondary:hover {
-  background: var(--sl-surface-hover);
-  border-color: var(--sl-border-strong);
-  color: #fff;
-  transform: translateY(-2px);
-}
-
-.sl-btn-ghost {
-  background: transparent;
-  color: var(--sl-text-secondary);
-}
-
-.sl-btn-ghost:hover {
-  color: var(--sl-text);
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.sl-btn-lg {
-  padding: 15px 32px;
-  font-size: 1.05rem;
-  border-radius: 14px;
-}
-
-.sl-btn:focus-visible {
-  outline: 2px solid var(--sl-copper);
-  outline-offset: 4px;
+.sl-btn-stark:hover .sl-pill-arrow,
+.sl-btn-dark-pill:hover .sl-pill-arrow {
+  transform: translateX(3px);
 }
 
 /* ==========================================================================
-   Hero Section
+   2. Hero Section (When Intelligence Reaches Out — Image 1 Exact Replica)
    ========================================================================== */
 .sl-hero {
   position: relative;
-  padding: 90px 24px 80px;
-  max-width: 1360px;
-  margin: 0 auto;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-}
-
-.sl-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 16px;
-  background: rgba(224, 179, 140, 0.08);
-  border: 1px solid var(--sl-border);
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--sl-copper);
-  margin-bottom: 24px;
-  backdrop-filter: blur(10px);
-}
-
-.sl-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--sl-copper);
-  display: inline-block;
-}
-
-.sl-dot-pulse {
-  box-shadow: 0 0 0 rgba(224, 179, 140, 0.4);
-  animation: slPulse 2s infinite;
-}
-
-@keyframes slPulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(224, 179, 140, 0.7);
-  }
-  70% {
-    box-shadow: 0 0 0 10px rgba(224, 179, 140, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(224, 179, 140, 0);
-  }
+  padding: 150px 24px 60px;
+  background: var(--sl-void);
 }
 
 .sl-hero-title {
-  font-size: clamp(2.8rem, 6.5vw, 5.2rem);
-  font-weight: 800;
+  font-size: clamp(2.4rem, 5.2vw, 4.4rem);
+  font-weight: 300;
+  line-height: 1.12;
   letter-spacing: -0.035em;
-  line-height: 1.08;
-  max-width: 1100px;
-  margin-bottom: 24px;
+  max-width: 1040px;
+  margin: 0 auto 20px;
+  color: #ffffff;
 }
-
+.sl-hero-lead-text {
+  display: block;
+  font-weight: 300;
+}
 .sl-serif-accent {
+  display: block;
   font-family: var(--font-editorial);
   font-style: italic;
   font-weight: 400;
   color: var(--sl-copper-light);
-  display: inline-block;
-  letter-spacing: normal;
+  font-size: 1.14em;
   text-shadow: 0 0 35px rgba(224, 179, 140, 0.3);
 }
 
-.sl-hero-lead {
-  font-size: clamp(1.1rem, 2vw, 1.35rem);
-  color: var(--sl-text-secondary);
-  max-width: 820px;
-  margin-bottom: 40px;
-  font-weight: 400;
+.sl-hero-subtitle {
+  font-size: clamp(0.92rem, 1.3vw, 1.08rem);
+  color: var(--sl-text-muted);
+  max-width: 640px;
+  margin: 0 auto 36px;
   line-height: 1.7;
+  font-weight: 400;
 }
 
-.sl-hero-cta-group {
+.sl-hero-action-row {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   gap: 16px;
-  margin-bottom: 48px;
-}
-
-.sl-hero-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 28px;
-  color: var(--sl-text-muted);
-  font-size: 0.88rem;
-}
-
-.sl-hero-meta-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  margin-bottom: 30px;
 }
 
 /* ==========================================================================
-   Interactive Cockpit & Subsystem Visualizer
+   3. The Creation Stage (Halftone Hands + Chromatic Prism — Image 1)
+   ========================================================================== */
+.sl-creation-stage {
+  position: relative;
+  width: 100%;
+  max-width: 1280px;
+  height: 560px;
+  margin: 0 auto;
+  background: var(--sl-void);
+  overflow: visible;
+}
+
+.sl-creation-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: crosshair;
+}
+
+/* Floating HUD Chips (Image 3) */
+.sl-hud-chip {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(10, 13, 20, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  padding: 6px 14px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: var(--sl-text-secondary);
+  user-select: none;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 10;
+}
+.sl-hud-chip:hover {
+  color: #ffffff;
+  border-color: var(--sl-copper);
+  box-shadow: 0 0 25px rgba(224, 179, 140, 0.35);
+  transform: translateY(-2px);
+}
+.sl-hud-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--sl-copper);
+  box-shadow: 0 0 8px var(--sl-copper);
+}
+
+.sl-hud-chip-1 {
+  top: 20%;
+  left: 8%;
+}
+.sl-hud-chip-2 {
+  top: 20%;
+  right: 8%;
+}
+.sl-hud-chip-3 {
+  bottom: 20%;
+  left: 10%;
+}
+.sl-hud-chip-4 {
+  bottom: 20%;
+  right: 10%;
+}
+.sl-hud-chip-5 {
+  bottom: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Micro Dotted Glyphs beneath Centerpiece (Image 1) */
+.sl-micro-glyphs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin: 10px auto 40px;
+  color: rgba(255, 255, 255, 0.28);
+  user-select: none;
+}
+.sl-micro-glyph {
+  font-size: 1.1rem;
+}
+
+/* ==========================================================================
+   4. Floating Obsidian Cockpit Console (HUD Telemetry Tabs)
    ========================================================================== */
 .sl-cockpit-preview {
   width: 100%;
-  max-width: 1200px;
-  margin: 30px auto 70px;
-  background: var(--sl-card, #07090f);
-  border: 1px solid var(--sl-border-strong);
+  max-width: 980px;
+  margin: 0 auto 80px;
+  background: rgba(6, 8, 14, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--sl-hairline);
   border-radius: 20px;
-  box-shadow:
-    0 30px 80px rgba(0, 0, 0, 0.8),
-    0 0 50px rgba(224, 179, 140, 0.08);
   overflow: hidden;
   text-align: left;
 }
@@ -398,88 +380,89 @@ body.sis-silisleek-page {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 20px;
-  background: #090c13;
-  border-bottom: 1px solid var(--sl-border);
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid var(--sl-hairline);
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .sl-window-dots {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 6px;
 }
-
 .sl-window-dot {
-  width: 11px;
-  height: 11px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  background: #242a36;
 }
 .sl-window-dot.close {
-  background: #ff5f56;
+  background: #ef4444;
+  opacity: 0.6;
 }
 .sl-window-dot.min {
-  background: #ffbd2e;
+  background: #f59e0b;
+  opacity: 0.6;
 }
 .sl-window-dot.max {
-  background: #27c93f;
+  background: #10b981;
+  opacity: 0.6;
 }
 
 .sl-cockpit-title {
-  font-size: 0.84rem;
-  font-weight: 600;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
   color: var(--sl-text-muted);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  letter-spacing: 0.04em;
 }
 
 .sl-cockpit-nav {
   display: flex;
-  gap: 6px;
-  background: #040609;
-  padding: 4px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  align-items: center;
+  gap: 4px;
 }
 
 .sl-cockpit-tab {
   background: transparent;
   color: var(--sl-text-muted);
-  border: 0;
+  border: 1px solid transparent;
   padding: 6px 14px;
-  border-radius: 6px;
-  font-size: 0.82rem;
-  font-weight: 600;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
   font-family: inherit;
 }
-
-.sl-cockpit-tab.active,
 .sl-cockpit-tab:hover {
-  background: var(--sl-surface-raised);
-  color: var(--sl-copper);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.04);
+}
+.sl-cockpit-tab.active {
+  background: rgba(224, 179, 140, 0.12);
+  color: var(--sl-copper-light);
+  border-color: rgba(224, 179, 140, 0.28);
 }
 
 .sl-cockpit-body {
-  padding: 28px;
-  background: #05070c;
-  min-height: 380px;
+  padding: 24px;
+  background: #020306;
+  min-height: 200px;
 }
 
 .sl-tab-content {
   display: none;
+  animation: slFadeIn 0.3s ease;
 }
 .sl-tab-content.active {
   display: block;
-  animation: slFadeIn 0.3s ease;
 }
 
 @keyframes slFadeIn {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
@@ -487,558 +470,511 @@ body.sis-silisleek-page {
   }
 }
 
-/* Subsystem Terminal & Diagnostics Visuals */
-.sl-term-grid {
+.sl-telemetry-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 20px;
 }
 
-.sl-term-card {
-  background: #090c13;
-  border: 1px solid var(--sl-border);
-  border-radius: 14px;
-  padding: 20px;
+.sl-telemetry-monolith {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--sl-hairline);
+  border-radius: 12px;
+  padding: 16px 20px;
 }
-
-.sl-term-header {
+.sl-telemetry-monolith-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--sl-hairline);
 }
-
-.sl-term-name {
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--sl-text);
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.sl-telemetry-title {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #ffffff;
 }
-
-.sl-badge {
-  font-size: 0.72rem;
-  font-weight: 700;
+.sl-telemetry-badge {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
   padding: 2px 8px;
-  border-radius: 6px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.sl-badge-green {
-  background: rgba(129, 199, 132, 0.15);
+  border-radius: 9999px;
+  background: rgba(74, 222, 128, 0.1);
   color: var(--sl-emerald);
-  border: 1px solid rgba(129, 199, 132, 0.3);
-}
-
-.sl-badge-copper {
-  background: rgba(224, 179, 140, 0.15);
-  color: var(--sl-copper);
-  border: 1px solid rgba(224, 179, 140, 0.3);
-}
-
-.sl-badge-blue {
-  background: rgba(100, 181, 246, 0.15);
-  color: var(--sl-cyan);
-  border: 1px solid rgba(100, 181, 246, 0.3);
+  border: 1px solid rgba(74, 222, 128, 0.2);
 }
 
 .sl-telemetry-row {
   display: flex;
   justify-content: space-between;
-  font-size: 0.85rem;
-  padding: 6px 0;
-  border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
-}
-
-.sl-telemetry-row span:first-child {
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  padding: 5px 0;
   color: var(--sl-text-muted);
 }
 .sl-telemetry-row span:last-child {
-  font-family: monospace;
-  color: var(--sl-copper-light);
-  font-weight: 600;
+  color: var(--sl-text);
+  font-weight: 500;
+}
+
+.sl-code-specimen {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: #cbd5e1;
+  background: #010204;
+  border: 1px solid var(--sl-hairline);
+  border-radius: 12px;
+  padding: 16px 20px;
+  overflow-x: auto;
+}
+.sl-code-specimen .token-comment {
+  color: #525f70;
 }
 
 /* ==========================================================================
-   Section Layouts
+   5. Philosophy Section: "Nature doesn't guess" (Image 2 Exact Replica)
    ========================================================================== */
-.sl-section {
-  padding: 90px 24px;
-  max-width: 1360px;
-  margin: 0 auto;
+.sl-philosophy-section {
+  position: relative;
+  max-width: 1280px;
+  margin: 100px auto 140px;
+  padding: 0 28px;
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+
+.sl-editorial-block {
+  text-align: left;
+}
+
+.sl-editorial-title {
+  font-family: var(--font-editorial);
+  font-size: clamp(2.8rem, 5.2vw, 4.4rem);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: 24px;
+  color: #ffffff;
+}
+.sl-editorial-title-serif {
+  display: block;
+  font-style: normal;
+}
+.sl-editorial-title-sub {
+  display: block;
+  font-style: normal;
+}
+
+.sl-editorial-lead {
+  font-size: 1.05rem;
+  color: var(--sl-text-secondary);
+  line-height: 1.75;
+  margin-bottom: 32px;
+  max-width: 520px;
+}
+
+.sl-bloom-stage {
+  position: relative;
+  width: 100%;
+  height: 520px;
+  background: var(--sl-void);
+  overflow: visible;
+}
+
+.sl-bloom-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ==========================================================================
+   6. Architectural Monoliths (Image 3 VOID Exact Replica)
+   ========================================================================== */
+.sl-architecture-section {
+  position: relative;
+  max-width: 1320px;
+  margin: 0 auto 160px;
+  padding: 0 28px;
+  text-align: left;
+}
+
+.sl-backdrop-word {
+  position: absolute;
+  top: -80px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: clamp(8rem, 20vw, 18rem);
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.02);
+  filter: blur(14px);
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+  z-index: 0;
 }
 
 .sl-section-header {
-  text-align: center;
-  max-width: 800px;
-  margin: 0 auto 56px;
+  position: relative;
+  margin-bottom: 60px;
+  z-index: 1;
+}
+
+.sl-section-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sl-copper);
+  margin-bottom: 12px;
 }
 
 .sl-section-title {
-  font-size: clamp(2rem, 4vw, 3.2rem);
-  font-weight: 800;
+  font-size: clamp(2rem, 3.8vw, 3rem);
+  font-weight: 300;
   letter-spacing: -0.03em;
-  line-height: 1.15;
-  margin-bottom: 16px;
-}
-
-.sl-section-sub {
-  font-size: 1.1rem;
-  color: var(--sl-text-secondary);
-  line-height: 1.7;
-}
-
-/* Grid Layouts */
-.sl-card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-  gap: 24px;
-}
-
-.sl-card {
-  background: var(--sl-card, #07090f);
-  border: 1px solid var(--sl-border);
-  border-radius: 18px;
-  padding: 32px;
-  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.sl-card:hover {
-  border-color: var(--sl-border-strong);
-  background: #090c14;
-  transform: translateY(-4px);
-  box-shadow:
-    0 16px 40px rgba(0, 0, 0, 0.6),
-    0 0 24px rgba(224, 179, 140, 0.06);
-}
-
-.sl-card-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: rgba(224, 179, 140, 0.08);
-  border: 1px solid var(--sl-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--sl-copper);
-  margin-bottom: 22px;
-}
-
-.sl-card-title {
-  font-size: 1.35rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
   margin-bottom: 12px;
-  color: var(--sl-text);
+  color: #ffffff;
 }
 
-.sl-card-desc {
-  font-size: 0.98rem;
-  color: var(--sl-text-secondary);
-  line-height: 1.68;
+.sl-section-subtitle {
+  color: var(--sl-text-muted);
+  font-size: 1rem;
+  max-width: 600px;
 }
 
-/* Feature Showcase Interactive Block */
-.sl-feature-split {
+.sl-pillars-grid {
+  position: relative;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 48px;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--sl-hairline);
+  border-bottom: 1px solid var(--sl-hairline);
+  z-index: 1;
+}
+
+.sl-pillar-col {
+  padding: 44px 28px;
+  border-right: 1px solid var(--sl-hairline);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 340px;
+  transition: background 0.25s;
+}
+.sl-pillar-col:last-child {
+  border-right: none;
+}
+.sl-pillar-col:hover {
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.sl-pillar-num {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--sl-copper);
+  margin-bottom: 20px;
+}
+
+.sl-pillar-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-bottom: 14px;
+  color: #ffffff;
+}
+
+.sl-pillar-desc {
+  font-size: 0.88rem;
+  color: var(--sl-text-muted);
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+.sl-pillar-tag {
+  display: inline-flex;
   align-items: center;
-  margin-top: 60px;
-}
-
-@media (max-width: 960px) {
-  .sl-feature-split {
-    grid-template-columns: 1fr;
-    gap: 32px;
-  }
-}
-
-.sl-code-block {
-  background: #040508;
-  border: 1px solid var(--sl-border);
-  border-radius: 14px;
-  padding: 22px;
-  font-family: 'Consolas', 'Monaco', monospace;
-  font-size: 0.88rem;
-  line-height: 1.65;
-  color: #d1d5db;
-  overflow-x: auto;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
-}
-
-.sl-code-keyword {
-  color: #f472b6;
-}
-.sl-code-func {
-  color: #60a5fa;
-}
-.sl-code-string {
-  color: var(--sl-copper-light);
-}
-.sl-code-comment {
-  color: #6b7280;
-  font-style: italic;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--sl-text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  width: fit-content;
 }
 
 /* ==========================================================================
-   Comparison Table Section
+   7. Distribution & Installer Hub (Monolithic Hardware Cards)
    ========================================================================== */
-.sl-table-container {
-  overflow-x: auto;
-  margin-top: 36px;
-  background: #06080d;
-  border: 1px solid var(--sl-border);
-  border-radius: 18px;
-}
-
-.sl-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-  font-size: 0.94rem;
-}
-
-.sl-table th,
-.sl-table td {
-  padding: 18px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.sl-table th {
-  background: #080b12;
-  font-weight: 700;
-  color: var(--sl-text);
-  font-size: 0.88rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.sl-table tr:last-child td {
-  border-bottom: none;
-}
-
-.sl-table tr:hover td {
-  background: rgba(224, 179, 140, 0.02);
-}
-
-.sl-table-highlight {
-  color: var(--sl-copper) !important;
-  font-weight: 700;
-  background: rgba(224, 179, 140, 0.05) !important;
-}
-
-/* ==========================================================================
-   Dedicated Installer Page Styles
-   ========================================================================== */
-.sl-installer-hero {
-  padding: 70px 24px 40px;
+.sl-installer-section {
+  position: relative;
+  max-width: 1280px;
+  margin: 0 auto 120px;
+  padding: 0 28px;
   text-align: center;
-  max-width: 1100px;
-  margin: 0 auto;
 }
 
 .sl-dist-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 28px;
-  max-width: 1260px;
-  margin: 40px auto 70px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 32px;
+  margin: 50px auto 40px;
+  text-align: left;
 }
 
 .sl-dist-card {
-  background: #07090e;
-  border: 1px solid var(--sl-border);
+  position: relative;
+  background: #020306;
+  border: 1px solid var(--sl-hairline-bright);
   border-radius: 20px;
-  padding: 36px;
+  padding: 40px 36px;
   display: flex;
   flex-direction: column;
-  position: relative;
-  transition: all 0.28s ease;
+  justify-content: space-between;
+  transition:
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.25s;
+}
+.sl-dist-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(224, 179, 140, 0.4);
 }
 
-.sl-dist-card.featured {
-  border-color: var(--sl-copper);
-  background: linear-gradient(180deg, rgba(224, 179, 140, 0.05) 0%, #07090e 100%);
-  box-shadow: 0 0 40px rgba(224, 179, 140, 0.12);
-}
-
-.sl-dist-badge {
+.sl-dist-card.featured::before {
+  content: '';
   position: absolute;
-  top: 20px;
-  right: 20px;
-  background: var(--sl-copper);
-  color: var(--sl-copper-ink);
-  font-size: 0.72rem;
-  font-weight: 800;
-  padding: 4px 10px;
-  border-radius: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--sl-copper-bright), transparent);
 }
 
-.sl-dist-type {
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: var(--sl-copper);
+.sl-dist-header {
+  margin-bottom: 24px;
+}
+.sl-dist-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  margin-bottom: 8px;
+  color: var(--sl-copper);
+  background: rgba(224, 179, 140, 0.1);
+  border: 1px solid rgba(224, 179, 140, 0.25);
+  padding: 4px 12px;
+  border-radius: 9999px;
+  margin-bottom: 14px;
 }
 
 .sl-dist-title {
-  font-size: 1.6rem;
-  font-weight: 800;
-  margin-bottom: 12px;
+  font-size: 1.55rem;
+  font-weight: 600;
   letter-spacing: -0.02em;
+  margin-bottom: 8px;
+  color: #ffffff;
 }
 
-.sl-dist-desc {
-  font-size: 0.95rem;
-  color: var(--sl-text-secondary);
+.sl-dist-subtitle {
+  color: var(--sl-text-muted);
+  font-size: 0.9rem;
   line-height: 1.6;
-  margin-bottom: 24px;
 }
 
 .sl-dist-specs {
-  list-style: none;
-  margin-bottom: 28px;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  font-size: 0.88rem;
-  color: var(--sl-text-muted);
-}
-
-.sl-dist-specs li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.sl-dist-specs li .sg-icon {
-  color: var(--sl-emerald);
+  gap: 20px;
+  margin: 20px 0;
+  padding: 12px 0;
+  border-top: 1px solid var(--sl-hairline);
+  border-bottom: 1px solid var(--sl-hairline);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--sl-text-secondary);
 }
 
 .sl-hash-box {
-  background: #040508;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #000000;
+  border: 1px solid var(--sl-hairline);
   border-radius: 10px;
-  padding: 12px 14px;
-  margin-bottom: 24px;
+  padding: 12px 16px;
+  margin: 18px 0 28px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
 }
-
 .sl-hash-label {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   color: var(--sl-text-muted);
   text-transform: uppercase;
-  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-family: var(--font-mono);
 }
-
-.sl-hash-val {
-  font-family: monospace;
+.sl-hash-value {
+  font-family: var(--font-mono);
   font-size: 0.74rem;
   color: var(--sl-copper-light);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 220px;
 }
-
 .sl-copy-btn {
-  background: transparent;
-  border: 0;
-  color: var(--sl-copper);
-  cursor: pointer;
-  padding: 4px;
-  display: flex;
-  align-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  border: 1px solid var(--sl-hairline);
   border-radius: 6px;
-  transition: all 0.2s ease;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
 }
 .sl-copy-btn:hover {
-  background: rgba(224, 179, 140, 0.15);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--sl-hairline-bright);
 }
 
-/* System Readiness Live Diagnostic Widget */
+/* Diagnostic Bar */
 .sl-readiness-widget {
-  background: #07090e;
-  border: 1px solid var(--sl-border-strong);
-  border-radius: 20px;
-  padding: 36px;
-  max-width: 1000px;
-  margin: 0 auto 70px;
-}
-
-.sl-readiness-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  margin-top: 24px;
-}
-
-.sl-diag-item {
-  background: #0a0d14;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
-  padding: 16px;
-}
-
-.sl-diag-label {
+  max-width: 980px;
+  margin: 40px auto 0;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--sl-hairline);
+  border-radius: 9999px;
+  padding: 12px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-family: var(--font-mono);
   font-size: 0.78rem;
   color: var(--sl-text-muted);
-  text-transform: uppercase;
-  font-weight: 600;
-  margin-bottom: 6px;
 }
-
-.sl-diag-value {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--sl-text);
+.sl-diag-item {
   display: flex;
   align-items: center;
   gap: 8px;
 }
-
-/* Step by Step Setup Timeline */
-.sl-steps {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 24px;
-  margin-top: 40px;
+.sl-diag-val {
+  color: #ffffff;
+  font-weight: 500;
 }
 
-.sl-step-card {
-  background: #07090e;
-  border: 1px solid var(--sl-border);
-  border-radius: 16px;
-  padding: 28px;
-  position: relative;
+/* Toast */
+.sl-toast {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: #ffffff;
+  color: #000000;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 12px 24px;
+  border-radius: 9999px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  z-index: 9999;
 }
-
-.sl-step-num {
-  font-family: var(--font-editorial);
-  font-size: 2.2rem;
-  color: var(--sl-copper);
-  font-style: italic;
-  margin-bottom: 12px;
-}
-
-.sl-step-title {
-  font-size: 1.15rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.sl-step-desc {
-  font-size: 0.92rem;
-  color: var(--sl-text-secondary);
-  line-height: 1.6;
+.sl-toast.show {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* ==========================================================================
-   Footer
+   8. Minimalist Luxury Footer
    ========================================================================== */
 .sl-footer {
-  border-top: 1px solid var(--sl-border);
-  padding: 70px 24px 50px;
-  background: #020305;
-  color: var(--sl-text-muted);
-  font-size: 0.9rem;
+  border-top: 1px solid var(--sl-hairline);
+  padding: 50px 28px;
+  background: var(--sl-void);
+  text-align: center;
 }
 
-.sl-footer-container {
-  max-width: 1360px;
+.sl-footer-inner {
+  max-width: 1280px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
-  gap: 40px;
-  margin-bottom: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
-@media (max-width: 860px) {
-  .sl-footer-container {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-@media (max-width: 540px) {
-  .sl-footer-container {
-    grid-template-columns: 1fr;
-  }
-}
-
-.sl-footer-col h4 {
-  color: var(--sl-text);
+.sl-footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #ffffff;
+  text-decoration: none;
   font-size: 0.95rem;
-  font-weight: 700;
-  margin-bottom: 18px;
-  letter-spacing: 0.04em;
+  font-weight: 600;
 }
 
 .sl-footer-links {
-  list-style: none;
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  gap: 28px;
 }
-
-.sl-footer-links a {
+.sl-footer-link {
   color: var(--sl-text-muted);
   text-decoration: none;
-  transition: color 0.2s ease;
+  font-size: 0.86rem;
+  transition: color 0.2s;
 }
-.sl-footer-links a:hover {
-  color: var(--sl-copper);
-}
-
-.sl-footer-bottom {
-  max-width: 1360px;
-  margin: 0 auto;
-  padding-top: 30px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  font-size: 0.84rem;
+.sl-footer-link:hover {
+  color: #ffffff;
 }
 
-/* Toast Notification */
-.sl-toast {
-  position: fixed;
-  bottom: 28px;
-  right: 28px;
-  background: #111520;
-  color: var(--sl-text);
-  border: 1px solid var(--sl-copper);
-  padding: 12px 20px;
-  border-radius: 10px;
-  font-size: 0.88rem;
-  font-weight: 600;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-  z-index: 99999;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transform: translateY(100px);
-  opacity: 0;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  pointer-events: none;
+.sl-footer-copy {
+  color: var(--sl-text-subtle);
+  font-size: 0.8rem;
 }
-.sl-toast.show {
-  transform: translateY(0);
-  opacity: 1;
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .sl-pillars-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .sl-pillar-col:nth-child(2) {
+    border-right: none;
+  }
+  .sl-philosophy-section {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sl-capsule-nav {
+    display: none;
+  }
+  .sl-dist-grid {
+    grid-template-columns: 1fr;
+  }
+  .sl-pillars-grid {
+    grid-template-columns: 1fr;
+  }
+  .sl-pillar-col {
+    border-right: none;
+    border-bottom: 1px solid var(--sl-hairline);
+  }
+  .sl-readiness-widget {
+    flex-direction: column;
+    align-items: flex-start;
+    border-radius: 16px;
+  }
+  .sl-creation-stage {
+    height: 420px;
+  }
 }
