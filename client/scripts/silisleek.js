@@ -499,8 +499,9 @@ export function mountBloomVisual(canvas) {
    Section 1: Interactive ASCII Code Matrix Hands & Celestial Astrolabe Core
    - Left Hand: Cybernetic robot hand rendered with streaming matrix ASCII glyphs
    - Right Hand: Biological human hand rendered with warm amber ASCII glyphs
-   - Center: 3D rotating Astrolabe celestial sphere with brass gear teeth,
-     gimbal coordinate rings, star reticle, and radiant chromatic flare
+   - Center: 3D rotating Astrolabe celestial sphere with authentic Supergence
+     sphere orb, brass gear teeth, gimbal coordinate rings, star reticle,
+     and radiant chromatic flare
    - Interactive mouse ripple: cursor movement distorts matrix glyphs
    ========================================================================== */
 export function mountAsciiHandsCanvas(canvas) {
@@ -516,6 +517,9 @@ export function mountAsciiHandsCanvas(canvas) {
   let mouseY = 0;
   let targetMouseX = 0;
   let targetMouseY = 0;
+
+  const astrolabeOrbImg = new Image();
+  astrolabeOrbImg.src = '/images/silisleek/astrolabe-sphere.png';
 
   function resize() {
     const rect = canvas.getBoundingClientRect();
@@ -765,6 +769,16 @@ export function mountAsciiHandsCanvas(canvas) {
     ctx.arc(0, 0, flareR, 0, Math.PI * 2);
     ctx.fill();
 
+    // Render authentic Supergence Astrolabe Sphere Orb image if loaded
+    if (astrolabeOrbImg.complete && astrolabeOrbImg.naturalWidth > 0) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.rotate(time * 0.2 + mouseX * 0.3);
+      const orbDim = 68;
+      ctx.drawImage(astrolabeOrbImg, -orbDim * 0.5, -orbDim * 0.5, orbDim, orbDim);
+      ctx.restore();
+    }
+
     const gearR = 48;
     const numTeeth = 24;
     const gearRot = time * 0.4;
@@ -887,6 +901,9 @@ export function mountSpiralGalaxy(canvas) {
   let mouseX = 0;
   let mouseY = 0;
 
+  const blackHoleImg = new Image();
+  blackHoleImg.src = '/images/silisleek/black-hole-galaxy.png';
+
   function resize() {
     const rect = canvas.getBoundingClientRect();
     const newWidth = Math.max(1, Math.round(rect.width));
@@ -964,6 +981,16 @@ export function mountSpiralGalaxy(canvas) {
     ctx.lineWidth = 1.2;
     ctx.stroke();
 
+    if (blackHoleImg.complete && blackHoleImg.naturalWidth > 0) {
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(-time * 0.12);
+      ctx.globalAlpha = 0.85;
+      const bhDim = 260;
+      ctx.drawImage(blackHoleImg, -bhDim * 0.5, -bhDim * 0.5, bhDim, bhDim);
+      ctx.restore();
+    }
+
     const mousePxX = cx + mouseX * width * 0.6;
     const mousePxY = cy + mouseY * height * 0.6;
 
@@ -1024,6 +1051,9 @@ export function mountLiquidStarburst(canvas) {
   let time = 0;
   let mouseX = 0;
   let mouseY = 0;
+
+  const starburstImg = new Image();
+  starburstImg.src = '/images/silisleek/liquid-starburst.png';
 
   function resize() {
     const rect = canvas.getBoundingClientRect();
@@ -1097,6 +1127,14 @@ export function mountLiquidStarburst(canvas) {
     ctx.translate(cx, cy);
     const rot = time * 0.2 + mouseX * 0.4;
     ctx.rotate(rot);
+
+    if (starburstImg.complete && starburstImg.naturalWidth > 0) {
+      ctx.save();
+      const sbDim = baseR * 2.3;
+      ctx.globalAlpha = 0.92;
+      ctx.drawImage(starburstImg, -sbDim * 0.5, -sbDim * 0.5, sbDim, sbDim);
+      ctx.restore();
+    }
 
     ctx.beginPath();
     for (let i = 0; i < numArms; i++) {
@@ -1191,6 +1229,11 @@ export function mountGoldenRecord(canvas) {
   let mouseX = 0;
   let mouseY = 0;
 
+  const goldenRecordImg = new Image();
+  goldenRecordImg.src = '/images/silisleek/golden-record.png';
+  const chessKnightImg = new Image();
+  chessKnightImg.src = '/images/silisleek/chess-knight.png';
+
   function resize() {
     const rect = canvas.getBoundingClientRect();
     const newWidth = Math.max(1, Math.round(rect.width));
@@ -1272,6 +1315,14 @@ export function mountGoldenRecord(canvas) {
     ctx.shadowBlur = 40;
     ctx.fill();
     ctx.shadowBlur = 0;
+
+    if (goldenRecordImg.complete && goldenRecordImg.naturalWidth > 0) {
+      ctx.save();
+      const recDim = R * 2.05;
+      ctx.globalAlpha = 0.95;
+      ctx.drawImage(goldenRecordImg, -recDim * 0.5, -recDim * 0.5 * pitch, recDim, recDim * pitch);
+      ctx.restore();
+    }
 
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
     ctx.lineWidth = 0.8;
@@ -1363,67 +1414,85 @@ export function mountGoldenRecord(canvas) {
 
     ctx.save();
     ctx.translate(kx, ky);
-    ctx.scale(kScale, kScale);
 
-    // Left half: Obsidian
-    ctx.beginPath();
-    ctx.moveTo(0, -60);
-    ctx.lineTo(-12, -48);
-    ctx.lineTo(-18, -32);
-    ctx.lineTo(-24, -10);
-    ctx.lineTo(-22, 18);
-    ctx.lineTo(-26, 38);
-    ctx.lineTo(0, 38);
-    ctx.lineTo(0, -60);
-    ctx.closePath();
+    if (chessKnightImg.complete && chessKnightImg.naturalWidth > 0) {
+      const knW = 125;
+      const knH = 150;
+      ctx.drawImage(chessKnightImg, -knW * 0.5, -knH * 0.5, knW, knH);
 
-    const obsGrad = ctx.createLinearGradient(-26, -60, 0, 38);
-    obsGrad.addColorStop(0, '#1e293b');
-    obsGrad.addColorStop(0.4, '#0f172a');
-    obsGrad.addColorStop(1, '#020617');
-    ctx.fillStyle = obsGrad;
-    ctx.fill();
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.2;
-    ctx.stroke();
+      // Holographic scanlines over right half
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.45)';
+      ctx.lineWidth = 1.0;
+      for (let sy = -knH * 0.45; sy < knH * 0.45; sy += 9) {
+        const glitchX = Math.sin(sy * 0.4 + time * 6) > 0.5 ? 4 : 0;
+        ctx.beginPath();
+        ctx.moveTo(0, sy);
+        ctx.lineTo(knW * 0.45 + glitchX, sy);
+        ctx.stroke();
+      }
+    } else {
+      ctx.scale(kScale, kScale);
 
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(-8, -38, 2, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Right half: Holographic Glitch
-    ctx.beginPath();
-    ctx.moveTo(0, -60);
-    ctx.lineTo(6, -55);
-    ctx.lineTo(18, -42);
-    ctx.lineTo(26, -32);
-    ctx.lineTo(22, -22);
-    ctx.lineTo(16, -14);
-    ctx.lineTo(18, 6);
-    ctx.lineTo(24, 38);
-    ctx.lineTo(0, 38);
-    ctx.lineTo(0, -60);
-    ctx.closePath();
-
-    const holoGrad = ctx.createLinearGradient(0, -60, 26, 38);
-    holoGrad.addColorStop(0, '#00f0ff');
-    holoGrad.addColorStop(0.5, '#ec4899');
-    holoGrad.addColorStop(1, '#38bdf8');
-    ctx.fillStyle = 'rgba(6, 182, 212, 0.25)';
-    ctx.fill();
-    ctx.strokeStyle = holoGrad;
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    ctx.strokeStyle = 'rgba(0, 240, 255, 0.7)';
-    ctx.lineWidth = 0.8;
-    for (let sy = -50; sy < 35; sy += 7) {
-      const glitchX = Math.sin(sy * 0.4 + time * 6) > 0.6 ? 3 : 0;
+      // Left half: Obsidian
       ctx.beginPath();
-      ctx.moveTo(0, sy);
-      ctx.lineTo(20 + glitchX, sy);
+      ctx.moveTo(0, -60);
+      ctx.lineTo(-12, -48);
+      ctx.lineTo(-18, -32);
+      ctx.lineTo(-24, -10);
+      ctx.lineTo(-22, 18);
+      ctx.lineTo(-26, 38);
+      ctx.lineTo(0, 38);
+      ctx.lineTo(0, -60);
+      ctx.closePath();
+
+      const obsGrad = ctx.createLinearGradient(-26, -60, 0, 38);
+      obsGrad.addColorStop(0, '#1e293b');
+      obsGrad.addColorStop(0.4, '#0f172a');
+      obsGrad.addColorStop(1, '#020617');
+      ctx.fillStyle = obsGrad;
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.2;
       ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(-8, -38, 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Right half: Holographic Glitch
+      ctx.beginPath();
+      ctx.moveTo(0, -60);
+      ctx.lineTo(6, -55);
+      ctx.lineTo(18, -42);
+      ctx.lineTo(26, -32);
+      ctx.lineTo(22, -22);
+      ctx.lineTo(16, -14);
+      ctx.lineTo(18, 6);
+      ctx.lineTo(24, 38);
+      ctx.lineTo(0, 38);
+      ctx.lineTo(0, -60);
+      ctx.closePath();
+
+      const holoGrad = ctx.createLinearGradient(0, -60, 26, 38);
+      holoGrad.addColorStop(0, '#00f0ff');
+      holoGrad.addColorStop(0.5, '#ec4899');
+      holoGrad.addColorStop(1, '#38bdf8');
+      ctx.fillStyle = 'rgba(6, 182, 212, 0.25)';
+      ctx.fill();
+      ctx.strokeStyle = holoGrad;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.7)';
+      ctx.lineWidth = 0.8;
+      for (let sy = -50; sy < 35; sy += 7) {
+        const glitchX = Math.sin(sy * 0.4 + time * 6) > 0.6 ? 3 : 0;
+        ctx.beginPath();
+        ctx.moveTo(0, sy);
+        ctx.lineTo(20 + glitchX, sy);
+        ctx.stroke();
+      }
     }
 
     ctx.restore();
@@ -1450,6 +1519,11 @@ export function mountSynapseNetwork(canvas) {
   let height = 0;
   let raf = 0;
   let time = 0;
+
+  const glassNeuronImg = new Image();
+  glassNeuronImg.src = '/images/silisleek/glass-neuron.png';
+  const glassChainsImg = new Image();
+  glassChainsImg.src = '/images/silisleek/glass-chains.png';
 
   function resize() {
     const rect = canvas.getBoundingClientRect();
@@ -1600,60 +1674,79 @@ export function mountSynapseNetwork(canvas) {
     const gny = height * 0.42;
     const gnR = 48;
 
-    ctx.save();
-    ctx.translate(gnx, gny);
+    if (glassNeuronImg.complete && glassNeuronImg.naturalWidth > 0) {
+      ctx.save();
+      ctx.translate(gnx, gny);
+      ctx.rotate(Math.sin(time * 0.4) * 0.06);
+      const gnDim = 110;
+      ctx.globalAlpha = 0.95;
+      ctx.drawImage(glassNeuronImg, -gnDim * 0.5, -gnDim * 0.5, gnDim, gnDim);
+      ctx.restore();
+    } else {
+      ctx.save();
+      ctx.translate(gnx, gny);
 
-    const glassGrad = ctx.createRadialGradient(0, 0, 4, 0, 0, gnR);
-    glassGrad.addColorStop(0, '#ffffff');
-    glassGrad.addColorStop(0.25, 'rgba(56, 189, 248, 0.7)');
-    glassGrad.addColorStop(0.65, 'rgba(168, 85, 247, 0.35)');
-    glassGrad.addColorStop(0.9, 'rgba(255, 255, 255, 0.8)');
-    glassGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    ctx.fillStyle = glassGrad;
-    ctx.beginPath();
-    ctx.arc(0, 0, gnR, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.2;
-    ctx.stroke();
+      const glassGrad = ctx.createRadialGradient(0, 0, 4, 0, 0, gnR);
+      glassGrad.addColorStop(0, '#ffffff');
+      glassGrad.addColorStop(0.25, 'rgba(56, 189, 248, 0.7)');
+      glassGrad.addColorStop(0.65, 'rgba(168, 85, 247, 0.35)');
+      glassGrad.addColorStop(0.9, 'rgba(255, 255, 255, 0.8)');
+      glassGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = glassGrad;
+      ctx.beginPath();
+      ctx.arc(0, 0, gnR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
 
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(0, 0, 8, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(0, 0, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
 
     // 3D Refractive Optical Crystal Chain Links
     const chainX = width * 0.82;
     const chainY = height * 0.52;
 
-    ctx.save();
-    ctx.translate(chainX, chainY);
-
-    for (let k = -1; k <= 1; k++) {
-      const linkY = k * 52;
-      const linkW = 22;
-      const linkH = 46;
-
+    if (glassChainsImg.complete && glassChainsImg.naturalWidth > 0) {
       ctx.save();
-      ctx.translate(0, linkY);
-      if (k % 2 !== 0) ctx.rotate(Math.PI / 2);
+      ctx.translate(chainX, chainY + Math.sin(time * 1.4) * 6);
+      const chDim = 135;
+      ctx.globalAlpha = 0.95;
+      ctx.drawImage(glassChainsImg, -chDim * 0.5, -chDim * 0.5, chDim, chDim);
+      ctx.restore();
+    } else {
+      ctx.save();
+      ctx.translate(chainX, chainY);
 
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-      ctx.lineWidth = 4.5;
-      ctx.beginPath();
-      ctx.roundRect(-linkW * 0.5, -linkH * 0.5, linkW, linkH, 12);
-      ctx.stroke();
+      for (let k = -1; k <= 1; k++) {
+        const linkY = k * 52;
+        const linkW = 22;
+        const linkH = 46;
 
-      ctx.strokeStyle = k === 0 ? 'rgba(56, 189, 248, 0.9)' : 'rgba(168, 85, 247, 0.9)';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.roundRect(-linkW * 0.5 + 1.5, -linkH * 0.5 + 1.5, linkW - 3, linkH - 3, 10);
-      ctx.stroke();
+        ctx.save();
+        ctx.translate(0, linkY);
+        if (k % 2 !== 0) ctx.rotate(Math.PI / 2);
 
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.lineWidth = 4.5;
+        ctx.beginPath();
+        ctx.roundRect(-linkW * 0.5, -linkH * 0.5, linkW, linkH, 12);
+        ctx.stroke();
+
+        ctx.strokeStyle = k === 0 ? 'rgba(56, 189, 248, 0.9)' : 'rgba(168, 85, 247, 0.9)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(-linkW * 0.5 + 1.5, -linkH * 0.5 + 1.5, linkW - 3, linkH - 3, 10);
+        ctx.stroke();
+
+        ctx.restore();
+      }
       ctx.restore();
     }
-    ctx.restore();
 
     raf = requestAnimationFrame(draw);
   }
@@ -1676,6 +1769,21 @@ export function mountSacredOrbit(canvas) {
   let height = 0;
   let raf = 0;
   let time = 0;
+
+  const butterflyImg = new Image();
+  butterflyImg.src = '/images/silisleek/violet-butterfly.png';
+  const neuronImg = new Image();
+  neuronImg.src = '/images/silisleek/glass-neuron.png';
+  const atomImg = new Image();
+  atomImg.src = '/images/silisleek/atom-ring.png';
+  const knightImg = new Image();
+  knightImg.src = '/images/silisleek/chess-knight.png';
+  const astrolabeImg = new Image();
+  astrolabeImg.src = '/images/silisleek/astrolabe-sphere.png';
+  const starburstEmblemImg = new Image();
+  starburstEmblemImg.src = '/images/silisleek/liquid-starburst.png';
+  const goldenRecordEmblemImg = new Image();
+  goldenRecordEmblemImg.src = '/images/silisleek/golden-record.png';
 
   function resize() {
     const rect = canvas.getBoundingClientRect();
@@ -1762,138 +1870,193 @@ export function mountSacredOrbit(canvas) {
 
   function drawButterfly(c, t) {
     const flap = Math.cos(t * 8) * 0.85;
-    c.strokeStyle = '#c084fc';
-    c.fillStyle = 'rgba(168, 85, 247, 0.45)';
-    c.lineWidth = 1.2;
+    if (butterflyImg.complete && butterflyImg.naturalWidth > 0) {
+      c.save();
+      c.scale(flap, 1);
+      const bDim = 48;
+      c.drawImage(butterflyImg, -bDim * 0.5, -bDim * 0.5, bDim, bDim);
+      c.restore();
+    } else {
+      c.strokeStyle = '#c084fc';
+      c.fillStyle = 'rgba(168, 85, 247, 0.45)';
+      c.lineWidth = 1.2;
 
-    c.save();
-    c.scale(flap, 1);
-    c.beginPath();
-    c.moveTo(0, 0);
-    c.bezierCurveTo(-24, -20, -32, 6, 0, 16);
-    c.fill();
-    c.stroke();
-    c.restore();
+      c.save();
+      c.scale(flap, 1);
+      c.beginPath();
+      c.moveTo(0, 0);
+      c.bezierCurveTo(-24, -20, -32, 6, 0, 16);
+      c.fill();
+      c.stroke();
+      c.restore();
 
-    c.save();
-    c.scale(-flap, 1);
-    c.beginPath();
-    c.moveTo(0, 0);
-    c.bezierCurveTo(-24, -20, -32, 6, 0, 16);
-    c.fill();
-    c.stroke();
-    c.restore();
+      c.save();
+      c.scale(-flap, 1);
+      c.beginPath();
+      c.moveTo(0, 0);
+      c.bezierCurveTo(-24, -20, -32, 6, 0, 16);
+      c.fill();
+      c.stroke();
+      c.restore();
 
-    c.fillStyle = '#ffffff';
-    c.beginPath();
-    c.ellipse(0, 5, 2, 10, 0, 0, Math.PI * 2);
-    c.fill();
+      c.fillStyle = '#ffffff';
+      c.beginPath();
+      c.ellipse(0, 5, 2, 10, 0, 0, Math.PI * 2);
+      c.fill();
+    }
   }
 
   function drawSynapseCluster(c, t) {
-    c.strokeStyle = '#38bdf8';
-    c.lineWidth = 1.2;
-    for (let i = 0; i < 6; i++) {
-      const a = (i * Math.PI) / 3 + t * 0.5;
-      const r = 18 + Math.sin(t * 3 + i) * 3;
-      c.beginPath();
-      c.moveTo(0, 0);
-      c.lineTo(Math.cos(a) * r, Math.sin(a) * r);
-      c.stroke();
-      c.fillStyle = '#ffffff';
-      c.beginPath();
-      c.arc(Math.cos(a) * r, Math.sin(a) * r, 2.5, 0, Math.PI * 2);
-      c.fill();
+    if (neuronImg.complete && neuronImg.naturalWidth > 0) {
+      c.save();
+      c.rotate(t * 0.25);
+      const nDim = 46;
+      c.drawImage(neuronImg, -nDim * 0.5, -nDim * 0.5, nDim, nDim);
+      c.restore();
+    } else {
+      c.strokeStyle = '#38bdf8';
+      c.lineWidth = 1.2;
+      for (let i = 0; i < 6; i++) {
+        const a = (i * Math.PI) / 3 + t * 0.5;
+        const r = 18 + Math.sin(t * 3 + i) * 3;
+        c.beginPath();
+        c.moveTo(0, 0);
+        c.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+        c.stroke();
+        c.fillStyle = '#ffffff';
+        c.beginPath();
+        c.arc(Math.cos(a) * r, Math.sin(a) * r, 2.5, 0, Math.PI * 2);
+        c.fill();
+      }
     }
   }
 
   function drawAtomicRing(c, t) {
-    c.strokeStyle = '#4ade80';
-    c.lineWidth = 1.0;
-    for (let k = 0; k < 3; k++) {
+    if (atomImg.complete && atomImg.naturalWidth > 0) {
       c.save();
-      c.rotate((k * Math.PI) / 3 + t * 0.3);
-      c.beginPath();
-      c.ellipse(0, 0, 20, 7, 0, 0, Math.PI * 2);
-      c.stroke();
-      const ea = t * 2 + k * 2;
-      c.fillStyle = '#ffffff';
-      c.beginPath();
-      c.arc(Math.cos(ea) * 20, Math.sin(ea) * 7, 2, 0, Math.PI * 2);
-      c.fill();
+      c.rotate(t * 0.35);
+      const aDim = 48;
+      c.drawImage(atomImg, -aDim * 0.5, -aDim * 0.5, aDim, aDim);
       c.restore();
+    } else {
+      c.strokeStyle = '#4ade80';
+      c.lineWidth = 1.0;
+      for (let k = 0; k < 3; k++) {
+        c.save();
+        c.rotate((k * Math.PI) / 3 + t * 0.3);
+        c.beginPath();
+        c.ellipse(0, 0, 20, 7, 0, 0, Math.PI * 2);
+        c.stroke();
+        const ea = t * 2 + k * 2;
+        c.fillStyle = '#ffffff';
+        c.beginPath();
+        c.arc(Math.cos(ea) * 20, Math.sin(ea) * 7, 2, 0, Math.PI * 2);
+        c.fill();
+        c.restore();
+      }
+      c.fillStyle = '#4ade80';
+      c.beginPath();
+      c.arc(0, 0, 3.5, 0, Math.PI * 2);
+      c.fill();
     }
-    c.fillStyle = '#4ade80';
-    c.beginPath();
-    c.arc(0, 0, 3.5, 0, Math.PI * 2);
-    c.fill();
   }
 
   function drawMiniKnight(c) {
-    c.fillStyle = '#00f0ff';
-    c.strokeStyle = '#ffffff';
-    c.lineWidth = 1.0;
-    c.beginPath();
-    c.moveTo(0, -18);
-    c.lineTo(-8, -12);
-    c.lineTo(-10, 8);
-    c.lineTo(-12, 16);
-    c.lineTo(12, 16);
-    c.lineTo(8, -4);
-    c.lineTo(10, -12);
-    c.closePath();
-    c.fill();
-    c.stroke();
+    if (knightImg.complete && knightImg.naturalWidth > 0) {
+      c.save();
+      const kDim = 44;
+      c.drawImage(knightImg, -kDim * 0.5, -kDim * 0.5, kDim, kDim);
+      c.restore();
+    } else {
+      c.fillStyle = '#00f0ff';
+      c.strokeStyle = '#ffffff';
+      c.lineWidth = 1.0;
+      c.beginPath();
+      c.moveTo(0, -18);
+      c.lineTo(-8, -12);
+      c.lineTo(-10, 8);
+      c.lineTo(-12, 16);
+      c.lineTo(12, 16);
+      c.lineTo(8, -4);
+      c.lineTo(10, -12);
+      c.closePath();
+      c.fill();
+      c.stroke();
+    }
   }
 
   function drawMiniAstrolabe(c, t) {
-    c.strokeStyle = '#e0b38c';
-    c.lineWidth = 1.2;
-    c.beginPath();
-    c.arc(0, 0, 16, 0, Math.PI * 2);
-    c.stroke();
-    c.strokeStyle = '#38bdf8';
-    c.beginPath();
-    c.ellipse(0, 0, 16, 6, t * 0.6, 0, Math.PI * 2);
-    c.stroke();
-    c.fillStyle = '#ffffff';
-    c.beginPath();
-    c.arc(0, 0, 3, 0, Math.PI * 2);
-    c.fill();
-  }
-
-  function drawMiniStarburst(c, t) {
-    c.strokeStyle = '#ec4899';
-    c.fillStyle = 'rgba(236, 72, 153, 0.4)';
-    c.lineWidth = 1.0;
-    c.beginPath();
-    for (let i = 0; i < 16; i++) {
-      const a = (i * Math.PI) / 8 + t * 0.5;
-      const r = i % 2 === 0 ? 18 : 6;
-      const x = Math.cos(a) * r;
-      const y = Math.sin(a) * r;
-      if (i === 0) c.moveTo(x, y);
-      else c.lineTo(x, y);
-    }
-    c.closePath();
-    c.fill();
-    c.stroke();
-  }
-
-  function drawDnaHelix(c, t) {
-    c.strokeStyle = '#a855f7';
-    c.lineWidth = 1.2;
-    for (let i = -16; i <= 16; i += 4) {
-      const w = Math.sin(i * 0.2 + t * 2) * 12;
+    if (astrolabeImg.complete && astrolabeImg.naturalWidth > 0) {
+      c.save();
+      c.rotate(t * 0.3);
+      const orbDim = 46;
+      c.drawImage(astrolabeImg, -orbDim * 0.5, -orbDim * 0.5, orbDim, orbDim);
+      c.restore();
+    } else {
+      c.strokeStyle = '#e0b38c';
+      c.lineWidth = 1.2;
       c.beginPath();
-      c.moveTo(-w, i);
-      c.lineTo(w, i);
+      c.arc(0, 0, 16, 0, Math.PI * 2);
+      c.stroke();
+      c.strokeStyle = '#38bdf8';
+      c.beginPath();
+      c.ellipse(0, 0, 16, 6, t * 0.6, 0, Math.PI * 2);
       c.stroke();
       c.fillStyle = '#ffffff';
       c.beginPath();
-      c.arc(-w, i, 1.8, 0, Math.PI * 2);
-      c.arc(w, i, 1.8, 0, Math.PI * 2);
+      c.arc(0, 0, 3, 0, Math.PI * 2);
       c.fill();
+    }
+  }
+
+  function drawMiniStarburst(c, t) {
+    if (starburstEmblemImg.complete && starburstEmblemImg.naturalWidth > 0) {
+      c.save();
+      c.rotate(t * 0.35);
+      const sbDim = 46;
+      c.drawImage(starburstEmblemImg, -sbDim * 0.5, -sbDim * 0.5, sbDim, sbDim);
+      c.restore();
+    } else {
+      c.strokeStyle = '#ec4899';
+      c.fillStyle = 'rgba(236, 72, 153, 0.4)';
+      c.lineWidth = 1.0;
+      c.beginPath();
+      for (let i = 0; i < 16; i++) {
+        const a = (i * Math.PI) / 8 + t * 0.5;
+        const r = i % 2 === 0 ? 18 : 6;
+        const x = Math.cos(a) * r;
+        const y = Math.sin(a) * r;
+        if (i === 0) c.moveTo(x, y);
+        else c.lineTo(x, y);
+      }
+      c.closePath();
+      c.fill();
+      c.stroke();
+    }
+  }
+
+  function drawDnaHelix(c, t) {
+    if (goldenRecordEmblemImg.complete && goldenRecordEmblemImg.naturalWidth > 0) {
+      c.save();
+      c.rotate(t * 0.2);
+      const rDim = 46;
+      c.drawImage(goldenRecordEmblemImg, -rDim * 0.5, -rDim * 0.5 * 0.65, rDim, rDim * 0.65);
+      c.restore();
+    } else {
+      c.strokeStyle = '#a855f7';
+      c.lineWidth = 1.2;
+      for (let i = -16; i <= 16; i += 4) {
+        const w = Math.sin(i * 0.2 + t * 2) * 12;
+        c.beginPath();
+        c.moveTo(-w, i);
+        c.lineTo(w, i);
+        c.stroke();
+        c.fillStyle = '#ffffff';
+        c.beginPath();
+        c.arc(-w, i, 1.8, 0, Math.PI * 2);
+        c.arc(w, i, 1.8, 0, Math.PI * 2);
+        c.fill();
+      }
     }
   }
 

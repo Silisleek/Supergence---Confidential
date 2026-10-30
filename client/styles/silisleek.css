@@ -829,6 +829,38 @@ button:focus-visible {
   transform: scale(1.2);
 }
 
+.sl-science-badge-container {
+  position: absolute;
+  bottom: 24px;
+  right: 28px;
+  z-index: 6;
+  background: rgba(14, 18, 28, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 8px 18px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+.sl-science-badge-container:hover {
+  transform: scale(1.05);
+  border-color: rgba(224, 179, 140, 0.45);
+  box-shadow: 0 0 25px rgba(224, 179, 140, 0.25);
+}
+.sl-science-badge-img {
+  height: 26px;
+  width: auto;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
+}
+
 .sl-hero {
   position: relative;
   min-height: 100vh;
@@ -1357,6 +1389,311 @@ button:focus-visible {
   width: fit-content;
 }
 
+.sl-pillars-monolith {
+  max-width: 1280px;
+  margin: 60px auto 80px;
+  text-align: left;
+}
+
+/* ==========================================================================
+   Realtime Telemetry Stream Banner
+   ========================================================================== */
+.sl-stream-telemetry-banner {
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto 32px;
+  background: rgba(10, 14, 24, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(224, 179, 140, 0.22);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+}
+
+.sl-stream-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: rgba(224, 179, 140, 0.1);
+  border-right: 1px solid rgba(224, 179, 140, 0.2);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--sl-copper-light);
+  white-space: nowrap;
+}
+
+.sl-stream-pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--sl-emerald);
+  box-shadow: 0 0 10px var(--sl-emerald);
+  animation: slPulse 1.8s infinite;
+}
+
+@keyframes slPulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.85);
+  }
+}
+
+.sl-stream-marquee {
+  overflow: hidden;
+  white-space: nowrap;
+  flex: 1;
+  padding: 10px 16px;
+}
+
+.sl-stream-track {
+  display: inline-flex;
+  gap: 16px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--sl-text-muted);
+  animation: slTicker 35s linear infinite;
+}
+
+.sl-stream-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes slTicker {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.sl-stream-item strong {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.sl-stream-sep {
+  color: var(--sl-copper);
+  opacity: 0.5;
+}
+
+/* ==========================================================================
+   Specimen Stage & Holographic Glass Brain
+   ========================================================================== */
+.sl-specimen-stage {
+  position: relative;
+  width: 100%;
+  height: 480px;
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sl-specimen-glass-bezel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #020306;
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  box-shadow: 0 0 50px rgba(168, 85, 247, 0.15);
+}
+
+.sl-specimen-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: contrast(1.08) brightness(0.95);
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sl-specimen-glass-bezel:hover .sl-specimen-img {
+  transform: scale(1.04);
+}
+
+.sl-specimen-hud-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at center, transparent 40%, rgba(0, 0, 0, 0.65) 100%);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.sl-specimen-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: rgba(168, 85, 247, 0.6);
+  border-style: solid;
+}
+.sl-specimen-corner.tl {
+  top: 16px;
+  left: 16px;
+  border-width: 2px 0 0 2px;
+}
+.sl-specimen-corner.tr {
+  top: 16px;
+  right: 16px;
+  border-width: 2px 2px 0 0;
+}
+.sl-specimen-corner.bl {
+  bottom: 16px;
+  left: 16px;
+  border-width: 0 0 2px 2px;
+}
+.sl-specimen-corner.br {
+  bottom: 16px;
+  right: 16px;
+  border-width: 0 2px 2px 0;
+}
+
+.sl-specimen-tag {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  color: var(--sl-copper-light);
+  background: rgba(10, 14, 22, 0.85);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  border: 1px solid rgba(224, 179, 140, 0.3);
+  width: fit-content;
+}
+
+.sl-specimen-status {
+  align-self: flex-end;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  color: var(--sl-emerald);
+  background: rgba(10, 14, 22, 0.85);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  width: fit-content;
+}
+
+/* ==========================================================================
+   Spun-Gold Knowledge Graph Architecture Card
+   ========================================================================== */
+.sl-gold-graph-card {
+  margin-top: 48px;
+  background: rgba(14, 18, 28, 0.55);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(234, 179, 8, 0.22);
+  border-radius: 20px;
+  padding: 36px 40px;
+  box-shadow: 0 0 60px rgba(234, 179, 8, 0.08);
+  text-align: left;
+}
+
+.sl-gold-graph-title {
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  margin: 10px 0 8px;
+}
+
+.sl-gold-graph-desc {
+  font-size: 0.95rem;
+  color: var(--sl-text-muted);
+  line-height: 1.65;
+  max-width: 820px;
+  margin-bottom: 28px;
+}
+
+.sl-arch-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(234, 179, 8, 0.15);
+}
+
+.sl-arch-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sl-stat-num {
+  font-family: var(--font-mono);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #fef08a;
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 20px rgba(234, 179, 8, 0.3);
+}
+
+.sl-stat-lbl {
+  font-size: 0.8rem;
+  color: var(--sl-text-secondary);
+}
+
+/* ==========================================================================
+   Empathy Matrix Specimen Card
+   ========================================================================== */
+.sl-empathy-card {
+  overflow: hidden;
+}
+
+.sl-empathy-card-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  margin-bottom: 10px;
+}
+
+.sl-empathy-cube-stage {
+  margin-top: 20px;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.sl-empathy-cube-img {
+  max-height: 180px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 20px rgba(56, 189, 248, 0.25));
+  transition: transform 0.4s ease;
+}
+
+.sl-empathy-cube-stage:hover .sl-empathy-cube-img {
+  transform: scale(1.05);
+}
+
+.sl-empathy-caption {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: var(--sl-copper-light);
+}
+
 /* ==========================================================================
    7. Distribution & Installer Hub (Monolithic Hardware Cards)
    ========================================================================== */
@@ -1597,6 +1934,9 @@ button:focus-visible {
   .sl-pillar-col:nth-child(2) {
     border-right: none;
   }
+  .sl-arch-stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
   .sl-philosophy-section {
     grid-template-columns: 1fr;
     gap: 40px;
@@ -1616,6 +1956,15 @@ button:focus-visible {
   .sl-pillar-col {
     border-right: none;
     border-bottom: 1px solid var(--sl-hairline);
+  }
+  .sl-arch-stats-row {
+    grid-template-columns: 1fr;
+  }
+  .sl-specimen-stage {
+    height: 320px;
+  }
+  .sl-stream-marquee {
+    display: none;
   }
   .sl-readiness-widget {
     flex-direction: column;
