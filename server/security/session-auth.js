@@ -9,6 +9,22 @@ function cookieName(req) {
   }
 }
 
+const PUBLIC_PATTERNS = [
+  /^\/(silisleek|silisleek\.html|silisleek\/.*|supergence-silisleek)(\?.*)?$/,
+  /^\/(installer|installer\.html|download|download\.html|downloads|install|install\.html)(\?.*)?$/,
+  /^\/release(\/.*)?$/,
+  /^\/styles\/.*$/,
+  /^\/scripts\/.*$/,
+  /^\/images\/.*$/,
+  /^\/favicon\.ico$/,
+];
+
+function isPublicRoute(req) {
+  if (!['GET', 'HEAD'].includes(req.method)) return false;
+  const pathname = String(req.path || '');
+  return PUBLIC_PATTERNS.some((pattern) => pattern.test(pathname));
+}
+
 export function createSessionAuth(
   secret = process.env.SIS_SESSION_SECRET || randomBytes(32).toString('hex'),
 ) {
@@ -36,8 +52,16 @@ export function createSessionAuth(
         'Set-Cookie',
         `${cookieName(req)}=${secret}; Path=/; HttpOnly; SameSite=Strict`,
       );
-      return res.redirect(303, '/');
+      const target =
+        typeof req.query.next === 'string' &&
+        req.query.next.startsWith('/') &&
+        !req.query.next.startsWith('//') &&
+        !req.query.next.includes('\\')
+          ? req.query.next
+          : '/';
+      return res.redirect(303, target);
     }
+    if (isPublicRoute(req)) return next();
     if (!authorized(req))
       return res
         .status(401)
