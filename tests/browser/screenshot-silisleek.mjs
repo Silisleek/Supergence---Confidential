@@ -12,7 +12,12 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 960 } });
 
 console.log('[Screenshot] Loading http://localhost:3009/silisleek ...');
 await page.goto('http://localhost:3009/silisleek', { waitUntil: 'networkidle' });
-await page.waitForTimeout(1000); // Wait for canvas initial frames
+// Wait for all images to decode completely
+await page.evaluate(async () => {
+  const imgs = Array.from(document.querySelectorAll('img'));
+  await Promise.all(imgs.map((img) => img.decode().catch(() => {})));
+});
+await page.waitForTimeout(500);
 await page.screenshot({ path: path.join(outDir, 'silisleek-hero.png'), fullPage: false });
 await page.screenshot({ path: path.join(outDir, 'silisleek-full.png'), fullPage: true });
 

@@ -22,8 +22,12 @@ try {
 
   // Verify Hero headline
   const heroH1 = await page.locator('.sl-hero-title').innerText();
-  assert.match(heroH1, /When intelligence reaches out/i);
-  assert.match(heroH1, /the future takes shape/i);
+  assert.match(heroH1, /Agents limited/i);
+  assert.match(heroH1, /to your imagination/i);
+
+  // Verify all 5 master design panels are rendered
+  const panels = page.locator('.sl-panel-stage');
+  assert.equal(await panels.count(), 5, 'Should render all 5 master design panels');
 
   // Verify Cockpit tabs exist and interactive switching works
   const cockpitNav = page.locator('#cockpitNav');

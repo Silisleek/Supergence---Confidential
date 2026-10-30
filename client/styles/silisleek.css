@@ -118,10 +118,57 @@ button:focus-visible {
   text-decoration: none;
   color: #ffffff;
 }
+
+.sl-brand-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  padding: 5px 16px 5px 8px;
+  transition: all 0.25s ease;
+}
+.sl-brand-badge:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.sl-brand-icon-hatched {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.7),
+    rgba(255, 255, 255, 0.7) 1.5px,
+    transparent 1.5px,
+    transparent 3.5px
+  );
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  display: inline-block;
+  flex-shrink: 0;
+}
+.sl-brand-icon-sphere {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 35% 35%,
+    #fde047 0%,
+    #ca8a04 40%,
+    #0369a1 75%,
+    #0f172a 100%
+  );
+  box-shadow: 0 0 10px rgba(234, 179, 8, 0.4);
+  display: inline-block;
+  flex-shrink: 0;
+}
 .sl-brand-logo-text {
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: -0.03em;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
   color: #ffffff;
 }
 
@@ -216,6 +263,79 @@ button:focus-visible {
 /* ==========================================================================
    2. Hero Section (When Intelligence Reaches Out — Image 1 Exact Replica)
    ========================================================================== */
+/* ==========================================================================
+   2. Master Showcase Sections (The 5 Official Design Artboards)
+   ========================================================================== */
+.sl-showcase-section {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px 80px;
+  background: var(--sl-void);
+  scroll-margin-top: 80px;
+}
+
+#imagination.sl-showcase-section {
+  padding-top: 110px;
+}
+
+.sl-panel-stage {
+  position: relative;
+  width: 100%;
+  max-width: 1360px;
+  aspect-ratio: 1808 / 1117;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #000000;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.95),
+    0 0 40px rgba(168, 85, 247, 0.08);
+  transition:
+    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.4s ease,
+    border-color 0.4s ease;
+  margin: 0 auto;
+}
+
+.sl-panel-stage:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 32px 100px rgba(0, 0, 0, 0.98),
+    0 0 60px rgba(168, 85, 247, 0.18);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.sl-panel-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  user-select: none;
+}
+
+/* Screen Reader and Accessibility Semantic Container */
+.sl-sr-content {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.sl-installer-container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 90px auto 0;
+}
+
 .sl-hero {
   position: relative;
   min-height: 100vh;
