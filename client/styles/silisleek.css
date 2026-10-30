@@ -273,48 +273,55 @@ button:focus-visible {
 .sl-creation-stage {
   position: relative;
   width: 100%;
-  max-width: 1280px;
-  height: 560px;
-  margin: 0 auto;
+  max-width: 1017px;
+  height: 541px;
+  margin: 0 auto 40px;
   background: var(--sl-void);
   overflow: visible;
 }
 
 .sl-creation-canvas {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   display: block;
   cursor: crosshair;
 }
 
-/* Floating HUD Chips (Image 3) */
+/* Floating HUD Chips — Interactive Hotspots perfectly mapped to the Master Artwork */
 .sl-hud-chip {
   position: absolute;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(10, 13, 20, 0.72);
+  background: rgba(10, 13, 20, 0.88);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(224, 179, 140, 0.35);
   border-radius: 9999px;
   padding: 6px 14px;
   font-family: var(--font-mono);
   font-size: 0.72rem;
-  letter-spacing: 0.06em;
-  color: var(--sl-text-secondary);
-  user-select: none;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 10;
-}
-.sl-hud-chip:hover {
+  font-weight: 500;
+  letter-spacing: 0.08em;
   color: #ffffff;
-  border-color: var(--sl-copper);
-  box-shadow: 0 0 25px rgba(224, 179, 140, 0.35);
+  user-select: none;
+  box-shadow: 0 0 25px rgba(224, 179, 140, 0.45);
+  opacity: 0;
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+  z-index: 10;
+  cursor: pointer;
+}
+.sl-hud-chip:hover,
+.sl-hud-chip:focus-visible {
+  opacity: 1;
   transform: translateY(-2px);
+  box-shadow: 0 0 32px rgba(224, 179, 140, 0.6);
 }
 .sl-hud-dot {
   width: 5px;
@@ -322,42 +329,65 @@ button:focus-visible {
   border-radius: 50%;
   background: var(--sl-copper);
   box-shadow: 0 0 8px var(--sl-copper);
+  flex-shrink: 0;
 }
 
 .sl-hud-chip-1 {
-  top: 20%;
-  left: 8%;
+  top: 17px;
+  left: 95px;
 }
 .sl-hud-chip-2 {
-  top: 20%;
-  right: 8%;
+  top: 17px;
+  right: 95px;
 }
 .sl-hud-chip-3 {
-  bottom: 20%;
-  left: 10%;
+  top: 333px;
+  left: 115px;
 }
 .sl-hud-chip-4 {
-  bottom: 20%;
-  right: 10%;
+  top: 333px;
+  right: 115px;
 }
 .sl-hud-chip-5 {
-  bottom: 8%;
+  top: 403px;
   left: 50%;
   transform: translateX(-50%);
+}
+.sl-hud-chip-5:hover,
+.sl-hud-chip-5:focus-visible {
+  transform: translate(-50%, -2px);
 }
 
 /* Micro Dotted Glyphs beneath Centerpiece (Image 1) */
 .sl-micro-glyphs {
+  position: absolute;
+  top: 496px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 24px;
-  margin: 10px auto 40px;
+  gap: 28px;
   color: rgba(255, 255, 255, 0.28);
   user-select: none;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.sl-micro-glyphs:hover {
+  opacity: 1;
 }
 .sl-micro-glyph {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    transform 0.2s;
+}
+.sl-micro-glyph:hover {
+  color: #ffffff;
+  transform: scale(1.15);
 }
 
 /* ==========================================================================

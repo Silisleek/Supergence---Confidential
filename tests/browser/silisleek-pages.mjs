@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright-core';
 
-const baseURL = process.env.SIS_BASE_URL || 'http://localhost:3001';
+const port = process.env.PORT || '3009';
+const baseURL = process.env.SIS_BASE_URL || `http://localhost:${port}`;
 console.log(`[Test] Launching Chrome against ${baseURL}...`);
 
 const browser = await chromium.launch({ channel: 'chrome', headless: true });

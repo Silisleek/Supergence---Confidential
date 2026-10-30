@@ -13,9 +13,11 @@ const PUBLIC_PATTERNS = [
   /^\/(silisleek|silisleek\.html|silisleek\/.*|supergence-silisleek)(\?.*)?$/,
   /^\/(installer|installer\.html|download|download\.html|downloads|install|install\.html)(\?.*)?$/,
   /^\/release(\/.*)?$/,
+  /^\/api\/health$/,
   /^\/styles\/.*$/,
   /^\/scripts\/.*$/,
   /^\/images\/.*$/,
+  /^\/fonts\/.*$/,
   /^\/favicon\.ico$/,
 ];
 
