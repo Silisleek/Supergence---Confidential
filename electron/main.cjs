@@ -534,11 +534,21 @@ trustedIpcHandle('set-storage-paths', async (_event, newPaths) => {
 });
 
 trustedIpcOn('open-path', (_event, targetPath) => {
-  if (targetPath) {
-    shell.openPath(targetPath);
-  } else {
-    shell.openPath(userDataDir);
+  if (targetPath && typeof targetPath === 'string') {
+    try {
+      const resolved = path.resolve(targetPath);
+      if (fs.existsSync(resolved)) {
+        const stat = fs.statSync(resolved);
+        if (stat.isDirectory()) {
+          shell.openPath(resolved);
+        } else {
+          shell.showItemInFolder(resolved);
+        }
+        return;
+      }
+    } catch (_) {}
   }
+  shell.openPath(userDataDir);
 });
 
 // Native notification API keeps titles and filenames out of executable shell code.

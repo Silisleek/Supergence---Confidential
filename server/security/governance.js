@@ -43,8 +43,8 @@ export class EnterpriseGovernanceEngine {
       .replace(/(?:sk-[a-zA-Z0-9_-]{20,})/g, 'sk-[REDACTED_SECRET]')
       .replace(/(?:Bearer\s+[a-zA-Z0-9_\-\.]{20,})/gi, 'Bearer [REDACTED_TOKEN]')
       .replace(
-        /(?:password|secret|apikey|access_token)\s*[:=]\s*["']?([^"',\s]+)["']?/gi,
-        '$1="[REDACTED]"',
+        /\b(password|secret|apikey|access_token)\s*([:=]\s*)["']?[^"',\s]+["']?/gi,
+        '$1$2"[REDACTED]"',
       );
   }
 }

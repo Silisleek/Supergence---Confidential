@@ -1,6 +1,8 @@
 import { injectImportmapIfNeeded } from './workspace/preview-importmap.js';
 import { resolveWithinRoot } from './utils/path-confinement.js';
-import { sessionAuth } from './security/session-auth.js';
+import { sessionAuth, cookieName } from './security/session-auth.js';
+import { globalInputValidator } from './security/input-validator.js';
+import { sleekAuth, SLEEK_ROLES } from './security/sleek-auth.js';
 import { registerLearningRoutes } from './routes/learning.js';
 import { registerEvolutionRoutes } from './routes/evolution.js';
 import { evolutionEngine } from './services/evolutionEngine.js';
@@ -19,6 +21,7 @@ import { registerAgentProfileRoutes } from './routes/agent-profiles.js';
 import { registerAgentConversationRoutes } from './routes/agent-conversations.js';
 import { configureAgentConversationRuntime } from './services/agentConversations.js';
 import { registerPageRoutes } from './routes/pages.js';
+import { registerStorageRoutes } from './routes/storage-dashboard.js';
 // SIS 1.0 — Main Server
 // Express + WebSocket server — the brain's nervous system
 
@@ -229,6 +232,71 @@ app.use('/__project-preview', projectPreview.serve);
 app.use(localBoundary);
 app.use(sessionAuth.middleware);
 app.use(express.json({ limit: '50mb' }));
+app.use(globalInputValidator);
+registerStorageRoutes(app);
+
+// ─── Silisleek Sleek ID Authentication & Permissions Routes ───
+app.post('/api/silisleek/auth', (req, res) => {
+  try {
+    const { sleekId, passcode, role, redirect = '/' } = req.body || {};
+    const result = sleekAuth.authenticate(sleekId, passcode, role);
+    const cookieKey = cookieName(req);
+    res.setHeader(
+      'Set-Cookie',
+      `${cookieKey}=${result.sessionToken}; Path=/; HttpOnly; SameSite=Strict`,
+    );
+    res.json({
+      success: true,
+      message: 'Authentication successful. Welcome to Supergence.',
+      user: result.user,
+      token: result.sessionToken,
+      redirect: redirect && String(redirect).startsWith('/') ? redirect : '/',
+    });
+  } catch (err) {
+    res.status(401).json({
+      success: false,
+      error: 'Authentication failed',
+      message: err.message,
+    });
+  }
+});
+
+app.get('/api/silisleek/session', (req, res) => {
+  try {
+    const session = sleekAuth.getSession(req);
+    res.json({
+      authenticated: Boolean(session),
+      user: session,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/silisleek/roles', (_req, res) => {
+  res.json({
+    success: true,
+    roles: SLEEK_ROLES,
+  });
+});
+
+app.post('/api/silisleek/logout', (req, res) => {
+  try {
+    sleekAuth.logout(req);
+    const cookieKey = cookieName(req);
+    res.setHeader(
+      'Set-Cookie',
+      `${cookieKey}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT`,
+    );
+    res.json({
+      success: true,
+      message: 'Logged out successfully.',
+      redirect: '/silisleek/supergence',
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 app.use('/api/browser', browserAccessMiddleware);
 app.use('/api/workspace', (req, res, next) => {
   if (req.path !== '/command' && !runtimeAccess.settings.files)

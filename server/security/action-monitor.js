@@ -63,7 +63,7 @@ export function assessAction(tool, args = {}) {
   )
     findings.push('Obfuscated or downloaded code execution');
   if (
-    /(?:(?:^|[\s/\\"'])\.env\b|credentials\.key|vault\.enc|id_rsa|Login Data|Cookies\b)/i.test(
+    /(?:(?:^|[\s/\\"'])\.env\b|credentials\.key|vault\.enc|installation\.key|keyring\.json|id_rsa|id_ed25519|id_ecdsa|Login Data|Cookies\b|\.git[\\/]config|supergence-config\.json)/i.test(
       sensitiveValue,
     ) &&
     !/^(recall_knowledge|retain_knowledge)$/.test(tool)

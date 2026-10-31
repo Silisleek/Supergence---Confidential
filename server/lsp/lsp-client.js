@@ -26,13 +26,21 @@ export class LspClient {
     }
 
     try {
-      const parts = this.serverCommand.split(' ');
-      this.process = spawn(parts[0], parts.slice(1), {
-        cwd: this.rootPath,
-        env: childEnvironment(),
-        shell: process.platform === 'win32',
-        stdio: ['pipe', 'pipe', 'pipe'],
-      });
+      if (process.platform === 'win32') {
+        this.process = spawn(this.serverCommand, {
+          cwd: this.rootPath,
+          env: childEnvironment(),
+          shell: true,
+          stdio: ['pipe', 'pipe', 'pipe'],
+        });
+      } else {
+        const parts = this.serverCommand.split(' ');
+        this.process = spawn(parts[0], parts.slice(1), {
+          cwd: this.rootPath,
+          env: childEnvironment(),
+          stdio: ['pipe', 'pipe', 'pipe'],
+        });
+      }
 
       this.process.on('error', (err) => {
         console.warn(

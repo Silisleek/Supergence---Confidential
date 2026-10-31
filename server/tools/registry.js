@@ -18,6 +18,8 @@ import { promisify } from 'util';
 import { randomUUID } from 'node:crypto';
 import { resolveWithinRoot } from '../utils/path-confinement.js';
 import { childEnvironment } from '../security/child-environment.js';
+import { safeEvaluateMath } from '../utils/safe-math.js';
+import { assertSafeExternalUrl } from '../security/ssrf-guard.js';
 import shortTermMemory from '../memory/short-term.js';
 import longTermMemory from '../memory/long-term.js';
 import generator3D from '../3d/generator.js';
@@ -2035,6 +2037,7 @@ function playProceduralSound(ctx) {
     parameters: { url: 'string' },
     execute: async ({ url }) => {
       try {
+        assertSafeExternalUrl(url);
         const resp = await fetch(url, { signal: AbortSignal.timeout(20000) });
         const text = await resp.text();
         return { content: text.substring(0, 5000), status: resp.status };
@@ -2054,12 +2057,7 @@ function playProceduralSound(ctx) {
         const expression = String(
           args?.expression || args?.expr || args?.query || args?.calculation || '',
         ).trim();
-        // Safe eval using Function constructor (limited scope)
-        const sanitized = expression.replace(
-          /[^0-9+\-*/().%^sqrt|log|sin|cos|tan|pi|e|Math|abs|pow|round|floor|ceil|max|min| ]/gi,
-          '',
-        );
-        const result = new Function(`return ${sanitized.replace(/\^/g, '**')}`)();
+        const result = safeEvaluateMath(expression);
         return { expression, result, type: typeof result };
       } catch (e) {
         return { error: e.message };
@@ -4131,7 +4129,7 @@ function playProceduralSound(ctx) {
       const fn =
         args.filename ||
         (type === 'dashboard' ? `app_dashboard_${Date.now()}.html` : `landing_${Date.now()}.html`);
-      const targetPath = path.join(workspaceRoot(), fn);
+      const targetPath = resolveWithinRoot(workspaceRoot(), fn);
       let html;
       if (type === 'dashboard') {
         html = supergenceDesignEngine.generateProductionAppDashboard(args);

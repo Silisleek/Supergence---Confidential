@@ -1,0 +1,251 @@
+.reference-header {
+  position: absolute;
+  z-index: 5;
+  top: 22px;
+  left: 5%;
+  right: 5%;
+}
+.reference-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 1580px;
+  margin: auto;
+}
+.reference-brand,
+.reference-download {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 100px;
+  background: rgba(20, 20, 21, 0.8);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(16px);
+}
+.reference-brand {
+  gap: 10px;
+  padding: 8px 20px 8px 10px;
+  font:
+    400 26px/1 'Instrument Serif',
+    Georgia,
+    serif;
+  white-space: nowrap;
+}
+.reference-brand img,
+.reference-orb {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+}
+.reference-brand img {
+  object-fit: contain;
+}
+.reference-brand i {
+  color: #9f9991;
+  font-style: normal;
+  padding: 0 3px;
+}
+.reference-orb {
+  border: 1px solid #79746e;
+  background: repeating-radial-gradient(
+    ellipse at 15% 50%,
+    transparent 0 5px,
+    rgba(224, 215, 203, 0.55) 5.5px 6px,
+    transparent 6.5px 10px
+  );
+}
+.reference-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  margin-left: auto;
+  color: #bcb8b2;
+  font-size: 12px;
+}
+.reference-links a,
+.reference-hero-bottom a {
+  transition: color 0.25s ease;
+}
+.reference-links a:hover,
+.reference-hero-bottom a:hover {
+  color: #fff;
+}
+.reference-download {
+  gap: 16px;
+  padding: 18px 22px;
+  font-size: 12px;
+  font-weight: 600;
+  transition:
+    background 0.25s,
+    color 0.25s;
+}
+.reference-download:hover {
+  background: #f0ece6;
+  color: #171513;
+}
+.reference-download svg {
+  width: 16px;
+  height: 16px;
+}
+.reference-hero {
+  background: #060607;
+  overflow: hidden;
+}
+.reference-hero-inner {
+  position: relative;
+  min-height: min(920px, 100svh);
+  max-width: 1920px;
+  margin: 0 auto;
+  padding: 150px 5% 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.reference-hero-inner::before {
+  content: '';
+  position: absolute;
+  inset: 15% 0 7%;
+  background: url('/images/silisleek/header-hands.jpg') center 55% / min(100%, 1550px) auto
+    no-repeat;
+  opacity: 0.8;
+  mask-image: linear-gradient(transparent 0%, #000 18%, #000 78%, transparent 100%);
+  pointer-events: none;
+}
+.reference-kicker {
+  position: relative;
+  color: #a7a19a;
+  font-size: 10px;
+  letter-spacing: 0.17em;
+  font-weight: 700;
+  margin: 0 0 28px;
+}
+.reference-hero h1 {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  margin: 0;
+  font:
+    400 clamp(56px, 6.2vw, 100px)/1 'Instrument Serif',
+    Georgia,
+    serif;
+  letter-spacing: -0.04em;
+}
+.reference-hero h1 em {
+  color: #d5c1b3;
+}
+.reference-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  flex: 1;
+  min-height: 310px;
+}
+.reference-center-logo {
+  width: clamp(190px, 24vw, 350px);
+  height: auto;
+  filter: drop-shadow(0 18px 45px #000);
+  animation: reference-float 9s ease-in-out infinite;
+}
+.reference-hero-bottom {
+  position: relative;
+  align-self: stretch;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  padding-top: 20px;
+}
+.reference-hero-bottom p {
+  margin: 0;
+  font:
+    400 clamp(20px, 2vw, 28px)/1.35 'Instrument Serif',
+    Georgia,
+    serif;
+}
+.reference-hero-bottom p em {
+  color: #bba99c;
+}
+.reference-hero-bottom a {
+  flex-shrink: 0;
+  color: #bcb8b2;
+  font-size: 12px;
+}
+.reference-hero-bottom a span {
+  margin-left: 12px;
+}
+@keyframes reference-float {
+  50% {
+    transform: translateY(-10px);
+  }
+}
+@media (max-width: 850px) {
+  .reference-header {
+    top: 15px;
+    left: 4%;
+    right: 4%;
+  }
+  .reference-brand {
+    font-size: 21px;
+    padding-right: 14px;
+    gap: 6px;
+  }
+  .reference-brand img,
+  .reference-orb {
+    width: 35px;
+    height: 35px;
+  }
+  .reference-links {
+    display: none;
+  }
+  .reference-download {
+    margin-left: auto;
+    padding: 15px;
+    gap: 8px;
+  }
+  .reference-hero-inner {
+    min-height: 760px;
+    padding: 150px 5% 35px;
+  }
+  .reference-hero-inner::before {
+    inset: 22% -20% 12%;
+    background-size: 140% auto;
+  }
+  .reference-hero h1 {
+    font-size: clamp(52px, 9vw, 76px);
+  }
+}
+@media (max-width: 440px) {
+  .reference-brand {
+    font-size: 18px;
+  }
+  .reference-orb {
+    display: none;
+  }
+  .reference-download {
+    font-size: 11px;
+  }
+  .reference-hero-inner {
+    min-height: 720px;
+  }
+  .reference-hero h1 {
+    font-size: 52px;
+  }
+  .reference-hero-bottom {
+    align-items: start;
+    flex-direction: column;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reference-center-logo {
+    animation: none;
+  }
+  .reference-download,
+  .reference-links a,
+  .reference-hero-bottom a {
+    transition: none;
+  }
+}

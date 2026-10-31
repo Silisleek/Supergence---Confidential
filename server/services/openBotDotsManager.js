@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url';
 import brain from '../orchestrator/brain.js';
 import hermesLearner from './hermesLearner.js';
 import { quickAI, DEFAULT_MODEL, PREMIUM_MODEL } from '../api/openrouter.js';
+import { resolveWithinRoot } from '../utils/path-confinement.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, '../../');
@@ -498,13 +499,13 @@ ${contributions.map((c) => `### ${c.avatar} ${c.agentName} — ${c.agentRole}\n$
   }
 
   getSpaceContent(filename) {
-    const full = path.join(SPACES_DIR, filename);
+    const full = resolveWithinRoot(SPACES_DIR, filename);
     if (!fs.existsSync(full)) throw new Error(`Space not found: ${filename}`);
     return fs.readFileSync(full, 'utf8');
   }
 
   saveSpaceReview(filename, decision, notes = '') {
-    const full = path.join(SPACES_DIR, filename);
+    const full = resolveWithinRoot(SPACES_DIR, filename);
     if (!fs.existsSync(full)) throw new Error(`Space not found: ${filename}`);
     let content = fs.readFileSync(full, 'utf8');
     const reviewBlock = `\n\n---\n### 🛡️ Human Review Decision: ${decision.toUpperCase()}\n*Review Date: ${new Date().toISOString()}*\n*Notes: ${notes || 'Approved for integration into Supergence.'}*\n`;

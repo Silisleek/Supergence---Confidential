@@ -29,29 +29,36 @@ try {
   const panels = page.locator('.sl-panel-stage');
   assert.equal(await panels.count(), 5, 'Should render all 5 master design panels');
 
-  // Verify Cockpit tabs exist and interactive switching works
-  const cockpitNav = page.locator('#cockpitNav');
-  await cockpitNav.waitFor({ timeout: 5000 });
-  const tabs = page.locator('.sl-cockpit-tab');
-  assert.equal(await tabs.count(), 4, 'Should have 4 cockpit tabs');
+  // Verify Hero centerpiece orb exists and is visible
+  const centerSphere = page.locator('.sl-center-sphere');
+  await centerSphere.waitFor({ timeout: 5000 });
+  assert.equal(await centerSphere.isVisible(), true, 'Centerpiece orb must be visible');
 
-  // Switch to Coder tab
-  await page.locator('.sl-cockpit-tab[data-target="tabCoder"]').click();
-  const coderContent = page.locator('#tabCoder');
-  assert.equal(await coderContent.isVisible(), true, 'Coder tab content must be visible');
-  assert.match(await coderContent.innerText(), /4-Step Verification Loop/i);
+  // Verify Hero editorial quote
+  const heroQuote = page.locator('.sl-hero-editorial-quote');
+  assert.equal(await heroQuote.isVisible(), true, 'Hero editorial quote must be visible');
+  assert.match(await heroQuote.innerText(), /We have reached a new era/i);
 
-  // Switch to Tools tab
-  await page.locator('.sl-cockpit-tab[data-target="tabTools"]').click();
-  const toolsContent = page.locator('#tabTools');
-  assert.equal(await toolsContent.isVisible(), true, 'Tools tab content must be visible');
-  assert.match(await toolsContent.innerText(), /193 Active Capabilities/i);
+  // Verify Panel 2 Cognition cutouts
+  assert.equal(await page.locator('.sl-galaxy-img').isVisible(), true, 'Galaxy must be visible');
+  assert.equal(await page.locator('.sl-starburst-img').isVisible(), true, 'Starburst must be visible');
 
-  // Switch to Security tab
-  await page.locator('.sl-cockpit-tab[data-target="tabSecurity"]').click();
-  const secContent = page.locator('#tabSecurity');
-  assert.equal(await secContent.isVisible(), true, 'Security tab content must be visible');
-  assert.match(await secContent.innerText(), /Strict 127.0.0.1 Binding Only/i);
+  // Verify Panel 3 Memories cutouts
+  assert.equal(await page.locator('.sl-golden-record-img').isVisible(), true, 'Golden Record must be visible');
+  assert.equal(await page.locator('.sl-chess-knight-img').first().isVisible(), true, 'Chess Knight must be visible');
+
+  // Verify Panel 4 Security cutouts
+  assert.equal(await page.locator('.sl-glass-neuron-img').first().isVisible(), true, 'Glass Neuron must be visible');
+  assert.equal(await page.locator('.sl-glass-chains-img').isVisible(), true, 'Glass Chains must be visible');
+
+  // Verify Panel 5 Superintelligence cutouts
+  assert.equal(await page.locator('.sl-emblem-butterfly').isVisible(), true, 'Butterfly must be visible');
+  assert.equal(await page.locator('.sl-emblem-atom').isVisible(), true, 'Atom ring must be visible');
+  assert.equal(await page.locator('.sl-science-badge-img').isVisible(), true, 'Science badge must be visible');
+
+  // Verify Verified Release Packages section on silisleek page
+  const pageSetupHash = await page.locator('#hashSetup').innerText();
+  assert.equal(pageSetupHash, 'BB1CDB8BFB6A2FE519E3C7AFF91F85826C73AD8EDB297AAF8415ACF0152571DE');
 
   // Verify Download CTA links to installer
   const installerLink = page.locator('a[href="/installer.html"]').first();

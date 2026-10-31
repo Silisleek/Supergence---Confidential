@@ -1,6 +1,6 @@
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 
-function cookieName(req) {
+export function cookieName(req) {
   try {
     const port = new URL(`http://${req.headers.host}`).port;
     return /^\d{1,5}$/.test(port) ? `sis_session_${port}` : 'sis_session';
@@ -14,6 +14,7 @@ const PUBLIC_PATTERNS = [
   /^\/(installer|installer\.html|download|download\.html|downloads|install|install\.html)(\?.*)?$/,
   /^\/release(\/.*)?$/,
   /^\/api\/health$/,
+  /^\/api\/silisleek\/(auth|roles|session|logout)(\?.*)?$/,
   /^\/styles\/.*$/,
   /^\/scripts\/.*$/,
   /^\/images\/.*$/,
@@ -22,8 +23,14 @@ const PUBLIC_PATTERNS = [
 ];
 
 function isPublicRoute(req) {
-  if (!['GET', 'HEAD'].includes(req.method)) return false;
   const pathname = String(req.path || '');
+  if (
+    ['POST', 'GET', 'HEAD'].includes(req.method) &&
+    /^\/api\/silisleek\/(auth|roles|session|logout)(\?.*)?$/.test(pathname)
+  ) {
+    return true;
+  }
+  if (!['GET', 'HEAD'].includes(req.method)) return false;
   return PUBLIC_PATTERNS.some((pattern) => pattern.test(pathname));
 }
 

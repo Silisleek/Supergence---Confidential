@@ -3,774 +3,397 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Supergence (SIS 1.0) — Silisleek Autonomous Superintelligence</title>
-    <meta
-      name="description"
-      content="Agents limited to your imagination. Supergence (SIS 1.0) is the autonomous continuous-cognition superintelligence engineered by Silisleek."
+    <meta name="description" content="Meet Supergence, an intelligent workspace by Silisleek." />
+    <title>Supergence — Intelligence in motion</title>
+    <link rel="icon" href="/images/silisleek/supergence-official.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap"
+      rel="stylesheet"
     />
-    <link rel="icon" type="image/png" href="/images/supergence-logo.png" />
-    <link rel="stylesheet" href="/styles/silisleek.css" />
-    <script type="module" src="/scripts/silisleek.js"></script>
+    <link rel="stylesheet" href="/styles/silisleek-launch.css" />
+    <link rel="stylesheet" href="/styles/silisleek-closing.css" />
+    <link rel="stylesheet" href="/styles/silisleek-motion.css" />
+    <link rel="stylesheet" href="/styles/silisleek-hero.css" />
+    <script type="module" src="/scripts/silisleek-launch.js"></script>
   </head>
-  <body class="sis-silisleek-page">
-    <a class="sl-skip-link" href="#main">Skip to main content</a>
-
-    <!-- 1. Floating Capsule Navigation (Silisleek | Supergence) -->
-    <header class="sl-header">
-      <div class="sl-nav-container">
-        <a class="sl-brand" href="/silisleek" aria-label="Silisleek Supergence Homepage">
-          <span class="sl-brand-badge">
-            <span class="sl-brand-icon-hatched" aria-hidden="true"></span>
-            <span class="sl-brand-icon-sphere" aria-hidden="true"></span>
-            <span class="sl-brand-logo-text">Silisleek | Supergence</span>
-          </span>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="scroll-progress" aria-hidden="true"></div>
+    <header class="reference-header">
+      <div class="reference-nav">
+        <a class="reference-brand" href="/silisleek" aria-label="Silisleek Supergence home">
+          <span class="reference-orb" aria-hidden="true"></span>
+          <img src="/images/silisleek/supergence-official.png" alt="" />
+          <span>Silisleek <i>|</i> Supergence</span>
         </a>
-
-        <nav class="sl-capsule-nav" aria-label="Main Navigation">
-          <a class="sl-nav-pill active" href="#imagination">Imagination</a>
-          <a class="sl-nav-pill" href="#cognition">Cognition</a>
-          <a class="sl-nav-pill" href="#memories">Memories</a>
-          <a class="sl-nav-pill" href="#security">Security</a>
-          <a class="sl-nav-pill" href="#superintelligence">Superintelligence</a>
-          <a class="sl-nav-pill" href="/installer.html">Installer Hub</a>
-          <a class="sl-nav-pill" href="/guide.html">Guide</a>
+        <nav class="reference-links" aria-label="Main navigation">
+          <a href="#vision">Vision</a>
+          <a href="#capabilities">Capabilities</a>
+          <a href="#philosophy">Philosophy</a>
         </nav>
-
-        <div class="sl-nav-actions">
-          <a class="sl-btn-stark" href="/installer.html">
-            Download <span class="sl-pill-arrow">↓</span>
-          </a>
-        </div>
+        <a class="reference-download" href="/installer.html"
+          >Download
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M12 3v13m-5-5 5 5 5-5M5 20h14" /></svg
+        ></a>
       </div>
     </header>
-
     <main id="main">
-      <!-- ====================================================================
-           Section 1: Hero — "Agents limited to your imagination"
-           Interactive ASCII Code Matrix Hands reaching toward the Celestial Astrolabe Orb
-           ==================================================================== -->
-      <section class="sl-section-hero sl-panel-stage" id="imagination">
-        <div class="sl-hero-header">
-          <div class="sl-hero-brand-capsule">
-            <span class="sl-brand-icon-hatched" aria-hidden="true"></span>
-            <span class="sl-brand-icon-sphere" aria-hidden="true"></span>
-            <span class="sl-brand-capsule-text">Silisleek | Supergence</span>
-            <a class="sl-capsule-download-btn" href="/installer.html">Download</a>
+      <section class="reference-hero" id="imagination">
+        <div class="reference-hero-inner">
+          <p class="reference-kicker">INTRODUCING SUPERGENCE / SIS 1.0</p>
+          <h1>Agents limited to <em>your imagination.</em></h1>
+          <div class="reference-stage">
+            <img
+              class="reference-center-logo"
+              src="/images/silisleek/supergence-official.png"
+              alt="Supergence logo"
+            />
           </div>
-
-          <h1 class="sl-hero-title">
-            <span class="sl-hero-lead-text">Agents limited</span>
-            <span class="sl-serif-accent">to your imagination</span>
-          </h1>
-        </div>
-
-        <!-- The Living Interactive ASCII Creation Stage -->
-        <div
-          class="sl-ascii-stage"
-          aria-label="Interactive ASCII Code Matrix Hands Reaching to Celestial Astrolabe Core"
-        >
-          <canvas id="asciiHandsCanvas" class="sl-ascii-canvas"></canvas>
-
-          <!-- Floating HUD Chips anchored around the core -->
-          <div class="sl-hud-chip sl-hud-chip-1">
-            <span class="sl-hud-dot"></span> 127.0.0.1 LOCAL VAULT
-          </div>
-          <div class="sl-hud-chip sl-hud-chip-2">
-            <span class="sl-hud-dot"></span> SELF-CORRECTING CODER
-          </div>
-          <div class="sl-hud-chip sl-hud-chip-3">
-            <span class="sl-hud-dot"></span> UNBROKEN BRAINSTEM 24/7
-          </div>
-          <div class="sl-hud-chip sl-hud-chip-4">
-            <span class="sl-hud-dot"></span> REAL CHROME DOM
-          </div>
-          <div class="sl-hud-chip sl-hud-chip-5">
-            <span class="sl-hud-dot"></span> 193 ACTIVE CAPABILITIES
-          </div>
-
-          <!-- Bottom-left Editorial Quote -->
-          <div class="sl-hero-editorial-quote">
-            <p class="sl-quote-line-1">
-              We have reached a new era where we give AI work instead of an prompt.
+          <div class="reference-hero-bottom">
+            <p>
+              Give your ideas room to become.<br /><em
+                >Imagine, create, and work with Supergence.</em
+              >
             </p>
-            <p class="sl-quote-line-2">
-              We at Silisleek has developed systems and agents which can learn and evolve
-              themselves. Limited to nothing.
+            <a href="#vision">Explore the vision <span aria-hidden="true">↓</span></a>
+          </div>
+        </div>
+      </section>
+      <section class="intro section-pad" id="vision">
+        <div class="section-kicker">
+          <span>01 / THE VISION</span><span>THOUGHT, MEET POSSIBILITY.</span>
+        </div>
+        <div class="intro-grid">
+          <h2>Intelligence should<br /><em>move with you.</em></h2>
+          <div class="intro-copy">
+            <p>
+              Big ideas rarely arrive fully formed. They need space to evolve, connections to be
+              made, and something that can keep up.
+            </p>
+            <p>
+              Supergence brings intelligence into your workflow, so you can spend less time
+              navigating the process and more time imagining what comes next.
             </p>
           </div>
         </div>
-
-        <!-- Live Telemetry Stream Marquee Banner -->
-        <div class="sl-stream-telemetry-banner" aria-label="Real-time Subsystem Cognitive Stream">
-          <div class="sl-stream-badge">
-            <span class="sl-stream-pulse"></span>
-            LIVE COGNITIVE BUS
-          </div>
-          <div class="sl-stream-marquee">
-            <div class="sl-stream-track">
-              <span class="sl-stream-item"><strong>PORT:</strong> 3009 (Loopback 127.0.0.1)</span>
-              <span class="sl-stream-sep">·</span>
-              <span class="sl-stream-item"><strong>SECURITY:</strong> Air-Gapped Vault</span>
-              <span class="sl-stream-sep">·</span>
-              <span class="sl-stream-item"
-                ><strong>CLOCK:</strong> 1,000ms Homeostatic Brainstem</span
-              >
-              <span class="sl-stream-sep">·</span>
-              <span class="sl-stream-item"><strong>REGISTRY:</strong> 193 Active Capabilities</span>
-              <span class="sl-stream-sep">·</span>
-              <span class="sl-stream-item"
-                ><strong>CODER:</strong> Acorn AST 4-Phase Self-Correction</span
-              >
-              <span class="sl-stream-sep">·</span>
-              <span class="sl-stream-item"
-                ><strong>MEMORY:</strong> Spun-Gold SQLite Index (82,410 Nodes)</span
-              >
-              <span class="sl-stream-sep">·</span>
-              <span class="sl-stream-item"><strong>TELEMETRY:</strong> 0.0% Cloud Ingestion</span>
-              <span class="sl-stream-sep">·</span>
-              <span class="sl-stream-item"
-                ><strong>CONFINEMENT:</strong> Process-Level Sandboxing Active</span
-              >
-            </div>
-          </div>
-        </div>
-
-        <!-- Minimalist Obsidian Cockpit Console -->
-        <div class="sl-cockpit-preview" id="cockpitBar" aria-label="Subsystem Telemetry Readout">
-          <div class="sl-cockpit-bar">
-            <div class="sl-window-dots">
-              <span class="sl-window-dot close"></span>
-              <span class="sl-window-dot min"></span>
-              <span class="sl-window-dot max"></span>
-            </div>
-            <div class="sl-cockpit-title">SIS 1.0 — NEURAL TELEMETRY &amp; COGNITIVE STREAM</div>
-            <div class="sl-cockpit-nav" id="cockpitNav">
-              <button class="sl-cockpit-tab active" data-target="tabBrainstem">
-                Brainstem (24/7)
-              </button>
-              <button class="sl-cockpit-tab" data-target="tabCoder">Self-Correcting Coder</button>
-              <button class="sl-cockpit-tab" data-target="tabTools">Tool Registry (193)</button>
-              <button class="sl-cockpit-tab" data-target="tabSecurity">Privacy &amp; Vault</button>
-            </div>
-          </div>
-
-          <div class="sl-cockpit-body">
-            <!-- Tab 1: Brainstem Lifecycle -->
-            <div class="sl-tab-content active" id="tabBrainstem">
-              <div class="sl-telemetry-grid">
-                <div class="sl-telemetry-monolith">
-                  <div class="sl-telemetry-monolith-header">
-                    <span class="sl-telemetry-title">Waking State</span>
-                    <span class="sl-telemetry-badge">AWAKE-STREAM</span>
-                  </div>
-                  <div class="sl-telemetry-row">
-                    <span>Continuous Cognition</span><span>Active (1s Tick)</span>
-                  </div>
-                  <div class="sl-telemetry-row">
-                    <span>Sleep Pressure</span><span>0% (Homeostatic)</span>
-                  </div>
-                  <div class="sl-telemetry-row">
-                    <span>Glymphatic Clearance</span><span>Ready (Periodic)</span>
-                  </div>
-                </div>
-                <div class="sl-telemetry-monolith">
-                  <div class="sl-telemetry-monolith-header">
-                    <span class="sl-telemetry-title">Subconscious Matrix</span>
-                    <span class="sl-telemetry-badge">ONLINE</span>
-                  </div>
-                  <div class="sl-telemetry-row">
-                    <span>Active Startups</span><span>5 Managed Instances</span>
-                  </div>
-                  <div class="sl-telemetry-row">
-                    <span>Persisted Tools</span><span>12 Dynamically Loaded</span>
-                  </div>
-                  <div class="sl-telemetry-row">
-                    <span>Adaptive Cadence</span><span>Derived from Signals</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Tab 2: Self-Correcting Coder Loop -->
-            <div class="sl-tab-content" id="tabCoder">
-              <div class="sl-telemetry-grid">
-                <div class="sl-telemetry-monolith">
-                  <div class="sl-telemetry-monolith-header">
-                    <span class="sl-telemetry-title">4-Step Verification Loop</span>
-                    <span class="sl-telemetry-badge">SELF-HEALING</span>
-                  </div>
-                  <div class="sl-telemetry-row">
-                    <span>Phase 1 · AST Syntax Check</span><span>Acorn Real-Time Parse</span>
-                  </div>
-                  <div class="sl-telemetry-row">
-                    <span>Phase 2 · Live Red Test</span><span>Node.js / Chromium Test Harness</span>
-                  </div>
-                  <div class="sl-telemetry-row">
-                    <span>Phase 3 · DiffPatcher</span><span>Atomic Unambiguous Patching</span>
-                  </div>
-                  <div class="sl-telemetry-row">
-                    <span>Phase 4 · Green Verification</span
-                    ><span>Zero Synthetic Hallucinations</span>
-                  </div>
-                </div>
-                <div class="sl-telemetry-monolith">
-                  <div class="sl-telemetry-monolith-header">
-                    <span class="sl-telemetry-title">Execution Engine</span>
-                    <span class="sl-telemetry-badge">CONFINED</span>
-                  </div>
-                  <div class="sl-telemetry-row">
-                    <span>Shell Execution</span><span>Sandboxed Subprocess</span>
-                  </div>
-                  <div class="sl-telemetry-row">
-                    <span>Credential Stripping</span><span>Subprocess Token Scrubbing</span>
-                  </div>
-                  <div class="sl-telemetry-row">
-                    <span>File Confinement</span><span>Workspace Boundaries Enforced</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Tab 3: Dynamic Tool Registry -->
-            <div class="sl-tab-content" id="tabTools">
-              <div class="sl-telemetry-grid">
-                <div class="sl-telemetry-monolith">
-                  <div class="sl-telemetry-monolith-header">
-                    <span class="sl-telemetry-title">193 Active Capabilities</span>
-                    <span class="sl-telemetry-badge">EXPANDED</span>
-                  </div>
-                  <div class="sl-telemetry-row">
-                    <span>Browser Automation</span><span>Real Playwright Chrome</span>
-                  </div>
-                  <div class="sl-telemetry-row">
-                    <span>Spatial &amp; 3D Modeling</span
-                    ><span>Three.js Mesh &amp; Material Analysis</span>
-                  </div>
-                  <div class="sl-telemetry-row">
-                    <span>Research &amp; Retrieval</span
-                    ><span>Real Knowledge Graph (82k Nodes)</span>
-                  </div>
-                  <div class="sl-telemetry-row">
-                    <span>RSI Dynamic Tools</span><span>Self-Forged ADA Skills</span>
-                  </div>
-                </div>
-                <div class="sl-telemetry-monolith">
-                  <div class="sl-telemetry-monolith-header">
-                    <span class="sl-telemetry-title">AI Parts Specialization</span>
-                    <span class="sl-telemetry-badge">28 COGNITIVE ROLES</span>
-                  </div>
-                  <div class="sl-telemetry-row">
-                    <span>Coder Specialist</span><span>AST Repair &amp; Unit Harness</span>
-                  </div>
-                  <div class="sl-telemetry-row">
-                    <span>Architect Specialist</span><span>System Contracts &amp; Scaffolding</span>
-                  </div>
-                  <div class="sl-telemetry-row">
-                    <span>Auditor Specialist</span><span>Security Boundaries &amp; Integrity</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Tab 4: Security & Vault -->
-            <div class="sl-tab-content" id="tabSecurity">
-              <div class="sl-telemetry-grid">
-                <div class="sl-telemetry-monolith">
-                  <div class="sl-telemetry-monolith-header">
-                    <span class="sl-telemetry-title">Strict 127.0.0.1 Binding Only</span>
-                    <span class="sl-telemetry-badge">AIR-GAPPED VAULT</span>
-                  </div>
-                  <div class="sl-telemetry-row">
-                    <span>Network Interfaces</span><span>Loopback (127.0.0.1 / ::1 Only)</span>
-                  </div>
-                  <div class="sl-telemetry-row">
-                    <span>Session Authentication</span><span>64-Char Ephemeral Secret Tokens</span>
-                  </div>
-                  <div class="sl-telemetry-row">
-                    <span>Telemetry Level</span><span>0.0% (Zero Cloud Tracking)</span>
-                  </div>
-                </div>
-                <div class="sl-telemetry-monolith">
-                  <div class="sl-telemetry-monolith-header">
-                    <span class="sl-telemetry-title">Physical Confinement</span>
-                    <span class="sl-telemetry-badge">HARDENED</span>
-                  </div>
-                  <div class="sl-telemetry-row">
-                    <span>Cross-Origin Requests</span><span>Strict Origin-Checking Denied</span>
-                  </div>
-                  <div class="sl-telemetry-row">
-                    <span>Credential Scrubbing</span><span>Environment Variable Masking</span>
-                  </div>
-                  <div class="sl-telemetry-row">
-                    <span>Junction / Traversal Defense</span><span>Confinement Verification</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div class="intro-foot">
+          <span>MADE FOR THE CURIOUS</span>
+          <div></div>
+          <span>BUILT TO KEEP MOVING ↗</span>
         </div>
       </section>
-
-      <!-- ====================================================================
-           Section 2: Cognitive Synthesis — "Optimized to build"
-           Spiral Stardust Galaxy & Iridescent Liquid Metal Starburst
-           ==================================================================== -->
-      <section class="sl-section-editorial sl-panel-stage" id="cognition">
-        <div class="sl-editorial-container">
-          <!-- Row 1: Continuous Learning & Spiral Stardust Galaxy -->
-          <div class="sl-editorial-split-row">
-            <div class="sl-glass-editorial-card">
-              <div class="sl-card-micro-tag">PERSISTENT KNOWLEDGE ENGINE</div>
-              <p class="sl-editorial-body-text">
-                Supergence can make a thousand types works better through its hobby of learning and
-                saving new data into many files simultaneously with work so that it doesn't looses
-                context and keeps learning, keeps working.
-              </p>
-              <div class="sl-editorial-chip-row">
-                <span class="sl-mini-chip">SIMULTANEOUS FILE SYNC: 12 STREAMS</span>
-                <span class="sl-mini-chip">ZERO CONTEXT DRIFT</span>
-              </div>
-            </div>
-
-            <div class="sl-visual-stage" aria-label="Interactive Spiral Stardust Galaxy">
-              <canvas id="spiralGalaxyCanvas" class="sl-interactive-canvas"></canvas>
-            </div>
-          </div>
-
-          <!-- Row 2: Optimized to build & Liquid Metal Starburst -->
-          <div class="sl-editorial-split-row reverse">
-            <div class="sl-visual-stage" aria-label="Interactive Chromatic Liquid Metal Starburst">
-              <canvas id="liquidStarburstCanvas" class="sl-interactive-canvas"></canvas>
-            </div>
-
-            <div class="sl-glass-editorial-card">
-              <div class="sl-card-micro-tag">PHYSICAL REALITY SYNTHESIS</div>
-              <h2 class="sl-editorial-card-title">Optimized to build</h2>
-              <p class="sl-editorial-body-text">
-                Supergence is specially built and optimized to invent, to keep building. We gave it
-                access to many things including real-world simulations and kept building.
-              </p>
-              <div class="sl-editorial-chip-row">
-                <span class="sl-mini-chip">REAL-WORLD SIMULATIONS</span>
-                <span class="sl-mini-chip">AUTONOMOUS GENERATION</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Row 3: Subconscious Mind Consolidation Engine & Holographic Brain Specimen -->
-          <div class="sl-editorial-split-row">
-            <div class="sl-glass-editorial-card sl-subconscious-card">
-              <div class="sl-card-micro-tag">SUBCONSCIOUS CONSOLIDATION</div>
-              <h2 class="sl-editorial-card-title">While you sleep, Supergence dreams in code</h2>
-              <p class="sl-editorial-body-text">
-                Biological intelligence consolidates memories during REM sleep by replaying
-                experiences, pruning obsolete synapses, and strengthening core associations.
-                Supergence activates an autonomous glymphatic consolidation cycle during idle
-                periods: executing AST integrity sweeps, compacting session graphs into immutable
-                local indices, and pre-compiling code pathways so every morning it wakes sharper
-                than before.
-              </p>
-              <div class="sl-editorial-chip-row">
-                <span class="sl-mini-chip">REM DREAM CADENCE: 60M IDLE</span>
-                <span class="sl-mini-chip">GLYMPHATIC SWEEPS: CONTINUOUS</span>
-                <span class="sl-mini-chip">LOCAL CONSOLIDATION: 100% AIR-GAPPED</span>
-              </div>
-            </div>
-
-            <div class="sl-specimen-stage" aria-label="3D Holographic Brain Specimen">
-              <div class="sl-specimen-glass-bezel">
-                <img
-                  src="/images/silisleek/glass-brain.jpg"
-                  alt="3D Holographic Brain Specimen"
-                  class="sl-specimen-img"
-                  loading="lazy"
-                />
-                <div class="sl-specimen-hud-overlay">
-                  <div class="sl-specimen-corner tl"></div>
-                  <div class="sl-specimen-corner tr"></div>
-                  <div class="sl-specimen-corner bl"></div>
-                  <div class="sl-specimen-corner br"></div>
-                  <span class="sl-specimen-tag">SPECIMEN // GLYMPHATIC REM ENGINE</span>
-                  <span class="sl-specimen-status">NEURAL HOMEOSTASIS: 99.8%</span>
-                </div>
-              </div>
-            </div>
-          </div>
+      <section class="capabilities section-pad" id="capabilities">
+        <div class="section-kicker">
+          <span>02 / THE CAPABILITIES</span><span>MORE THAN A SINGLE MOMENT</span>
         </div>
-      </section>
-
-      <!-- ====================================================================
-           Section 3: Memory & Evolution — "And built to grow with you, with those memories."
-           Cosmic Ultraviolet Nebula, Voyager Golden Record & Holographic Chess Knight
-           ==================================================================== -->
-      <section class="sl-section-cosmic sl-panel-stage" id="memories">
-        <div class="sl-cosmic-container">
-          <div class="sl-cosmic-top-grid">
-            <div class="sl-glass-editorial-card sl-cosmic-card">
-              <div class="sl-card-micro-tag">PERMANENT LOCAL MEMORY</div>
-              <p class="sl-editorial-body-text">
-                Memory like the golden disk, for everyone working with Supergence on the same
-                machine. No need to import memories when reinstalled plus built for any machine with
-                a app for Windows and runs on localhost on any other machine, to work for you.
+        <div class="cap-heading">
+          <h2>Made to think.<br /><em>Built to create.</em></h2>
+          <p>A workspace for the journey from first thought to what comes after.</p>
+        </div>
+        <div class="feature-grid">
+          <article class="feature feature-large" id="cognition">
+            <div class="feature-meta"><span>01 / COGNITION</span></div>
+            <img src="/images/silisleek/liquid-starburst.png" alt="" />
+            <div class="feature-copy">
+              <h3>Keep the ideas flowing.</h3>
+              <p>
+                Explore ideas, build on context, and work through possibilities with an intelligent
+                collaborator by your side.
               </p>
-              <div class="sl-editorial-chip-row">
-                <span class="sl-mini-chip">GOLDEN DISK ARCHITECTURE</span>
-                <span class="sl-mini-chip">ZERO RE-IMPORT REQUISITES</span>
-              </div>
             </div>
-
-            <div
-              class="sl-cosmic-stage"
-              aria-label="3D Voyager Golden Record and Holographic Chess Knight"
+          </article>
+          <article class="feature feature-memory" id="memories">
+            <div class="feature-meta">
+              <span>02 / MEMORY</span
+              ><svg
+                class="icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M5 19 19 5M8 5h11v11" />
+              </svg>
+            </div>
+            <img src="/images/silisleek/golden-record.png" alt="" />
+            <div class="feature-copy">
+              <h3>Make room for continuity.</h3>
+              <p>
+                Work is a story, not a single prompt. Supergence is designed to carry context
+                forward as you go.
+              </p>
+            </div>
+          </article>
+          <article class="feature feature-local" id="security">
+            <div class="feature-meta">
+              <span>03 / YOUR WORKSPACE</span
+              ><svg
+                class="icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M5 19 19 5M8 5h11v11" />
+              </svg>
+            </div>
+            <img class="feature-figure" src="/images/silisleek/cosmic-figure.png" alt="" />
+            <div class="feature-copy">
+              <h3>Closer to your world.</h3>
+              <p>
+                A local-first workspace for ideas, files, and the work that brings them to life.
+              </p>
+            </div>
+          </article>
+        </div>
+        <div class="motion-story">
+          <div class="motion-story-copy">
+            <h3>From thought<br /><em>to something real.</em></h3>
+            <p>
+              Brainstorm, write code, and create files with agents in a workspace that lets you
+              follow the work as it unfolds.
+            </p>
+          </div>
+          <div class="motion-visual">
+            <video
+              class="ascii-video"
+              muted
+              playsinline
+              preload="metadata"
+              poster="/images/silisleek/digital-flower.jpg"
+              aria-hidden="true"
             >
-              <canvas id="goldenRecordCanvas" class="sl-interactive-canvas"></canvas>
-            </div>
-          </div>
-
-          <div class="sl-cosmic-headline-block">
-            <h2 class="sl-cosmic-display-title">
-              <span class="sl-cosmic-line-1">And built to grow with</span>
-              <span class="sl-cosmic-line-2">you, with those memories.</span>
-            </h2>
-          </div>
-
-          <!-- Spun-Gold Local Graph Architecture Card -->
-          <div class="sl-gold-graph-card" aria-label="Spun-Gold Knowledge Graph Architecture">
-            <div class="sl-gold-graph-header">
-              <div class="sl-card-micro-tag">SPUN-GOLD KNOWLEDGE GRAPH</div>
-              <h3 class="sl-gold-graph-title">Memories etched in gold, never forgotten</h3>
-              <p class="sl-gold-graph-desc">
-                Every interaction, tool execution, and architectural refinement is indexed into a
-                sovereign local SQLite knowledge graph. Zero cloud reliance, zero external
-                telemetry, zero re-import latency when reinstalling or migrating machines.
-              </p>
-            </div>
-            <div class="sl-arch-stats-row">
-              <div class="sl-arch-stat">
-                <span class="sl-stat-num">82,410</span>
-                <span class="sl-stat-lbl">Nodes in Local Index</span>
-              </div>
-              <div class="sl-arch-stat">
-                <span class="sl-stat-num">188,320</span>
-                <span class="sl-stat-lbl">Semantic Synaptic Edges</span>
-              </div>
-              <div class="sl-arch-stat">
-                <span class="sl-stat-num">0 ms</span>
-                <span class="sl-stat-lbl">Cloud Latency (Air-Gapped)</span>
-              </div>
-              <div class="sl-arch-stat">
-                <span class="sl-stat-num">100%</span>
-                <span class="sl-stat-lbl">Sovereign SQLite Storage</span>
-              </div>
-            </div>
+              <source src="/images/silisleek/motion/ascii-film.mp4" type="video/mp4" />
+            </video>
           </div>
         </div>
       </section>
-
-      <!-- ====================================================================
-           Section 4: Security & Care — "Loves what you love, except your girlfriend"
-           Bioluminescent Neural Synapse Network, Glass Synaptic Neuron & Crystal Chains
-           ==================================================================== -->
-      <section class="sl-section-neural sl-panel-stage" id="security">
-        <div class="sl-neural-container">
-          <div class="sl-neural-grid">
-            <div class="sl-neural-text-col">
-              <div class="sl-glass-editorial-card sl-neural-card">
-                <div class="sl-card-micro-tag">AUTONOMOUS SENSITIVITY</div>
-                <p class="sl-editorial-body-text">
-                  Better emotional care than anything else, on your controls.<br /><br />
-                  <strong style="color: #ffffff">And... How can we forget about security?</strong
-                  ><br />
-                  Supergence is more secure than an iPhone even on a public wi-fi. No need to worry
-                  excpet worrying about the future.
-                </p>
-                <div class="sl-editorial-chip-row">
-                  <span class="sl-mini-chip">PUBLIC WI-FI AIR-GAP</span>
-                  <span class="sl-mini-chip">EPHEMERAL SECRETS</span>
-                </div>
-              </div>
-
-              <div class="sl-glass-editorial-card sl-neural-card" style="margin-top: 24px">
-                <div class="sl-card-micro-tag">PREDICTIVE ACTION POTENTIAL</div>
-                <p class="sl-editorial-body-text">
-                  And increased intelligence for anything you want to do, without any limits. It
-                  predicts something before it even happens, so you don't need to do anything except
-                  making it work or doing your own work until Supergence notifies you that your work
-                  is done.
-                </p>
-                <div class="sl-editorial-chip-row">
-                  <span class="sl-mini-chip">PROACTIVE HOMEOSIS</span>
-                  <span class="sl-mini-chip">AUTOMATED NOTIFICATION</span>
-                </div>
-              </div>
-
-              <!-- Authentic Reasoning Emotion Specimen Card -->
-              <div class="sl-glass-editorial-card sl-empathy-card" style="margin-top: 24px">
-                <div class="sl-card-micro-tag">AFFECTION &amp; CARING MATRIX</div>
-                <h3 class="sl-empathy-card-title">Reasoning with Human Empathy</h3>
-                <p class="sl-editorial-body-text">
-                  True superintelligence transcends mechanical logic. Supergence analyzes
-                  conversational cadence, detects cognitive fatigue, and adapts to your rhythm. It
-                  protects your focus and respects human boundaries.
-                </p>
-                <div class="sl-empathy-cube-stage">
-                  <img
-                    src="/images/silisleek/empathy-cubes.png"
-                    alt="Glass Cube Empathy Column: 1 feel so smile"
-                    class="sl-empathy-cube-img"
-                    loading="lazy"
-                  />
-                  <div class="sl-empathy-caption">
-                    SYNAPTIC CUBE MATRIX · [ 1 | FEEL | SO | SMILE ]
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              class="sl-neural-stage"
-              aria-label="Bioluminescent Neural Synapse, Glass Neuron and Optical Glass Chains"
-            >
-              <canvas id="neuralSynapseCanvas" class="sl-interactive-canvas"></canvas>
-            </div>
+      <section class="how-it-works section-pad" id="how-it-works" aria-labelledby="how-title">
+        <div class="section-kicker"><span>THE DETAILS</span><span>BUILT FOR REAL WORK</span></div>
+        <div class="how-layout">
+          <div class="how-intro">
+            <h2 id="how-title">From a task<br /><em>to a workspace.</em></h2>
+            <p>
+              Supergence brings conversations, files, and tools together so you can follow the work
+              as it takes shape.
+            </p>
           </div>
-
-          <div class="sl-neural-headline-block">
-            <h2 class="sl-neural-display-title">
-              <span class="sl-neural-line-1">Loves what you love, except</span>
-              <span class="sl-neural-line-2">your girlfriend</span>
-            </h2>
+          <div class="how-list">
+            <article class="how-item">
+              <span>01</span>
+              <div>
+                <h3>Start with an idea</h3>
+                <p>
+                  Ask an agent to brainstorm, write code, or create files. Each chat has its own
+                  workspace on disk for its task.
+                </p>
+              </div>
+            </article>
+            <article class="how-item">
+              <span>02</span>
+              <div>
+                <h3>See the work unfold</h3>
+                <p>
+                  The workspace viewer shows files being written and commands running in the live
+                  terminal as the task progresses.
+                </p>
+              </div>
+            </article>
+            <article class="how-item">
+              <span>03</span>
+              <div>
+                <h3>Choose how you work</h3>
+                <p>
+                  Use the web cockpit or the optional desktop app. Connect a model provider through
+                  your configuration.
+                </p>
+              </div>
+            </article>
+            <article class="how-item">
+              <span>04</span>
+              <div>
+                <h3>Stay in control</h3>
+                <p>
+                  Proactive suggestions are disabled by default. When enabled, selected folder
+                  metadata and optionally the foreground window title can be sent to your configured
+                  model.
+                </p>
+              </div>
+            </article>
+          </div>
+        </div>
+        <p class="how-note">
+          Supergence is local-first. Your configured model provider may receive prompts and selected
+          data; commands run with your operating system permissions.
+        </p>
+      </section>
+      <section class="manifesto" id="philosophy">
+        <div class="manifesto-inner">
+          <div class="section-kicker">
+            <span>03 / THE PHILOSOPHY</span><span>HUMAN CURIOSITY, AMPLIFIED</span>
+          </div>
+          <div class="manifesto-content">
+            <h2>The future isn’t<br />somewhere we go.<br /><em>It’s something we make.</em></h2>
+            <p>
+              For the questions that lead to more questions. For the work that becomes a new idea.
+              For everything you haven’t imagined yet.
+            </p>
+          </div>
+          <div class="manifesto-bottom">
+            <span>SILISLEEK / SUPERGENCE</span><span>THE POSSIBILITY IS YOURS.</span>
           </div>
         </div>
       </section>
-
-      <!-- ====================================================================
-           Section 5: Climax — "Say hello, to Superintelligence"
-           Orbiting Constellation of Sacred Emblems & Verified Installer Hub
-           ==================================================================== -->
-      <section class="sl-section-climax sl-panel-stage" id="superintelligence">
-        <div class="sl-climax-container">
-          <h2 class="sl-climax-super-title">Say hello, to Superintelligence</h2>
-
-          <!-- The Living Orbiting Constellation Stage -->
-          <div
-            class="sl-climax-stage"
-            aria-label="Orbiting Constellation of Sacred Emblems: Butterfly, Neuron, Atom, Chess Knight, Astrolabe Sphere, Starburst, and Science Glyph"
-          >
-            <canvas id="sacredOrbitCanvas" class="sl-interactive-canvas"></canvas>
-
-            <div class="sl-climax-core-statement">
-              <span class="sl-statement-top">And the limit</span>
-              <span class="sl-statement-italic">Is your imagination</span>
-            </div>
-
-            <!-- Authentic Science Typography Badge in corner -->
-            <div class="sl-science-badge-container" aria-label="Authentic Science Badge">
-              <img
-                src="/images/silisleek/science-badge.png"
-                alt="S C I Σ N C E"
-                class="sl-science-badge-img"
-                loading="lazy"
-              />
+      <section class="final section-pad" id="superintelligence">
+        <div class="section-kicker">
+          <span>04 / BEGIN HERE</span><span>YOUR NEXT IDEA IS WAITING</span>
+        </div>
+        <div class="final-grid">
+          <div>
+            <p class="eyebrow">INTRODUCING SIS 1.0</p>
+            <h2>What will you<br /><em>make possible?</em></h2>
+            <p>Take the next step with Supergence.</p>
+            <div class="hero-actions">
+              <a class="button button-dark" href="/installer.html"
+                >Get Supergence
+                <svg
+                  class="icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.7"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M5 19 19 5M8 5h11v11" /></svg></a
+              ><a class="text-link dark-link" href="/guide.html"
+                >Read the guide
+                <svg
+                  class="icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.7"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M5 19 19 5M8 5h11v11" /></svg
+              ></a>
             </div>
           </div>
-
-          <!-- The Four Pillars of Continuous Cognition -->
-          <div class="sl-pillars-monolith" aria-label="Four Pillars of Continuous Cognition">
-            <div class="sl-section-header">
-              <div class="sl-section-label">SYSTEM ARCHITECTURE // SPECIFICATIONS</div>
-              <h2 class="sl-section-title">The Four Pillars of Continuous Cognition</h2>
-              <p class="sl-section-subtitle">
-                Engineered from first principles for lifelong continuous execution on your
-                workstation.
-              </p>
-            </div>
-            <div class="sl-pillars-grid">
-              <div class="sl-pillar-col">
-                <div class="sl-pillar-num">01</div>
-                <h3 class="sl-pillar-title">Continuous Brainstem</h3>
-                <p class="sl-pillar-desc">
-                  1-second homeostatic tick running 24/7. Proactively performs background memory
-                  consolidation, idle glymphatic sweeps, and task scheduling without waiting for
-                  prompts.
-                </p>
-                <div class="sl-pillar-tag">1,000MS HOMEOSTASIS</div>
-              </div>
-              <div class="sl-pillar-col">
-                <div class="sl-pillar-num">02</div>
-                <h3 class="sl-pillar-title">AST Self-Correction</h3>
-                <p class="sl-pillar-desc">
-                  4-phase self-healing verification loop. Analyzes syntax via real-time Acorn AST
-                  parsing, runs live Chromium/Node.js tests, applies atomic diffs, and verifies zero
-                  hallucinations.
-                </p>
-                <div class="sl-pillar-tag">4-PHASE VERIFICATION</div>
-              </div>
-              <div class="sl-pillar-col">
-                <div class="sl-pillar-num">03</div>
-                <h3 class="sl-pillar-title">127.0.0.1 Air-Gap Vault</h3>
-                <p class="sl-pillar-desc">
-                  Confined strictly to localhost. Ephemeral 64-char session secrets, zero cloud
-                  telemetry tracking, environment variable masking, and filesystem traversal
-                  defenses.
-                </p>
-                <div class="sl-pillar-tag">STRICT LOOPBACK AIR-GAP</div>
-              </div>
-              <div class="sl-pillar-col">
-                <div class="sl-pillar-num">04</div>
-                <h3 class="sl-pillar-title">193 Dynamic Capabilities</h3>
-                <p class="sl-pillar-desc">
-                  Full Playwright browser automation, 3D Three.js mesh inspection, self-forged ADA
-                  runtime skills, and 28 specialized cognitive persona parts acting as one united
-                  mind.
-                </p>
-                <div class="sl-pillar-tag">193 EXPANDED CAPABILITIES</div>
-              </div>
-            </div>
+          <div class="final-art"><img src="/images/silisleek/atom-ring.png" alt="" /></div>
+        </div>
+      </section>
+      <section class="sl-launch-finale" aria-labelledby="sl-finale-title">
+        <div class="sl-finale-inner">
+          <p class="sl-finale-kicker">SILISLEEK / SUPERGENCE</p>
+          <h2 id="sl-finale-title">Say hello to <em>Superintelligence.</em></h2>
+          <div class="sl-finale-art" aria-hidden="true">
+            <img class="sl-finale-atom" src="/images/silisleek/atom-ring.png" alt="" />
+            <img class="sl-finale-butterfly" src="/images/silisleek/violet-butterfly.png" alt="" />
+            <img class="sl-finale-neuron" src="/images/silisleek/glass-neuron.png" alt="" />
+            <img class="sl-finale-knight" src="/images/silisleek/chess-knight.png" alt="" />
+            <img class="sl-finale-star" src="/images/silisleek/liquid-starburst.png" alt="" />
+            <img class="sl-finale-science" src="/images/silisleek/science-badge.png" alt="" />
           </div>
-
-          <!-- ====================================================================
-               Production Distribution & Verified Installer Hub
-               ==================================================================== -->
-          <div class="sl-installer-container" id="installer">
-            <div class="sl-section-header">
-              <div class="sl-section-label">DEPLOYMENT // PRODUCTION RELEASE</div>
-              <h2 class="sl-section-title">Verified Release Packages</h2>
-              <p class="sl-section-subtitle">
-                Engineered for Windows 10, Windows 11, and ARM64 Snapdragon devices. Loopback
-                127.0.0.1 privacy.
-              </p>
-            </div>
-
-            <div class="sl-dist-grid">
-              <!-- Monolith 1: Windows Setup Installer -->
-              <div class="sl-dist-card featured">
-                <div>
-                  <div class="sl-dist-header">
-                    <span class="sl-dist-badge">Automated Desktop Setup</span>
-                    <h3 class="sl-dist-title">Windows Setup (.exe)</h3>
-                    <p class="sl-dist-subtitle">
-                      Single-click automated installation. Integrates desktop shortcuts, start menu
-                      launch entries, and local user data directory configuration.
-                    </p>
-                  </div>
-
-                  <div class="sl-dist-specs">
-                    <span>Version 1.0.0</span>
-                    <span>Size: 591 MB</span>
-                    <span>Windows 10 / 11 (x64 / ARM64)</span>
-                  </div>
-
-                  <div class="sl-hash-box">
-                    <div style="overflow: hidden">
-                      <div class="sl-hash-label">Verified SHA-256 Checksum</div>
-                      <div class="sl-hash-value" id="hashSetup">
-                        BB1CDB8BFB6A2FE519E3C7AFF91F85826C73AD8EDB297AAF8415ACF0152571DE
-                      </div>
-                    </div>
-                    <button
-                      class="sl-copy-btn"
-                      data-copy="BB1CDB8BFB6A2FE519E3C7AFF91F85826C73AD8EDB297AAF8415ACF0152571DE"
-                      aria-label="Copy SHA-256 checksum"
-                    >
-                      Copy
-                    </button>
-                  </div>
-                </div>
-
-                <a
-                  class="sl-btn-stark"
-                  href="/release/Supergence%20Setup%201.0.0.exe"
-                  download="Supergence Setup 1.0.0.exe"
-                >
-                  Download Windows Setup (591 MB) <span class="sl-pill-arrow">↓</span>
-                </a>
-              </div>
-
-              <!-- Monolith 2: Windows Portable Standalone -->
-              <div class="sl-dist-card">
-                <div>
-                  <div class="sl-dist-header">
-                    <span class="sl-dist-badge">Zero Installation</span>
-                    <h3 class="sl-dist-title">Standalone Portable (.exe)</h3>
-                    <p class="sl-dist-subtitle">
-                      Self-contained single executable. Run directly from any folder, USB flash
-                      drive, or sandboxed volume without modifying the Windows registry.
-                    </p>
-                  </div>
-
-                  <div class="sl-dist-specs">
-                    <span>Version 1.0.0</span>
-                    <span>Size: 590 MB</span>
-                    <span>Air-Gapped &amp; USB Ready</span>
-                  </div>
-
-                  <div class="sl-hash-box">
-                    <div style="overflow: hidden">
-                      <div class="sl-hash-label">Verified SHA-256 Checksum</div>
-                      <div class="sl-hash-value" id="hashPortable">
-                        02730AD008BDF2ECBBD0B35912853E0E354FD6260404E168B69324EDFB9CE77E
-                      </div>
-                    </div>
-                    <button
-                      class="sl-copy-btn"
-                      data-copy="02730AD008BDF2ECBBD0B35912853E0E354FD6260404E168B69324EDFB9CE77E"
-                      aria-label="Copy SHA-256 checksum"
-                    >
-                      Copy
-                    </button>
-                  </div>
-                </div>
-
-                <a
-                  class="sl-btn-dark-pill"
-                  href="/release/Supergence-Portable-1.0.0.exe"
-                  download="Supergence-Portable-1.0.0.exe"
-                >
-                  Download Portable (590 MB) <span class="sl-pill-arrow">↓</span>
-                </a>
-              </div>
-            </div>
-
-            <!-- Real-Time Hardware Diagnostic Bar -->
-            <div class="sl-readiness-widget" aria-label="Client Hardware Environment Diagnostics">
-              <div class="sl-diag-item">
-                <span>Operating System:</span>
-                <span class="sl-diag-val" id="diagOS">Detecting Windows Environment...</span>
-              </div>
-              <div class="sl-diag-item">
-                <span>Architecture:</span>
-                <span class="sl-diag-val" id="diagArch">Detecting Host...</span>
-              </div>
-              <div class="sl-diag-item">
-                <span>Hardware GPU:</span>
-                <span class="sl-diag-val" id="diagWebGL">Inspecting WebGL 2.0...</span>
-              </div>
-              <div class="sl-diag-item">
-                <span>Loopback Security:</span>
-                <span class="sl-diag-val" id="diagLocalApp">127.0.0.1 Strict</span>
-              </div>
-            </div>
+          <div class="sl-finale-message">
+            <p>And the limit</p>
+            <p><em>is your imagination.</em></p>
+            <img src="/images/silisleek/supergence-official.png" alt="Supergence logo" />
+          </div>
+          <div class="sl-finale-bottom">
+            <span>IMAGINATION / INTELLIGENCE / POSSIBILITY</span><span>✳</span>
           </div>
         </div>
       </section>
     </main>
-
-    <!-- Footer -->
-    <footer class="sl-footer">
-      <div class="sl-footer-inner">
-        <a class="sl-footer-brand" href="/silisleek">
-          <span>Supergence SIS 1.0</span>
-        </a>
-
-        <div class="sl-footer-links">
-          <a class="sl-footer-link" href="/installer.html">Installer Portal</a>
-          <a class="sl-footer-link" href="/guide.html">User Guide</a>
-          <a class="sl-footer-link" href="/">Web Cockpit</a>
+    <footer class="launch-footer" aria-label="Site footer">
+      <div class="footer-glow" aria-hidden="true"></div>
+      <div class="footer-shell">
+        <div class="footer-lead">
+          <div>
+            <p class="footer-eyebrow"><span class="footer-dot"></span> YOUR NEXT CHAPTER</p>
+            <h2>Ideas are just<br /><em>the beginning.</em></h2>
+            <p class="footer-description">
+              Give your next idea the space to become something more.
+            </p>
+          </div>
+          <a class="footer-cta" href="/installer.html">
+            <span>Get Supergence</span>
+            <span class="footer-cta-icon" aria-hidden="true"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M5 19 19 5M8 5h11v11" /></svg
+            ></span>
+          </a>
         </div>
-
-        <div class="sl-footer-copy">
-          &copy; 2026 Silisleek Technologies. Engineered for Reality. Zero synthetic telemetry.
+        <div class="footer-divider"></div>
+        <div class="footer-directory">
+          <div class="footer-identity">
+            <a class="brand" href="/silisleek" aria-label="Supergence home"
+              ><img
+                class="brand-logo"
+                src="/images/silisleek/supergence-official.png"
+                alt=""
+              /><span>SUPERGENCE<small>BY SILISLEEK</small></span></a
+            >
+            <p>Intelligence in motion.<br />Made for curious minds.</p>
+          </div>
+          <nav class="footer-nav" aria-label="Explore Supergence">
+            <p>EXPLORE</p>
+            <a href="#vision">The vision <span aria-hidden="true">↗</span></a>
+            <a href="#capabilities">Capabilities <span aria-hidden="true">↗</span></a>
+            <a href="#philosophy">Our philosophy <span aria-hidden="true">↗</span></a>
+          </nav>
+          <nav class="footer-nav" aria-label="Resources">
+            <p>RESOURCES</p>
+            <a href="/installer.html">Installer <span aria-hidden="true">↗</span></a>
+            <a href="/guide.html">User guide <span aria-hidden="true">↗</span></a>
+            <a href="/">Open workspace <span aria-hidden="true">↗</span></a>
+          </nav>
+          <a class="footer-top-link" href="#imagination" aria-label="Back to top">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 20V4M6 10l6-6 6 6" />
+            </svg>
+          </a>
+        </div>
+        <div class="footer-wordmark" aria-hidden="true">SUPERGENCE<span>.</span></div>
+        <div class="footer-legal">
+          <span>© 2026 SILISLEEK TECHNOLOGIES</span><span>MADE FOR WHAT’S NEXT</span
+          ><span>BACK TO THE BEGINNING <a href="#imagination" aria-label="Back to top">↑</a></span>
         </div>
       </div>
     </footer>

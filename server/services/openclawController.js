@@ -16,6 +16,7 @@ import { exec, execFile, spawn } from 'child_process';
 import { promisify } from 'util';
 import brain from '../orchestrator/brain.js';
 import { childEnvironment } from '../security/child-environment.js';
+import { resolveWithinRoot } from '../utils/path-confinement.js';
 
 const execAsync = promisify(exec);
 const execFileAsync = promisify(execFile);
@@ -374,9 +375,54 @@ export class OpenClawController {
     }
   }
 
+  _isProtectedSystemPath(targetPath) {
+    if (!targetPath) return true;
+    const resolved = path.resolve(targetPath);
+    const norm = resolved.toLowerCase().replace(/[/\\]+$/, '');
+
+    // 1. Root drives (e.g. C:, C:\, D:, /, etc.)
+    const parsedRoot = path.parse(resolved).root.toLowerCase().replace(/[/\\]+$/, '');
+    if (/^[a-zA-Z]:$/i.test(norm) || norm === '' || norm === parsedRoot) {
+      return true;
+    }
+
+    // 2. Windows and core system directories
+    const sysDirs = [
+      process.env.WINDIR,
+      process.env.SYSTEMROOT,
+      process.env.PROGRAMFILES,
+      process.env['PROGRAMFILES(X86)'],
+      process.env.PROGRAMDATA,
+      'C:\\Windows',
+      'C:\\Windows\\System32',
+      'C:\\Program Files',
+      'C:\\Program Files (x86)',
+      '/etc', '/usr', '/bin', '/sbin', '/boot', '/dev', '/sys', '/proc'
+    ].filter(Boolean).map((d) => path.resolve(d).toLowerCase().replace(/[/\\]+$/, ''));
+
+    if (sysDirs.some((sd) => norm === sd || norm.startsWith(sd + path.sep))) {
+      return true;
+    }
+
+    // 3. User profile root itself
+    const homeNorm = path.resolve(os.homedir()).toLowerCase().replace(/[/\\]+$/, '');
+    if (norm === homeNorm) {
+      return true;
+    }
+
+    // 4. Project root and workspace root directories themselves
+    const rootNorm = path.resolve(ROOT_DIR).toLowerCase().replace(/[/\\]+$/, '');
+    const wsNorm = path.resolve(WORKSPACE_DIR).toLowerCase().replace(/[/\\]+$/, '');
+    if (norm === rootNorm || norm === wsNorm) {
+      return true;
+    }
+
+    return false;
+  }
+
   // ─── 5. File System Operations ───
   async exploreFileSystem(dirPath = '') {
-    const resolved = dirPath ? path.resolve(ROOT_DIR, dirPath) : ROOT_DIR;
+    const resolved = dirPath ? resolveWithinRoot(ROOT_DIR, dirPath) : ROOT_DIR;
     if (!fs.existsSync(resolved)) {
       throw new Error(`Directory does not exist: ${resolved}`);
     }
@@ -420,7 +466,7 @@ export class OpenClawController {
 
   async readFile(filePath) {
     if (!filePath) throw new Error('File path required');
-    const resolved = path.resolve(ROOT_DIR, filePath);
+    const resolved = resolveWithinRoot(ROOT_DIR, filePath);
     if (!fs.existsSync(resolved)) throw new Error(`File not found: ${filePath}`);
 
     const stat = fs.statSync(resolved);
@@ -439,7 +485,7 @@ export class OpenClawController {
 
   async writeFile(filePath, content = '') {
     if (!filePath) throw new Error('File path required');
-    const resolved = path.resolve(ROOT_DIR, filePath);
+    const resolved = resolveWithinRoot(ROOT_DIR, filePath);
     const parent = path.dirname(resolved);
     if (!fs.existsSync(parent)) {
       fs.mkdirSync(parent, { recursive: true });
@@ -459,8 +505,11 @@ export class OpenClawController {
 
   async deleteFile(filePath) {
     if (!filePath) throw new Error('File path required');
-    const resolved = path.resolve(ROOT_DIR, filePath);
+    const resolved = resolveWithinRoot(ROOT_DIR, filePath);
     if (!fs.existsSync(resolved)) throw new Error(`File does not exist: ${filePath}`);
+    if (this._isProtectedSystemPath(resolved)) {
+      throw new Error(`Security Violation: Cannot delete protected path or root directory: ${filePath}`);
+    }
 
     const stat = fs.statSync(resolved);
     if (stat.isDirectory()) {

@@ -1,0 +1,177 @@
+.sl-official-brand-logo {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  border-radius: 50%;
+}
+.sl-footer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.sl-launch-finale {
+  overflow: hidden;
+  background: #050505;
+  color: #f4f2ed;
+  padding: 100px 6% 32px;
+}
+.sl-finale-inner {
+  position: relative;
+  max-width: 1440px;
+  min-height: 760px;
+  margin: 0 auto;
+}
+.sl-finale-kicker,
+.sl-finale-bottom {
+  color: #9d9791;
+  font:
+    600 10px/1.4 Manrope,
+    sans-serif;
+  letter-spacing: 0.16em;
+}
+.sl-finale-inner h2 {
+  position: relative;
+  z-index: 2;
+  margin: 80px auto 0;
+  text-align: center;
+  font:
+    400 clamp(50px, 6.7vw, 100px)/0.98 'Instrument Serif',
+    Georgia,
+    serif;
+  letter-spacing: -0.035em;
+}
+.sl-finale-inner h2 em,
+.sl-finale-message em {
+  color: #c6ab98;
+  font-weight: 400;
+}
+.sl-finale-art {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.sl-finale-art img {
+  position: absolute;
+  object-fit: contain;
+}
+.sl-finale-atom {
+  width: 17%;
+  left: 5%;
+  top: 33%;
+}
+.sl-finale-butterfly {
+  width: 14%;
+  left: 25%;
+  top: 31%;
+}
+.sl-finale-neuron {
+  width: 18%;
+  right: 24%;
+  top: 32%;
+}
+.sl-finale-knight {
+  width: 12%;
+  left: 9%;
+  top: 65%;
+}
+.sl-finale-star {
+  width: 15%;
+  right: 6%;
+  top: 55%;
+}
+.sl-finale-science {
+  width: 15%;
+  right: 5%;
+  bottom: 12%;
+}
+.sl-finale-message {
+  position: relative;
+  z-index: 1;
+  margin: 240px auto 0;
+  text-align: center;
+}
+.sl-finale-message p {
+  margin: 0;
+  font:
+    400 clamp(25px, 3vw, 42px)/1.05 Manrope,
+    sans-serif;
+}
+.sl-finale-message p + p {
+  font:
+    400 italic clamp(45px, 5.5vw, 78px)/1.05 'Instrument Serif',
+    Georgia,
+    serif;
+}
+.sl-finale-message img {
+  width: clamp(105px, 13vw, 175px);
+  height: auto;
+  margin: 22px auto 0;
+}
+.sl-finale-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid #292725;
+  padding-top: 20px;
+}
+@media (max-width: 700px) {
+  .sl-launch-finale {
+    padding: 70px 5% 28px;
+  }
+  .sl-finale-inner {
+    min-height: 660px;
+  }
+  .sl-finale-inner h2 {
+    margin-top: 65px;
+    font-size: clamp(48px, 10vw, 70px);
+  }
+  .sl-finale-message {
+    margin-top: 260px;
+  }
+  .sl-finale-atom {
+    width: 26%;
+    left: 0;
+    top: 33%;
+  }
+  .sl-finale-butterfly {
+    width: 21%;
+    left: 28%;
+    top: 31%;
+  }
+  .sl-finale-neuron {
+    width: 27%;
+    right: 0;
+    top: 32%;
+  }
+  .sl-finale-knight {
+    width: 19%;
+    left: 2%;
+    top: 67%;
+  }
+  .sl-finale-star {
+    width: 24%;
+    right: 0;
+    top: 65%;
+  }
+  .sl-finale-science {
+    width: 23%;
+    right: 2%;
+    bottom: 7%;
+  }
+}
+@media (min-width: 701px) {
+  .sl-finale-science {
+    bottom: 5%;
+  }
+}
+@media (max-width: 700px) {
+  .sl-finale-knight {
+    top: 52%;
+  }
+  .sl-finale-star {
+    top: 51%;
+  }
+}

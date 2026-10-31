@@ -3,6 +3,7 @@
 // Powers live on-screen information streams and agent research tools
 
 import toolRegistry from '../tools/registry.js';
+import { assertSafeExternalUrl } from '../security/ssrf-guard.js';
 
 export const PUBLIC_API_CATALOG = [
   {
@@ -106,6 +107,7 @@ export class PublicApisManager {
     );
 
     const url = customUrl || (target ? target.endpoint : this.catalog[1].endpoint);
+    assertSafeExternalUrl(url);
 
     // Check recent cache (2 minutes)
     const cached = this.cache.get(url);

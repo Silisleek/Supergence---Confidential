@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Supergence on Silisleek — Authenticate with your Sleek ID to access autonomous agents and local-first intelligence."
+    />
+    <title>Supergence on Silisleek — Intelligence in motion</title>
+    <link rel="icon" href="/images/silisleek/supergence-official.png" />
+    <link rel="stylesheet" href="/styles/supergence-tokens.css" />
+    <link rel="stylesheet" href="/styles/workspace-polish.css" />
+    <link rel="stylesheet" href="/styles/supergence-motion.css" />
+    <link rel="stylesheet" href="/styles/silisleek-supergence.css" />
+    <script type="module" src="/scripts/silisleek-supergence.js"></script>
+  </head>
+  <body class="sis-workspace-ui" data-theme="neutral">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+
+    <!-- Ambient Orbital Particle Canvas -->
+    <div class="portal-canvas-wrap" aria-hidden="true">
+      <canvas id="portal-motion-canvas"></canvas>
+    </div>
+
+    <!-- Navigation Header -->
+    <header class="portal-header">
+      <div class="portal-header-inner">
+        <a class="portal-brand" href="/silisleek/supergence" aria-label="Supergence on Silisleek">
+          <img
+            class="portal-logo"
+            src="/images/silisleek/supergence-official.png"
+            alt="Supergence logo"
+          />
+          <div class="portal-brand-text">
+            <span>SUPERGENCE</span>
+            <small>BY SILISLEEK</small>
+          </div>
+        </a>
+
+        <nav class="portal-nav" aria-label="Portal Navigation">
+          <a href="/silisleek#vision">Vision</a>
+          <a href="/silisleek#capabilities">Capabilities</a>
+          <a href="/guide.html">User Guide</a>
+          <a href="/installer.html">Desktop App</a>
+        </nav>
+
+        <div class="portal-header-actions">
+          <div class="portal-status-pill" id="portal-status-pill" aria-live="polite">
+            <span class="status-dot warning"></span>
+            <span>Checking session...</span>
+          </div>
+          <button
+            id="motion-toggle"
+            class="btn-pill"
+            type="button"
+            aria-label="Toggle ambient motion"
+            aria-pressed="true"
+          >
+            Motion
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="portal-main" id="main-content">
+      <!-- Hero Section -->
+      <section class="portal-hero" aria-labelledby="portal-hero-title">
+        <span class="portal-kicker">SILISLEEK.COM / SUPERGENCE</span>
+        <h1 class="portal-title" id="portal-hero-title">
+          Intelligence in motion.
+          <em>Authenticate with your Sleek ID.</em>
+        </h1>
+        <p class="portal-subtitle">
+          Connect your verified Sleek ID to Supergence to unlock full-stack autonomous agents,
+          spatial simulations, live browser automation, and secure local workspace execution.
+        </p>
+      </section>
+
+      <!-- Sleek ID Authentication Form Card -->
+      <section
+        class="portal-auth-card"
+        id="auth-form-card"
+        aria-labelledby="auth-card-title"
+      >
+        <div class="auth-card-head">
+          <h2 class="auth-card-title" id="auth-card-title">
+            <svg
+              class="auth-shield-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+            Sleek Security Gateway
+          </h2>
+          <span class="auth-card-badge">AES-256 AUTHENTICATED</span>
+        </div>
+
+        <form id="sleek-auth-form" novalidate>
+          <!-- Sleek ID Input -->
+          <div class="form-group">
+            <label class="form-label" for="sleek-id">Sleek ID</label>
+            <div class="form-input-wrap">
+              <input
+                type="text"
+                id="sleek-id"
+                class="form-input"
+                name="sleekId"
+                placeholder="e.g. slk-creator-01 or sleek_yourname"
+                autocomplete="username"
+                required
+                spellcheck="false"
+              />
+            </div>
+            <div class="input-hint" id="sleek-id-hint">
+              Enter your 4–48 character verified Sleek ID.
+            </div>
+          </div>
+
+          <!-- Passcode Input -->
+          <div class="form-group">
+            <label class="form-label" for="sleek-passcode">Sleek Passkey / Master Secret</label>
+            <div class="form-input-wrap">
+              <input
+                type="password"
+                id="sleek-passcode"
+                class="form-input"
+                name="passcode"
+                placeholder="Enter your security passkey"
+                autocomplete="current-password"
+                required
+              />
+              <button
+                type="button"
+                id="toggle-passcode"
+                class="form-toggle-btn"
+                aria-label="Show passkey"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                >
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Role / Permission Selector -->
+          <div class="form-group">
+            <span class="form-label">Requested Capability Level & Permissions</span>
+            <div class="role-grid" role="radiogroup" aria-label="Select capability level">
+              <button
+                type="button"
+                class="role-card"
+                data-role="creator"
+                role="radio"
+                aria-pressed="true"
+                aria-checked="true"
+              >
+                <div class="role-header">
+                  <span class="role-badge">🎨 Sleek Creator</span>
+                  <span class="role-check">✓</span>
+                </div>
+                <p class="role-desc">
+                  Pair programming, UI creation & creative code generation.
+                </p>
+              </button>
+
+              <button
+                type="button"
+                class="role-card"
+                data-role="operator"
+                role="radio"
+                aria-pressed="false"
+                aria-checked="false"
+              >
+                <div class="role-header">
+                  <span class="role-badge">⚡ Sleek Operator</span>
+                  <span class="role-check">✓</span>
+                </div>
+                <p class="role-desc">
+                  Autonomous task execution, terminal actions & bounded system controls.
+                </p>
+              </button>
+
+              <button
+                type="button"
+                class="role-card"
+                data-role="architect"
+                role="radio"
+                aria-pressed="false"
+                aria-checked="false"
+              >
+                <div class="role-header">
+                  <span class="role-badge">🏛️ Sleek Architect</span>
+                  <span class="role-check">✓</span>
+                </div>
+                <p class="role-desc">
+                  Full superintelligence, multi-agent swarms & enterprise security policies.
+                </p>
+              </button>
+
+              <button
+                type="button"
+                class="role-card"
+                data-role="observer"
+                role="radio"
+                aria-pressed="false"
+                aria-checked="false"
+              >
+                <div class="role-header">
+                  <span class="role-badge">🔍 Sleek Observer</span>
+                  <span class="role-check">✓</span>
+                </div>
+                <p class="role-desc">
+                  Auditing, deep research & read-only telemetry analysis.
+                </p>
+              </button>
+            </div>
+          </div>
+
+          <!-- Security Guarantees -->
+          <div class="security-checklist">
+            <div class="security-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="m5 12 4 4L19 6" />
+              </svg>
+              <span>127.0.0.1 Confinement</span>
+            </div>
+            <div class="security-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="m5 12 4 4L19 6" />
+              </svg>
+              <span>AES-256 Vault Encryption</span>
+            </div>
+            <div class="security-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="m5 12 4 4L19 6" />
+              </svg>
+              <span>SameSite=Strict Session</span>
+            </div>
+          </div>
+
+          <!-- Action Button -->
+          <button type="submit" id="submit-auth" class="btn-primary">
+            <span>Authenticate & Launch Supergence</span>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M5 12h14m-6-6 6 6-6 6" />
+            </svg>
+          </button>
+
+          <!-- Feedback Box -->
+          <div id="auth-feedback" class="auth-feedback" role="alert"></div>
+
+          <!-- Demo Pre-fills -->
+          <div class="demo-accounts">
+            <div class="demo-label">Fast Demo Credentials (One-Click Pre-fill):</div>
+            <div class="demo-pills">
+              <button type="button" class="btn-pill" data-demo="creator">Creator Alpha</button>
+              <button type="button" class="btn-pill" data-demo="operator">Operator Beta</button>
+              <button type="button" class="btn-pill" data-demo="architect">Architect Prime</button>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <!-- Signed In Active Session Card -->
+      <section
+        class="portal-auth-card signed-in-card"
+        id="signed-in-card"
+        aria-labelledby="signed-in-title"
+      >
+        <div class="signed-in-avatar">🛡️</div>
+        <h2 class="signed-in-name" id="signed-in-user-name">Sleek User</h2>
+        <div class="signed-in-role" id="signed-in-user-role">Sleek Creator</div>
+        <div class="signed-in-permissions" id="signed-in-user-perms"></div>
+
+        <div class="signed-in-actions">
+          <button type="button" id="btn-launch-workspace" class="btn-primary">
+            <span>Open Supergence Workspace</span>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M5 12h14m-6-6 6 6-6 6" />
+            </svg>
+          </button>
+          <button type="button" id="btn-logout" class="btn-secondary">
+            Switch Identity / Logout
+          </button>
+        </div>
+      </section>
+
+      <!-- Architecture & Security Highlights Section -->
+      <section class="portal-features" aria-label="Supergence Security Highlights">
+        <article class="feature-panel">
+          <div class="feature-icon-circle" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </div>
+          <h3>Server-Side Confinement</h3>
+          <p>
+            Supergence binds strictly to loopback (127.0.0.1) with host-origin enforcement and SSRF
+            filters blocking private subnet queries and metadata endpoints.
+          </p>
+        </article>
+
+        <article class="feature-panel">
+          <div class="feature-icon-circle" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+          </div>
+          <h3>Scoped Permissions</h3>
+          <p>
+            Every Sleek ID session is issued a cryptographically verified token with explicit role
+            capabilities, screening all autonomous file and terminal actions.
+          </p>
+        </article>
+
+        <article class="feature-panel">
+          <div class="feature-icon-circle" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+            </svg>
+          </div>
+          <h3>Local Data Sovereignty</h3>
+          <p>
+            Your projects, memory graphs, and conversational history stay on your local disk.
+            Sensitive keys and cookies are protected by an AES-256-GCM vault.
+          </p>
+        </article>
+      </section>
+    </main>
+
+    <!-- Portal Footer -->
+    <footer class="portal-footer" aria-label="Portal Footer">
+      <div class="portal-footer-inner">
+        <div>© 2026 SILISLEEK TECHNOLOGIES &bull; SUPERGENCE / SIS 1.0</div>
+        <div class="portal-footer-links">
+          <a href="/silisleek">Vision & Philosophy</a>
+          <a href="/guide.html">User Guide</a>
+          <a href="/installer.html">Desktop Installer</a>
+          <a href="#main-content">Back to Top ↑</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

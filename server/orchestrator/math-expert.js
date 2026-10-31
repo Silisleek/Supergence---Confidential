@@ -1,6 +1,8 @@
 // SIS 1.0 — Math Expert Engine
 // Pillar 6: Rigorous symbolic and numerical mathematics, proof verification, and KaTeX formulation
 
+import { safeEvaluateMath } from '../utils/safe-math.js';
+
 export class MathExpertEngine {
   constructor() {
     this.solvedProblems = [];
@@ -101,27 +103,7 @@ export class MathExpertEngine {
    * Evaluate arithmetic/math expression securely
    */
   evaluateExpression(expr) {
-    const sanitized = expr
-      .replace(/\^/g, '**')
-      .replace(/\bpi\b/gi, 'Math.PI')
-      .replace(/\be\b/gi, 'Math.E')
-      .replace(/\bsqrt\b/gi, 'Math.sqrt')
-      .replace(/\bsin\b/gi, 'Math.sin')
-      .replace(/\bcos\b/gi, 'Math.cos')
-      .replace(/\btan\b/gi, 'Math.tan')
-      .replace(/\blog\b/gi, 'Math.log10')
-      .replace(/\bln\b/gi, 'Math.log')
-      .replace(/\babs\b/gi, 'Math.abs');
-
-    // Strict character whitelist for mathematical safety
-    if (!/^[0-9+\-*/().\s,MathPIEsqrtincostanlgab**]+$/.test(sanitized)) {
-      throw new Error('Expression contains disallowed symbols');
-    }
-
-    const fn = new Function(`return (${sanitized});`);
-    const val = fn();
-    if (typeof val !== 'number' || isNaN(val)) throw new Error('Result is not a finite number');
-    return val;
+    return safeEvaluateMath(expr);
   }
 
   _classifyProblem(text) {

@@ -1,5 +1,20 @@
 import { sessionAuth } from './session-auth.js';
 
+const ALLOWED_HOSTS = new Set([
+  'localhost',
+  '127.0.0.1',
+  '[::1]',
+  'silisleek.com',
+  'www.silisleek.com',
+  'supergence.silisleek.com',
+]);
+
+function isAllowedHost(hostname) {
+  if (ALLOWED_HOSTS.has(hostname)) return true;
+  if (hostname.endsWith('.silisleek.com')) return true;
+  return false;
+}
+
 // Browser origins must be the app itself or the local Vite development server.
 export function isLocalRequest(req) {
   const address = req.socket?.remoteAddress || '';
@@ -10,7 +25,7 @@ export function isLocalRequest(req) {
   } catch {
     return false;
   }
-  if (!['localhost', '127.0.0.1', '[::1]'].includes(host.hostname)) return false;
+  if (!isAllowedHost(host.hostname)) return false;
   const origin = req.headers.origin;
   if (!origin) return true;
   if (origin === 'null') {
@@ -24,11 +39,9 @@ export function isLocalRequest(req) {
   }
   try {
     const parsed = new URL(origin);
-    if (
-      parsed.protocol !== 'http:' ||
-      !['localhost', '127.0.0.1', '[::1]'].includes(parsed.hostname)
-    )
+    if (!['http:', 'https:'].includes(parsed.protocol) || !isAllowedHost(parsed.hostname)) {
       return false;
+    }
     return (
       parsed.port === host.port ||
       (process.env.SIS_ALLOW_VITE_ORIGIN === '1' && parsed.port === '5173')

@@ -6,10 +6,30 @@ const projectRoot = fileURLToPath(new URL('../../', import.meta.url));
 
 /** Register page aliases in one place, keeping existing bookmarks working. */
 export function registerPageRoutes(app) {
+  // Handle silisleek.com host routing and virtual host redirects
+  app.use((req, res, next) => {
+    const host = (req.headers.host || '').toLowerCase();
+    if (host.includes('silisleek.com')) {
+      if (req.path === '/' || req.path === '/supergence' || req.path === '/supergence/') {
+        return res.sendFile(path.join(projectRoot, 'client/silisleek-supergence.html'));
+      }
+    }
+    next();
+  });
+
   const pages = [
     [['/', '/classic', '/classic.html', '/classic-ui', '/liquid-glass'], 'client/index.html'],
     [
-      ['/silisleek', '/silisleek.html', '/silisleek/supergence', '/supergence-silisleek'],
+      [
+        '/silisleek/supergence',
+        '/supergence-silisleek',
+        '/silisleek/supergence.html',
+        '/sleek/supergence',
+      ],
+      'client/silisleek-supergence.html',
+    ],
+    [
+      ['/silisleek', '/silisleek.html'],
       'client/silisleek.html',
     ],
     [

@@ -215,10 +215,24 @@ export class AgentBrowserManager {
     }
 
     const liveSession = this.sessions.get(agentId);
-    const destUrl =
+    let destUrl =
       targetUrl ||
       (liveSession && liveSession.currentUrl ? liveSession.currentUrl : this.getHomeUrl(agentId)) ||
       'https://www.google.com';
+
+    // Validate destination URL to prevent command-line argument injection
+    if (typeof destUrl !== 'string' || destUrl.startsWith('-')) {
+      destUrl = 'https://www.google.com';
+    }
+    try {
+      const parsed = new URL(destUrl);
+      if (!['http:', 'https:', 'about:'].includes(parsed.protocol)) {
+        destUrl = 'https://www.google.com';
+      }
+    } catch {
+      destUrl = 'https://www.google.com';
+    }
+
     const { spawn, exec } = await import('child_process');
 
     // Launch detached GUI process with independent stdio so it never hangs or blocks the server
@@ -227,7 +241,7 @@ export class AgentBrowserManager {
     if (usePersonalProfile) {
       chromeArgs.push(`--user-data-dir=${desktopProfileDir}`, '--no-first-run');
     }
-    chromeArgs.push('--new-window', '--start-maximized', destUrl);
+    chromeArgs.push('--new-window', '--start-maximized', '--', destUrl);
 
     const child = spawn(executablePath, chromeArgs, {
       detached: true,
