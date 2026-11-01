@@ -60,7 +60,7 @@ function parseResetCooldownSeconds(msg) {
   return 0;
 }
 
-const DEFAULT_MODEL = normalizeRouterModel(process.env.DEFAULT_MODEL || 'opus-4.6');
+const DEFAULT_MODEL = normalizeRouterModel(process.env.DEFAULT_MODEL || 'gemma4:31b');
 const FALLBACK_MODEL = process.env.FALLBACK_MODEL || process.env.FALLBACK_MODELS || '';
 const PREMIUM_MODEL = process.env.PREMIUM_MODEL || FALLBACK_MODEL || DEFAULT_MODEL;
 const FREE_MODEL = process.env.FREE_MODEL || DEFAULT_MODEL;

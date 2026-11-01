@@ -751,9 +751,14 @@ async function executeTurnInWorkspace(
   let streamedTokens = '';
 
   try {
+    const streamHeaders = { 'Content-Type': 'application/json', Accept: 'text/event-stream' };
+    const savedToken = localStorage.getItem('sis_session_token') || localStorage.getItem('sleek_token') || '';
+    if (savedToken) streamHeaders['Authorization'] = `Bearer ${savedToken}`;
+
     const streamRes = await fetch('/api/sis/unified-turn-stream', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
+      credentials: 'include',
+      headers: streamHeaders,
       body: JSON.stringify({
         query: q,
         mode,
@@ -920,9 +925,14 @@ async function executeTurnInWorkspace(
     let lastError = null;
     for (let attempt = 1; attempt <= 2; attempt++) {
       try {
+        const turnHeaders = { 'Content-Type': 'application/json' };
+        const savedToken = localStorage.getItem('sis_session_token') || localStorage.getItem('sleek_token') || '';
+        if (savedToken) turnHeaders['Authorization'] = `Bearer ${savedToken}`;
+
         const res = await fetch('/api/sis/unified-turn', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          headers: turnHeaders,
           body: JSON.stringify({
             query: q,
             mode,

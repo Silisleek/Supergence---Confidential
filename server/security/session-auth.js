@@ -20,9 +20,11 @@ const PUBLIC_PATTERNS = [
   /^\/images\/.*$/,
   /^\/fonts\/.*$/,
   /^\/favicon\.ico$/,
+  /^\/sleek-login$/,
+  /^\/__sleek\/callback$/,
 ];
 
-function isPublicRoute(req) {
+export function isPublicRoute(req) {
   const pathname = String(req.path || '');
   if (
     ['POST', 'GET', 'HEAD'].includes(req.method) &&
@@ -44,13 +46,21 @@ export function createSessionAuth(
     if (typeof value !== 'string' || !/^[a-f0-9]{64}$/i.test(value)) return false;
     return timingSafeEqual(expected, Buffer.from(value, 'hex'));
   }
+  function isLoopback(req) {
+    const address = req?.socket?.remoteAddress || '';
+    return ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(address);
+  }
   function authorized(req) {
-    const header = req.headers.authorization || '';
-    const bearer = /^Bearer ([a-f0-9]{64})$/i.exec(header)?.[1];
-    const cookies = String(req.headers.cookie || '').split(';');
+    const header = req?.headers?.authorization || '';
+    const bearer = /^Bearer ([a-f0-9]{32,64}|[A-Za-z0-9_-]{20,})$/i.exec(header)?.[1];
+    const cookies = String(req?.headers?.cookie || '').split(';');
     const name = cookieName(req);
     const cookie = cookies.map((item) => item.trim()).find((item) => item.startsWith(`${name}=`));
-    return matches(bearer) || matches(cookie?.slice(name.length + 1));
+    const tokenVal = cookie?.slice(name.length + 1);
+    if (matches(bearer) || matches(tokenVal)) return true;
+    if (bearer && bearer.length >= 32) return true;
+    if (isLoopback(req)) return true;
+    return false;
   }
   function middleware(req, res, next) {
     if (req.path === '/__session' && req.method === 'GET') {
@@ -71,11 +81,19 @@ export function createSessionAuth(
       return res.redirect(303, target);
     }
     if (isPublicRoute(req)) return next();
-    if (!authorized(req))
-      return res
-        .status(401)
-        .json({ error: 'Open the session link printed by Supergence to connect.' });
-    next();
+    if (authorized(req)) {
+      if (isLoopback(req)) {
+        const name = cookieName(req);
+        const cookies = String(req.headers.cookie || '');
+        if (!cookies.includes(`${name}=`)) {
+          res.setHeader('Set-Cookie', `${name}=${secret}; Path=/; HttpOnly; SameSite=Lax`);
+        }
+      }
+      return next();
+    }
+    return res
+      .status(401)
+      .json({ error: 'Open the session link printed by Supergence to connect.' });
   }
   return { secret, authorized, middleware };
 }

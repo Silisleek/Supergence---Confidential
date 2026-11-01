@@ -335,6 +335,15 @@
 
   /* ── Boot ───────────────────────────────────────────────────────────────── */
   function boot() {
+    document.getElementById('sleekSignOut')?.addEventListener('click', async () => {
+      try {
+        const response = await fetch('/api/silisleek/logout', { method: 'POST' });
+        if (!response.ok) throw new Error('Could not sign out.');
+        window.location.assign('/sleek-login');
+      } catch (error) {
+        window.alert(error.message);
+      }
+    });
     mountDock();
     mountColumnDividers();
     document.documentElement.style.cursor = '';

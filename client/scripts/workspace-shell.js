@@ -107,21 +107,39 @@
     .catch((error) => console.warn('Ambient motion unavailable:', error.message));
   import('./supergence-icons.js').then(({ hydrateIcons }) => hydrateIcons());
 
+  let serverOnline = true;
+  async function pingHealth() {
+    try {
+      const res = await fetch('/api/health', { credentials: 'include' });
+      serverOnline = res.ok;
+    } catch {
+      serverOnline = false;
+    }
+  }
+  pingHealth();
+  setInterval(pingHealth, 10000);
+
   function updateConnection() {
     const socket = typeof agentBrowserWs === 'undefined' ? null : agentBrowserWs;
+    const isSocketOpen = socket?.readyState === WebSocket.OPEN;
+    const isSocketConnecting = socket?.readyState === WebSocket.CONNECTING;
     const state =
-      socket?.readyState === WebSocket.OPEN
+      (isSocketOpen || serverOnline)
         ? 'connected'
-        : socket?.readyState === WebSocket.CONNECTING
+        : isSocketConnecting
           ? 'connecting'
           : 'offline';
-    document.getElementById('shellConnection').dataset.state = state;
-    document.getElementById('shellConnectionLabel').textContent =
-      state === 'connected'
-        ? 'Connected to SIS'
-        : state === 'connecting'
-          ? 'Connecting'
-          : 'Disconnected';
+    const connEl = document.getElementById('shellConnection');
+    if (connEl) connEl.dataset.state = state;
+    const labelEl = document.getElementById('shellConnectionLabel');
+    if (labelEl) {
+      labelEl.textContent =
+        state === 'connected'
+          ? 'Connected to SIS'
+          : state === 'connecting'
+            ? 'Connecting'
+            : 'Disconnected';
+    }
     send.classList.toggle('is-ready', Boolean(input.value.trim()));
   }
   input.addEventListener('input', updateConnection);

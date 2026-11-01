@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Sign in · Supergence</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: system-ui, sans-serif;
+        background: #0b0b0d;
+        color: #f5f1ec;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        box-sizing: border-box;
+      }
+      main {
+        width: min(100%, 390px);
+        padding: 32px;
+        border: 1px solid #38332f;
+        border-radius: 20px;
+        background: #171513;
+        box-sizing: border-box;
+      }
+      .brand {
+        color: #cbb09a;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+      }
+      h1 {
+        font-size: 1.8rem;
+        margin: 20px 0 8px;
+      }
+      p {
+        color: #bcb1a9;
+        line-height: 1.5;
+      }
+      label {
+        display: block;
+        margin: 20px 0 8px;
+        font-size: 0.9rem;
+      }
+      input,
+      button {
+        font: inherit;
+        box-sizing: border-box;
+        width: 100%;
+        border-radius: 10px;
+        padding: 12px;
+      }
+      input {
+        border: 1px solid #51463e;
+        background: #0c0b0b;
+        color: white;
+      }
+      button {
+        margin-top: 24px;
+        background: #ead4bf;
+        color: #211912;
+        border: 0;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.55;
+      }
+      a {
+        color: #e0bea0;
+      }
+      #feedback {
+        color: #ffb9a7;
+        min-height: 1.5em;
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="brand">Supergence</div>
+      <h1>Connect your Sleek account</h1>
+      <p>Sign in on Silisleek and allow Supergence to connect.</p>
+      <p id="feedback" role="status" aria-live="polite">Preparing a secure connection…</p>
+      <a id="open" target="_blank" rel="noopener noreferrer" hidden>Continue with Sleek</a>
+      <button id="retry" type="button" hidden>Try again</button>
+    </main>
+    <script>
+      async function startSignIn() {
+        const link = document.getElementById('open');
+        const retry = document.getElementById('retry');
+        const feedback = document.getElementById('feedback');
+        retry.hidden = true;
+        link.hidden = true;
+        feedback.textContent = 'Preparing a secure connection…';
+        try {
+          const response = await fetch('/api/silisleek/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}',
+          });
+          const result = await response.json();
+          if (!response.ok || !result.url || !result.state)
+            throw new Error('Could not start sign-in.');
+          const url = new URL(result.url);
+          if (url.origin !== 'https://silisleek.com') throw new Error('Invalid sign-in address.');
+          link.href = url.href;
+          link.hidden = false;
+          feedback.textContent = 'Continue in your browser to sign in.';
+          async function poll() {
+            try {
+              const reply = await fetch('/api/silisleek/auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ state: result.state }),
+              });
+              const data = await reply.json();
+              if (data.status === 'complete') return location.replace('/');
+              if (!reply.ok || ['failed', 'expired'].includes(data.status))
+                throw new Error('Sign-in expired or failed. Please try again.');
+              setTimeout(poll, 1500);
+            } catch (error) {
+              feedback.textContent = error.message;
+              link.hidden = true;
+              retry.hidden = false;
+            }
+          }
+          setTimeout(poll, 1500);
+        } catch (error) {
+          feedback.textContent = error.message || 'Could not start sign-in.';
+          retry.hidden = false;
+        }
+      }
+      document.getElementById('retry').addEventListener('click', startSignIn);
+      startSignIn();
+    </script>
+  </body>
+</html>

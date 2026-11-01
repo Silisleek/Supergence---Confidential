@@ -3,7 +3,8 @@
 
 import fs from 'fs';
 import path from 'path';
-import archiver from 'archiver';
+import yazl from 'yazl';
+import { pipeline } from 'node:stream/promises';
 import shortTermMemory from '../memory/short-term.js';
 import { resolveWithinRoot } from '../utils/path-confinement.js';
 import { randomUUID } from 'node:crypto';
@@ -42,19 +43,17 @@ export async function processImage(imagePath) {
     // 4. Package into .zip bundle per foundation prompt specification
     const zipPath = resolveWithinRoot(outputDir, `${path.parse(filename).name}_bundle.zip`);
     temporaryZip = resolveWithinRoot(outputDir, `.bundle-${randomUUID()}.tmp`);
-    await new Promise((resolve, reject) => {
-      const output = fs.createWriteStream(temporaryZip, { flags: 'wx' });
-      const archive = archiver('zip', { zlib: { level: 9 } });
-      output.on('close', resolve);
-      output.on('error', reject);
-      archive.on('error', reject);
-      archive.on('warning', reject);
-      archive.pipe(output);
-      archive.file(warmTintPath, { name: 'warm_tint.png' });
-      archive.file(invertedBlurPath, { name: 'inverted_blur.png' });
-      archive.file(originalPath, { name: 'original.png' });
-      archive.finalize();
-    });
+    const archive = new yazl.ZipFile();
+    archive.on('error', (error) => archive.outputStream.destroy(error));
+    const completed = pipeline(
+      archive.outputStream,
+      fs.createWriteStream(temporaryZip, { flags: 'wx' }),
+    );
+    archive.addFile(warmTintPath, 'warm_tint.png', { compressionLevel: 9 });
+    archive.addFile(invertedBlurPath, 'inverted_blur.png', { compressionLevel: 9 });
+    archive.addFile(originalPath, 'original.png', { compressionLevel: 9 });
+    archive.end();
+    await completed;
     resolveWithinRoot(outputDir, path.basename(zipPath));
     fs.renameSync(temporaryZip, zipPath);
 

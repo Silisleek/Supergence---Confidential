@@ -19,7 +19,7 @@ if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 npm run dev
 ```
 
-`npm run dev` starts the backend and Vite frontend. First open the private session link printed by the backend, then open the Vite URL printed in the terminal (typically `http://127.0.0.1:5173`). Both must use `127.0.0.1`, because browser cookies are host-specific. The backend defaults to `http://127.0.0.1:3001`; check its startup banner for the active port. The server listens only on loopback. Session links grant access to local files and tools: keep them private and restart the backend if a link is exposed.
+`npm run dev` starts the backend and Vite frontend. First open the private session link printed by the backend, then open the Vite URL printed in the terminal (typically `http://127.0.0.1:5173`). Both must use `127.0.0.1`, because browser cookies are host-specific. The backend defaults to `http://127.0.0.1:3001`; check its startup banner for the active port. The server listens only on loopback. Keep session links private and restart the backend if a link is exposed.
 
 ### Running Services Independently
 
@@ -34,7 +34,9 @@ npm run server
 npm run client
 ```
 
-Open the backend's printed session link before using the frontend. The desktop app establishes its own session automatically. For automated API clients, set `SIS_SESSION_SECRET` to a private 64-character hexadecimal value before starting the backend and supply it as a bearer token. This secret gives the client broad local access; store it securely and do not commit it.
+Open the backend's printed session link before using the frontend, then select **Continue with Sleek**. The desktop app establishes the local connection automatically. Sign in on Silisleek in your browser and approve the connection; Supergence does not receive your password. A connection to Silisleek is required to sign in.
+
+The local connection and Sleek sign-in are both required. The identity session expires after eight hours or on sign-out. Treat session links and identity cookies as private credentials.
 
 ---
 
@@ -111,6 +113,7 @@ npm run lint
 # then provide the same value and the server URL in the test terminal.
 $env:SIS_SESSION_SECRET='<the same private 64-character hexadecimal secret>'
 $env:SIS_BASE_URL='http://127.0.0.1:3001' # use the actual printed port
+$env:SIS_TEST_IDENTITY_COOKIE='<identity cookie from a signed-in test session>'
 npm run test:browser
 
 # Run full project checks

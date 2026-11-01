@@ -31,11 +31,13 @@ const classicScripts = [
   'voice-input.js',
   'supergence-motion.js',
   'supergence-icons.js',
+  'storage-dashboard.js',
   'silisleek.js',
 ];
 
 // Stage generated copies in Vite's public directory. Classic controllers keep
 // their native globals and loading order; maintained sources stay in client/.
+await fs.rm(publicDirectory, { recursive: true, force: true });
 await fs.mkdir(path.join(publicDirectory, 'scripts'), { recursive: true });
 await fs.copyFile(path.join(root, 'client', 'Styles.md'), path.join(publicDirectory, 'Styles.md'));
 for (const script of classicScripts) {
@@ -63,3 +65,16 @@ const result = spawnSync(process.execPath, ['node_modules/vite/bin/vite.js', 'bu
 });
 if (result.error) throw result.error;
 process.exitCode = result.status ?? 1;
+if (process.exitCode === 0) {
+  for (const page of ['index', 'guide', 'silisleek', 'installer']) {
+    const html = await fs.readFile(path.join(root, 'dist', `${page}.html`), 'utf8');
+    for (const match of html.matchAll(/<script\b[^>]*\bsrc="(\/scripts\/[^"?#]+)[^"]*"/g)) {
+      const asset = path.join(root, 'dist', match[1].slice(1));
+      try {
+        await fs.access(asset);
+      } catch {
+        throw new Error(`${page}.html references a missing production script: ${match[1]}`);
+      }
+    }
+  }
+}

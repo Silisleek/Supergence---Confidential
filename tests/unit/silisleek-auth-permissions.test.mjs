@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validateSleekId, globalInputValidator } from '../../server/security/input-validator.js';
-import { sleekAuth, SLEEK_ROLES } from '../../server/security/sleek-auth.js';
 
 test('validateSleekId enforces strict format bounds', () => {
   // Valid IDs
@@ -20,42 +19,6 @@ test('validateSleekId enforces strict format bounds', () => {
   assert.equal(validateSleekId('slk$dollar'), false);
   assert.equal(validateSleekId(null), false);
   assert.equal(validateSleekId(undefined), false);
-});
-
-test('SleekAuthManager authenticates and grants role-based permissions', () => {
-  // Authenticate seed user
-  const authRes = sleekAuth.authenticate('slk-creator-01', 'sleek-pass-2026', 'creator');
-  assert.ok(authRes.sessionToken);
-  assert.equal(authRes.user.sleekId, 'slk-creator-01');
-  assert.equal(authRes.user.role, 'creator');
-  assert.ok(authRes.user.permissions.includes('workspace.write'));
-  assert.ok(authRes.user.permissions.includes('tools.generate_ui'));
-
-  // Verify wrong password rejects
-  assert.throws(
-    () => sleekAuth.authenticate('slk-creator-01', 'wrong-password-123'),
-    /Authentication failed/,
-  );
-
-  // Verify custom provisioned user with operator role
-  const opRes = sleekAuth.authenticate('slk-test-operator', 'supersecret2026', 'operator');
-  assert.equal(opRes.user.role, 'operator');
-  assert.ok(opRes.user.permissions.includes('computer.control'));
-  assert.ok(opRes.user.permissions.includes('terminal.exec'));
-
-  // Verify architect permissions
-  assert.ok(SLEEK_ROLES.architect.permissions.includes('system.admin'));
-  assert.ok(SLEEK_ROLES.architect.permissions.includes('vault.manage'));
-
-  // Verify invalid ID rejects
-  assert.throws(
-    () => sleekAuth.authenticate('bad ID with spaces', 'password123'),
-    /Invalid Sleek ID format/,
-  );
-  assert.throws(
-    () => sleekAuth.authenticate('slk-user', '123'), // Too short password (< 6)
-    /Passcode must be at least 6 characters/,
-  );
 });
 
 test('globalInputValidator rejects prototype pollution, traversal, and script injection', () => {

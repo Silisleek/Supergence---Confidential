@@ -375,7 +375,18 @@ function createMainWindow() {
     return { action: 'deny' };
   });
   const restrictNavigation = (event, url, _isInPlace, isMainFrame = true) => {
-    if (isMainFrame && !trustedUrl(url)) event.preventDefault();
+    let loginUrl = false;
+    try {
+      const parsed = new URL(url);
+      loginUrl =
+        parsed.protocol === 'http:' &&
+        ['localhost', '127.0.0.1'].includes(parsed.hostname) &&
+        parsed.port === String(activeBackendPort) &&
+        parsed.pathname === '/sleek-login' &&
+        !parsed.username &&
+        !parsed.password;
+    } catch (_) {}
+    if (isMainFrame && !trustedUrl(url) && !loginUrl) event.preventDefault();
   };
   mainWindow.webContents.on('will-navigate', restrictNavigation);
   mainWindow.webContents.on('will-redirect', restrictNavigation);

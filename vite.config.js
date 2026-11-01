@@ -31,6 +31,10 @@ export default defineConfig(({ mode, command }) => {
           target: `http://127.0.0.1:${backendPort}`,
           changeOrigin: true,
         },
+        '/sleek-login': {
+          target: `http://127.0.0.1:${backendPort}`,
+          changeOrigin: true,
+        },
         '/vendor/three': {
           target: `http://127.0.0.1:${backendPort}`,
           changeOrigin: true,

@@ -1,8 +1,8 @@
 import { injectImportmapIfNeeded } from './workspace/preview-importmap.js';
 import { resolveWithinRoot } from './utils/path-confinement.js';
-import { sessionAuth, cookieName } from './security/session-auth.js';
+import { sessionAuth, isPublicRoute } from './security/session-auth.js';
 import { globalInputValidator } from './security/input-validator.js';
-import { sleekAuth, SLEEK_ROLES } from './security/sleek-auth.js';
+import { sleekIdentity } from './security/sleek-identity.js';
 import { registerLearningRoutes } from './routes/learning.js';
 import { registerEvolutionRoutes } from './routes/evolution.js';
 import { evolutionEngine } from './services/evolutionEngine.js';
@@ -232,38 +232,60 @@ app.use('/__project-preview', projectPreview.serve);
 app.use(localBoundary);
 app.use(sessionAuth.middleware);
 app.use(express.json({ limit: '50mb' }));
-app.use(globalInputValidator);
-registerStorageRoutes(app);
-
-// ─── Silisleek Sleek ID Authentication & Permissions Routes ───
-app.post('/api/silisleek/auth', (req, res) => {
+app.get('/sleek-login', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.sendFile(path.join(__dirname, '../client/sleek-login.html'));
+});
+app.get(
+  [
+    '/silisleek/supergence',
+    '/supergence-silisleek',
+    '/silisleek/supergence.html',
+    '/sleek/supergence',
+    '/silisleek-supergence.html',
+  ],
+  (_req, res) => res.redirect(303, '/sleek-login'),
+);
+app.post('/api/silisleek/auth', async (req, res) => {
+  if (!sessionAuth.authorized(req) && !isLocalRequest(req))
+    return res.status(401).json({ message: 'Open the private Supergence session link first.' });
   try {
-    const { sleekId, passcode, role, redirect = '/' } = req.body || {};
-    const result = sleekAuth.authenticate(sleekId, passcode, role);
-    const cookieKey = cookieName(req);
-    res.setHeader(
-      'Set-Cookie',
-      `${cookieKey}=${result.sessionToken}; Path=/; HttpOnly; SameSite=Strict`,
-    );
-    res.json({
-      success: true,
-      message: 'Authentication successful. Welcome to Supergence.',
-      user: result.user,
-      token: result.sessionToken,
-      redirect: redirect && String(redirect).startsWith('/') ? redirect : '/',
-    });
+    if (!req.body?.state) {
+      const address = server.address();
+      if (!address || typeof address === 'string') throw new Error('Server is not ready.');
+      return res.json(sleekIdentity.begin(address.port));
+    }
+    const result = sleekIdentity.claim(req.body.state);
+    res.setHeader('Cache-Control', 'no-store');
+    if (result.status === 'complete')
+      res.setHeader(
+        'Set-Cookie',
+        `sis_sleek_identity=${result.key}; Path=/; HttpOnly; SameSite=Strict; Max-Age=28800`,
+      );
+    return res.json({ status: result.status });
   } catch (err) {
-    res.status(401).json({
-      success: false,
-      error: 'Authentication failed',
-      message: err.message,
-    });
+    return res.status(401).json({ success: false, message: err.message });
+  }
+});
+app.get('/__sleek/callback', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  try {
+    await sleekIdentity.complete(req.query.state, req.query.code);
+    res
+      .type('text')
+      .send('Sleek account connected. You may close this tab and return to Supergence.');
+  } catch {
+    res
+      .status(400)
+      .type('text')
+      .send('Sign-in could not be completed. Return to Supergence and try again.');
   }
 });
 
 app.get('/api/silisleek/session', (req, res) => {
   try {
-    const session = sleekAuth.getSession(req);
+    const session = sessionAuth.authorized(req) ? sleekIdentity.getSession(req) : null;
     res.json({
       authenticated: Boolean(session),
       user: session,
@@ -273,30 +295,34 @@ app.get('/api/silisleek/session', (req, res) => {
   }
 });
 
-app.get('/api/silisleek/roles', (_req, res) => {
-  res.json({
-    success: true,
-    roles: SLEEK_ROLES,
-  });
-});
-
 app.post('/api/silisleek/logout', (req, res) => {
   try {
-    sleekAuth.logout(req);
-    const cookieKey = cookieName(req);
+    if (!sessionAuth.authorized(req)) return res.status(401).end();
+    sleekIdentity.logout(req);
+    projectPreview.revokeAll();
+    for (const client of wss.clients) client.close(1008, 'Signed out');
     res.setHeader(
       'Set-Cookie',
-      `${cookieKey}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT`,
+      'sis_sleek_identity=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0',
     );
     res.json({
       success: true,
       message: 'Logged out successfully.',
-      redirect: '/silisleek/supergence',
+      redirect: '/sleek-login',
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+app.use(globalInputValidator);
+app.use((req, res, next) => {
+  if (isPublicRoute(req)) return next();
+  if (sessionAuth.authorized(req) && sleekIdentity.getSession(req)) return next();
+  if (req.method === 'GET' && req.accepts('html') && !req.path.startsWith('/api/'))
+    return res.redirect(303, '/sleek-login');
+  return res.status(401).json({ error: 'Sign in with your Sleek ID to use Supergence.' });
+});
+registerStorageRoutes(app);
 app.use('/api/browser', browserAccessMiddleware);
 app.use('/api/workspace', (req, res, next) => {
   if (req.path !== '/command' && !runtimeAccess.settings.files)
@@ -4143,10 +4169,17 @@ app.use('/api', (req, res) =>
 // ─── WebSocket Server ───
 const wss = new WebSocketServer({
   server,
-  verifyClient: ({ req }) => isLocalRequest(req) && sessionAuth.authorized(req),
+  verifyClient: ({ req }) =>
+    isLocalRequest(req) && sessionAuth.authorized(req) && Boolean(sleekIdentity.getSession(req)),
 });
 
-wss.on('connection', (ws) => {
+wss.on('connection', (ws, req) => {
+  const identityTimeout = setTimeout(
+    () => ws.close(1008, 'Sleek ID session expired'),
+    sleekIdentity.remainingMs(req),
+  );
+  identityTimeout.unref();
+  ws.once('close', () => clearTimeout(identityTimeout));
   console.log('[WS] Client connected');
   brain.addClient(ws);
 
@@ -4158,6 +4191,10 @@ wss.on('connection', (ws) => {
 
   // Attach message listener immediately to prevent any dropped frames
   ws.on('message', async (data) => {
+    if (!sleekIdentity.getSession(req)) {
+      ws.close(1008, 'Sleek ID session expired');
+      return;
+    }
     try {
       const msg = JSON.parse(data.toString());
 

@@ -6,7 +6,23 @@ const ALLOWED_HOSTS = new Set([
   '[::1]',
   'silisleek.com',
   'www.silisleek.com',
+  'sleek.silisleek.com',
   'supergence.silisleek.com',
+]);
+
+const ALLOWED_PORTS = new Set([
+  '',
+  '80',
+  '443',
+  '3000',
+  '3001',
+  '3002',
+  '3004',
+  '3005',
+  '3008',
+  '3009',
+  '3010',
+  '5173',
 ]);
 
 function isAllowedHost(hostname) {
@@ -44,6 +60,7 @@ export function isLocalRequest(req) {
     }
     return (
       parsed.port === host.port ||
+      ALLOWED_PORTS.has(parsed.port) ||
       (process.env.SIS_ALLOW_VITE_ORIGIN === '1' && parsed.port === '5173')
     );
   } catch {
