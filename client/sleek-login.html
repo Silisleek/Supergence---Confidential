@@ -2,141 +2,927 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Sign in · Supergence</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Welcome to Supergence · Setup & Connect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&family=Instrument+Serif:ital@0;1&family=Inter:wght@300..800&family=JetBrains+Mono:wght@400..700&family=Manrope:wght@300..800&family=Space+Grotesk:wght@400..700&display=swap"
+      rel="stylesheet"
+    />
     <style>
       :root {
         color-scheme: dark;
-        font-family: system-ui, sans-serif;
-        background: #0b0b0d;
-        color: #f5f1ec;
+        --bg-page: #0b0b0b;
+        --bg-surface: #141614;
+        --bg-card: rgba(22, 24, 22, 0.7);
+        --border-glass: rgba(255, 255, 255, 0.08);
+        --border-accent: rgba(198, 171, 152, 0.4);
+        --accent: #c6ab98;
+        --accent-hover: #dec4b0;
+        --accent-ink: #14110e;
+        --text: #f5eee7;
+        --text-secondary: #c9c5be;
+        --muted: #9e9c97;
+        --glow: rgba(198, 171, 152, 0.15);
+        --font-ui: 'DM Sans', -apple-system, sans-serif;
+        --font-display: 'Instrument Serif', Georgia, serif;
       }
-      body {
+
+      /* Theme variants */
+      body[data-theme='obsidian'] {
+        --bg-page: #0b0b0b;
+        --bg-surface: #141614;
+        --bg-card: rgba(20, 22, 20, 0.75);
+        --border-glass: rgba(255, 255, 255, 0.08);
+        --border-accent: rgba(198, 171, 152, 0.45);
+        --accent: #c6ab98;
+        --accent-hover: #dec4b0;
+        --glow: rgba(198, 171, 152, 0.18);
+      }
+      body[data-theme='warm'] {
+        --bg-page: #15110d;
+        --bg-surface: #1d1712;
+        --bg-card: rgba(29, 23, 18, 0.75);
+        --border-glass: rgba(233, 185, 143, 0.12);
+        --border-accent: rgba(233, 185, 143, 0.5);
+        --accent: #e9b98f;
+        --accent-hover: #f5cfaa;
+        --glow: rgba(233, 185, 143, 0.2);
+      }
+      body[data-theme='midnight'] {
+        --bg-page: #130f14;
+        --bg-surface: #1b151e;
+        --bg-card: rgba(27, 21, 30, 0.75);
+        --border-glass: rgba(207, 169, 140, 0.12);
+        --border-accent: rgba(207, 169, 140, 0.45);
+        --accent: #cfa98c;
+        --accent-hover: #e8c7ae;
+        --glow: rgba(207, 169, 140, 0.2);
+      }
+      body[data-theme='cyber'] {
+        --bg-page: #070a0d;
+        --bg-surface: #0e141a;
+        --bg-card: rgba(14, 20, 26, 0.75);
+        --border-glass: rgba(16, 185, 129, 0.15);
+        --border-accent: rgba(16, 185, 129, 0.5);
+        --accent: #10b981;
+        --accent-hover: #34d399;
+        --glow: rgba(16, 185, 129, 0.22);
+      }
+
+      /* Font variants */
+      body[data-font='editorial'] {
+        --font-ui: 'DM Sans', -apple-system, sans-serif;
+        --font-display: 'Instrument Serif', Georgia, serif;
+      }
+      body[data-font='sans'] {
+        --font-ui: 'Manrope', Inter, -apple-system, sans-serif;
+        --font-display: 'Manrope', Inter, sans-serif;
+      }
+      body[data-font='mono'] {
+        --font-ui: 'JetBrains Mono', monospace;
+        --font-display: 'JetBrains Mono', monospace;
+      }
+      body[data-font='grotesk'] {
+        --font-ui: 'Space Grotesk', -apple-system, sans-serif;
+        --font-display: 'Space Grotesk', -apple-system, sans-serif;
+      }
+      body[data-font='inter'] {
+        --font-ui: 'Inter', -apple-system, sans-serif;
+        --font-display: 'Inter', -apple-system, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
         margin: 0;
+        padding: 0;
+        transition: background-color 220ms ease, border-color 220ms ease, color 220ms ease, box-shadow 220ms ease;
+      }
+
+      body {
         min-height: 100vh;
-        display: grid;
-        place-items: center;
-        padding: 24px;
-        box-sizing: border-box;
+        background: var(--bg-page);
+        color: var(--text);
+        font-family: var(--font-ui);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 20px;
+        position: relative;
+        overflow-x: hidden;
       }
-      main {
-        width: min(100%, 390px);
-        padding: 32px;
-        border: 1px solid #38332f;
-        border-radius: 20px;
-        background: #171513;
-        box-sizing: border-box;
+
+      /* Ambient radial glow */
+      .ambient-glow {
+        position: fixed;
+        top: 15%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 800px;
+        height: 500px;
+        background: radial-gradient(ellipse at center, var(--glow) 0%, transparent 70%);
+        pointer-events: none;
+        z-index: 0;
       }
-      .brand {
-        color: #cbb09a;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        font-size: 0.75rem;
-      }
-      h1 {
-        font-size: 1.8rem;
-        margin: 20px 0 8px;
-      }
-      p {
-        color: #bcb1a9;
-        line-height: 1.5;
-      }
-      label {
-        display: block;
-        margin: 20px 0 8px;
-        font-size: 0.9rem;
-      }
-      input,
-      button {
-        font: inherit;
-        box-sizing: border-box;
+
+      .onboarding-container {
+        position: relative;
+        z-index: 1;
         width: 100%;
-        border-radius: 10px;
-        padding: 12px;
+        max-width: 680px;
+        background: var(--bg-card);
+        backdrop-filter: blur(28px);
+        -webkit-backdrop-filter: blur(28px);
+        border: 1px solid var(--border-glass);
+        border-radius: 28px;
+        padding: 44px 48px;
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
       }
-      input {
-        border: 1px solid #51463e;
-        background: #0c0b0b;
-        color: white;
+
+      @media (max-width: 640px) {
+        .onboarding-container {
+          padding: 30px 24px;
+          border-radius: 22px;
+        }
       }
-      button {
-        margin-top: 24px;
-        background: #ead4bf;
-        color: #211912;
-        border: 0;
-        font-weight: 700;
+
+      /* Header */
+      .brand-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-glass);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: var(--accent);
+        margin-bottom: 20px;
+      }
+      .brand-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 10px var(--accent);
+      }
+
+      .hero-title {
+        font-family: var(--font-display);
+        font-size: clamp(34px, 4.2vw, 46px);
+        font-weight: 400;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        margin-bottom: 12px;
+      }
+      .hero-title em {
+        font-style: italic;
+        color: var(--accent);
+      }
+
+      .hero-desc {
+        font-size: 14.5px;
+        line-height: 1.6;
+        color: var(--text-secondary);
+        max-width: 540px;
+        margin-bottom: 32px;
+      }
+
+      /* Step Stepper Tabs */
+      .stepper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 32px;
+        background: rgba(0, 0, 0, 0.28);
+        padding: 5px;
+        border-radius: 16px;
+        border: 1px solid var(--border-glass);
+      }
+      .step-pill {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--muted);
+        background: transparent;
+        border: none;
         cursor: pointer;
       }
-      button:disabled {
-        opacity: 0.55;
+      .step-pill.is-active {
+        background: var(--bg-surface);
+        color: var(--text);
+        border: 1px solid var(--border-accent);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
       }
-      a {
-        color: #e0bea0;
+      .step-pill.is-completed {
+        color: var(--accent);
       }
-      #feedback {
-        color: #ffb9a7;
-        min-height: 1.5em;
-        font-size: 0.9rem;
+      .step-num {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        font-size: 10px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+      .step-pill.is-active .step-num {
+        background: var(--accent);
+        color: var(--accent-ink);
+      }
+      .step-pill.is-completed .step-num {
+        background: var(--accent);
+        color: var(--accent-ink);
+      }
+
+      /* Panels */
+      .step-panel {
+        display: none;
+        animation: fadeIn 240ms ease-out forwards;
+      }
+      .step-panel.is-active {
+        display: block;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .panel-section-title {
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--muted);
+        margin-bottom: 16px;
+      }
+
+      /* Grid Cards (Theme & Font) */
+      .grid-options {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+        margin-bottom: 28px;
+      }
+      @media (max-width: 520px) {
+        .grid-options {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .option-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-glass);
+        border-radius: 18px;
+        padding: 20px;
+        cursor: pointer;
+        text-align: left;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .option-card:hover {
+        border-color: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+      }
+      .option-card.is-selected {
+        border-color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 8%, var(--bg-surface));
+        box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 18%, transparent);
+      }
+
+      .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .card-title {
+        font-size: 14.5px;
+        font-weight: 700;
+        color: var(--text);
+      }
+      .card-tag {
+        font-size: 10.5px;
+        font-weight: 600;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      /* Swatches for theme cards */
+      .swatches-row {
+        display: flex;
+        gap: 6px;
+        margin: 4px 0;
+      }
+      .swatch {
+        width: 18px;
+        height: 18px;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+      }
+
+      .card-desc {
+        font-size: 12px;
+        line-height: 1.5;
+        color: var(--text-secondary);
+      }
+
+      /* Typography preview box on font cards */
+      .font-sample {
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        font-size: 13px;
+        color: var(--accent);
+        line-height: 1.4;
+      }
+
+      /* Step 3: Sleek Connect Box */
+      .sleek-connect-box {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-accent);
+        border-radius: 20px;
+        padding: 28px;
+        margin-bottom: 28px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+      .sleek-network-logo {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        margin: 0 auto 16px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-glass);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .sleek-connect-title {
+        font-size: 19px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: var(--text);
+      }
+      .sleek-connect-desc {
+        font-size: 13.5px;
+        line-height: 1.6;
+        color: var(--text-secondary);
+        max-width: 440px;
+        margin: 0 auto 20px;
+      }
+      .neutrino-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        border-radius: 9999px;
+        background: rgba(245, 158, 11, 0.1);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        color: #f59e0b;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 20px;
+      }
+
+      /* Action Buttons */
+      .actions-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 10px;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 13px 26px;
+        border-radius: 14px;
+        font-size: 13.5px;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: var(--accent-ink);
+        border: none;
+        box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 30%, transparent);
+      }
+      .btn-primary:hover {
+        background: var(--accent-hover);
+        transform: translateY(-1px);
+      }
+      .btn-secondary {
+        background: transparent;
+        color: var(--text);
+        border: 1px solid var(--border-glass);
+      }
+      .btn-secondary:hover {
+        background: var(--bg-surface);
+        border-color: rgba(255, 255, 255, 0.18);
+      }
+
+      .btn-lg {
+        width: 100%;
+        padding: 16px 28px;
+        font-size: 15px;
+      }
+
+      /* Status Feedback */
+      .status-banner {
+        padding: 12px 16px;
+        border-radius: 12px;
+        font-size: 12.5px;
+        margin-top: 16px;
+        display: none;
+        align-items: center;
+        gap: 10px;
+        text-align: left;
+      }
+      .status-banner.is-loading {
+        display: flex;
+        background: rgba(59, 130, 246, 0.12);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        color: #93c5fd;
+      }
+      .status-banner.is-success {
+        display: flex;
+        background: rgba(16, 185, 129, 0.12);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        color: #6ee7b7;
+      }
+      .status-banner.is-error {
+        display: flex;
+        background: rgba(239, 68, 68, 0.12);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: #fca5a5;
+      }
+
+      /* Spinner */
+      .spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid currentColor;
+        border-right-color: transparent;
+        border-radius: 50%;
+        animation: spin 700ms linear infinite;
+        flex-shrink: 0;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
       }
     </style>
   </head>
-  <body>
-    <main>
-      <div class="brand">Supergence</div>
-      <h1>Connect your Sleek account</h1>
-      <p>Sign in on Silisleek and allow Supergence to connect.</p>
-      <p id="feedback" role="status" aria-live="polite">Preparing a secure connection…</p>
-      <a id="open" target="_blank" rel="noopener noreferrer" hidden>Continue with Sleek</a>
-      <button id="retry" type="button" hidden>Try again</button>
+  <body data-theme="obsidian" data-font="editorial">
+    <div class="ambient-glow"></div>
+
+    <main class="onboarding-container">
+      <div class="brand-badge">
+        <span class="brand-dot"></span>
+        <span>Supergence // Beyond Ordinary Minds</span>
+      </div>
+
+      <h1 class="hero-title" id="pageTitle">Personalize <em>Your Intelligence</em></h1>
+      <p class="hero-desc" id="pageDesc">
+        Choose your visual environment and typography, then link your verified Sleek ID to activate your workspace.
+      </p>
+
+      <!-- Step Stepper -->
+      <nav class="stepper" aria-label="Onboarding Steps">
+        <button type="button" class="step-pill is-active" data-step="1" id="stepPill1">
+          <span class="step-num">1</span>
+          <span>Theme</span>
+        </button>
+        <button type="button" class="step-pill" data-step="2" id="stepPill2">
+          <span class="step-num">2</span>
+          <span>Font</span>
+        </button>
+        <button type="button" class="step-pill" data-step="3" id="stepPill3">
+          <span class="step-num">3</span>
+          <span>Sleek Account</span>
+        </button>
+      </nav>
+
+      <!-- Step 1: Theme -->
+      <section class="step-panel is-active" id="stepPanel1">
+        <h2 class="panel-section-title">Select Color Theme</h2>
+        <div class="grid-options" role="radiogroup" aria-label="Theme selection">
+          <!-- Obsidian -->
+          <button type="button" class="option-card is-selected" data-theme-val="obsidian" role="radio" aria-checked="true">
+            <div class="card-header">
+              <span class="card-title">Obsidian Luxury</span>
+              <span class="card-tag">Signature</span>
+            </div>
+            <div class="swatches-row">
+              <span class="swatch" style="background:#0b0b0b;"></span>
+              <span class="swatch" style="background:#141614;"></span>
+              <span class="swatch" style="background:#c6ab98;"></span>
+              <span class="swatch" style="background:#10b981;"></span>
+            </div>
+            <p class="card-desc">Deep obsidian black surfaces with Champagne Bronze orbital glow.</p>
+          </button>
+
+          <!-- Walnut -->
+          <button type="button" class="option-card" data-theme-val="warm" role="radio" aria-checked="false">
+            <div class="card-header">
+              <span class="card-title">Walnut Espresso</span>
+              <span class="card-tag">Editorial</span>
+            </div>
+            <div class="swatches-row">
+              <span class="swatch" style="background:#15110d;"></span>
+              <span class="swatch" style="background:#1d1712;"></span>
+              <span class="swatch" style="background:#e9b98f;"></span>
+              <span class="swatch" style="background:#f5cfaa;"></span>
+            </div>
+            <p class="card-desc">Warm roasted espresso tones with golden copper and amber depth.</p>
+          </button>
+
+          <!-- Midnight -->
+          <button type="button" class="option-card" data-theme-val="midnight" role="radio" aria-checked="false">
+            <div class="card-header">
+              <span class="card-title">Midnight Rose</span>
+              <span class="card-tag">Velvet</span>
+            </div>
+            <div class="swatches-row">
+              <span class="swatch" style="background:#130f14;"></span>
+              <span class="swatch" style="background:#1b151e;"></span>
+              <span class="swatch" style="background:#cfa98c;"></span>
+              <span class="swatch" style="background:#e8c7ae;"></span>
+            </div>
+            <p class="card-desc">Dark chocolate velvet framing with subtle rose copper illumination.</p>
+          </button>
+
+          <!-- Cyber -->
+          <button type="button" class="option-card" data-theme-val="cyber" role="radio" aria-checked="false">
+            <div class="card-header">
+              <span class="card-title">Cyber Slate</span>
+              <span class="card-tag">Matrix</span>
+            </div>
+            <div class="swatches-row">
+              <span class="swatch" style="background:#070a0d;"></span>
+              <span class="swatch" style="background:#0e141a;"></span>
+              <span class="swatch" style="background:#10b981;"></span>
+              <span class="swatch" style="background:#38bdf8;"></span>
+            </div>
+            <p class="card-desc">Tactical deep slate with neon emerald telemetry accents.</p>
+          </button>
+        </div>
+
+        <div class="actions-row">
+          <div></div>
+          <button type="button" class="btn btn-primary" id="btnNext1">
+            <span>Continue to Font Selection</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- Step 2: Font -->
+      <section class="step-panel" id="stepPanel2">
+        <h2 class="panel-section-title">Select Typography Pairing</h2>
+        <div class="grid-options" role="radiogroup" aria-label="Font selection">
+          <!-- Editorial Luxury -->
+          <button type="button" class="option-card is-selected" data-font-val="editorial" role="radio" aria-checked="true">
+            <div class="card-header">
+              <span class="card-title" style="font-family:'Instrument Serif', serif; font-size:18px;">Editorial Luxury</span>
+              <span class="card-tag">Recommended</span>
+            </div>
+            <div class="font-sample" style="font-family:'Instrument Serif', serif; font-size:16px;">
+              "Beyond Ordinary Minds."
+            </div>
+            <p class="card-desc">Instrument Serif display moments paired with DM Sans interface body.</p>
+          </button>
+
+          <!-- Modern Geometric -->
+          <button type="button" class="option-card" data-font-val="sans" role="radio" aria-checked="false">
+            <div class="card-header">
+              <span class="card-title" style="font-family:'Manrope', sans-serif;">Modern Geometric</span>
+              <span class="card-tag">Clean</span>
+            </div>
+            <div class="font-sample" style="font-family:'Manrope', sans-serif;">
+              Engineered for absolute technical clarity & precision.
+            </div>
+            <p class="card-desc">Variable Manrope sans with crisp geometric balance across all screens.</p>
+          </button>
+
+          <!-- Terminal Mono -->
+          <button type="button" class="option-card" data-font-val="mono" role="radio" aria-checked="false">
+            <div class="card-header">
+              <span class="card-title" style="font-family:'JetBrains Mono', monospace;">Hacker Mono</span>
+              <span class="card-tag">Developer</span>
+            </div>
+            <div class="font-sample" style="font-family:'JetBrains Mono', monospace; font-size:11.5px;">
+              const sis = new Superintelligence({ mode: 'autonomous' });
+            </div>
+            <p class="card-desc">JetBrains Mono high-legibility monospace across all code and conversation.</p>
+          </button>
+
+          <!-- Neo Grotesk -->
+          <button type="button" class="option-card" data-font-val="grotesk" role="radio" aria-checked="false">
+            <div class="card-header">
+              <span class="card-title" style="font-family:'Space Grotesk', sans-serif;">Space Grotesk</span>
+              <span class="card-tag">Futuristic</span>
+            </div>
+            <div class="font-sample" style="font-family:'Space Grotesk', sans-serif;">
+              Avant-garde typography with bold architectural rhythm.
+            </div>
+            <p class="card-desc">Space Grotesk neo-grotesque display for a daring futuristic feel.</p>
+          </button>
+        </div>
+
+        <div class="actions-row">
+          <button type="button" class="btn btn-secondary" id="btnBack2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            <span>Back</span>
+          </button>
+          <button type="button" class="btn btn-primary" id="btnNext2">
+            <span>Continue to Sleek Account</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- Step 3: Sleek Connect -->
+      <section class="step-panel" id="stepPanel3">
+        <h2 class="panel-section-title">Authenticate & Link Workspace</h2>
+        
+        <div class="sleek-connect-box">
+          <div class="sleek-network-logo">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+              <polyline points="2 17 12 22 22 17"/>
+              <polyline points="2 12 12 17 22 12"/>
+            </svg>
+          </div>
+
+          <h3 class="sleek-connect-title">Connect your Sleek Account</h3>
+          <p class="sleek-connect-desc">
+            Sign in on Silisleek in your browser to verify your identity and link your workspace.
+          </p>
+
+          <div class="neutrino-pill">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m12 6 4 6-4 6-4-6Z"/></svg>
+            <span>One-Time Activation: 400 Neutrinos</span>
+          </div>
+
+          <!-- Connect CTA -->
+          <button type="button" class="btn btn-primary btn-lg" id="btnConnectBrowser">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+              <polyline points="15 3 21 3 21 9"/>
+              <line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>
+            <span id="btnConnectText">Connect Sleek Account from Browser</span>
+          </button>
+
+          <!-- Fallback or manual action if needed -->
+          <div id="authExternalLinkWrapper" style="display:none; margin-top:14px;">
+            <a id="authExternalLink" href="#" target="_blank" rel="noopener noreferrer" style="color:var(--accent); font-size:12.5px; text-decoration:underline;">
+              Browser tab didn't open? Click here to authorize manually
+            </a>
+          </div>
+
+          <!-- Status Message -->
+          <div class="status-banner" id="statusBanner">
+            <div class="spinner" id="statusSpinner"></div>
+            <span id="statusText">Opening browser authentication...</span>
+          </div>
+        </div>
+
+        <div class="actions-row">
+          <button type="button" class="btn btn-secondary" id="btnBack3">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            <span>Back</span>
+          </button>
+          
+          <button type="button" class="btn btn-primary" id="btnEnterWorkspace" style="display:none;">
+            <span>Launch Supergence</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </section>
     </main>
+
     <script>
-      async function startSignIn() {
-        const link = document.getElementById('open');
-        const retry = document.getElementById('retry');
-        const feedback = document.getElementById('feedback');
-        retry.hidden = true;
-        link.hidden = true;
-        feedback.textContent = 'Preparing a secure connection…';
-        try {
-          const response = await fetch('/api/silisleek/auth', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: '{}',
+      (() => {
+        let currentStep = 1;
+        let selectedTheme = localStorage.getItem('sis-ui-theme') || 'obsidian';
+        let selectedFont = localStorage.getItem('sis-ui-font') || 'editorial';
+        let pollTimer = null;
+        let authState = null;
+
+        // Elements
+        const body = document.body;
+        const pills = [1, 2, 3].map(i => document.getElementById(`stepPill${i}`));
+        const panels = [1, 2, 3].map(i => document.getElementById(`stepPanel${i}`));
+        const btnNext1 = document.getElementById('btnNext1');
+        const btnNext2 = document.getElementById('btnNext2');
+        const btnBack2 = document.getElementById('btnBack2');
+        const btnBack3 = document.getElementById('btnBack3');
+        const btnConnectBrowser = document.getElementById('btnConnectBrowser');
+        const btnConnectText = document.getElementById('btnConnectText');
+        const btnEnterWorkspace = document.getElementById('btnEnterWorkspace');
+        const statusBanner = document.getElementById('statusBanner');
+        const statusSpinner = document.getElementById('statusSpinner');
+        const statusText = document.getElementById('statusText');
+        const authExternalLink = document.getElementById('authExternalLink');
+        const authExternalLinkWrapper = document.getElementById('authExternalLinkWrapper');
+
+        // Apply initial preferences
+        function applyTheme(theme) {
+          selectedTheme = theme;
+          body.dataset.theme = theme;
+          localStorage.setItem('sis-ui-theme', theme);
+          document.querySelectorAll('[data-theme-val]').forEach(card => {
+            const isMatch = card.dataset.themeVal === theme;
+            card.classList.toggle('is-selected', isMatch);
+            card.setAttribute('aria-checked', String(isMatch));
           });
-          const result = await response.json();
-          if (!response.ok || !result.url || !result.state)
-            throw new Error('Could not start sign-in.');
-          const url = new URL(result.url);
-          if (url.origin !== 'https://silisleek.com') throw new Error('Invalid sign-in address.');
-          link.href = url.href;
-          link.hidden = false;
-          feedback.textContent = 'Continue in your browser to sign in.';
-          async function poll() {
+        }
+
+        function applyFont(font) {
+          selectedFont = font;
+          body.dataset.font = font;
+          localStorage.setItem('sis-ui-font', font);
+          document.querySelectorAll('[data-font-val]').forEach(card => {
+            const isMatch = card.dataset.fontVal === font;
+            card.classList.toggle('is-selected', isMatch);
+            card.setAttribute('aria-checked', String(isMatch));
+          });
+        }
+
+        applyTheme(selectedTheme);
+        applyFont(selectedFont);
+
+        // Theme clicks
+        document.querySelectorAll('[data-theme-val]').forEach(card => {
+          card.addEventListener('click', () => applyTheme(card.dataset.themeVal));
+        });
+
+        // Font clicks
+        document.querySelectorAll('[data-font-val]').forEach(card => {
+          card.addEventListener('click', () => applyFont(card.dataset.fontVal));
+        });
+
+        // Stepper Navigation
+        function goToStep(step) {
+          currentStep = step;
+          pills.forEach((p, idx) => {
+            const stepNum = idx + 1;
+            p.classList.toggle('is-active', stepNum === step);
+            p.classList.toggle('is-completed', stepNum < step);
+          });
+          panels.forEach((panel, idx) => {
+            panel.classList.toggle('is-active', idx + 1 === step);
+          });
+        }
+
+        pills.forEach((pill, idx) => {
+          pill.addEventListener('click', () => goToStep(idx + 1));
+        });
+
+        btnNext1.addEventListener('click', () => goToStep(2));
+        btnBack2.addEventListener('click', () => goToStep(1));
+        btnNext2.addEventListener('click', () => goToStep(3));
+        btnBack3.addEventListener('click', () => goToStep(2));
+
+        // Step 3: Sleek Account Connect via Browser
+        async function initiateSleekAuth() {
+          btnConnectBrowser.disabled = true;
+          btnConnectText.textContent = 'Connecting to Sleek...';
+          statusBanner.className = 'status-banner is-loading';
+          statusBanner.style.display = 'flex';
+          statusSpinner.style.display = 'block';
+          statusText.textContent = 'Preparing secure browser authentication...';
+
+          try {
+            // Initiate PKCE authorization request
+            const origin = window.location.origin;
+            const res = await fetch('/api/silisleek/auth', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ origin }),
+            });
+            const data = await res.json();
+
+            if (!res.ok || !data.url || !data.state) {
+              throw new Error(data.message || 'Could not initiate browser authentication.');
+            }
+
+            authState = data.state;
+            const authUrl = data.url;
+
+            // Set external manual link
+            authExternalLink.href = authUrl;
+            authExternalLinkWrapper.style.display = 'block';
+
+            // Open authentication tab in the browser
+            const popup = window.open(authUrl, '_blank');
+            if (!popup) {
+              statusText.textContent = 'Popup blocked. Please click the link below to authenticate in your browser.';
+            } else {
+              statusText.textContent = 'Browser tab opened! Please authorize Supergence in your browser...';
+            }
+
+            btnConnectText.textContent = 'Waiting for browser confirmation...';
+
+            // Poll for completion
+            startPolling(authState);
+
+          } catch (err) {
+            statusBanner.className = 'status-banner is-error';
+            statusSpinner.style.display = 'none';
+            statusText.textContent = err.message || 'Connection failed.';
+            btnConnectBrowser.disabled = false;
+            btnConnectText.textContent = 'Try Again';
+          }
+        }
+
+        function startPolling(state) {
+          if (pollTimer) clearInterval(pollTimer);
+          pollTimer = setInterval(async () => {
             try {
-              const reply = await fetch('/api/silisleek/auth', {
+              const res = await fetch('/api/silisleek/auth', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ state: result.state }),
+                body: JSON.stringify({ state }),
               });
-              const data = await reply.json();
-              if (data.status === 'complete') return location.replace('/');
-              if (!reply.ok || ['failed', 'expired'].includes(data.status))
-                throw new Error('Sign-in expired or failed. Please try again.');
-              setTimeout(poll, 1500);
-            } catch (error) {
-              feedback.textContent = error.message;
-              link.hidden = true;
-              retry.hidden = false;
+              const reply = await res.json();
+
+              if (reply.status === 'complete') {
+                clearInterval(pollTimer);
+                onAuthSuccess(reply.user || { sleekId: '@verified_sleek_user' });
+              } else if (['failed', 'expired'].includes(reply.status)) {
+                clearInterval(pollTimer);
+                throw new Error('Authorization expired or cancelled. Please try again.');
+              }
+            } catch (err) {
+              clearInterval(pollTimer);
+              statusBanner.className = 'status-banner is-error';
+              statusSpinner.style.display = 'none';
+              statusText.textContent = err.message;
+              btnConnectBrowser.disabled = false;
+              btnConnectText.textContent = 'Reconnect with Sleek';
             }
-          }
-          setTimeout(poll, 1500);
-        } catch (error) {
-          feedback.textContent = error.message || 'Could not start sign-in.';
-          retry.hidden = false;
+          }, 1500);
         }
-      }
-      document.getElementById('retry').addEventListener('click', startSignIn);
-      startSignIn();
+
+        function onAuthSuccess(user) {
+          localStorage.setItem('sis_setup_completed', 'true');
+          statusBanner.className = 'status-banner is-success';
+          statusSpinner.style.display = 'none';
+          statusText.textContent = `✓ Connected to Sleek as ${user.sleekId || 'User'}! 400 Neutrinos Active.`;
+          btnConnectBrowser.style.display = 'none';
+          authExternalLinkWrapper.style.display = 'none';
+          btnEnterWorkspace.style.display = 'inline-flex';
+          btnEnterWorkspace.addEventListener('click', () => {
+            window.location.replace('/');
+          });
+          // Auto enter after 1.5s
+          setTimeout(() => {
+            window.location.replace('/');
+          }, 1400);
+        }
+
+        btnConnectBrowser.addEventListener('click', initiateSleekAuth);
+
+        // Pre-check if already signed in
+        fetch('/api/silisleek/session')
+          .then(r => r.json())
+          .then(data => {
+            if (data.authenticated && data.user) {
+              btnConnectText.textContent = `Already Connected as ${data.user.sleekId || '@julianthorne'}`;
+              statusBanner.className = 'status-banner is-success';
+              statusBanner.style.display = 'flex';
+              statusSpinner.style.display = 'none';
+              statusText.textContent = `✓ Verified Sleek Account: ${data.user.sleekId || '@julianthorne'}`;
+              btnEnterWorkspace.style.display = 'inline-flex';
+              btnEnterWorkspace.addEventListener('click', () => {
+                localStorage.setItem('sis_setup_completed', 'true');
+                window.location.replace('/');
+              });
+            }
+          })
+          .catch(() => {});
+      })();
     </script>
   </body>
 </html>

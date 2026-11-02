@@ -1,0 +1,354 @@
+/* Workspace Onboarding Wizard Modal */
+.sis-onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 280ms ease;
+}
+
+.sis-onboarding-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sis-onboarding-card {
+  width: 100%;
+  max-width: 660px;
+  background: var(--shell-surface, #141614);
+  border: 1px solid var(--shell-border, rgba(255, 255, 255, 0.1));
+  border-radius: 24px;
+  padding: 36px 40px;
+  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+  transform: translateY(14px) scale(0.98);
+  transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sis-onboarding-overlay.is-open .sis-onboarding-card {
+  transform: translateY(0) scale(1);
+}
+
+.sis-ob-header {
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.sis-ob-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--shell-accent, #c6ab98);
+  margin-bottom: 14px;
+}
+
+.sis-ob-title {
+  font-family: var(--font-editorial, 'Instrument Serif', Georgia, serif);
+  font-size: clamp(28px, 3.6vw, 36px);
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--shell-text, #f5eee7);
+  margin-bottom: 8px;
+}
+
+.sis-ob-title em {
+  font-style: italic;
+  color: var(--shell-accent, #c6ab98);
+}
+
+.sis-ob-desc {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--shell-muted, #9e9c97);
+}
+
+/* Stepper bar */
+.sis-ob-stepper {
+  display: flex;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 4px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 26px;
+}
+
+.sis-ob-step {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--shell-muted, #9e9c97);
+  cursor: pointer;
+  transition: all 180ms ease;
+}
+
+.sis-ob-step.is-active {
+  background: var(--shell-raised, #181a18);
+  color: var(--shell-text, #f5eee7);
+  border: 1px solid var(--shell-accent, #c6ab98);
+}
+
+.sis-ob-step.is-done {
+  color: var(--shell-accent, #c6ab98);
+}
+
+.sis-ob-num {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sis-ob-step.is-active .sis-ob-num,
+.sis-ob-step.is-done .sis-ob-num {
+  background: var(--shell-accent, #c6ab98);
+  color: var(--shell-accent-ink, #14110e);
+}
+
+/* Panels */
+.sis-ob-panel {
+  display: none;
+}
+.sis-ob-panel.is-active {
+  display: block;
+}
+
+/* Grid of option cards */
+.sis-ob-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 560px) {
+  .sis-onboarding-card {
+    padding: 24px 20px;
+  }
+  .sis-ob-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sis-ob-card {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 16px;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 180ms ease;
+}
+
+.sis-ob-card:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+.sis-ob-card.is-selected {
+  border-color: var(--shell-accent, #c6ab98);
+  background: color-mix(in srgb, var(--shell-accent, #c6ab98) 10%, rgba(0, 0, 0, 0.25));
+  box-shadow: 0 0 16px color-mix(in srgb, var(--shell-accent, #c6ab98) 20%, transparent);
+}
+
+.sis-ob-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sis-ob-card-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--shell-text, #f5eee7);
+}
+
+.sis-ob-card-tag {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--shell-muted, #9e9c97);
+}
+
+.sis-ob-swatches {
+  display: flex;
+  gap: 5px;
+}
+.sis-ob-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.sis-ob-card-desc {
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--shell-text-secondary, #c9c5be);
+}
+
+.sis-ob-font-sample {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  font-size: 12px;
+  color: var(--shell-accent, #c6ab98);
+  line-height: 1.35;
+}
+
+/* Step 3: Sleek connect */
+.sis-ob-sleek-box {
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--shell-accent, #c6ab98);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.sis-ob-sleek-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  color: var(--shell-accent, #c6ab98);
+}
+
+.sis-ob-sleek-title {
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--shell-text, #f5eee7);
+}
+
+.sis-ob-sleek-desc {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--shell-text-secondary, #c9c5be);
+  max-width: 420px;
+  margin: 0 auto 16px;
+}
+
+.sis-ob-neutrino {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: #f59e0b;
+  font-size: 11.5px;
+  font-weight: 600;
+  margin-bottom: 18px;
+}
+
+.sis-ob-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sis-ob-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 180ms ease;
+}
+
+.sis-ob-btn-primary {
+  background: var(--shell-accent, #c6ab98);
+  color: var(--shell-accent-ink, #14110e);
+  border: none;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--shell-accent, #c6ab98) 25%, transparent);
+}
+.sis-ob-btn-primary:hover {
+  background: var(--shell-accent-hover, #dec4b0);
+  transform: translateY(-1px);
+}
+
+.sis-ob-btn-secondary {
+  background: transparent;
+  color: var(--shell-text, #f5eee7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.sis-ob-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.sis-ob-status-msg {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  margin-top: 14px;
+  display: none;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+}
+.sis-ob-status-msg.is-loading {
+  display: flex;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #93c5fd;
+}
+.sis-ob-status-msg.is-success {
+  display: flex;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #6ee7b7;
+}
+.sis-ob-status-msg.is-error {
+  display: flex;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}

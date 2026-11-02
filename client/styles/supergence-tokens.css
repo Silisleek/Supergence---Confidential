@@ -19,83 +19,167 @@
   font-weight: 400;
   font-display: swap;
 }
-/* Deep dark working surfaces framed by warm brown navigation. */
+/* Deep dark working surfaces with ultra-luxurious dark obsidian palette. */
 :root {
   color-scheme: dark;
-  --shell-page: #211a16;
-  --shell-panel: #0b0c0c;
-  --shell-sidebar: #211a16;
-  --shell-surface: #191b1b;
-  --shell-border: transparent;
+  --shell-page: #0b0b0b;
+  --shell-panel: #0d0e0d;
+  --shell-sidebar: #0f100f;
+  --shell-surface: #141614;
+  --shell-border: rgba(255, 255, 255, 0.08);
   --shell-text: #f5eee7;
-  --shell-muted: #adb2ae;
-  --shell-accent: #e0b38c;
-  --shell-accent-hover: #f0cca9;
-  --shell-accent-ink: #2a1b11;
-  --shell-text-secondary: #d3d7d2;
-  --shell-subtle: #969e98;
-  --shell-hover: #222525;
-  --shell-selected: #303532;
-  --shell-code: #080909;
-  --shell-raised: #191b1b;
-  --shell-success: #b6c7a2;
-  --shell-warning: #e6b88c;
-  --shell-error: #eea497;
-  --shell-backdrop: #0d0805d9;
+  --shell-muted: #9e9c97;
+  --shell-accent: #c6ab98;
+  --shell-accent-hover: #dec4b0;
+  --shell-accent-ink: #14110e;
+  --shell-text-secondary: #c9c5be;
+  --shell-subtle: #75736d;
+  --shell-hover: #1c1e1c;
+  --shell-selected: #242724;
+  --shell-code: #070707;
+  --shell-raised: #181a18;
+  --shell-success: #10b981;
+  --shell-warning: #f59e0b;
+  --shell-error: #ef4444;
+  --shell-backdrop: rgba(8, 8, 8, 0.88);
   --shell-rail: 64px;
   --shell-history: 264px;
-  --font-ui: 'Manrope', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
-
-:root {
-  --font-display: var(--font-ui);
+  --font-ui: 'DM Sans', 'Manrope', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Instrument Serif', Georgia, serif;
   --font-editorial: 'Instrument Serif', Georgia, serif;
 }
 
+/* Typography Choices */
+body[data-font='editorial'],
+:root[data-font='editorial'] {
+  --font-ui: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-editorial: 'Instrument Serif', Georgia, serif;
+}
+
+body[data-font='sans'],
+:root[data-font='sans'] {
+  --font-ui: 'Manrope', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Manrope', Inter, -apple-system, sans-serif;
+  --font-editorial: 'Manrope', sans-serif;
+}
+
+body[data-font='mono'],
+:root[data-font='mono'] {
+  --font-ui: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-display: 'JetBrains Mono', monospace;
+  --font-editorial: 'JetBrains Mono', monospace;
+}
+
+body[data-font='grotesk'],
+:root[data-font='grotesk'] {
+  --font-ui: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Space Grotesk', -apple-system, sans-serif;
+  --font-editorial: 'Space Grotesk', sans-serif;
+}
+
+body[data-font='inter'],
+:root[data-font='inter'] {
+  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Inter', -apple-system, sans-serif;
+  --font-editorial: 'Inter', sans-serif;
+}
+
 /* Theme keys stay compatible with saved preferences. */
+body.sis-workspace-ui[data-theme='obsidian'],
+body.sis-workspace-ui[data-theme='neutral'],
+body.sis-workspace-ui:not([data-theme]) {
+  color-scheme: dark;
+  --shell-page: #0b0b0b;
+  --shell-panel: #0d0e0d;
+  --shell-sidebar: #0f100f;
+  --shell-surface: #141614;
+  --shell-border: rgba(255, 255, 255, 0.08);
+  --shell-text: #f5eee7;
+  --shell-muted: #9e9c97;
+  --shell-accent: #c6ab98;
+  --shell-accent-hover: #dec4b0;
+  --shell-accent-ink: #14110e;
+  --shell-text-secondary: #c9c5be;
+  --shell-subtle: #75736d;
+  --shell-hover: #1c1e1c;
+  --shell-selected: #242724;
+  --shell-code: #070707;
+  --shell-raised: #181a18;
+  --shell-success: #10b981;
+  --shell-warning: #f59e0b;
+  --shell-error: #ef4444;
+  --shell-backdrop: rgba(8, 8, 8, 0.88);
+}
+
 body.sis-workspace-ui[data-theme='warm'] {
   color-scheme: dark;
-  --shell-page: #2a2019;
-  --shell-panel: #0c0b0a;
-  --shell-sidebar: #231912;
-  --shell-surface: #1c1b19;
-  --shell-border: transparent;
+  --shell-page: #15110d;
+  --shell-panel: #0e0c0a;
+  --shell-sidebar: #17120e;
+  --shell-surface: #1d1712;
+  --shell-border: rgba(233, 185, 143, 0.12);
   --shell-text: #f7eee5;
   --shell-text-secondary: #e1cebb;
   --shell-muted: #bda48f;
   --shell-subtle: #b49983;
-  --shell-hover: #242321;
+  --shell-hover: #261f18;
   --shell-selected: #443024;
   --shell-code: #080807;
-  --shell-raised: #1c1b19;
+  --shell-raised: #1d1712;
   --shell-accent: #e9b98f;
   --shell-accent-hover: #f5cfaa;
   --shell-accent-ink: #2a1b11;
-  --shell-success: #becaa0;
+  --shell-success: #10b981;
   --shell-warning: #edba83;
   --shell-error: #efa28e;
-  --shell-backdrop: #100905d9;
+  --shell-backdrop: rgba(16, 9, 5, 0.9);
 }
 
 body.sis-workspace-ui[data-theme='midnight'] {
-  --shell-page: #1a1613;
-  --shell-panel: #080909;
-  --shell-sidebar: #14110f;
-  --shell-surface: #171818;
-  --shell-border: transparent;
+  color-scheme: dark;
+  --shell-page: #130f14;
+  --shell-panel: #0b090c;
+  --shell-sidebar: #151017;
+  --shell-surface: #1b151e;
+  --shell-border: rgba(207, 169, 140, 0.12);
   --shell-text: #f2eae3;
   --shell-text-secondary: #cebeb2;
   --shell-muted: #b2a092;
   --shell-subtle: #a28e80;
-  --shell-hover: #202121;
-  --shell-selected: #33281f;
-  --shell-code: #050606;
-  --shell-raised: #171818;
+  --shell-hover: #241b29;
+  --shell-selected: #3a253f;
+  --shell-code: #070508;
+  --shell-raised: #1b151e;
   --shell-accent: #cfa98c;
   --shell-accent-hover: #e8c7ae;
   --shell-accent-ink: #271b14;
-  --shell-success: #aebe9f;
+  --shell-success: #10b981;
   --shell-warning: #d8af88;
   --shell-error: #e29d8b;
-  --shell-backdrop: #080504d9;
+  --shell-backdrop: rgba(12, 8, 14, 0.9);
+}
+
+body.sis-workspace-ui[data-theme='cyber'] {
+  color-scheme: dark;
+  --shell-page: #070a0d;
+  --shell-panel: #0a0e13;
+  --shell-sidebar: #080c10;
+  --shell-surface: #0e141a;
+  --shell-border: rgba(34, 197, 94, 0.15);
+  --shell-text: #e6f1f5;
+  --shell-text-secondary: #b5c7d1;
+  --shell-muted: #7d93a1;
+  --shell-subtle: #566c7a;
+  --shell-hover: #141c24;
+  --shell-selected: #1a2632;
+  --shell-code: #040608;
+  --shell-raised: #121921;
+  --shell-accent: #10b981;
+  --shell-accent-hover: #34d399;
+  --shell-accent-ink: #042f1a;
+  --shell-success: #10b981;
+  --shell-warning: #38bdf8;
+  --shell-error: #f43f5e;
+  --shell-backdrop: rgba(4, 7, 10, 0.9);
 }

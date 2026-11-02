@@ -69,12 +69,22 @@
 
   const theme = document.getElementById('shellThemePreference');
   const storedTheme = localStorage.getItem('sis-ui-theme');
-  theme.value = ['neutral', 'warm', 'midnight'].includes(storedTheme) ? storedTheme : 'neutral';
-  document.body.dataset.theme = theme.value;
-  theme.addEventListener('change', () => {
-    document.body.dataset.theme = theme.value;
-    localStorage.setItem('sis-ui-theme', theme.value);
-  });
+  const validThemes = ['obsidian', 'neutral', 'warm', 'midnight', 'cyber'];
+  const activeTheme = validThemes.includes(storedTheme) ? storedTheme : 'obsidian';
+  if (theme) theme.value = activeTheme;
+  document.body.dataset.theme = activeTheme;
+  if (theme) {
+    theme.addEventListener('change', () => {
+      document.body.dataset.theme = theme.value;
+      localStorage.setItem('sis-ui-theme', theme.value);
+    });
+  }
+
+  // Load and apply typography preference
+  const validFonts = ['editorial', 'sans', 'mono', 'grotesk', 'inter'];
+  const storedFont = localStorage.getItem('sis-ui-font');
+  const activeFont = validFonts.includes(storedFont) ? storedFont : 'editorial';
+  document.body.dataset.font = activeFont;
   sounds.checked = localStorage.getItem('sis-ui-sounds') === 'true';
   compact.checked = localStorage.getItem('sis-ui-compact') === 'true';
   document.body.dataset.compact = String(compact.checked);

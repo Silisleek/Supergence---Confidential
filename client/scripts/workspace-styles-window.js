@@ -49,37 +49,78 @@
             <h3 class="sw-card-title">Theme Palette</h3>
             <p class="sw-card-desc">Deep dark work areas with brown outer surfaces and copper highlights.</p>
             <div class="sw-theme-grid">
-              <button type="button" class="sw-theme-btn" data-theme-val="neutral" role="radio" aria-checked="true">
+              <button type="button" class="sw-theme-btn" data-theme-val="obsidian" role="radio" aria-checked="true">
                 <div class="sw-theme-swatches">
-                  <span class="sw-swatch" style="background:#211a16;"></span>
-                  <span class="sw-swatch" style="background:#0b0c0c;"></span>
-                  <span class="sw-swatch" style="background:#191b1b;"></span>
-                  <span class="sw-swatch" style="background:#e0b38c;"></span>
+                  <span class="sw-swatch" style="background:#0b0b0b;"></span>
+                  <span class="sw-swatch" style="background:#141614;"></span>
+                  <span class="sw-swatch" style="background:#c6ab98;"></span>
+                  <span class="sw-swatch" style="background:#10b981;"></span>
                 </div>
-                <strong>Charcoal</strong>
-                <span style="font-size:11px; color:var(--shell-muted);">Dark charcoal with an espresso frame</span>
+                <strong>Obsidian Luxury</strong>
+                <span style="font-size:11px; color:var(--shell-muted);">Deep obsidian with champagne bronze</span>
               </button>
               <button type="button" class="sw-theme-btn" data-theme-val="warm" role="radio" aria-checked="false">
                 <div class="sw-theme-swatches">
-                  <span class="sw-swatch" style="background:#2a2019;"></span>
-                  <span class="sw-swatch" style="background:#0c0b0a;"></span>
-                  <span class="sw-swatch" style="background:#1c1b19;"></span>
+                  <span class="sw-swatch" style="background:#15110d;"></span>
+                  <span class="sw-swatch" style="background:#1d1712;"></span>
                   <span class="sw-swatch" style="background:#e9b98f;"></span>
+                  <span class="sw-swatch" style="background:#f5cfaa;"></span>
                 </div>
-                <strong>Walnut</strong>
+                <strong>Walnut Espresso</strong>
                 <span style="font-size:11px; color:var(--shell-muted);">Golden copper and roast amber</span>
               </button>
               <button type="button" class="sw-theme-btn" data-theme-val="midnight" role="radio" aria-checked="false">
                 <div class="sw-theme-swatches">
-                  <span class="sw-swatch" style="background:#1a1613;"></span>
-                  <span class="sw-swatch" style="background:#080909;"></span>
-                  <span class="sw-swatch" style="background:#171818;"></span>
+                  <span class="sw-swatch" style="background:#130f14;"></span>
+                  <span class="sw-swatch" style="background:#1b151e;"></span>
                   <span class="sw-swatch" style="background:#cfa98c;"></span>
+                  <span class="sw-swatch" style="background:#e8c7ae;"></span>
                 </div>
-                <strong>Cocoa</strong>
-                <span style="font-size:11px; color:var(--shell-muted);">Rich dark chocolate and rose copper</span>
+                <strong>Midnight Rose</strong>
+                <span style="font-size:11px; color:var(--shell-muted);">Rich velvet chocolate and rose copper</span>
+              </button>
+              <button type="button" class="sw-theme-btn" data-theme-val="cyber" role="radio" aria-checked="false">
+                <div class="sw-theme-swatches">
+                  <span class="sw-swatch" style="background:#070a0d;"></span>
+                  <span class="sw-swatch" style="background:#0e141a;"></span>
+                  <span class="sw-swatch" style="background:#10b981;"></span>
+                  <span class="sw-swatch" style="background:#38bdf8;"></span>
+                </div>
+                <strong>Cyber Slate</strong>
+                <span style="font-size:11px; color:var(--shell-muted);">Tactical dark slate with neon emerald</span>
               </button>
             </div>
+          </div>
+
+          <div class="sw-card">
+            <h3 class="sw-card-title">Typography &amp; Font</h3>
+            <p class="sw-card-desc">Select the font pairing used across conversations, agent tools, and code.</p>
+            <div class="sw-theme-grid">
+              <button type="button" class="sw-font-btn" data-font-val="editorial" role="radio" aria-checked="true" style="padding:12px; border-radius:12px; background:var(--shell-surface); border:1px solid var(--shell-border); color:inherit; text-align:left; cursor:pointer;">
+                <strong style="display:block; font-family:'Instrument Serif', serif; font-size:15px; margin-bottom:4px;">Editorial Luxury</strong>
+                <span style="font-size:11px; color:var(--shell-muted);">Instrument Serif + DM Sans</span>
+              </button>
+              <button type="button" class="sw-font-btn" data-font-val="sans" role="radio" aria-checked="false" style="padding:12px; border-radius:12px; background:var(--shell-surface); border:1px solid var(--shell-border); color:inherit; text-align:left; cursor:pointer;">
+                <strong style="display:block; font-family:'Manrope', sans-serif; font-size:13px; margin-bottom:4px;">Modern Geometric</strong>
+                <span style="font-size:11px; color:var(--shell-muted);">Manrope + Inter Sans</span>
+              </button>
+              <button type="button" class="sw-font-btn" data-font-val="mono" role="radio" aria-checked="false" style="padding:12px; border-radius:12px; background:var(--shell-surface); border:1px solid var(--shell-border); color:inherit; text-align:left; cursor:pointer;">
+                <strong style="display:block; font-family:'JetBrains Mono', monospace; font-size:12px; margin-bottom:4px;">Hacker Mono</strong>
+                <span style="font-size:11px; color:var(--shell-muted);">JetBrains Monospace</span>
+              </button>
+              <button type="button" class="sw-font-btn" data-font-val="grotesk" role="radio" aria-checked="false" style="padding:12px; border-radius:12px; background:var(--shell-surface); border:1px solid var(--shell-border); color:inherit; text-align:left; cursor:pointer;">
+                <strong style="display:block; font-family:'Space Grotesk', sans-serif; font-size:13px; margin-bottom:4px;">Space Grotesk</strong>
+                <span style="font-size:11px; color:var(--shell-muted);">Futuristic Neo-Grotesque</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="sw-card">
+            <h3 class="sw-card-title">Setup &amp; Sleek Account Connection</h3>
+            <p class="sw-card-desc">Review your onboarding personalization or reconnect your verified Sleek ID.</p>
+            <button type="button" id="swOpenSetupWizardBtn" class="sw-btn sw-btn-secondary" style="margin-top:6px;">
+              Reopen Theme, Font &amp; Sleek Connect Wizard
+            </button>
           </div>
 
           <div class="sw-preview-card">
@@ -322,6 +363,20 @@
       });
     });
 
+    dialog.querySelectorAll('.sw-font-btn').forEach((fontBtn) => {
+      fontBtn.addEventListener('click', () => {
+        const fontVal = fontBtn.dataset.fontVal;
+        selectFont(fontVal);
+      });
+    });
+
+    dialog.querySelector('#swOpenSetupWizardBtn')?.addEventListener('click', () => {
+      if (window.openSupergenceSetup) {
+        window.openSupergenceSetup();
+        dialog.close();
+      }
+    });
+
     const keyInput = dialog.querySelector('#swApiKey');
     const toggleKeyBtn = dialog.querySelector('#swToggleKeyVisibility');
     toggleKeyBtn?.addEventListener('click', () => {
@@ -367,11 +422,25 @@
     if (selectEl) selectEl.value = themeVal;
   }
 
+  function selectFont(fontVal) {
+    dialog.querySelectorAll('.sw-font-btn').forEach((btn) => {
+      const isSelected = btn.dataset.fontVal === fontVal;
+      btn.setAttribute('aria-checked', String(isSelected));
+      btn.style.borderColor = isSelected ? 'var(--shell-accent)' : 'var(--shell-border)';
+      btn.style.background = isSelected ? 'color-mix(in srgb, var(--shell-accent) 12%, var(--shell-surface))' : 'var(--shell-surface)';
+    });
+    document.body.dataset.font = fontVal;
+    localStorage.setItem('sis-ui-font', fontVal);
+  }
+
   async function loadSettings() {
     mount();
 
-    const storedTheme = localStorage.getItem('sis-ui-theme') || 'neutral';
+    const storedTheme = localStorage.getItem('sis-ui-theme') || 'obsidian';
     selectTheme(storedTheme);
+
+    const storedFont = localStorage.getItem('sis-ui-font') || 'editorial';
+    selectFont(storedFont);
 
     const optMotion = dialog.querySelector('#swOptMotion');
     if (optMotion) {

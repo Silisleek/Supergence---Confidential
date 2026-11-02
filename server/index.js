@@ -253,7 +253,7 @@ app.post('/api/silisleek/auth', async (req, res) => {
     if (!req.body?.state) {
       const address = server.address();
       if (!address || typeof address === 'string') throw new Error('Server is not ready.');
-      return res.json(sleekIdentity.begin(address.port));
+      return res.json(sleekIdentity.begin(address.port, req.body?.origin));
     }
     const result = sleekIdentity.claim(req.body.state);
     res.setHeader('Cache-Control', 'no-store');

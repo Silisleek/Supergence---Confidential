@@ -39,7 +39,7 @@ export function createSleekIdentity({ fetchImpl = fetch, now = Date.now } = {}) 
     const session = sessions.get(token(req));
     return session ? Math.max(0, session.expires - now()) : 0;
   }
-  function begin(port) {
+  function begin(port, customOrigin) {
     if (!Number.isInteger(port) || port < 1 || port > 65535)
       throw new Error('Invalid callback port.');
     for (const [key, item] of pending) if (item.expires <= now()) pending.delete(key);
@@ -48,13 +48,21 @@ export function createSleekIdentity({ fetchImpl = fetch, now = Date.now } = {}) 
     const verifier = randomBytes(32).toString('base64url');
     const challenge = createHash('sha256').update(verifier).digest('base64url');
     const redirectUri = `http://127.0.0.1:${port}/__sleek/callback`;
+    const targetOrigin =
+      customOrigin &&
+      (customOrigin.includes('silisleek.com') ||
+        customOrigin.includes('127.0.0.1') ||
+        customOrigin.includes('localhost'))
+        ? customOrigin
+        : identityOrigin;
     pending.set(state, {
       verifier,
       redirectUri,
+      targetOrigin,
       expires: now() + pendingLifetime,
       status: 'pending',
     });
-    const url = new URL('/supergence/authorize', identityOrigin);
+    const url = new URL('/supergence/authorize', targetOrigin);
     url.searchParams.set('redirect_uri', redirectUri);
     url.searchParams.set('code_challenge', challenge);
     url.searchParams.set('state', state);

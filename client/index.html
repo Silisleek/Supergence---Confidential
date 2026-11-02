@@ -14,6 +14,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&family=Instrument+Serif:ital@0;1&family=Inter:wght@300..800&family=JetBrains+Mono:wght@400..700&family=Manrope:wght@300..800&family=Space+Grotesk:wght@400..700&display=swap"
+      rel="stylesheet"
+    />
+    <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
       media="print"
@@ -48,6 +52,7 @@
     <link rel="stylesheet" href="/styles/workspace-agent-profiles.css" />
     <link rel="stylesheet" href="/styles/workspace-sidechat.css" />
     <link rel="stylesheet" href="/styles/storage-dashboard.css?v=2" />
+    <link rel="stylesheet" href="/styles/workspace-onboarding.css" />
     <link rel="icon" type="image/png" href="/images/supergence-logo.png" />
   </head>
 
@@ -239,6 +244,30 @@
             >
               <path d="M12 2v20M2 12h20M7 7l10 10M17 7 7 17" /></svg
             ><span class="shell-tooltip">Styles &amp; Settings</span>
+          </button>
+          <button
+            id="railOnboarding"
+            type="button"
+            class="shell-rail-button"
+            onclick="window.openSupergenceSetup &amp;&amp; window.openSupergenceSetup()"
+            aria-label="Theme, Font &amp; Sleek Setup"
+            title="Theme, Font &amp; Sleek Setup"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="3" />
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+              />
+            </svg>
+            <span class="shell-tooltip">Theme, Font &amp; Sleek ID</span>
           </button>
           <button
             id="railPreferences"
@@ -2622,5 +2651,6 @@
     <script src="/scripts/workspace-styles-window.js"></script>
     <script src="/scripts/workspace-polish.js"></script>
     <script src="/scripts/storage-dashboard.js?v=2"></script>
+    <script src="/scripts/workspace-onboarding.js"></script>
   </body>
 </html>
