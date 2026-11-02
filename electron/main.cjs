@@ -161,7 +161,16 @@ function saveWindowState() {
 async function ensureBackendRunning() {
   console.log('[Desktop] Starting internal SIS Express server...');
   initializeAppDataStorage();
-  const serverScript = path.join(__dirname, '../server/index.js');
+  let serverScript = path.join(__dirname, '../server/index.js');
+  if (app.isPackaged) {
+    const unpackedScript = path.join(process.resourcesPath, 'app.asar.unpacked', 'server', 'index.js');
+    const appScript = path.join(process.resourcesPath, 'app', 'server', 'index.js');
+    if (fs.existsSync(unpackedScript)) {
+      serverScript = unpackedScript;
+    } else if (fs.existsSync(appScript)) {
+      serverScript = appScript;
+    }
+  }
 
   const env = {
     ...process.env,
@@ -172,6 +181,7 @@ async function ensureBackendRunning() {
     SUPERGENCE_APPDATA: userDataDir,
     SIS_SESSION_SECRET: sessionSecret,
     SIS_DESKTOP_SESSION: '1',
+    ELECTRON_RUN_AS_NODE: '1',
   };
 
   try {

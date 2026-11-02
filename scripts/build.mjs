@@ -33,6 +33,7 @@ const classicScripts = [
   'supergence-icons.js',
   'storage-dashboard.js',
   'silisleek.js',
+  'workspace-onboarding.js',
 ];
 
 // Stage generated copies in Vite's public directory. Classic controllers keep
