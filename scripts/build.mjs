@@ -5,53 +5,33 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const publicDirectory = path.join(root, '.cache', 'vite-public');
-const classicScripts = [
-  'reload-guard.js',
-  'workspace-controller.js',
-  'feature-catalog.js',
-  'feature-actions.js',
-  'continuous-dock.js',
-  'telemetry-values.js',
-  'workspace-shell.js',
-  'creation-studio.js',
-  'chat-artifacts.js',
-  'workspace-result-summary.js',
-  'workspace-learning.js',
-  'workspace-evolution.js',
-  'workspace-cockpit.js',
-  'workspace-chat-files.js',
-  'workspace-browser.js',
-  'workspace-access.js',
-  'workspace-task-status.js',
-  'workspace-proactive.js',
-  'workspace-agent-profiles.js',
-  'workspace-sidechat.js',
-  'workspace-styles-window.js',
-  'workspace-polish.js',
-  'voice-input.js',
-  'supergence-motion.js',
-  'supergence-icons.js',
-  'storage-dashboard.js',
-  'silisleek.js',
-  'workspace-onboarding.js',
-];
-
+if (path.relative(root, publicDirectory) !== path.join('.cache', 'vite-public'))
+  throw new Error('Unexpected build staging directory.');
 // Stage generated copies in Vite's public directory. Classic controllers keep
 // their native globals and loading order; maintained sources stay in client/.
 await fs.rm(publicDirectory, { recursive: true, force: true });
 await fs.mkdir(path.join(publicDirectory, 'scripts'), { recursive: true });
 await fs.copyFile(path.join(root, 'client', 'Styles.md'), path.join(publicDirectory, 'Styles.md'));
-for (const script of classicScripts) {
-  await fs.copyFile(
-    path.join(root, 'client', 'scripts', script),
-    path.join(publicDirectory, 'scripts', script),
-  );
+const clientScriptsDir = path.join(root, 'client', 'scripts');
+const clientScripts = await fs.readdir(clientScriptsDir);
+for (const script of clientScripts) {
+  if (script.endsWith('.js')) {
+    await fs.copyFile(
+      path.join(clientScriptsDir, script),
+      path.join(publicDirectory, 'scripts', script),
+    );
+  }
 }
-for (const directory of ['fonts', 'images']) {
+for (const directory of ['fonts', 'images', 'vendor']) {
   await fs.cp(path.join(root, 'client', directory), path.join(publicDirectory, directory), {
     recursive: true,
   });
 }
+await fs.cp(
+  path.join(root, 'node_modules/dompurify/dist'),
+  path.join(publicDirectory, 'vendor/dompurify'),
+  { recursive: true },
+);
 for (const directory of ['build', 'examples/jsm']) {
   await fs.cp(
     path.join(root, 'node_modules', 'three', directory),

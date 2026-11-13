@@ -1,0 +1,772 @@
+/* ─────────────────────────────────────────────────────────────
+   SUPERGENCE SIS 1.0: MODERN FRONTEND REDESIGN
+   Compliant with Antislop Craftsmanship Standard (Mode 1: During)
+   Design System: Deep Dark Obsidian Void, Zero Slop / No Gimmicks
+   ───────────────────────────────────────────────────────────── */
+
+/* ── VIEW SWITCHER IN TOP BAR ── */
+.sis-modern-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(18, 19, 24, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sis-nav-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #94a3b8;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.sis-nav-pill:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sis-nav-pill.is-active {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.sis-nav-pill:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 2px;
+}
+
+.sis-nav-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  font-weight: 600;
+}
+
+/* ── MULTI-VIEW CONTAINERS ── */
+.sis-view-pane {
+  display: none;
+  width: 100%;
+  height: calc(100vh - var(--sis-topbar-height, 56px));
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.sis-view-pane.is-active {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── REAL-TIME TOOL CALLING SHOWCASE ── */
+.sis-tool-call-block {
+  margin: 10px 0;
+  background: #0d0e12;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  font-family:
+    'DM Sans',
+    -apple-system,
+    sans-serif;
+  transition: border-color 0.2s ease;
+}
+
+.sis-tool-call-block:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.sis-tool-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  user-select: none;
+}
+
+.sis-tool-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sis-tool-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sis-tool-status-dot.completed {
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+
+.sis-tool-status-dot.running {
+  background: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+  animation: sisPulse 1.2s infinite;
+}
+
+.sis-tool-status-dot.error {
+  background: #ef4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+}
+
+.sis-tool-name-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.sis-tool-domain-tag {
+  font-size: 10.5px;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.sis-tool-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sis-tool-duration {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.sis-tool-toggle-icon {
+  width: 14px;
+  height: 14px;
+  color: #94a3b8;
+  transition: transform 0.2s ease;
+}
+
+.sis-tool-call-block.is-expanded .sis-tool-toggle-icon {
+  transform: rotate(180deg);
+}
+
+.sis-tool-details {
+  display: none;
+  padding: 12px;
+  flex-direction: column;
+  gap: 10px;
+  background: #08090c;
+}
+
+.sis-tool-call-block.is-expanded .sis-tool-details {
+  display: flex;
+}
+
+.sis-tool-section-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.sis-tool-code-box {
+  background: #050508;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #cbd5e1;
+  overflow-x: auto;
+  max-height: 180px;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* ── REAL-TIME MEMORY SHOWCASE (3-LAYER AREM) ── */
+.sis-memory-dashboard {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  overflow-y: auto;
+  background: #050608;
+}
+
+.sis-memory-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  background: #0b0c10;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.sis-memory-hero-left h1 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #f8fafc;
+  margin: 0 0 4px 0;
+}
+
+.sis-memory-hero-left p {
+  font-size: 13px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.sis-memory-hero-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sis-dream-status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #10b981;
+}
+
+.sis-dream-status-pill.is-dreaming {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+  animation: sisPulse 1.5s infinite;
+}
+
+.sis-trigger-dream-btn {
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  background: linear-gradient(180deg, #27272a 0%, #151518 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.sis-trigger-dream-btn:hover {
+  background: linear-gradient(180deg, #3f3f46 0%, #202024 100%);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.sis-trigger-dream-btn:active {
+  transform: scale(0.98);
+}
+
+/* 3-Layer Memory Grid */
+.sis-memory-3layer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  min-height: 480px;
+}
+
+@media (max-width: 1080px) {
+  .sis-memory-3layer-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sis-memory-layer-card {
+  background: #0b0c10;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.sis-layer-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sis-layer-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sis-layer-number {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+}
+
+.sis-layer-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.sis-layer-badge {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.sis-layer-body {
+  padding: 16px;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Transcript Row */
+.sis-transcript-item {
+  padding: 12px;
+  border-radius: 10px;
+  background: #111216;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sis-transcript-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+}
+
+.sis-transcript-time {
+  font-family: 'JetBrains Mono', monospace;
+  color: #94a3b8;
+}
+
+.sis-transcript-status {
+  padding: 1px 7px;
+  border-radius: 9999px;
+  font-size: 10.5px;
+  font-weight: 500;
+}
+
+.sis-transcript-status.consolidated {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+}
+
+.sis-transcript-status.unconsolidated {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+}
+
+.sis-transcript-query {
+  font-size: 12.5px;
+  color: #e2e8f0;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* Wiki Note Item */
+.sis-wiki-item {
+  padding: 12px;
+  border-radius: 10px;
+  background: #111216;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sis-wiki-item:hover {
+  background: #16171d;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.sis-wiki-item-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sis-wiki-item-crosslinks {
+  font-size: 11px;
+  color: #38bdf8;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Top Index Invariants */
+.sis-gauge-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+
+.sis-gauge-track {
+  width: 100%;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 4px 0 12px 0;
+}
+
+.sis-gauge-fill {
+  height: 100%;
+  background: #10b981;
+  border-radius: 3px;
+}
+
+.sis-invariant-pill {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #111216;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 12px;
+  line-height: 1.45;
+  color: #e2e8f0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.sis-invariant-icon {
+  color: #10b981;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ── TOOL REGISTRY & SANDBOX VIEW ── */
+.sis-tools-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  gap: 16px;
+  overflow-y: auto;
+  background: #050608;
+}
+
+.sis-tools-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: #0b0c10;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+}
+
+.sis-tools-title-group h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 2px 0;
+}
+
+.sis-tools-title-group p {
+  font-size: 12.5px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.sis-tool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.sis-tool-card {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #0b0c10;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  transition: all 0.15s ease;
+}
+
+.sis-tool-card:hover {
+  background: #101116;
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.sis-tool-card-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.sis-tool-card-desc {
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.sis-tool-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.sis-tool-execute-btn {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sis-tool-execute-btn:hover {
+  background: #ffffff;
+  color: #07080b;
+}
+
+/* ── LIVE BROWSER SANDBOX VIEW ── */
+.sis-browser-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #07080b;
+}
+
+.sis-browser-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #0b0c10;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sis-browser-url-input {
+  flex: 1;
+  background: #14151a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: #ffffff;
+  outline: none;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.sis-browser-url-input:focus {
+  border-color: #38bdf8;
+}
+
+.sis-browser-canvas-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #050508;
+  overflow: auto;
+  position: relative;
+}
+
+.sis-browser-placeholder-text {
+  font-size: 13.5px;
+  color: #64748b;
+  text-align: center;
+}
+
+/* ── COMPONENT STATES AND HELPERS ── */
+.sis-empty-state {
+  font-size: 12.5px;
+  color: #64748b;
+  padding: 16px 12px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+}
+
+.sis-loading-state {
+  font-size: 12.5px;
+  color: #94a3b8;
+  padding: 16px 12px;
+  text-align: center;
+}
+
+.sis-error-state {
+  font-size: 12px;
+  color: #f87171;
+  padding: 12px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+}
+
+.sis-category-chip {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sis-category-chip:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sis-category-chip.is-active {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.sis-category-chip:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 2px;
+}
+
+.sis-status-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
+  animation: sisPulse 1.2s infinite;
+}
+
+.sis-status-idle-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+}
+
+.sis-wiki-crosslink {
+  color: #38bdf8;
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.sis-wiki-crosslink:hover {
+  color: #7dd3fc;
+}
+
+.sis-wiki-reader-card {
+  padding: 14px;
+  border-radius: 12px;
+  background: #06070a;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  margin-top: 10px;
+}
+
+.sis-wiki-reader-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 6px;
+}
+
+.sis-wiki-reader-head h3 {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+.sis-wiki-reader-body {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #cbd5e1;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.sis-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #38bdf8;
+  border-radius: 50%;
+  animation: sisSpin 0.8s linear infinite;
+  display: inline-block;
+}
+
+@keyframes sisSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.sis-browser-log-entry {
+  padding: 4px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  word-break: break-all;
+}

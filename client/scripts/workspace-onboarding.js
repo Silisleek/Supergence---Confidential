@@ -9,6 +9,7 @@
     overlay = document.createElement('div');
     overlay.className = 'sis-onboarding-overlay';
     overlay.id = 'sisOnboardingModal';
+    overlay.hidden = true;
     overlay.setAttribute('role', 'dialog');
     overlay.setAttribute('aria-modal', 'true');
 
@@ -22,8 +23,8 @@
             <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:currentColor;"></span>
             <span>Supergence Personalization</span>
           </div>
-          <h2 class="sis-ob-title">Design Your <em>Intelligence Workspace</em></h2>
-          <p class="sis-ob-desc">Select your preferred color theme, typography, and connect your verified Sleek ID.</p>
+          <h2 class="sis-ob-title">Make Supergence <em>yours</em></h2>
+          <p class="sis-ob-desc">Personalize your workspace, connect your Sleek account, and set up a model.</p>
         </header>
 
         <nav class="sis-ob-stepper" aria-label="Setup steps">
@@ -39,69 +40,72 @@
             <span class="sis-ob-num">3</span>
             <span>Sleek Connect</span>
           </button>
+          <button type="button" class="sis-ob-step" data-ob-step="4" id="obStep4">
+            <span class="sis-ob-num">4</span><span>Model</span>
+          </button>
         </nav>
 
         <!-- Panel 1: Theme -->
         <section class="sis-ob-panel is-active" id="obPanel1">
           <div class="sis-ob-grid" role="radiogroup" aria-label="Choose theme">
-            <!-- Obsidian -->
+            <!-- Lilac Mist -->
             <button type="button" class="sis-ob-card ${activeTheme === 'obsidian' || activeTheme === 'neutral' ? 'is-selected' : ''}" data-theme-choice="obsidian">
               <div class="sis-ob-card-top">
-                <span class="sis-ob-card-name">Obsidian Luxury</span>
-                <span class="sis-ob-card-tag">Signature</span>
+                <span class="sis-ob-card-name">Lilac Mist</span>
+                <span class="sis-ob-card-tag">Default</span>
               </div>
-              <div class="sis-ob-swatches">
-                <span class="sis-ob-swatch" style="background:#0b0b0b;"></span>
-                <span class="sis-ob-swatch" style="background:#141614;"></span>
-                <span class="sis-ob-swatch" style="background:#c6ab98;"></span>
-                <span class="sis-ob-swatch" style="background:#10b981;"></span>
+              <div class="sis-ob-swatches" data-palette-preview="obsidian" aria-hidden="true">
+                <span class="sis-ob-swatch"></span>
+                <span class="sis-ob-swatch"></span>
+                <span class="sis-ob-swatch"></span>
+                <span class="sis-ob-swatch"></span>
               </div>
-              <p class="sis-ob-card-desc">Deep obsidian black surfaces with Champagne Bronze orbital glow.</p>
+              <p class="sis-ob-card-desc">Soft lilac surfaces with a plum accent.</p>
             </button>
 
-            <!-- Walnut -->
+            <!-- Apricot Cream -->
             <button type="button" class="sis-ob-card ${activeTheme === 'warm' ? 'is-selected' : ''}" data-theme-choice="warm">
               <div class="sis-ob-card-top">
-                <span class="sis-ob-card-name">Walnut Espresso</span>
+                <span class="sis-ob-card-name">Apricot Cream</span>
                 <span class="sis-ob-card-tag">Warm</span>
               </div>
-              <div class="sis-ob-swatches">
-                <span class="sis-ob-swatch" style="background:#15110d;"></span>
-                <span class="sis-ob-swatch" style="background:#1d1712;"></span>
-                <span class="sis-ob-swatch" style="background:#e9b98f;"></span>
-                <span class="sis-ob-swatch" style="background:#f5cfaa;"></span>
+              <div class="sis-ob-swatches" data-palette-preview="warm" aria-hidden="true">
+                <span class="sis-ob-swatch"></span>
+                <span class="sis-ob-swatch"></span>
+                <span class="sis-ob-swatch"></span>
+                <span class="sis-ob-swatch"></span>
               </div>
-              <p class="sis-ob-card-desc">Warm roasted espresso tones with golden copper and amber depth.</p>
+              <p class="sis-ob-card-desc">Cream and peach with a terracotta accent.</p>
             </button>
 
-            <!-- Midnight -->
+            <!-- Lavender Dusk -->
             <button type="button" class="sis-ob-card ${activeTheme === 'midnight' ? 'is-selected' : ''}" data-theme-choice="midnight">
               <div class="sis-ob-card-top">
-                <span class="sis-ob-card-name">Midnight Rose</span>
-                <span class="sis-ob-card-tag">Velvet</span>
+                <span class="sis-ob-card-name">Lavender Dusk</span>
+                <span class="sis-ob-card-tag">Dark</span>
               </div>
-              <div class="sis-ob-swatches">
-                <span class="sis-ob-swatch" style="background:#130f14;"></span>
-                <span class="sis-ob-swatch" style="background:#1b151e;"></span>
-                <span class="sis-ob-swatch" style="background:#cfa98c;"></span>
-                <span class="sis-ob-swatch" style="background:#e8c7ae;"></span>
+              <div class="sis-ob-swatches" data-palette-preview="midnight" aria-hidden="true">
+                <span class="sis-ob-swatch"></span>
+                <span class="sis-ob-swatch"></span>
+                <span class="sis-ob-swatch"></span>
+                <span class="sis-ob-swatch"></span>
               </div>
-              <p class="sis-ob-card-desc">Dark chocolate velvet framing with subtle rose copper illumination.</p>
+              <p class="sis-ob-card-desc">Deep violet surfaces with lavender highlights.</p>
             </button>
 
-            <!-- Cyber -->
+            <!-- Mint Glass -->
             <button type="button" class="sis-ob-card ${activeTheme === 'cyber' ? 'is-selected' : ''}" data-theme-choice="cyber">
               <div class="sis-ob-card-top">
-                <span class="sis-ob-card-name">Cyber Slate</span>
-                <span class="sis-ob-card-tag">Matrix</span>
+                <span class="sis-ob-card-name">Mint Glass</span>
+                <span class="sis-ob-card-tag">Cool</span>
               </div>
-              <div class="sis-ob-swatches">
-                <span class="sis-ob-swatch" style="background:#070a0d;"></span>
-                <span class="sis-ob-swatch" style="background:#0e141a;"></span>
-                <span class="sis-ob-swatch" style="background:#10b981;"></span>
-                <span class="sis-ob-swatch" style="background:#38bdf8;"></span>
+              <div class="sis-ob-swatches" data-palette-preview="cyber" aria-hidden="true">
+                <span class="sis-ob-swatch"></span>
+                <span class="sis-ob-swatch"></span>
+                <span class="sis-ob-swatch"></span>
+                <span class="sis-ob-swatch"></span>
               </div>
-              <p class="sis-ob-card-desc">Tactical deep slate with neon emerald telemetry accents.</p>
+              <p class="sis-ob-card-desc">Cool mint surfaces with a forest-green accent.</p>
             </button>
           </div>
 
@@ -121,7 +125,7 @@
             <button type="button" class="sis-ob-card ${activeFont === 'editorial' ? 'is-selected' : ''}" data-font-choice="editorial">
               <div class="sis-ob-card-top">
                 <span class="sis-ob-card-name" style="font-family:'Instrument Serif', serif; font-size:16px;">Editorial Luxury</span>
-                <span class="sis-ob-card-tag">Signature</span>
+                <span class="sis-ob-card-tag">Default</span>
               </div>
               <div class="sis-ob-font-sample" style="font-family:'Instrument Serif', serif; font-size:15px;">
                 "Beyond Ordinary Minds."
@@ -196,7 +200,8 @@
             </div>
 
             <div>
-              <button type="button" class="sis-ob-btn sis-ob-btn-primary" id="obBtnConnectBrowser" style="width:100%; max-width:380px; padding:13px 20px;">
+              <div style="margin-top: 14px; width: 100%; max-width: 380px;">
+              <button type="button" class="sis-ob-btn sis-ob-btn-secondary" id="obBtnConnectBrowser" style="width:100%; padding:11px 16px; font-size:12.5px;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
                   <polyline points="15 3 21 3 21 9"/>
@@ -204,7 +209,7 @@
                 </svg>
                 <span id="obConnectText">Connect Sleek Account from Browser</span>
               </button>
-            </div>
+            </div></div>
 
             <div class="sis-ob-status-msg" id="obStatusMsg">
               <span id="obStatusText">Connecting...</span>
@@ -216,10 +221,26 @@
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
               <span>Back</span>
             </button>
-            <button type="button" class="sis-ob-btn sis-ob-btn-primary" id="obBtnFinish">
-              <span>Finish &amp; Enter Workspace</span>
+            <button type="button" class="sis-ob-btn sis-ob-btn-primary" id="obNext3">
+              <span>Next: Model</span>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </button>
+          </div>
+        </section>
+        <section class="sis-ob-panel" id="obPanel4">
+          <h3>Connect a model</h3>
+          <p class="sis-ob-sleek-desc">Use an OpenAI-compatible endpoint with native tool calling. Requests go to your provider and may incur its usage charges.</p>
+          <form id="obProviderForm" class="sis-ob-provider">
+            <label>API endpoint<input id="obProviderURL" type="url" required placeholder="https://provider.example/v1" autocomplete="off"></label>
+            <label>Model ID<input id="obProviderModel" required placeholder="Model ID from your provider" autocomplete="off"></label>
+            <label>API key<input id="obProviderKey" type="password" placeholder="Leave blank to keep a saved key" autocomplete="new-password"></label>
+            <p>Keys are encrypted on this computer. A local endpoint can use an empty key.</p>
+            <button class="sis-ob-btn sis-ob-btn-primary" id="obProviderTest" type="submit">Save &amp; test model</button>
+          </form>
+          <p id="obProviderStatus" role="status" aria-live="polite">Checking saved configuration…</p>
+          <div class="sis-ob-actions">
+            <button type="button" class="sis-ob-btn sis-ob-btn-secondary" id="obBack4">Back</button>
+            <button type="button" class="sis-ob-btn sis-ob-btn-primary" id="obBtnFinish">Enter Workspace</button>
           </div>
         </section>
       </div>
@@ -228,18 +249,20 @@
     document.body.appendChild(overlay);
 
     // Event binding
-    const steps = [1, 2, 3].map(i => document.getElementById(`obStep${i}`));
-    const panels = [1, 2, 3].map(i => document.getElementById(`obPanel${i}`));
+    const steps = [1, 2, 3, 4].map((i) => document.getElementById(`obStep${i}`));
+    const panels = [1, 2, 3, 4].map((i) => document.getElementById(`obPanel${i}`));
 
     function setStep(s) {
       currentStep = s;
       steps.forEach((btn, idx) => {
         btn.classList.toggle('is-active', idx + 1 === s);
         btn.classList.toggle('is-done', idx + 1 < s);
+        btn.setAttribute('aria-current', idx + 1 === s ? 'step' : 'false');
       });
       panels.forEach((p, idx) => {
         p.classList.toggle('is-active', idx + 1 === s);
       });
+      overlay.querySelector('.sis-onboarding-card').scrollTop = 0;
     }
 
     steps.forEach((btn, idx) => btn.addEventListener('click', () => setStep(idx + 1)));
@@ -247,26 +270,95 @@
     document.getElementById('obBack2').addEventListener('click', () => setStep(1));
     document.getElementById('obNext2').addEventListener('click', () => setStep(3));
     document.getElementById('obBack3').addEventListener('click', () => setStep(2));
+    document.getElementById('obNext3').addEventListener('click', () => setStep(4));
+    document.getElementById('obBack4').addEventListener('click', () => setStep(3));
+
+    const providerStatus = document.getElementById('obProviderStatus');
+    const providerURL = document.getElementById('obProviderURL');
+    const providerModel = document.getElementById('obProviderModel');
+    const providerKey = document.getElementById('obProviderKey');
+    const providerTest = document.getElementById('obProviderTest');
+    let providerConfig = null;
+    function showProvider(data) {
+      providerConfig = data;
+      if (data.configured) {
+        providerURL.value = data.baseURL || '';
+        providerModel.value = data.model || '';
+      }
+      providerStatus.textContent = data.ready
+        ? `Generation and tool calling passed for ${data.model}. This connection check does not measure general task quality.`
+        : 'Model setup pending. Save and test before asking Supergence to perform tasks. You can return here from Setup.';
+    }
+    fetch('/api/provider/status')
+      .then(async (r) => {
+        if (!r.ok) throw new Error('Connect your Sleek account before setting up a model.');
+        showProvider(await r.json());
+      })
+      .catch((error) => {
+        providerStatus.textContent = error.message;
+      });
+    document.getElementById('obProviderForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      providerTest.disabled = true;
+      providerStatus.textContent = 'Saving and checking generation and native tool calling…';
+      try {
+        const unchanged =
+          providerConfig?.configured &&
+          !providerKey.value &&
+          providerURL.value.trim() === providerConfig.baseURL &&
+          providerModel.value.trim() === providerConfig.model;
+        const requests = unchanged
+          ? []
+          : [
+              [
+                '/api/provider/configure',
+                {
+                  baseURL: providerURL.value.trim(),
+                  model: providerModel.value.trim(),
+                  apiKey: providerKey.value,
+                },
+              ],
+            ];
+        requests.push(['/api/provider/check', {}]);
+        for (const [url, body] of requests) {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || 'Model setup failed.');
+          if (url.endsWith('/check')) showProvider(data);
+        }
+      } catch (error) {
+        providerStatus.textContent = error.message;
+      } finally {
+        providerKey.value = '';
+        providerTest.disabled = false;
+      }
+    });
 
     // Theme selector
-    overlay.querySelectorAll('[data-theme-choice]').forEach(card => {
+    overlay.querySelectorAll('[data-theme-choice]').forEach((card) => {
       card.addEventListener('click', () => {
         const theme = card.dataset.themeChoice;
         document.body.dataset.theme = theme;
         localStorage.setItem('sis-ui-theme', theme);
-        overlay.querySelectorAll('[data-theme-choice]').forEach(c => {
+        const preference = document.getElementById('shellThemePreference');
+        if (preference) preference.value = theme;
+        overlay.querySelectorAll('[data-theme-choice]').forEach((c) => {
           c.classList.toggle('is-selected', c.dataset.themeChoice === theme);
         });
       });
     });
 
     // Font selector
-    overlay.querySelectorAll('[data-font-choice]').forEach(card => {
+    overlay.querySelectorAll('[data-font-choice]').forEach((card) => {
       card.addEventListener('click', () => {
         const font = card.dataset.fontChoice;
         document.body.dataset.font = font;
         localStorage.setItem('sis-ui-font', font);
-        overlay.querySelectorAll('[data-font-choice]').forEach(c => {
+        overlay.querySelectorAll('[data-font-choice]').forEach((c) => {
           c.classList.toggle('is-selected', c.dataset.fontChoice === font);
         });
       });
@@ -312,13 +404,22 @@
             if (pollData.status === 'complete') {
               clearInterval(pollTimer);
               statusMsg.className = 'sis-ob-status-msg is-success';
-              statusText.textContent = `✓ Connected to Sleek as ${pollData.user?.sleekId || 'Verified User'}!`;
+              if (!pollData.user?.sleekId || pollData.user.supergenceActivated !== true)
+                throw new Error('Identity or activation was not confirmed. Reconnect with Sleek.');
+              statusText.textContent = `Connected as ${pollData.user.sleekId}. Supergence activation confirmed by Silisleek.`;
               connectText.textContent = '✓ Sleek Account Connected';
               btnConnect.disabled = true;
+            } else if (!pollRes.ok || ['failed', 'expired'].includes(pollData.status)) {
+              throw new Error(pollData.message || 'Sign-in expired. Start again.');
             }
-          } catch (_) {}
+          } catch (error) {
+            clearInterval(pollTimer);
+            btnConnect.disabled = false;
+            connectText.textContent = 'Retry Browser Connect';
+            statusMsg.className = 'sis-ob-status-msg is-error';
+            statusText.textContent = error.message;
+          }
         }, 1500);
-
       } catch (err) {
         statusMsg.className = 'sis-ob-status-msg is-error';
         statusText.textContent = err.message || 'Failed to open browser authentication.';
@@ -329,13 +430,13 @@
 
     // Precheck Sleek session
     fetch('/api/silisleek/session')
-      .then(r => r.json())
-      .then(d => {
-        if (d.authenticated && d.user) {
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.authenticated && d.user?.sleekId && d.user.supergenceActivated === true) {
           statusMsg.className = 'sis-ob-status-msg is-success';
           statusMsg.style.display = 'flex';
-          statusText.textContent = `✓ Active Sleek Account: ${d.user.sleekId || '@julianthorne'}`;
-          connectText.textContent = `Connected as ${d.user.sleekId || '@julianthorne'}`;
+          statusText.textContent = `Connected as ${d.user.sleekId}. Supergence activation confirmed by Silisleek.`;
+          connectText.textContent = `Connected as ${d.user.sleekId}`;
         }
       })
       .catch(() => {});
@@ -343,25 +444,23 @@
     // Finish
     document.getElementById('obBtnFinish').addEventListener('click', () => {
       localStorage.setItem('sis_setup_completed', 'true');
+      localStorage.setItem('sis_model_setup_seen', 'true');
       overlay.classList.remove('is-open');
+      overlay.hidden = true;
     });
 
     return overlay;
   }
 
-  window.openSupergenceSetup = () => {
+  window.openSupergenceSetup = (step) => {
     const m = createModal();
+    m.hidden = false;
     m.classList.add('is-open');
+    if (step) m.querySelector(`#obStep${step}`)?.click();
   };
 
-  // Auto-launch on first run
+  // Keep available on demand, do not auto-intercept user interaction on load
   window.addEventListener('DOMContentLoaded', () => {
     createModal();
-    const hasCompleted = localStorage.getItem('sis_setup_completed');
-    if (hasCompleted !== 'true') {
-      setTimeout(() => {
-        window.openSupergenceSetup();
-      }, 400);
-    }
   });
 })();

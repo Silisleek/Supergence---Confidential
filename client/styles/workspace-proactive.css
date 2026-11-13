@@ -12,14 +12,14 @@
   border-radius: 12px;
 }
 .proactive-open:hover {
-  background: #2b211b;
+  background: var(--shell-hover);
 }
 .proactive-open span {
   position: absolute;
   right: 0;
   top: 0;
-  background: #b88c69;
-  color: #080706;
+  background: var(--shell-accent);
+  color: var(--shell-accent-ink);
   border-radius: 50%;
   font-size: 10px;
   padding: 2px 5px;
@@ -27,8 +27,8 @@
 .proactive-dialog {
   margin: auto;
   inset: 0;
-  background: #10100f;
-  color: #e8dfd5;
+  background: var(--shell-raised);
+  color: var(--shell-text);
   border: 0;
   border-radius: 24px;
   max-width: 640px;
@@ -43,11 +43,11 @@
 }
 .proactive-settings summary {
   cursor: pointer;
-  color: #d7b697;
+  color: var(--shell-accent);
   padding: 12px 0;
 }
 .proactive-dialog::backdrop {
-  background: #000a;
+  background: var(--shell-backdrop);
   backdrop-filter: blur(10px);
 }
 .proactive-heading {
@@ -64,8 +64,8 @@
 .proactive-dialog button,
 .proactive-dialog select {
   border: 0;
-  background: #30251d;
-  color: #e4c5aa;
+  background: var(--shell-tint);
+  color: var(--shell-text);
   padding: 10px 15px;
   border-radius: 12px;
   cursor: pointer;
@@ -73,7 +73,7 @@
 }
 .proactive-dialog p {
   line-height: 1.65;
-  color: #bdb1a6;
+  color: var(--shell-muted);
   font-size: 13px;
 }
 .proactive-dialog label {
@@ -85,19 +85,19 @@
   flex-wrap: wrap;
 }
 .proactive-dialog input {
-  accent-color: #bd9472;
+  accent-color: var(--shell-accent);
 }
 .proactive-dialog fieldset {
   border: 0;
   margin: 15px 0;
   padding: 15px;
-  background: #181614;
+  background: var(--shell-code);
   border-radius: 16px;
 }
 .proactive-dialog small {
   display: block;
   width: 100%;
-  color: #9e9084;
+  color: var(--shell-muted);
   font-size: 11px;
   overflow-wrap: anywhere;
 }
@@ -109,7 +109,7 @@
   gap: 10px;
 }
 .proactive-dialog article {
-  background: #1c1815;
+  background: var(--shell-surface);
   border-radius: 18px;
   padding: 20px;
   margin: 14px 0;
@@ -125,15 +125,15 @@
   display: flex;
   gap: 16px;
   align-items: center;
-  color: #baab9d;
+  color: var(--shell-muted);
   font-size: 12px;
   margin: 14px 0;
 }
 .task-progress-control button {
   border: 0;
   border-radius: 10px;
-  background: #30251d;
-  color: #e4c5aa;
+  background: var(--shell-tint);
+  color: var(--shell-text);
   padding: 7px 12px;
   cursor: pointer;
 }

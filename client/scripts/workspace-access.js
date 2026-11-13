@@ -66,7 +66,8 @@
   approvals.id = 'workspaceApprovals';
   approvals.hidden = true;
   approvals.setAttribute('aria-label', 'Pending agent actions');
-  document.querySelector('.workspace-composer-wrap')?.prepend(approvals);
+  if (document.body.classList.contains('hud-liquid-glass-pure')) document.body.append(approvals);
+  else document.querySelector('.workspace-composer-wrap')?.prepend(approvals);
   async function api(url, method = 'GET', body) {
     const response = await fetch(url, {
       method,

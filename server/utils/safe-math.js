@@ -219,7 +219,9 @@ class Parser {
   parse() {
     const res = this.parseExpression();
     if (this.peek().type !== 'eof') {
-      throw new Error(`Unexpected token '${this.peek().value || this.peek().type}' after expression`);
+      throw new Error(
+        `Unexpected token '${this.peek().value || this.peek().type}' after expression`,
+      );
     }
     return res;
   }
@@ -329,7 +331,9 @@ class Parser {
       throw new Error(`Unknown mathematical identifier: ${name}`);
     }
 
-    throw new Error(`Unexpected token: ${tok.type === 'eof' ? 'end of expression' : tok.value || tok.type}`);
+    throw new Error(
+      `Unexpected token: ${tok.type === 'eof' ? 'end of expression' : tok.value || tok.type}`,
+    );
   }
 }
 

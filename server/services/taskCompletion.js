@@ -35,6 +35,25 @@ export function resumableTaskError(error) {
     ) || error?.code === 'TASK_BATCH_LIMIT'
   );
 }
+
+function clipText(value, length) {
+  return typeof value === 'string' ? value.slice(0, length) : undefined;
+}
+
+function compactResearchSources(sources) {
+  return sources
+    .slice(0, 10)
+    .filter((source) => typeof source?.url === 'string' && source.url.length <= 2048)
+    .map(({ id, title, url, excerpt, snippet, fetchStatus }) => ({
+      id: clipText(id, 32),
+      title: clipText(title, 180),
+      url,
+      excerpt: clipText(excerpt, 360),
+      snippet: clipText(snippet, 240),
+      fetchStatus: Number.isInteger(fetchStatus) ? fetchStatus : clipText(fetchStatus, 40),
+    }));
+}
+
 export function compactTaskCall(call) {
   const args = { ...(call.args || {}) };
   for (const key of ['content', 'target_content', 'replacement_content', 'code']) {
@@ -58,6 +77,12 @@ export function compactTaskCall(call) {
             excerpt: text.slice(0, 5000),
             tail: text.slice(-1500),
             truncated: true,
+            ...(call.tool === 'deep_research' && Array.isArray(result?.sources)
+              ? {
+                  topic: clipText(result.topic, 240),
+                  sources: compactResearchSources(result.sources),
+                }
+              : {}),
           }
         : result,
   };

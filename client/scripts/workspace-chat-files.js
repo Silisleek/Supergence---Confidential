@@ -392,6 +392,7 @@
   }
   window.SupergenceChatWorkspace = {
     render(container) {
+      if (!container) return;
       container.classList.add('cw-container');
       container.append(panel);
       if (!cid)
@@ -400,9 +401,9 @@
         );
     },
     selectChat,
-    start({ conversationId }) {
+    start({ conversationId, open = true }) {
       tab('files');
-      return selectChat(conversationId, { open: true });
+      return selectChat(conversationId, { open });
     },
     get conversationId() {
       return cid;

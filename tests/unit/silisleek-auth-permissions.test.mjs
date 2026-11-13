@@ -85,3 +85,46 @@ test('globalInputValidator rejects prototype pollution, traversal, and script in
   assert.equal(nextCalled, true);
   assert.equal(status, 200);
 });
+
+test('code-bearing conversations and retained sources accept literal code without weakening structural checks', () => {
+  const history = [
+    { role: 'assistant', content: '```html\n<script src="../app.js"></script>\n```' },
+  ];
+  for (const path of [
+    '/api/sis/unified-turn-stream',
+    '/api/sis/UNIFIED-TURN/',
+    '/api/learning/sources',
+  ]) {
+    let passed = false;
+    const res = {
+      status() {
+        return { json() {} };
+      },
+    };
+    globalInputValidator(
+      { path, query: {}, params: {}, body: { query: 'Update the existing project.', history } },
+      res,
+      () => {
+        passed = true;
+      },
+    );
+    assert.equal(passed, true, path);
+    passed = false;
+    globalInputValidator(
+      { path, query: {}, params: {}, body: JSON.parse('{"__proto__":{"admin":true}}') },
+      res,
+      () => {
+        passed = true;
+      },
+    );
+    assert.equal(passed, false, path);
+    globalInputValidator(
+      { path, query: { path: '../../secret' }, params: {}, body: {} },
+      res,
+      () => {
+        passed = true;
+      },
+    );
+    assert.equal(passed, false, path);
+  }
+});

@@ -18,7 +18,8 @@ const privateNames = new Set([
   'AZURE_OPENAI_API_KEY',
 ]);
 
-const SENSITIVE_KEY_PATTERN = /(?:API[_-]?KEY|SECRET|TOKEN|PASSWORD|PRIVATE_KEY|CREDENTIAL|AUTH(?:ORIZATION|ENTICATION)?$|_AUTH$|^AUTH_)/i;
+const SENSITIVE_KEY_PATTERN =
+  /(?:API[_-]?KEY|SECRET|TOKEN|PASSWORD|PRIVATE_KEY|CREDENTIAL|AUTH(?:ORIZATION|ENTICATION)?$|_AUTH$|^AUTH_)/i;
 
 export function childEnvironment(overrides = {}) {
   return Object.fromEntries(

@@ -1,4 +1,7 @@
 import learningLibrary from './learningLibrary.js';
+import aremEngine from '../arem/arem-engine.js';
+import aremStore from '../arem/arem-memory-store.js';
+import { responseDiagnostics, generatedArtifactEvidence } from './responseDiagnostics.js';
 import { evolutionEngine } from './evolutionEngine.js';
 import { ConversationTurns } from './conversationTurns.js';
 import { conversationWorkspaces } from './conversationWorkspaces.js';
@@ -41,6 +44,8 @@ import brain from '../orchestrator/brain.js';
 import openclawController from './openclawController.js';
 import openBotDotsManager from './openBotDotsManager.js';
 import adaToolForger from './adaToolForger.js';
+import uiWidgetStore from './uiWidgetStore.js';
+import uiSelfModification from './uiSelfModification.js';
 import hermesLearner from './hermesLearner.js';
 import publicApisManager from './publicApis.js';
 import agentBrowserManager from './agentBrowserManager.js';
@@ -61,6 +66,7 @@ import subconsciousMatrix from '../orchestrator/subconscious.js';
 import codingExpertEngine from '../coder/coding-expert-engine.js';
 import userFocusTracker from '../improvement/user-focus-tracker.js';
 import exemplarBank from '../improvement/exemplar-bank.js';
+import { taskLearning } from './taskLearning.js';
 import patternLibrary from '../improvement/anti-patterns.js';
 import autonomousLearner from '../improvement/autonomous-learner.js';
 import { innerReview, outerReview } from '../orchestrator/conscious.js';
@@ -225,7 +231,7 @@ export class SisUnifiedSystem {
           'Autonomous Tree of Thoughts & MCTS Planners',
           'Asymptotic Complexity & Concurrency Race Detection',
           'Procedural WebGL 3D Terrain, Shaders & FM Audio Synthesis',
-          'Deterministic 60 FPS Physics & GOAP Enemy AI',
+          'Real-time Physics & GOAP Enemy AI',
         ],
       },
     ];
@@ -340,14 +346,17 @@ export class SisUnifiedSystem {
       return await runtimeAccess.run(
         { agentId: params.agentId || 'agent-supergence', conversationId },
         () =>
-          conversationTurns.run({ ...params, conversationId }, emitter, (turn, callbacks) =>
-            conversationWorkspaces.run(
-              { baseRoot: workspace.baseRoot, conversationId, requestId: turn.requestId },
-              () =>
-                runtimeAccess.run({ signal: turn.signal }, () =>
-                  this._executeUnifiedTurnStream(turn, callbacks),
-                ),
-            ),
+          conversationTurns.run(
+            { ...params, conversationId, signal: runtimeAccess.currentContext().signal },
+            emitter,
+            (turn, callbacks) =>
+              conversationWorkspaces.run(
+                { baseRoot: workspace.baseRoot, conversationId, requestId: turn.requestId },
+                () =>
+                  runtimeAccess.run({ signal: turn.signal }, () =>
+                    this._executeUnifiedTurnStream(turn, callbacks),
+                  ),
+              ),
           ),
       );
     } finally {
@@ -357,7 +366,7 @@ export class SisUnifiedSystem {
   }
 
   async _executeUnifiedTurnStream(params = {}, emitter = {}) {
-    const query = params.query || params.prompt || params.message || params.userPrompt || '';
+    const query = params.query || params.prompt || params.message || params.userPrompt || params.input || '';
     const context = params.context || {};
     const autoExecuteClaw = params.autoExecuteClaw !== false;
     const forceAgentId = params.agentId || null;
@@ -387,6 +396,11 @@ export class SisUnifiedSystem {
       const currentHistory = Array.isArray(params.history) ? [...params.history] : [];
       const conversationIntent = resolveConversationIntent(trimmed, currentHistory);
       const effectiveQuery = conversationIntent.effectiveQuery;
+      try {
+        taskLearning.observeTask(effectiveQuery, conversationId);
+      } catch (error) {
+        console.warn('[TaskLearning] Task observation unavailable:', error.message);
+      }
 
       // Automatically search across all past conversations & prior threads for relevant context (skip for pure coding queries for sub-second preamble)
       const isCodingQuery =
@@ -411,10 +425,24 @@ export class SisUnifiedSystem {
         pastChatsContextStr =
           `### 📜 Relevant Past Conversations (from Archive):\n` +
           filteredPastMatches
-            .slice(0, 2)
+            .slice(0, 3)
             .map((m) => `- [Thread: "${m.title}"]: "${(m.snippet || '').slice(0, 150)}"`)
             .join('\n') +
           '\n';
+      } else {
+        try {
+          const recentConvs = (conversations.list() || [])
+            .filter((c) => c.id !== conversationId)
+            .slice(0, 6);
+          if (recentConvs.length > 0) {
+            pastChatsContextStr =
+              `### 📜 Recent Past Conversation Threads & Ongoing Projects:\n` +
+              recentConvs
+                .map((c) => `- Thread: "${c.title}" (${c.messageCount} messages, last active: ${c.updatedAt ? new Date(c.updatedAt).toLocaleDateString() : 'recent'})`)
+                .join('\n') +
+              '\n';
+          }
+        } catch (_) {}
       }
 
       const recentTurns = currentHistory.slice(-8);
@@ -538,18 +566,26 @@ export class SisUnifiedSystem {
       let memoryTreeContextStr = '';
       let possapForecastingStr = '';
 
-      if (
-        !isCodingQuery &&
-        /\b(?:search|inspect|retrieve)\s+(?:the\s+)?legacy memory\b/i.test(trimmed)
-      ) {
+      const isMemoryQuery =
+        /\b(remember|memory|recall|past|earlier|previous|yesterday|history|last time|who am i|know about me|hey|hello|myself|project|work|what did we)\b/i.test(
+          trimmed,
+        );
+
+      if (!isCodingQuery || isMemoryQuery) {
         try {
           learnedFacet = hermesLearner.learnFromTurn({ role: 'user', content: trimmed, context });
-          hermesMemoryContext = hermesLearner.getLearnedContextPrompt();
-          workingMemorySummary = shortTermMemory.getSummary();
-          memoryTreeMatches = longTermMemory.search(trimmed, 5) || [];
+          hermesMemoryContext = hermesLearner.getLearnedContextPrompt() || '';
+          workingMemorySummary = shortTermMemory.getSummary() || '';
+
+          const searchQuery = isMemoryQuery ? 'Akshan Sharma Supergence system architecture workspace' : trimmed;
+          memoryTreeMatches = longTermMemory.search(searchQuery, 6) || [];
+          if (memoryTreeMatches.length === 0 && isMemoryQuery) {
+            memoryTreeMatches = longTermMemory.search(trimmed, 6) || [];
+          }
+
           if (memoryTreeMatches.length > 0) {
             memoryTreeContextStr =
-              `\n### Retained legacy context (not independently verified):\n` +
+              `\n### 🧠 Retained Long-Term Memory (LTM):\n` +
               memoryTreeMatches
                 .map(
                   (m) => `- [${m.type}] ${m.content}${m.couldBeWrong ? ' (could be wrong)' : ''}`,
@@ -727,8 +763,8 @@ export class SisUnifiedSystem {
       const registeredRoster = agentTeamManager.getAllAgents();
       const personaInstruction =
         domainAgent && forceAgentId
-          ? `You are ${domainAgent.name}, ${domainAgent.role} in Supergence. ${domainAgent.systemPrompt || ''}`
-          : `You are Supergence, an AI workspace with local tools, Chrome and retained source memory. Describe only capabilities and outcomes established by the runtime. Avoid unsupported intelligence, mastery, performance or autonomy claims.${/agent|specialist|team|coworker/i.test(effectiveQuery) ? ` Registered specialists: ${registeredRoster.map((agent) => `${agent.name} (${agent.role})`).join('; ')}.` : ''}`;
+          ? `You are ${domainAgent.name}, ${domainAgent.role} in Supergence. ${domainAgent.systemPrompt || ''} You share Supergence's unified lifelong memory across conversations and recognize the operator, Akshan Sharma.`
+          : `You are Supergence, an AI workspace with local tools, Chrome and retained source memory. Describe only capabilities and outcomes established by the runtime. Avoid unsupported intelligence, mastery, performance or autonomy claims. You share Supergence's unified lifelong memory across conversations and recognize the operator, Akshan Sharma.${/agent|specialist|team|coworker/i.test(effectiveQuery) ? ` Registered specialists: ${registeredRoster.map((agent) => `${agent.name} (${agent.role})`).join('; ')}.` : ''}`;
 
       const toolsContextStr = toolCalls
         .map((tc) => {
@@ -779,7 +815,7 @@ export class SisUnifiedSystem {
     4. Hotbar / block selector: Keys 1-6 or scroll wheel to switch active block type (Grass, Dirt, Stone, Wood, Leaves, Glass).
     5. Procedural Web Audio API sound effects (synthesize oscillators and noise buffers for footsteps, block placement, and block breaking).
     6. Performance: 60 FPS requestAnimationFrame render loop with delta time, PBR lighting (directional sun with shadow map + ambient sky), and atmospheric fog.
-  - MANDATORY 3D ENGINE SYNTHESIS TOOL: When requested to make a 3D game, voxel engine, or Minecraft clone, invoke generate_3d_game: {"prompt": "...", "title": "..."}. This invokes the high-performance Three.js voxel compiler, executes a real headless Chrome smoke-test, and mounts the 60 FPS playable world in Center Stage!
+  - MANDATORY 3D ENGINE SYNTHESIS TOOL: When requested to make a 3D game, voxel engine, or Minecraft clone, invoke generate_3d_game: {"prompt": "...", "title": "..."}. This invokes the high-performance Three.js voxel compiler, attempts a headless Chrome smoke-test and mounts the generated world in Center Stage. Report the returned check results; claim a frame rate only when measured.
   - ZERO SKELETONS / ZERO PLACEHOLDERS: Implement 100% of all functions, game loops, textures, and event handlers. Never output placeholders or // TODO.`);
         }
         if (
@@ -860,10 +896,18 @@ Available Tools:
 - openclaw_hardware_audit: {} — Deep Windows CIM/WMI hardware forensic audit.
 - openclaw_executeShell: {"command": "..."} — Run PowerShell/cmd command on host machine.
 - openclaw_captureScreen: {} — Capture desktop screenshot with multimodal visual inspection.
-- create_tool: {"name": "...", "goal": "...", "specification": "..."} — Dynamically synthesize, test in sandbox, and hot-load a new computational tool.
+- superbox_create_file: {"path": "...", "content": "..."} - Write to the shared Superbox staging folder.
+- superbox_run_command: {"command": "..."} - Run a host shell command with Superbox as its working directory. Host filesystem permissions apply.
+- superbox_list_files: {} - List staged files.
+- superbox_apply_to_workspace: {"filePaths": [...]} - Copy staged files to new paths in the workspace.
+- superbox_reset: {} - Clear the Superbox staging folder.
+- create_tool: {"name": "...", "description": "...", "code": "..."} - Autonomously synthesize, test in sandbox, and register a new tool in Supergence.
+- synthesize_dynamic_tool: {"name": "...", "description": "...", "code": "..."} - Synthesize dynamic tool into registry.
+- inject_ui_widget: {"id": "...", "title": "...", "html": "...", "css": "...", "js": "..."} - Inject live interactive UI element/widget into Supergence interface.
+- modify_ui_theme: {"theme": "cyber|midnight|warm|obsidian", "customCssVars": {...}} - Modify UI styling and theme.
 - generate_3d_simulation: {"prompt": "...", "title": "..."} — Synthesize interactive Three.js N-body gravitational orbit simulator.
-- generate_3d_game: {"prompt": "...", "title": "..."} — Synthesize 60 FPS Three.js WebGL game with physics and sound.
-- generate_3d_architecture: {"prompt": "...", "title": "..."} — Synthesize 60 FPS Three.js WebGL architectural simulation (bridges, landmarks, towers, monuments, cities) with PBR materials, multi-camera presets, and environmental audio.
+- generate_3d_game: {"prompt": "...", "title": "..."} — Generate a Three.js WebGL game with physics and sound. Smooth frame pacing is a target; report measured results only.
+- generate_3d_architecture: {"prompt": "...", "title": "..."} — Generate a Three.js WebGL architectural simulation (bridges, landmarks, towers, monuments, cities) with PBR materials, multi-camera presets, and environmental audio.
 - generate_startup_venture: {"prompt": "...", "name": "...", "industry": "...", "runUnlimited": true} — Autonomously architect a complete enterprise startup, assemble C-Suite, synthesize working interactive landing page and MVP dashboard in ./workspace/, and start continuous 24/7 unlimited execution loop.
 - start_unlimited_venture_loop: {"slug": "...", "intervalMs": 15000} — Start or accelerate 24/7 unlimited autonomous startup execution loop.
 - figcraft_create_design: {"name": "...", "width": 1200, "height": 800, "backgroundColor": "#07090E", "primaryColor": "#6366F1", "elements": [...]} — Autonomously synthesize full vector UI artboards in FigCraft (.figcraft) with frames, shapes, typography, and render a crisp 2x retina PNG preview.
@@ -886,7 +930,10 @@ Available Tools:
 - swarm_team_deliberate: {"senderId": "agent-cs", "message": "..."} — Broadcast message to visible coworker team channel.
 
 TOOL COGNITION RULES:
-- When the user requests implementation, use actual file and terminal tools to build and test the result. Stream brief commentary before tool calls. For explanation-only requests, provide clear Markdown and complete examples.
+- GREETINGS & CASUAL MESSAGES ("hey", "hello", "hi"): Reply in 1 concise, direct sentence asking what to build or debug today. NEVER dump capability lists, past projects, or unprompted feature summaries.
+- TOOL CREATION & CUSTOMIZATION: When user asks to create, build, forge, or customize a tool (e.g. "create a tool to calculate compound interest"), IMMEDIATELY invoke create_tool with complete working JavaScript code, parameter schema, and description.
+- INTERACTIVE UI WIDGETS: When user asks to create an interactive UI widget, dashboard card, or visual control, invoke inject_ui_widget (and create_tool if custom logic is needed) to mount the live widget into Supergence.
+- When user requests implementation, use actual file and terminal tools to build and test the result. Stream brief commentary before tool calls. For explanation-only requests, provide clear Markdown and complete examples.
 - When user asks for 3D landmarks, bridges, towers, monuments, or architectural scenes: invoke generate_3d_architecture.
 - When user asks for vector designs, FigCraft artboards, banners, UI mocks, or vector iconography: invoke figcraft_create_design or open_design_to_figcraft.
 - When user asks for design systems, themes, tokens, or Open Design: invoke open_design_get_system or open_design_list_systems.
@@ -894,14 +941,31 @@ TOOL COGNITION RULES:
 - When user asks for a startup venture or business: invoke generate_startup_venture.
 - When user asks for 3D games or Minecraft/voxel worlds: invoke generate_3d_game.
 - When user asks for hardware specs/telemetry: invoke openclaw_getSystemTelemetry.
+- Use Superbox staging for tasks that request it. If a task requires OS-level isolation, do not substitute Superbox host execution.
+- When user asks to restyle or customize Supergence UI: invoke inject_ui_widget or modify_ui_theme.
 
 If no tool is needed, respond directly with your complete, authoritative Markdown solution.
 </tools>`;
       }
 
-      const retainedContext = learningLibrary.contextFor(effectiveQuery);
+      const aremTopIndex = aremEngine.getTopLayerIndex();
+      const relevantWiki = aremStore.searchWiki(effectiveQuery, 2);
+      const aremMemorySection = [
+        aremTopIndex ? `<arem_long_term_memory>\n${aremTopIndex}\n</arem_long_term_memory>` : '',
+        relevantWiki.length > 0
+          ? `<arem_wiki_retrieval>\n${relevantWiki.map((p) => `### [[${p.slug}]]: ${p.title}\n${p.preview}`).join('\n\n')}\n</arem_wiki_retrieval>`
+          : '',
+      ]
+        .filter(Boolean)
+        .join('\n\n');
+      const retainedContext =
+        (aremMemorySection ? `${aremMemorySection}\n` : '') +
+        learningLibrary.contextFor(effectiveQuery);
       systemPrompt =
-        `You must distinguish retained reference material, actual tool observations, and independently checked results. Never claim that reading a source proves its contents or updates model weights.
+        `You are Supergence, a superintelligent AI system equipped with dual-layer continuous learning memory: Short-Term Working Memory (active conversation turns & working context) and Long-Term Memory (AREM top-layer index invariants & cross-linked wiki knowledge).
+You must distinguish retained reference material, actual tool observations, and independently checked results. Never claim that reading a source proves its contents or updates model weights.
+When addressing any task, apply both your short-term and long-term memory to prevent regressions and improve execution accuracy. At the very end of your response, always display a clear memory engagement indicator:
+\`[🧠 Memory Engaged | Short-Term: <active working context/turns applied> | Long-Term: <invariants/wiki concepts applied>]\`
 ${retainedContext}
 ` + systemPrompt;
       systemPrompt += `
@@ -1010,6 +1074,10 @@ ${[
         'list_local_directory',
         'retain_knowledge',
         'recall_knowledge',
+        'evaluate_knowledge',
+        'study_topic',
+        'inspect_learning',
+        'record_learning_experience',
         'inspect_knowledge',
         'edit_knowledge',
         'read_learning_skill',
@@ -1023,7 +1091,49 @@ ${[
         'generate_3d_game',
         'generate_3d_architecture',
         'execute_code_sandbox',
+        'superbox_create_file',
+        'superbox_read_file',
+        'superbox_list_files',
+        'superbox_run_command',
+        'superbox_apply_to_workspace',
+        'superbox_reset',
+        'create_tool',
+        'synthesize_dynamic_tool',
+        'list_dynamic_tools',
+        'execute_dynamic_tool',
+        'get_ui_state',
+        'modify_ui_theme',
+        'inject_ui_widget',
+        'remove_ui_widget',
+        'modify_ui_source',
       ]);
+      const memorySections = [];
+      memorySections.push(`### 👤 User & Operator Profile:
+- Operator Name: Akshan Sharma
+- Identity / Sleek ID: akshansleek (local operator)
+- Role: Founder & Lead Architect of Silisleek & Supergence
+- Memory Invariant: You HAVE continuous lifelong cross-conversation memory across conversations via Supergence's Unified Long-Term Memory (LTM), AREM episodic memory engine, and Knowledge Graph. NEVER claim that you do not have memory of past chats or that you don't remember Akshan Sharma. Always recognize Akshan Sharma and recall your shared history, projects, and past conversations.`);
+
+      if (pastChatsContextStr) {
+        memorySections.push(pastChatsContextStr);
+      }
+      if (memoryTreeContextStr) {
+        memorySections.push(memoryTreeContextStr);
+      }
+      if (hermesMemoryContext) {
+        memorySections.push(`### 🏛️ Lifelong Cognitive Memory:\n${hermesMemoryContext}`);
+      }
+      try {
+        const libContext = learningLibrary.userMemoryContext();
+        if (libContext && typeof libContext === 'string') {
+          memorySections.push(libContext);
+        } else if (libContext && Array.isArray(libContext) && libContext.length) {
+          memorySections.push(JSON.stringify(libContext, null, 2));
+        }
+      } catch (_) {}
+
+      const unifiedUserMemory = memorySections.join('\n\n');
+
       // Build a focused contract rather than sending the legacy persona,
       // duplicated tool catalog and unrelated domain mandates to every task.
       // The actual conversation and retained evidence stay intact.
@@ -1032,7 +1142,7 @@ ${[
         access: runtimeAccess.describe(),
         conversation: conversationContract(conversationIntent, currentHistory),
         creation: creationWorkflow(),
-        userMemory: learningLibrary.userMemoryContext(),
+        userMemory: unifiedUserMemory,
         evolution: evolutionEngine.context(effectiveQuery),
         references: retainedContext,
         maxToolSteps,
@@ -1162,7 +1272,7 @@ ${[
                 systemPrompt,
                 messages: toolTranscript,
                 tools: nativeTools,
-                toolChoice: 'required',
+                toolChoice: 'auto',
                 maxTokens: Math.min(maxOutputTokens, 8192),
                 temperature: 0.2,
                 signal: params.signal,
@@ -1274,6 +1384,13 @@ ${[
             subsystem: 'Runtime',
             status: 'PENDING',
             args: publicArgs,
+          });
+          emitter?.onTaskStatus?.({
+            status: 'running',
+            message: `- Tasks running: ${effectiveTool.replaceAll('_', ' ')} (${agentTurnCount}/${maxToolSteps})`,
+            step: agentTurnCount,
+            maxSteps: maxToolSteps,
+            tool: effectiveTool,
           });
           try {
             await runtimeAccess.authorize(effectiveTool, tArgs);
@@ -1981,19 +2098,21 @@ ${[
             try {
               const telemetry = await openclawController.getSystemTelemetry();
               let cpuDetail = null;
-              try {
-                const { stdout: cpuOut } = await openclawController.executeShell(
-                  'powershell -NoProfile -Command "Get-CimInstance Win32_Processor | Select-Object Name, NumberOfCores, NumberOfLogicalProcessors, CurrentClockSpeed, MaxClockSpeed | ConvertTo-Json"',
-                );
-                cpuDetail = JSON.parse(cpuOut);
-              } catch (_) {}
               let osDetail = null;
-              try {
-                const { stdout: osOut } = await openclawController.executeShell(
-                  'powershell -NoProfile -Command "Get-CimInstance Win32_OperatingSystem | Select-Object TotalVisibleMemorySize, FreePhysicalMemory, TotalVirtualMemorySize, FreeVirtualMemory | ConvertTo-Json"',
-                );
-                osDetail = JSON.parse(osOut);
-              } catch (_) {}
+              if (process.platform === 'win32') {
+                try {
+                  const { stdout: cpuOut } = await openclawController.executeShell(
+                    'powershell -NoProfile -Command "Get-CimInstance Win32_Processor | Select-Object Name, NumberOfCores, NumberOfLogicalProcessors, CurrentClockSpeed, MaxClockSpeed | ConvertTo-Json"',
+                  );
+                  cpuDetail = JSON.parse(cpuOut);
+                } catch (_) {}
+                try {
+                  const { stdout: osOut } = await openclawController.executeShell(
+                    'powershell -NoProfile -Command "Get-CimInstance Win32_OperatingSystem | Select-Object TotalVisibleMemorySize, FreePhysicalMemory, TotalVirtualMemorySize, FreeVirtualMemory | ConvertTo-Json"',
+                  );
+                  osDetail = JSON.parse(osOut);
+                } catch (_) {}
+              }
               toolOutput = {
                 cpu: {
                   model: cpuDetail?.Name || telemetry.cpu.model,
@@ -2057,38 +2176,138 @@ ${[
             });
           } else if (
             effectiveTool === 'create_tool' ||
+            effectiveTool === 'synthesize_dynamic_tool' ||
             effectiveTool === 'forge_tool' ||
             effectiveTool === 'new_tool' ||
             effectiveTool === 'ada_synthesizeToolDynamically'
           ) {
-            const toolGoal =
-              tArgs.goal || tArgs.requirement || tArgs.description || tArgs.name || trimmed;
-            const toolSpec = tArgs.specification || tArgs.code || JSON.stringify(tArgs);
+            const cleanName = String(tArgs.name || tArgs.toolName || '')
+              .replace(/[^a-zA-Z0-9_]/g, '_')
+              .replace(/^_+|_+$/g, '')
+              .toLowerCase() || 'custom_tool_' + Date.now().toString(36).slice(-6);
+            const toolCode = tArgs.code || tArgs.implementation || tArgs.specification || '';
+            const toolDesc = tArgs.description || tArgs.goal || 'Autonomously synthesized dynamic tool.';
+            const displayName = tArgs.displayName || cleanName.replace(/_/g, ' ').toUpperCase();
+            const parameters = tArgs.parameters || tArgs.args || {};
+            const required = tArgs.required || [];
+
             emitToolCall({
               id: interceptId,
               tool: 'create_tool',
-              displayName: `Subconscious Tool Genesis: "${tArgs.name || toolGoal.slice(0, 35)}"`,
-              subsystem: 'Subconscious Autonomous Engine',
+              displayName: `Ada-SI Tool Genesis: "${cleanName}"`,
+              subsystem: 'Ada-SI Tool Forger',
               status: 'RUNNING',
-              args: tArgs,
+              args: { name: cleanName, displayName, description: toolDesc, parameters },
             });
+
             try {
-              const forged = await subconsciousEngine.createTool({
-                goal: toolGoal,
-                specification: toolSpec,
-                context: { caller: 'sis-unified', timestamp: Date.now() },
+              let forgeResult = await adaToolForger.forgeTool({
+                name: cleanName,
+                displayName,
+                description: toolDesc,
+                code: toolCode,
+                parameters,
+                required,
+                privileged: true,
+                requestedBy: 'Supergence Autonomous System',
               });
+
+              // Fallback to subconsciousEngine if no code was supplied or verification failed
+              if (!forgeResult.accepted && (!toolCode || toolCode.length < 20)) {
+                const subForged = await subconsciousEngine.createTool({
+                  goal: toolDesc,
+                  specification: `Create tool "${cleanName}": ${toolDesc}`,
+                  context: { caller: 'sis-unified', timestamp: Date.now() },
+                });
+                if (subForged?.success) {
+                  forgeResult = {
+                    accepted: true,
+                    pendingApproval: true,
+                    tool: {
+                      id: 'ada-tool-' + cleanName,
+                      name: cleanName,
+                      displayName,
+                      description: toolDesc,
+                      capabilities: ['custom'],
+                      privileged: true,
+                      code: subForged.code || '',
+                    },
+                  };
+                  adaToolForger.proposals.set(forgeResult.tool.id, forgeResult.tool);
+                }
+              }
+
               toolOutput = {
-                success: forged.success,
-                toolName: forged.name,
-                displayName: forged.displayName,
-                status: 'HOT_REGISTERED',
-                message: `Tool "${forged.name}" successfully created, verified in sandbox, and hot-loaded into ToolRegistry!`,
-                parameters: forged.parameters,
+                success: forgeResult.accepted,
+                name: cleanName,
+                status: forgeResult.pendingApproval ? 'PENDING_APPROVAL' : 'INSTALLED',
+                requiresVerification: Boolean(forgeResult.pendingApproval),
+                message: forgeResult.pendingApproval
+                  ? `Tool "${cleanName}" synthesized and verified in sandbox! Staged in Superbox Tool Studio requiring user verification to be unlocked.`
+                  : (forgeResult.reason || `Tool "${cleanName}" synthesized and live.`),
+                tool: forgeResult.tool || null,
               };
+
+              if (forgeResult.tool) {
+                emitter?.onInteractiveUI?.({
+                  type: 'tool-proposal',
+                  tool: forgeResult.tool,
+                });
+              }
             } catch (forgeErr) {
               toolOutput = { error: `Tool creation failed: ${forgeErr.message}` };
             }
+            emitToolResult({
+              id: interceptId,
+              status: toolOutput?.error || toolOutput?.success === false ? 'FAILED' : 'RESOLVED',
+              output: toolOutput,
+              durationMs: Date.now() - interceptStart,
+            });
+          } else if (effectiveTool === 'inject_ui_widget' || effectiveTool === 'create_ui_widget') {
+            const widgetId = String(tArgs.id || tArgs.widgetId || 'widget-' + Date.now().toString(36));
+            const widgetTitle = String(tArgs.title || tArgs.displayName || 'Dynamic Widget');
+            const widgetHtml = tArgs.html || tArgs.content || '';
+            const widgetCss = tArgs.css || '';
+            const widgetJs = tArgs.js || tArgs.script || '';
+            const widgetTarget = tArgs.target || 'workspace-stage';
+
+            emitToolCall({
+              id: interceptId,
+              tool: 'inject_ui_widget',
+              displayName: `Inject UI Widget: "${widgetTitle}"`,
+              subsystem: 'Dynamic UI Engine',
+              status: 'RUNNING',
+              args: { id: widgetId, title: widgetTitle, target: widgetTarget },
+            });
+
+            try {
+              const result = uiSelfModification.injectUIWidget({
+                id: widgetId,
+                title: widgetTitle,
+                html: widgetHtml,
+                css: widgetCss,
+                js: widgetJs,
+                target: widgetTarget === 'workspace-stage' ? '#sisFloatingLayer' : widgetTarget,
+                position: 'append',
+                author: 'agent',
+              });
+              const widget = result?.widget || null;
+
+              emitter?.onInteractiveUI?.({
+                type: 'injected-widget',
+                widget,
+              });
+
+              toolOutput = {
+                success: true,
+                widgetId: widget?.id || widgetId,
+                title: widgetTitle,
+                message: `Widget "${widgetTitle}" injected successfully into Supergence workspace.`,
+              };
+            } catch (err) {
+              toolOutput = { error: `UI Widget injection failed: ${err.message}` };
+            }
+
             emitToolResult({
               id: interceptId,
               status: toolOutput?.error ? 'FAILED' : 'RESOLVED',
@@ -2508,12 +2727,25 @@ ${isProjectBuild(effectiveQuery) ? projectCheckpoint([...savedToolCalls, ...tool
         );
       }
       if (extractToolCall(response) || (completionAudit && completionAudit.status === 'continue')) {
-        const error = new Error(
-          'The task has unfinished authorized work. Completed actions and the remaining request are saved. Continue to resume.',
-        );
-        error.partialResponse = visibleReply('');
-        error.code = 'TASK_BATCH_LIMIT';
-        throw error;
+        if (toolCalls.length > 0) {
+          const remainingMsg = completionAudit?.remaining?.length
+            ? `\n\n> **Task Note:** Remaining items: ${completionAudit.remaining.join(', ')}.`
+            : '';
+          response = (visibleReply(response) || response || '') + remainingMsg;
+          emitter?.onStreamToken?.(response, response);
+        } else if (response && response.trim().length > 10) {
+          response = visibleReply(response) || response;
+          emitter?.onStreamToken?.(response, response);
+        } else if (params.recoveryAttempt || agentTurnCount >= 2) {
+          const error = new Error(
+            'The task has unfinished authorized work. Completed actions and the remaining request are saved. Continue to resume.',
+          );
+          error.partialResponse = visibleReply('');
+          error.code = 'TASK_BATCH_LIMIT';
+          throw error;
+        } else {
+          response = visibleReply(response) || response;
+        }
       }
 
       // GUARANTEED NON-EMPTY SYNTHESIS: Fallback only if model output is completely blank
@@ -2544,49 +2776,26 @@ ${isProjectBuild(effectiveQuery) ? projectCheckpoint([...savedToolCalls, ...tool
 
       response = visibleReply(response).trim();
 
-      // STRICT NON-MUTATION RULE: Supergence delivers the model's genuine response untouched.
-      // Quality & verification engines run strictly as diagnostic auditors and metric collectors.
-      let qualityEval = { compositeScore: 0.98, passed: true };
-      let mistakeCheck = { mistakes: [] };
-      try {
-        // 1. Autonomous Mistake Self-Correction Diagnostic Audit
-        const auditResult = selfCorrector.auditAndHealDraft(response, trimmed);
-
-        // 2. Multi-Stage Refinement Diagnostic Pass (Precision, Logic, Technical Integrity, Presentation)
-        const refinementResult = refinerEngine.refine(response, {
-          passes: ['precision', 'logic', 'technical', 'presentation'],
-        });
-
-        // 3. Autonomous Output Elevation Rubric Audit (Completeness, Rigor, Structure, Concision, Alignment)
-        qualityEval = outputElevationEngine.evaluateQuality(response, trimmed);
-
-        // 4. Inner Reviewer Zero-Latency Heuristic Check
-        const innerCheck = innerReview(response, response, trimmed);
-
-        // 5. Detect and record any internal mistakes to Subconscious Matrix for continuous improvement
-        mistakeCheck = selfCorrector.detectInternalMistakes({
-          turnText: response,
-          fullResponse: response,
-          toolResults: toolCalls.map((t) => t.output),
-          toolsUsed: toolCalls,
-        });
-      } catch (auditErr) {
-        console.warn('[Supergence] Verification audit notice:', auditErr.message);
-      }
-
-      executedSteps.push({
-        id: 'step-verification-audit',
-        subsystem: 'Zero-Defect Heuristic & Self-Correction Gate',
-        icon: '🔬',
-        title: 'Response formatting and heuristic review',
-        status: 'COMPLETED',
-        details: [
-          'Formatting heuristics evaluated; this is not an execution test',
-          'Original model response retained',
-          `Output quality composite score: ${(qualityEval.compositeScore * 100).toFixed(0)}% (${qualityEval.passed ? 'PASSED' : 'OPTIMIZED'})`,
-          `Heuristic issues flagged: ${mistakeCheck.mistakes.length}; correctness requires execution checks`,
-        ],
-      });
+      executedSteps.push(
+        responseDiagnostics({
+          response,
+          query: trimmed,
+          audit: (text, goal) => selfCorrector.auditAndHealDraft(text, goal),
+          refine: (text) =>
+            refinerEngine.refine(text, {
+              passes: ['precision', 'logic', 'technical', 'presentation'],
+            }),
+          evaluate: (text, goal) => outputElevationEngine.evaluateQuality(text, goal),
+          review: (text, goal) => innerReview(text, text, goal),
+          detect: (text) =>
+            selfCorrector.detectInternalMistakes({
+              turnText: text,
+              fullResponse: text,
+              toolResults: toolCalls.map((item) => item.output),
+              toolsUsed: toolCalls,
+            }),
+        }),
+      );
 
       executedSteps.push({
         id: 'step-synthesis',
@@ -2632,10 +2841,10 @@ ${isProjectBuild(effectiveQuery) ? projectCheckpoint([...savedToolCalls, ...tool
           name: splitGeneratedGameMeta.filename,
           title: splitGeneratedGameMeta.title,
           type: 'html',
-          badge: '60 FPS 3D Game',
+          ...generatedArtifactEvidence(),
           url: splitGeneratedGameMeta.url,
           size: splitGeneratedGameMeta.sizeBytes,
-          description: `${splitGeneratedGameMeta.title} — Verified 3D WebGL Simulation via Split Method.`,
+          description: `${splitGeneratedGameMeta.title} — Generated WebGL artifact; task behavior, visuals and performance require review.`,
         });
       }
 
@@ -2685,9 +2894,9 @@ ${isProjectBuild(effectiveQuery) ? projectCheckpoint([...savedToolCalls, ...tool
           name: startupVentureMeta.artifacts.mvpDashboard.filename,
           title: startupVentureMeta.artifacts.mvpDashboard.title,
           type: 'html',
-          badge: 'Production MVP App',
+          badge: 'Generated MVP prototype',
           url: startupVentureMeta.artifacts.mvpDashboard.url,
-          description: `${startupVentureMeta.name} — Working Production MVP Dashboard`,
+          description: `${startupVentureMeta.name} — Generated MVP dashboard; functional review required`,
         });
         isolatedArtifacts.push({
           id: 'art-arch-' + Date.now(),
@@ -2713,7 +2922,7 @@ ${isProjectBuild(effectiveQuery) ? projectCheckpoint([...savedToolCalls, ...tool
       if (isolatedArtifacts && isolatedArtifacts.length > 0) {
         for (const art of isolatedArtifacts) {
           if (startupVentureMeta) {
-            art.verified = true;
+            art.verified = false;
             continue;
           }
           if (splitGeneratedGameMeta && art.name === splitGeneratedGameMeta.filename) {
@@ -2724,8 +2933,8 @@ ${isProjectBuild(effectiveQuery) ? projectCheckpoint([...savedToolCalls, ...tool
             continue;
           }
           if (art.type !== 'html' && !art.name.endsWith('.html')) {
-            art.verified = true;
-            art.badge = `${(art.type || path.extname(art.name).slice(1) || 'code').toUpperCase()} Module`;
+            art.verified = false;
+            art.badge = `${(art.type || path.extname(art.name).slice(1) || 'code').toUpperCase()} Module · not run`;
             continue;
           }
           const fullArtPath = path.join(workspace.root, art.name);
@@ -2783,12 +2992,9 @@ ${isProjectBuild(effectiveQuery) ? projectCheckpoint([...savedToolCalls, ...tool
                       art.name = gameMeta.filename;
                       art.url = gameMeta.url;
                       art.title = `${isArchPrompt ? '🏛️' : '🎮'} ${gameMeta.title}`;
-                      art.badge = isArchPrompt
-                        ? 'Verified 60 FPS 3D Simulation'
-                        : 'Verified 60 FPS 3D Game';
-                      art.description = `${gameMeta.title} — Verified Three.js WebGL Simulation.`;
+                      Object.assign(art, generatedArtifactEvidence());
+                      art.description = `${gameMeta.title} — Generated WebGL artifact; task behavior, visuals and performance require review.`;
                       art.size = gameMeta.sizeBytes;
-                      art.verified = true;
                       brain.broadcast('workspace-file-saved', {
                         filename: gameMeta.filename,
                         filepath: gameMeta.filepath,
@@ -2883,6 +3089,18 @@ ${isProjectBuild(effectiveQuery) ? projectCheckpoint([...savedToolCalls, ...tool
         });
       } catch (memErr) {
         console.warn('[Supergence] Memory update warning:', memErr.message);
+      }
+      try {
+        aremStore.appendTranscript({
+          conversationId,
+          userPrompt: trimmed,
+          agentResponse: response,
+          toolCalls: toolCalls.map((tc) => ({ tool: tc.tool, args: tc.args, status: tc.status })),
+          errors: toolCalls.filter((tc) => tc.output?.error).map((tc) => tc.output.error),
+          outcome: toolCalls.some((tc) => tc.output?.error) ? 'partial_failure' : 'success',
+        });
+      } catch (aremErr) {
+        console.warn('[Supergence] AREM transcript log notice:', aremErr.message);
       }
 
       // ─── CONTINUOUS LEARNING ENGINES UPDATE ───
@@ -3002,6 +3220,22 @@ ${isProjectBuild(effectiveQuery) ? projectCheckpoint([...savedToolCalls, ...tool
         })),
         telemetry: liveTelemetry,
         unifiedSystem: this.getUnifiedStatus(),
+        memory: {
+          shortTerm: {
+            activeWorkingNodes: shortTermMemory.getStats ? shortTermMemory.getStats() : null,
+            recentConversationTurns: (conversations.get(conversationId)?.turns || []).slice(-3),
+          },
+          longTerm: {
+            topLayerIndex: aremTopIndex,
+            relevantWiki: relevantWiki.map((w) => ({
+              slug: w.slug,
+              title: w.title,
+              preview: w.preview,
+            })),
+            longTermMemoryStats: longTermMemory.getStats ? longTermMemory.getStats() : null,
+            dreamStatus: aremEngine.getStatus(),
+          },
+        },
         durationMs: Date.now() - startTime,
         timestamp: new Date().toISOString(),
       });

@@ -120,17 +120,26 @@ export class WorktreeManager {
         fs.mkdirSync(dest, { recursive: true });
       }
       const resolvedDest = path.resolve(dest);
-      fs.cpSync(sourceDir, dest, {
-        recursive: true,
-        filter: (src) => {
-          const resolvedSrc = path.resolve(src);
-          if (resolvedSrc === resolvedDest || resolvedSrc.startsWith(resolvedDest + path.sep)) {
-            return false;
+      const copyRecursive = (src, dst) => {
+        const stat = fs.statSync(src);
+        if (stat.isDirectory()) {
+          if (!fs.existsSync(dst)) fs.mkdirSync(dst, { recursive: true });
+          const entries = fs.readdirSync(src);
+          for (const entry of entries) {
+            if (['node_modules', '.git', '.snapshots', 'dist', '.sandbox'].includes(entry))
+              continue;
+            const srcPath = path.join(src, entry);
+            const dstPath = path.join(dst, entry);
+            const resolvedSrc = path.resolve(srcPath);
+            if (resolvedSrc === resolvedDest || resolvedSrc.startsWith(resolvedDest + path.sep))
+              continue;
+            copyRecursive(srcPath, dstPath);
           }
-          const base = path.basename(src);
-          return !['node_modules', '.git', '.snapshots', 'dist', '.sandbox'].includes(base);
-        },
-      });
+        } else {
+          fs.copyFileSync(src, dst);
+        }
+      };
+      copyRecursive(sourceDir, dest);
       return { success: true, mode: 'snapshot', path: dest, snapshotId };
     } catch (err) {
       return { success: false, error: err.message };

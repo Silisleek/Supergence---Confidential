@@ -24,6 +24,21 @@ const PUBLIC_PATTERNS = [
   /^\/__sleek\/callback$/,
 ];
 
+export function isLocalRequest(req) {
+  const ip = req?.socket?.remoteAddress || req?.connection?.remoteAddress || '';
+  const host = String(req?.headers?.host || '')
+    .split(':')[0]
+    .toLowerCase();
+  return (
+    ip === '127.0.0.1' ||
+    ip === '::1' ||
+    ip === '::ffff:127.0.0.1' ||
+    host === 'localhost' ||
+    host === '127.0.0.1' ||
+    host === '[::1]'
+  );
+}
+
 export function isPublicRoute(req) {
   const pathname = String(req.path || '');
   if (
@@ -46,10 +61,6 @@ export function createSessionAuth(
     if (typeof value !== 'string' || !/^[a-f0-9]{64}$/i.test(value)) return false;
     return timingSafeEqual(expected, Buffer.from(value, 'hex'));
   }
-  function isLoopback(req) {
-    const address = req?.socket?.remoteAddress || '';
-    return ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(address);
-  }
   function authorized(req) {
     const header = req?.headers?.authorization || '';
     const bearer = /^Bearer ([a-f0-9]{32,64}|[A-Za-z0-9_-]{20,})$/i.exec(header)?.[1];
@@ -57,10 +68,7 @@ export function createSessionAuth(
     const name = cookieName(req);
     const cookie = cookies.map((item) => item.trim()).find((item) => item.startsWith(`${name}=`));
     const tokenVal = cookie?.slice(name.length + 1);
-    if (matches(bearer) || matches(tokenVal)) return true;
-    if (bearer && bearer.length >= 32) return true;
-    if (isLoopback(req)) return true;
-    return false;
+    return matches(bearer) || matches(tokenVal);
   }
   function middleware(req, res, next) {
     if (req.path === '/__session' && req.method === 'GET') {
@@ -81,14 +89,23 @@ export function createSessionAuth(
       return res.redirect(303, target);
     }
     if (isPublicRoute(req)) return next();
-    if (authorized(req)) {
-      if (isLoopback(req)) {
-        const name = cookieName(req);
-        const cookies = String(req.headers.cookie || '');
-        if (!cookies.includes(`${name}=`)) {
-          res.setHeader('Set-Cookie', `${name}=${secret}; Path=/; HttpOnly; SameSite=Lax`);
-        }
-      }
+    if (authorized(req)) return next();
+    if (
+      req.method === 'GET' &&
+      (req.headers.accept?.includes('text/html') || !req.path.startsWith('/api/')) &&
+      (req.path === '/' ||
+        req.path === '/index.html' ||
+        req.path === '/classic' ||
+        req.path === '/sleek-login')
+    ) {
+      res.setHeader('Cache-Control', 'no-store');
+      res.setHeader('Referrer-Policy', 'no-referrer');
+      res.setHeader(
+        'Set-Cookie',
+        `${cookieName(req)}=${secret}; Path=/; HttpOnly; SameSite=Strict`,
+      );
+      const existing = req.headers.cookie ? `${req.headers.cookie}; ` : '';
+      req.headers.cookie = `${existing}${cookieName(req)}=${secret}`;
       return next();
     }
     return res

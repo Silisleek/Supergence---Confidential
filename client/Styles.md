@@ -1,65 +1,32 @@
 # Supergence — Styles
 
-A reusable style reference for the Supergence app and guide. The current direction is **deep dark working areas with a warm brown outer frame and copper accents, clear surface hierarchy, and borderless controls: Manrope + Instrument Serif with copper motion graphics**.
+Supergence uses pastel surfaces, clear text contrast, and rounded controls. Lilac Mist is the default. Apricot Cream, Mint Glass, and Lavender Dusk use the same component styles.
 
 ## Source of truth
 
-- `client/styles/supergence-tokens.css` — shared palettes, fonts, and theme compatibility.
-- `client/styles/workspace-shell.css` — the actual workspace layout and controls.
-- `client/styles/workspace-theme.css` — theme-aware app components.
-- `client/styles/supergence-guide.css` — the guide's responsive reading layout.
-- `client/styles/workspace-polish.css` — app interaction details and reduced-motion handling.
-- `client/styles/supergence-motion.css` and `client/scripts/supergence-motion.js` — shared particles, reveals, pointer lighting, motion preference, and pause lifecycle.
-- `client/scripts/supergence-icons.js` — original SVG outline icon primitives.
+- `client/styles/supergence-tokens.css` defines the shared palettes, typography, and appearance previews.
+- `client/styles/workspace-shell.css` defines the workspace layout and common controls.
+- `client/styles/workspace-theme.css` styles conversation and navigation surfaces.
+- `client/styles/supergence-guide.css` defines the guide layout.
+- `client/styles/supergence-motion.css` and `client/scripts/supergence-motion.js` handle optional motion and reduced motion.
+- `client/scripts/supergence-icons.js` contains the shared SVG icon primitives.
 
-The app and `/guide.html` share the tokens. Download this document at `/Styles.md`. Change the shared stylesheet instead of maintaining a separate palette for each page.
+Use the shared tokens for new surfaces and appearance previews. The app, sign-in wizard, guide, and storage view all load them.
 
-## Visual direction
+## Color and hierarchy
 
-Keep the central conversation and composer surroundings near black. Use brown on the outer page, navigation rail, conversation sidebar, and workspace shortcuts. This inside/outside separation applies to all three themes. Pair modern Manrope UI typography with selective Instrument Serif display moments. Keep surfaces spacious and borderless. Use tonal fills and spacing to distinguish the composer and controls. Let a copper orbital graphic, flowing particles, pointer light, and smooth reveals bring energy to the page without covering the content.
+Use `--shell-page` for the canvas, `--shell-panel` for the reading and working areas, and `--shell-surface` for controls. Use `--shell-tint`, `--shell-mint`, `--shell-blue`, and `--shell-peach` for grouped or selected content. Use `--shell-accent` with `--shell-accent-ink` for primary actions. Use `--shell-shadow` and `--shell-backdrop` for floating layers.
 
-No decorative borders, outlined cards, glows, or particle effects in the workspace. Keep starter actions as simple text buttons and use plain, direct copy. Use Instrument Serif deliberately rather than styling every heading as a serif. Keep a visible keyboard focus outline; it is an accessibility state, not permanent decoration.
+| Theme         | Saved key  | Page      | Panel     | Accent    |
+| ------------- | ---------- | --------- | --------- | --------- |
+| Lilac Mist    | `obsidian` | `#f0edf8` | `#fefcff` | `#6544a3` |
+| Apricot Cream | `warm`     | `#f8eee7` | `#fffdfb` | `#87442d` |
+| Lavender Dusk | `midnight` | `#252239` | `#2d2844` | `#d9c5ff` |
+| Mint Glass    | `cyber`    | `#eaf5f0` | `#fcfffd` | `#245f55` |
 
-Prefer a few clearly grouped surfaces over a box around every paragraph. Use strong hierarchy, comfortable line length, and purposeful space. Use glow, gradients, and animated graphics purposefully. Decorative particles are visual effects, never backend telemetry or capability evidence.
+The preference remains `sis-ui-theme`. The previous `neutral` key maps to Lilac Mist. The default palettes use dark text on soft surfaces. Lavender Dusk uses pale lavender and mint accents on deep violet surfaces.
 
-## Default palette — Charcoal
-
-| Token                    | Value         | Use                                   |
-| ------------------------ | ------------- | ------------------------------------- |
-| `--shell-page`           | `#211a16`     | Main background                       |
-| `--shell-panel`          | `#0b0c0c`     | Content and working panels            |
-| `--shell-sidebar`        | `#211a16`     | Secondary navigation                  |
-| `--shell-surface`        | `#191b1b`     | Inputs and compact controls           |
-| `--shell-text`           | `#f5eee7`     | Primary text                          |
-| `--shell-text-secondary` | `#d3d7d2`     | Supporting text                       |
-| `--shell-muted`          | `#adb2ae`     | Secondary navigation and descriptions |
-| `--shell-subtle`         | `#969e98`     | Lower-priority annotations            |
-| `--shell-accent`         | `#e0b38c`     | Primary actions and highlights        |
-| `--shell-accent-hover`   | `#f0cca9`     | Primary-action hover                  |
-| `--shell-accent-ink`     | `#2a1b11`     | Text on copper actions                |
-| `--shell-hover`          | `#222525`     | Hover surfaces                        |
-| `--shell-selected`       | `#303532`     | Selected surfaces                     |
-| `--shell-code`           | `#080909`     | Source and code areas                 |
-| `--shell-raised`         | `#191b1b`     | Floating menus and dialogs            |
-| `--shell-success`        | `#b6c7a2`     | Confirmed success                     |
-| `--shell-warning`        | `#e6b88c`     | Attention or incomplete state         |
-| `--shell-error`          | `#eea497`     | Actual errors                         |
-| `--shell-border`         | `transparent` | Borderless surfaces                   |
-| `--shell-backdrop`       | `#0d0805d9`   | Modal backdrop                        |
-
-Always pair status colors with a label or icon. Telemetry and progress must come from real state. Present prompt examples as examples.
-
-## Theme variants
-
-Apply `class="sis-workspace-ui"` to the body. The browser preference remains `sis-ui-theme`.
-
-| Theme    | Stored key | Page      | Panel     | Text      | Accent    |
-| -------- | ---------- | --------- | --------- | --------- | --------- |
-| Charcoal | `neutral`  | `#211a16` | `#0b0c0c` | `#f5eee7` | `#e0b38c` |
-| Walnut   | `warm`     | `#2a2019` | `#0c0b0a` | `#f7eee5` | `#e9b98f` |
-| Cocoa    | `midnight` | `#1a1613` | `#080909` | `#f2eae3` | `#cfa98c` |
-
-The saved keys are retained for compatibility. Every theme uses deep dark central panels and a brown outer frame; the brown warmth varies. All themes share copper accents. The full foreground, surface, status, and accent palettes live in the shared stylesheet. Do not mix foregrounds and backgrounds from different themes.
+Pair status colors with a label or icon. Keep telemetry and progress tied to application state.
 
 ## Typography
 
@@ -77,7 +44,7 @@ The saved keys are retained for compatibility. Every theme uses deep dark centra
 - Guide cards and large panels: approximately 18–22px radius. Controls: 9–12px. Do not put every element in a pill.
 - Use 16–24px gaps between related panels and 48–64px between major reading sections.
 - Use 24–30px interior padding in roomy panels; reduce it for small screens.
-- Primary action: solid copper or warm cream, with the correct accent-ink foreground. Secondary actions use quiet filled surfaces or text.
+- Primary action: the accent fill with its paired accent-ink foreground. Secondary actions use quiet filled surfaces or text.
 - Inputs use a visibly different fill from their parent panel, with a persistent label. Focus uses a clear accent outline.
 - A sticky header can use restrained background translucency and blur. Use translucent layers where they support the visual hierarchy, rather than behind every paragraph.
 - Keep the existing 64px app rail and default 264px conversation sidebar. The guide uses a maximum 1400px layout, secondary navigation, and a flexible reading column.
@@ -91,14 +58,14 @@ The saved keys are retained for compatibility. Every theme uses deep dark centra
 - Use `aria-current` or `aria-pressed` for selection as appropriate. Include clear loading, empty, disabled, success, and failure states.
 - Keep touch targets comfortable, aiming for at least 44px where space permits.
 - Ordinary transitions should be short, around 120–240ms. Scroll reveals may take around 650ms; ambient orbital graphics use slow 9–46 second loops. Respect `prefers-reduced-motion`.
-- Check readability in all three themes, keyboard operation, mobile overflow, and increased zoom.
+- Check readability in all four themes, keyboard operation, mobile overflow, and increased zoom.
 - Clipboard controls must report actual success or failure. Do not claim an action occurred because a button was clicked.
 
 ## Reuse
 
 ```html
 <link rel="stylesheet" href="/styles/supergence-tokens.css" />
-<body class="sis-workspace-ui" data-theme="neutral">
+<body class="sis-workspace-ui" data-theme="obsidian">
   <!-- Add the page's layout using the shared tokens. -->
 </body>
 ```
@@ -130,7 +97,7 @@ For a separate project, include a local copy of the shared token stylesheet and 
 
 ## Prompt for reusing this style
 
-> Build [page or feature] using Styles.md and the shared Supergence tokens. Use a modern interface with charcoal surfaces by default, optional warm brown themes, and borderless controls, Manrope UI text, selective Instrument Serif display accents, copper highlights, modern SVG icons, and spacious rounded panels. Separate sections through spacing and tone. Reuse working app components. Include [content and interactions], adapt it for mobile and desktop, preserve visible keyboard focus, add purposeful orbital motion, particles, scroll reveals, and pointer lighting; test the actual controls, and provide the files and preview. Respect reduced motion and allow ambient effects to be paused. Show real states and label anything unverified.
+> Use the shared Supergence tokens for [page or feature]. Group related controls with pastel fills and spacing, and use the accent pair for the primary action. Reuse existing controls. Test desktop and mobile layouts, keyboard focus, and each palette. Respect reduced motion and display application state accurately.
 
 ## Delivery check
 

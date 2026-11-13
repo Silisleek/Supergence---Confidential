@@ -5,7 +5,17 @@ import path from 'node:path';
 import os from 'node:os';
 // Source fixtures must live outside the protected tests tree. Each run gets its
 // own directory so concurrent verification cannot overwrite another run.
-const TEST_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'sis-integration-'));
+const baseTemp =
+  process.platform === 'win32' &&
+  ((process.env.TEMP &&
+    (process.env.TEMP.startsWith('E:') || process.env.TEMP.startsWith('\\\\'))) ||
+    os.tmpdir().startsWith('E:') ||
+    os.tmpdir().startsWith('\\\\'))
+    ? process.env.LOCALAPPDATA
+      ? path.join(process.env.LOCALAPPDATA, 'Temp')
+      : 'C:\\Users\\Akshan sharma\\AppData\\Local\\Temp'
+    : os.tmpdir();
+const TEST_DIR = fs.mkdtempSync(path.join(baseTemp, 'sis-integration-'));
 process.env.SIS_DATA_DIR = path.join(TEST_DIR, 'data');
 process.env.SIS_WORKSPACE_DIR = path.join(TEST_DIR, 'workspace');
 process.env.SIS_VAULT_DIR = path.join(TEST_DIR, 'vault');

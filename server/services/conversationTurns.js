@@ -11,7 +11,7 @@ export class ConversationTurns {
     this.retryDelayMs = retryDelayMs;
   }
   async run(params, emitter, execute) {
-    const query = params.query || params.prompt || params.message || params.userPrompt;
+    const query = params.query || params.prompt || params.message || params.userPrompt || params.input;
     if (typeof query !== 'string' || !query.trim())
       throw new Error('Query must be a non-empty string.');
     const conversationId = params.conversationId || params.id || `conv-${randomUUID()}`;
@@ -41,6 +41,9 @@ export class ConversationTurns {
       observers: new Set([emitter]),
       snapshot: null,
     };
+    entry.signal = params.signal
+      ? AbortSignal.any([params.signal, entry.controller.signal])
+      : entry.controller.signal;
     this.active.set(key, entry);
     const dispatch = Object.fromEntries(
       ['onToolCall', 'onToolResult', 'onStreamToken', 'onInteractiveUI', 'onTaskStatus'].map(
@@ -184,7 +187,7 @@ export class ConversationTurns {
     const activity = new Map(
       (previous?.toolCalls || []).map((call) => [call.id || randomUUID(), call]),
     );
-    const signal = entry.controller.signal;
+    const signal = entry.signal;
     let checkpointAt = 0,
       persistenceError = null;
     const save = (status, extra = {}) => {

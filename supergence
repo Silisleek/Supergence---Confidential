@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# Supergence — 1-Command Universal Launcher for Linux & macOS
+# ==============================================================================
+set -e
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+cd "$DIR"
+
+# Verify Node.js is installed
+if ! command -v node >/dev/null 2>&1; then
+  echo ""
+  echo "Error: Node.js is not installed."
+  echo "Please install Node.js 20 or higher from: https://nodejs.org or via your package manager:"
+  echo "  macOS: brew install node"
+  echo "  Ubuntu/Debian: sudo apt update && sudo apt install -y nodejs npm"
+  echo "  Arch: sudo pacman -S nodejs npm"
+  echo ""
+  exit 1
+fi
+
+node bin/supergence.mjs "$@"

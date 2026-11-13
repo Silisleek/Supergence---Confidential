@@ -20,7 +20,10 @@ import mistakeLearningEngine from './mistake-learning-engine.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, '../../');
-const DATA_DIR = path.join(ROOT_DIR, 'data', 'improvement');
+const DATA_DIR = path.join(
+  process.env.SIS_DATA_DIR ? path.resolve(process.env.SIS_DATA_DIR) : path.join(ROOT_DIR, 'data'),
+  'improvement',
+);
 const IDLE_MIND_LOG_FILE = path.join(DATA_DIR, 'idle-mind-log.json');
 
 const EXPLORATION_FRONTIERS = [

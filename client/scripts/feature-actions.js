@@ -80,7 +80,8 @@ function renderFiftyFeatures() {
 function setFiftyFeedback(msg, isSuccess = true) {
   const el = document.getElementById('fiftyFeedbackMsg');
   if (el) {
-    el.innerHTML = `<span style="color:${isSuccess ? '#10B981' : '#F87171'}; font-weight:700;">[STATUS]:</span> ${escapeHtml(msg)}`;
+    el.textContent = msg;
+    el.dataset.tone = isSuccess ? 'success' : 'error';
   }
 }
 

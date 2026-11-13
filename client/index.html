@@ -7,7 +7,7 @@
     <link rel="icon" href="data:," />
     <meta
       name="description"
-      content="Supergence — Unified Superintelligent AI System powered by the SIS System, combining Hermes, OpenClaw, OpenDots, OpenBot and scientific domain swarms."
+      content="Supergence — Unified Superintelligent AI System powered by the SIS System."
     />
     <script src="/scripts/reload-guard.js"></script>
 
@@ -53,10 +53,13 @@
     <link rel="stylesheet" href="/styles/workspace-sidechat.css" />
     <link rel="stylesheet" href="/styles/storage-dashboard.css?v=2" />
     <link rel="stylesheet" href="/styles/workspace-onboarding.css" />
+    <link rel="stylesheet" href="/styles/workspace-mascot.css" />
+    <link rel="stylesheet" href="/styles/workspace-liquid-glass.css" />
     <link rel="icon" type="image/png" href="/images/supergence-logo.png" />
   </head>
 
-  <body class="sis-workspace-ui">
+  <body class="sis-workspace-ui hud-liquid-glass-pure">
+    <div id="workspaceDrawerBackdrop" class="workspace-drawer-backdrop" onclick="window.SupergenceLiquidGlass &amp;&amp; window.SupergenceLiquidGlass.toggleDrawer(false)"></div>
     <div id="supergenceWorkspace" class="supergence-workspace active">
       <nav class="workspace-rail" aria-label="Workspace navigation">
         <button
@@ -199,8 +202,49 @@
               <rect x="4" y="4" width="6" height="6" rx="1.5" />
               <rect x="14" y="4" width="6" height="6" rx="1.5" />
               <rect x="4" y="14" width="6" height="6" rx="1.5" />
-              <rect x="14" y="14" width="6" height="6" rx="1.5" /></svg
-            ><span class="shell-tooltip">Feature catalogue</span>
+              <rect x="14" y="14" width="6" height="6" rx="1.5" />
+            </svg>
+          </button>
+          <button
+            id="railLearning"
+            type="button"
+            class="shell-rail-button"
+            data-shell-action="learning"
+            aria-label="Learning library"
+            title="Learning library"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+            </svg><span class="shell-tooltip">Learning library</span>
+          </button>
+          <button
+            id="railStudio"
+            type="button"
+            class="shell-rail-button"
+            data-shell-action="creation-studio"
+            aria-label="Creation studio"
+            title="Creation studio"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z" />
+            </svg><span class="shell-tooltip">Creation studio</span>
           </button>
         </div>
         <div class="shell-rail-bottom">
@@ -226,27 +270,8 @@
             ><span class="shell-tooltip">Help and guide</span>
           </button>
           <button
-            id="railStylesWindow"
-            type="button"
-            class="shell-rail-button"
-            data-shell-action="styles"
-            aria-label="Styles and Settings"
-            title="Styles and Settings"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.6"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M12 2v20M2 12h20M7 7l10 10M17 7 7 17" /></svg
-            ><span class="shell-tooltip">Styles &amp; Settings</span>
-          </button>
-          <button
             id="railOnboarding"
+            style="display: none;"
             type="button"
             class="shell-rail-button"
             onclick="window.openSupergenceSetup &amp;&amp; window.openSupergenceSetup()"
@@ -318,22 +343,16 @@
               <path d="M14 4v16" />
             </svg>
           </button>
-          <div class="shell-workspace-name">
-            <span class="shell-workspace-orb" aria-hidden="true"></span>Local workspace<span
-              class="shell-label"
-              >SIS</span
-            >
-          </div>
-        </div>
-        <div class="workspace-brand-pill">
-          <span class="shell-assistant-mark" aria-hidden="true"
-            ><img src="/images/supergence-logo.png" alt="" /></span
-          ><span id="activeWorkspaceTitleDisplay">New conversation</span>
+          <span id="activeWorkspaceTitleDisplay" class="shell-header-title">New conversation</span>
         </div>
         <div class="workspace-right-actions">
-          <div
-            class="enterprise-model-pill"
-            title="Model routing is managed by the connected SIS server"
+          <button
+            id="workspaceBtnSideChat"
+            type="button"
+            class="shell-header-btn shell-sidechat-btn"
+            onclick="window.SupergenceSideChat &amp;&amp; window.SupergenceSideChat.show()"
+            aria-label="Open side chat"
+            title="Side chat"
           >
             <svg
               viewBox="0 0 24 24"
@@ -344,11 +363,21 @@
               stroke-linejoin="round"
               aria-hidden="true"
             >
-              <rect x="5" y="6" width="14" height="14" rx="4" />
-              <path d="M12 3v3M2 12h3m14 0h3M9 11v3m6-3v3m-6 3h6" /></svg
-            ><span id="enterpriseModelLabel">Server managed</span>
-          </div>
-          <span class="shell-header-divider"></span>
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span>Side chat</span>
+          </button>
+          <button
+            id="workspaceBtnSuperbox"
+            type="button"
+            class="shell-header-btn"
+            style="display:inline-flex; align-items:center; gap:6px; padding:6px 12px; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.3); border-radius:8px; color:#38bdf8; font-size:12px; font-weight:600; cursor:pointer;"
+            onclick="window.Superbox &amp;&amp; window.Superbox.toggle()"
+            aria-label="Superbox Sandbox &amp; Live Stage"
+            title="Superbox (Universal Sandbox &amp; Live Stage)"
+          >
+            <span>📦 Superbox</span>
+          </button>
           <button
             id="workspaceBtnSideBrowser"
             type="button"
@@ -457,49 +486,7 @@
         <!-- Primary Conversation & Work Tree Column -->
         <div class="workspace-main-column" id="mainWorkspaceColumn">
           <div class="chat-scroll-container" id="chatScrollContainer">
-            <div id="chatTurnsStream" class="chat-turns-stream">
-              <div class="chat-turn-item" id="turn-active-root">
-                <!-- User Query Pill -->
-                <div class="user-query-pill-wrap" style="display: none">
-                  <div class="user-query-pill" id="userQueryPill"></div>
-                </div>
-
-                <div class="work-tree-section collapsed" id="workTreeSection" style="display: none">
-                  <div class="work-tree-header" id="workTreeToggle">
-                    <span
-                      class="work-tree-title"
-                      style="font-weight: 500; font-size: 12px; color: #94a3b8"
-                      >Execution Trace</span
-                    >
-                    <svg
-                      class="work-tree-chevron"
-                      id="workTreeChevron"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path d="M6 9l6 6 6-6" />
-                    </svg>
-                  </div>
-
-                  <div class="work-tree-body" id="workTreeBody"></div>
-                </div>
-
-                <!-- Synthesized Response Markdown Area -->
-                <div class="response-synthesis-card" id="responseSynthesisCard">
-                  <div class="response-agent-header">
-                    <span class="resp-agent-indicator"></span>
-                    <span class="resp-agent-name" id="mainRespAgentName">Supergence</span>
-                  </div>
-                  <div class="response-body-markdown" id="mainResponseBody">
-                    Welcome to Supergence. Ready for instructions.
-                  </div>
-                  <!-- Multi-Card Artifact & Schematic Suite in Workspace -->
-                  <div class="workspace-deck-slot" id="workspaceDeckSlot"></div>
-                </div>
-              </div>
-            </div>
+            <div id="chatTurnsStream" class="chat-turns-stream"></div>
           </div>
 
           <div class="workspace-composer-wrap">
@@ -533,7 +520,19 @@
                       <path d="M12 5v14M5 12h14" />
                     </svg>
                   </button>
-                  <span class="shell-composer-context">Supergence</span>
+                  <button
+                    id="composerAgentSelect"
+                    type="button"
+                    class="composer-agent-select"
+                    onclick="window.toggleAgentBrowsersModal &amp;&amp; window.toggleAgentBrowsersModal()"
+                    aria-label="Select active agent model"
+                    title="Select model"
+                  >
+                    <span>Supergence · Auto</span>
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="m6 9 6 6 6-6"/>
+                    </svg>
+                  </button>
                 </div>
                 <div class="workspace-composer-actions">
                   <button
@@ -2516,10 +2515,7 @@
               class="status-pulse-dot"
               style="width: 7px; height: 7px; background: #10b981"
             ></span>
-            <span id="fiftyFeedbackMsg"
-              >50 / 50 Next-Gen Features Operational · Grounded in Real Backend Systems (Zero Mock /
-              Zero Canned)</span
-            >
+            <span id="fiftyFeedbackMsg">Availability is shown on each card.</span>
           </div>
           <div
             style="font-family: var(--font-mono); font-size: 10px; color: rgba(255, 255, 255, 0.5)"
@@ -2530,7 +2526,9 @@
       </div>
     </div>
 
+    <script src="/scripts/modern-loader.js"></script>
     <script src="/scripts/workspace-task-status.js"></script>
+    <script src="/vendor/dompurify/purify.min.js"></script>
     <script src="/scripts/workspace-controller.js"></script>
 
     <script src="/scripts/feature-catalog.js"></script>
@@ -2584,9 +2582,10 @@
       <label class="shell-preference"
         ><span><strong>Appearance</strong><small>Choose a palette for your workspace.</small></span
         ><select id="shellThemePreference" class="shell-theme-select" aria-label="Workspace theme">
-          <option value="neutral">Charcoal</option>
-          <option value="warm">Walnut</option>
-          <option value="midnight">Cocoa</option>
+          <option value="warm">Apricot Cream</option>
+          <option value="midnight">Lavender Dusk</option>
+          <option value="cyber">Mint Glass</option>
+          <option value="obsidian">Lilac Mist</option>
         </select></label
       >
       <p class="shell-preference-note">Saved in this browser. Your conversations stay unchanged.</p>
@@ -2652,5 +2651,8 @@
     <script src="/scripts/workspace-polish.js"></script>
     <script src="/scripts/storage-dashboard.js?v=2"></script>
     <script src="/scripts/workspace-onboarding.js"></script>
+    <script src="/scripts/workspace-mascot.js"></script>
+    <script src="/scripts/workspace-liquid-glass.js"></script>
+    <script src="/scripts/workspace-superbox.js"></script>
   </body>
 </html>

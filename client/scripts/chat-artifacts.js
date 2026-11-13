@@ -102,8 +102,13 @@
     header.append(identity, actions);
     const tabs = element('div', 'chat-artifact-tabs');
     const body = element('div', 'chat-artifact-body');
-    const status = element('div', 'chat-artifact-status', 'Loading file…');
+    const status = element('div', 'chat-artifact-status');
     status.setAttribute('role', 'status');
+    if (typeof window.renderModernLoader === 'function') {
+      status.innerHTML = window.renderModernLoader('Loading file…', { size: 'sm' });
+    } else {
+      status.textContent = 'Loading file…';
+    }
     const source = element('pre', 'chat-artifact-source');
     const code = element('code');
     source.append(code);

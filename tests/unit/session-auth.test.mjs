@@ -19,10 +19,10 @@ test('HTTP and WebSocket require the same private session', async (t) => {
     verifyClient: ({ req }) => isLocalRequest(req) && session.authorized(req),
   });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
-  t.after(() => {
-    ws.clients.forEach((client) => client.terminate());
-    ws.close();
-    server.close();
+  t.after(async () => {
+    for (const client of ws.clients) client.terminate();
+    await new Promise((resolve) => ws.close(resolve));
+    await new Promise((resolve) => server.close(resolve));
   });
   const url = `http://127.0.0.1:${server.address().port}`;
   assert.equal(
@@ -42,6 +42,16 @@ test('HTTP and WebSocket require the same private session', async (t) => {
     403,
   );
   assert.equal((await fetch(`${url}/api/private`)).status, 401);
+  for (const forged of ['b'.repeat(64), 'x'.repeat(32), 'x'.repeat(128)]) {
+    assert.equal(
+      (
+        await fetch(`${url}/api/private`, {
+          headers: { authorization: `Bearer ${forged}` },
+        })
+      ).status,
+      401,
+    );
+  }
   assert.equal(
     (await fetch(`${url}/__session?token=${'b'.repeat(64)}`, { redirect: 'manual' })).status,
     401,
@@ -78,4 +88,16 @@ test('HTTP and WebSocket require the same private session', async (t) => {
   });
   accepted.close();
   assert.throws(() => createSessionAuth('weak'), /64 hexadecimal/);
+});
+
+test('loopback addresses and arbitrary bearer tokens never establish a private session', () => {
+  const session = createSessionAuth('a'.repeat(64));
+  for (const remoteAddress of ['127.0.0.1', '::1', '::ffff:127.0.0.1']) {
+    for (const authorization of ['', `Bearer ${'b'.repeat(64)}`, `Bearer ${'x'.repeat(32)}`]) {
+      assert.equal(
+        session.authorized({ socket: { remoteAddress }, headers: { authorization } }),
+        false,
+      );
+    }
+  }
 });

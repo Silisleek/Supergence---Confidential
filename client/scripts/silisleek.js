@@ -53,7 +53,9 @@ function initDiagnostics() {
         const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
         if (debugInfo) {
           const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
-          diagWebGL.textContent = renderer ? renderer.split(' Direct3D')[0].slice(0, 32) : 'WebGL 2.0 Hardware';
+          diagWebGL.textContent = renderer
+            ? renderer.split(' Direct3D')[0].slice(0, 32)
+            : 'WebGL 2.0 Hardware';
         } else {
           diagWebGL.textContent = 'WebGL 2.0 Active';
         }

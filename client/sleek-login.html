@@ -4,100 +4,34 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Welcome to Supergence · Setup & Connect</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&family=Instrument+Serif:ital@0;1&family=Inter:wght@300..800&family=JetBrains+Mono:wght@400..700&family=Manrope:wght@300..800&family=Space+Grotesk:wght@400..700&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="stylesheet" href="/styles/sleek-fonts.css" />
+    <link rel="stylesheet" href="/styles/supergence-tokens.css" />
+    <link rel="stylesheet" href="/styles/supergence-motion.css" />
     <style>
-      :root {
-        color-scheme: dark;
-        --bg-page: #0b0b0b;
-        --bg-surface: #141614;
-        --bg-card: rgba(22, 24, 22, 0.7);
-        --border-glass: rgba(255, 255, 255, 0.08);
-        --border-accent: rgba(198, 171, 152, 0.4);
-        --accent: #c6ab98;
-        --accent-hover: #dec4b0;
-        --accent-ink: #14110e;
-        --text: #f5eee7;
-        --text-secondary: #c9c5be;
-        --muted: #9e9c97;
-        --glow: rgba(198, 171, 152, 0.15);
-        --font-ui: 'DM Sans', -apple-system, sans-serif;
-        --font-display: 'Instrument Serif', Georgia, serif;
-      }
-
-      /* Theme variants */
-      body[data-theme='obsidian'] {
-        --bg-page: #0b0b0b;
-        --bg-surface: #141614;
-        --bg-card: rgba(20, 22, 20, 0.75);
-        --border-glass: rgba(255, 255, 255, 0.08);
-        --border-accent: rgba(198, 171, 152, 0.45);
-        --accent: #c6ab98;
-        --accent-hover: #dec4b0;
-        --glow: rgba(198, 171, 152, 0.18);
-      }
-      body[data-theme='warm'] {
-        --bg-page: #15110d;
-        --bg-surface: #1d1712;
-        --bg-card: rgba(29, 23, 18, 0.75);
-        --border-glass: rgba(233, 185, 143, 0.12);
-        --border-accent: rgba(233, 185, 143, 0.5);
-        --accent: #e9b98f;
-        --accent-hover: #f5cfaa;
-        --glow: rgba(233, 185, 143, 0.2);
-      }
-      body[data-theme='midnight'] {
-        --bg-page: #130f14;
-        --bg-surface: #1b151e;
-        --bg-card: rgba(27, 21, 30, 0.75);
-        --border-glass: rgba(207, 169, 140, 0.12);
-        --border-accent: rgba(207, 169, 140, 0.45);
-        --accent: #cfa98c;
-        --accent-hover: #e8c7ae;
-        --glow: rgba(207, 169, 140, 0.2);
-      }
-      body[data-theme='cyber'] {
-        --bg-page: #070a0d;
-        --bg-surface: #0e141a;
-        --bg-card: rgba(14, 20, 26, 0.75);
-        --border-glass: rgba(16, 185, 129, 0.15);
-        --border-accent: rgba(16, 185, 129, 0.5);
-        --accent: #10b981;
-        --accent-hover: #34d399;
-        --glow: rgba(16, 185, 129, 0.22);
-      }
-
-      /* Font variants */
-      body[data-font='editorial'] {
-        --font-ui: 'DM Sans', -apple-system, sans-serif;
-        --font-display: 'Instrument Serif', Georgia, serif;
-      }
-      body[data-font='sans'] {
-        --font-ui: 'Manrope', Inter, -apple-system, sans-serif;
-        --font-display: 'Manrope', Inter, sans-serif;
-      }
-      body[data-font='mono'] {
-        --font-ui: 'JetBrains Mono', monospace;
-        --font-display: 'JetBrains Mono', monospace;
-      }
-      body[data-font='grotesk'] {
-        --font-ui: 'Space Grotesk', -apple-system, sans-serif;
-        --font-display: 'Space Grotesk', -apple-system, sans-serif;
-      }
-      body[data-font='inter'] {
-        --font-ui: 'Inter', -apple-system, sans-serif;
-        --font-display: 'Inter', -apple-system, sans-serif;
+      body {
+        --bg-page: var(--shell-page);
+        --bg-surface: var(--shell-surface);
+        --bg-card: var(--shell-raised);
+        --border-glass: var(--shell-border);
+        --border-accent: var(--shell-accent);
+        --accent: var(--shell-accent);
+        --accent-hover: var(--shell-accent-hover);
+        --accent-ink: var(--shell-accent-ink);
+        --text: var(--shell-text);
+        --text-secondary: var(--shell-text-secondary);
+        --muted: var(--shell-muted);
+        --glow: var(--shell-tint);
       }
 
       * {
         box-sizing: border-box;
         margin: 0;
         padding: 0;
-        transition: background-color 220ms ease, border-color 220ms ease, color 220ms ease, box-shadow 220ms ease;
+        transition:
+          background-color 220ms ease,
+          border-color 220ms ease,
+          color 220ms ease,
+          box-shadow 220ms ease;
       }
 
       body {
@@ -116,28 +50,29 @@
       /* Ambient radial glow */
       .ambient-glow {
         position: fixed;
-        top: 15%;
+        top: 20%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 800px;
-        height: 500px;
-        background: radial-gradient(ellipse at center, var(--glow) 0%, transparent 70%);
+        width: 900px;
+        height: 600px;
+        background: radial-gradient(ellipse at center, color-mix(in srgb, var(--accent) 30%, transparent) 0%, color-mix(in srgb, var(--glow) 15%, transparent) 40%, transparent 70%);
         pointer-events: none;
         z-index: 0;
+        filter: blur(50px);
       }
 
       .onboarding-container {
         position: relative;
         z-index: 1;
         width: 100%;
-        max-width: 680px;
-        background: var(--bg-card);
-        backdrop-filter: blur(28px);
-        -webkit-backdrop-filter: blur(28px);
-        border: 1px solid var(--border-glass);
+        max-width: 700px;
+        background: rgba(14, 18, 28, 0.82);
+        backdrop-filter: blur(36px) saturate(190%);
+        -webkit-backdrop-filter: blur(36px) saturate(190%);
+        border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 28px;
         padding: 44px 48px;
-        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        box-shadow: 0 30px 80px -15px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05), 0 0 60px color-mix(in srgb, var(--accent) 12%, transparent);
       }
 
       @media (max-width: 640px) {
@@ -155,13 +90,15 @@
         padding: 6px 14px;
         border-radius: 9999px;
         background: rgba(255, 255, 255, 0.04);
-        border: 1px solid var(--border-glass);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        font-family: var(--font-mono, monospace);
         font-size: 11px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.16em;
         color: var(--accent);
         margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
       }
       .brand-dot {
         width: 6px;
@@ -178,18 +115,21 @@
         line-height: 1.15;
         letter-spacing: -0.02em;
         margin-bottom: 12px;
+        color: #ffffff;
       }
       .hero-title em {
         font-style: italic;
-        color: var(--accent);
+        background: linear-gradient(135deg, var(--accent) 20%, #e9d5ff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
       }
 
       .hero-desc {
         font-size: 14.5px;
         line-height: 1.6;
-        color: var(--text-secondary);
+        color: rgba(255, 255, 255, 0.65);
         max-width: 540px;
-        margin-bottom: 32px;
+        margin-bottom: 30px;
       }
 
       /* Step Stepper Tabs */
@@ -197,11 +137,11 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        margin-bottom: 32px;
-        background: rgba(0, 0, 0, 0.28);
+        margin-bottom: 30px;
+        background: rgba(0, 0, 0, 0.45);
         padding: 5px;
         border-radius: 16px;
-        border: 1px solid var(--border-glass);
+        border: 1px solid rgba(255, 255, 255, 0.08);
       }
       .step-pill {
         flex: 1;
@@ -209,20 +149,25 @@
         align-items: center;
         justify-content: center;
         gap: 8px;
-        padding: 10px 12px;
+        padding: 10px 14px;
         border-radius: 12px;
-        font-size: 12px;
+        font-size: 12.5px;
         font-weight: 600;
-        color: var(--muted);
+        color: rgba(255, 255, 255, 0.5);
         background: transparent;
-        border: none;
+        border: 1px solid transparent;
         cursor: pointer;
+        transition: all 180ms ease;
+      }
+      .step-pill:hover:not(.is-active) {
+        color: rgba(255, 255, 255, 0.85);
+        background: rgba(255, 255, 255, 0.04);
       }
       .step-pill.is-active {
-        background: var(--bg-surface);
-        color: var(--text);
-        border: 1px solid var(--border-accent);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        background: rgba(255, 255, 255, 0.09);
+        color: #ffffff;
+        border-color: color-mix(in srgb, var(--accent) 60%, rgba(255, 255, 255, 0.2));
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 18px color-mix(in srgb, var(--accent) 25%, transparent);
       }
       .step-pill.is-completed {
         color: var(--accent);
@@ -231,19 +176,24 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 18px;
-        height: 18px;
+        width: 20px;
+        height: 20px;
         border-radius: 50%;
-        font-size: 10px;
+        font-size: 11px;
+        font-weight: 700;
         background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.6);
+        transition: all 180ms ease;
       }
       .step-pill.is-active .step-num {
         background: var(--accent);
-        color: var(--accent-ink);
+        color: var(--accent-ink, #000);
+        box-shadow: 0 0 10px var(--accent);
       }
       .step-pill.is-completed .step-num {
-        background: var(--accent);
-        color: var(--accent-ink);
+        background: color-mix(in srgb, var(--accent) 20%, transparent);
+        color: var(--accent);
+        border: 1px solid var(--accent);
       }
 
       /* Panels */
@@ -255,8 +205,14 @@
         display: block;
       }
       @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(6px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
 
       .panel-section-title {
@@ -282,8 +238,8 @@
       }
 
       .option-card {
-        background: var(--bg-surface);
-        border: 1px solid var(--border-glass);
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0.01) 100%), var(--bg-surface);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 18px;
         padding: 20px;
         cursor: pointer;
@@ -292,15 +248,19 @@
         display: flex;
         flex-direction: column;
         gap: 10px;
+        backdrop-filter: blur(12px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+        transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
       }
       .option-card:hover {
-        border-color: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.25);
         transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px color-mix(in srgb, var(--accent) 15%, transparent);
       }
       .option-card.is-selected {
         border-color: var(--accent);
-        background: color-mix(in srgb, var(--accent) 8%, var(--bg-surface));
-        box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 18%, transparent);
+        background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 14%, transparent) 0%, rgba(255, 255, 255, 0.02) 100%), var(--bg-surface);
+        box-shadow: 0 0 28px color-mix(in srgb, var(--accent) 25%, transparent), inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
       }
 
       .card-header {
@@ -311,80 +271,160 @@
       .card-title {
         font-size: 14.5px;
         font-weight: 700;
-        color: var(--text);
+        color: #ffffff;
       }
       .card-tag {
         font-size: 10.5px;
-        font-weight: 600;
-        color: var(--muted);
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.55);
         text-transform: uppercase;
         letter-spacing: 0.08em;
+        padding: 2px 7px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        transition: all 180ms ease;
+      }
+      .option-card.is-selected .card-tag {
+        background: color-mix(in srgb, var(--accent) 22%, transparent);
+        color: var(--accent);
+        border-color: color-mix(in srgb, var(--accent) 40%, transparent);
       }
 
       /* Swatches for theme cards */
       .swatches-row {
         display: flex;
-        gap: 6px;
-        margin: 4px 0;
+        gap: 8px;
+        margin: 6px 0;
+        align-items: center;
       }
       .swatch {
-        width: 18px;
-        height: 18px;
-        border-radius: 6px;
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 1.5px solid rgba(255, 255, 255, 0.18);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        flex-shrink: 0;
+        transition: transform 180ms ease, box-shadow 180ms ease;
       }
+      .option-card:hover .swatch {
+        transform: scale(1.1);
+      }
+
+      /* Palette 1: Obsidian / Lilac Mist */
+      [data-palette-preview="obsidian"] .swatch:nth-child(1) { background: #13101d; }
+      [data-palette-preview="obsidian"] .swatch:nth-child(2) { background: #2f2347; }
+      [data-palette-preview="obsidian"] .swatch:nth-child(3) { background: #a855f7; box-shadow: 0 0 10px rgba(168, 85, 247, 0.4); }
+      [data-palette-preview="obsidian"] .swatch:nth-child(4) { background: #e9d5ff; }
+
+      /* Palette 2: Warm / Apricot Cream */
+      [data-palette-preview="warm"] .swatch:nth-child(1) { background: #1c1410; }
+      [data-palette-preview="warm"] .swatch:nth-child(2) { background: #3d2317; }
+      [data-palette-preview="warm"] .swatch:nth-child(3) { background: #ea580c; box-shadow: 0 0 10px rgba(234, 88, 12, 0.4); }
+      [data-palette-preview="warm"] .swatch:nth-child(4) { background: #fed7aa; }
+
+      /* Palette 3: Midnight / Lavender Dusk */
+      [data-palette-preview="midnight"] .swatch:nth-child(1) { background: #0b0e1a; }
+      [data-palette-preview="midnight"] .swatch:nth-child(2) { background: #172147; }
+      [data-palette-preview="midnight"] .swatch:nth-child(3) { background: #6366f1; box-shadow: 0 0 10px rgba(99, 102, 241, 0.4); }
+      [data-palette-preview="midnight"] .swatch:nth-child(4) { background: #c7d2fe; }
+
+      /* Palette 4: Cyber / Mint Glass */
+      [data-palette-preview="cyber"] .swatch:nth-child(1) { background: #061512; }
+      [data-palette-preview="cyber"] .swatch:nth-child(2) { background: #0d3228; }
+      [data-palette-preview="cyber"] .swatch:nth-child(3) { background: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+      [data-palette-preview="cyber"] .swatch:nth-child(4) { background: #a7f3d0; }
 
       .card-desc {
         font-size: 12px;
         line-height: 1.5;
-        color: var(--text-secondary);
+        color: rgba(255, 255, 255, 0.65);
       }
 
       /* Typography preview box on font cards */
       .font-sample {
-        padding: 10px 12px;
+        padding: 10px 14px;
         border-radius: 10px;
-        background: rgba(0, 0, 0, 0.25);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        font-size: 13px;
+        background: rgba(0, 0, 0, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        font-size: 13.5px;
         color: var(--accent);
         line-height: 1.4;
       }
 
       /* Step 3: Sleek Connect Box */
       .sleek-connect-box {
-        background: var(--bg-surface);
-        border: 1px solid var(--border-accent);
-        border-radius: 20px;
-        padding: 28px;
-        margin-bottom: 28px;
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%), var(--bg-surface);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 22px;
+        padding: 32px 28px;
+        margin-bottom: 24px;
         text-align: center;
         position: relative;
         overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
       }
       .sleek-network-logo {
-        width: 56px;
-        height: 56px;
-        border-radius: 16px;
-        margin: 0 auto 16px;
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid var(--border-glass);
+        width: 64px;
+        height: 64px;
+        border-radius: 20px;
+        margin: 0 auto 18px;
+        background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 20%, transparent) 0%, rgba(255, 255, 255, 0.03) 100%);
+        border: 1px solid color-mix(in srgb, var(--accent) 40%, rgba(255, 255, 255, 0.1));
         display: flex;
         align-items: center;
         justify-content: center;
+        box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 20%, transparent);
       }
       .sleek-connect-title {
         font-size: 19px;
         font-weight: 700;
         margin-bottom: 8px;
-        color: var(--text);
+        color: #ffffff;
       }
       .sleek-connect-desc {
         font-size: 13.5px;
         line-height: 1.6;
-        color: var(--text-secondary);
+        color: rgba(255, 255, 255, 0.65);
         max-width: 440px;
         margin: 0 auto 20px;
+      }
+
+      /* Returning User Notice */
+      .returning-notice {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 16px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        margin-bottom: 20px;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.7);
+        gap: 12px;
+      }
+      .returning-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #34d399;
+        font-weight: 600;
+      }
+      .btn-reconfigure {
+        background: none;
+        border: none;
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 2px 6px;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        transition: opacity 160ms ease;
+      }
+      .btn-reconfigure:hover {
+        opacity: 0.8;
       }
       .neutrino-pill {
         display: inline-flex;
@@ -392,9 +432,9 @@
         gap: 8px;
         padding: 6px 14px;
         border-radius: 9999px;
-        background: rgba(245, 158, 11, 0.1);
-        border: 1px solid rgba(245, 158, 11, 0.3);
-        color: #f59e0b;
+        background: var(--shell-peach);
+        border: 1px solid var(--shell-border);
+        color: var(--shell-warning);
         font-size: 12px;
         font-weight: 600;
         margin-bottom: 20px;
@@ -437,7 +477,7 @@
       }
       .btn-secondary:hover {
         background: var(--bg-surface);
-        border-color: rgba(255, 255, 255, 0.18);
+        border-color: var(--shell-border);
       }
 
       .btn-lg {
@@ -459,21 +499,21 @@
       }
       .status-banner.is-loading {
         display: flex;
-        background: rgba(59, 130, 246, 0.12);
-        border: 1px solid rgba(59, 130, 246, 0.3);
-        color: #93c5fd;
+        background: var(--shell-blue);
+        border: 1px solid var(--shell-border);
+        color: var(--shell-info);
       }
       .status-banner.is-success {
         display: flex;
-        background: rgba(16, 185, 129, 0.12);
-        border: 1px solid rgba(16, 185, 129, 0.3);
-        color: #6ee7b7;
+        background: var(--shell-mint);
+        border: 1px solid var(--shell-border);
+        color: var(--shell-success);
       }
       .status-banner.is-error {
         display: flex;
-        background: rgba(239, 68, 68, 0.12);
-        border: 1px solid rgba(239, 68, 68, 0.3);
-        color: #fca5a5;
+        background: var(--shell-peach);
+        border: 1px solid var(--shell-border);
+        color: var(--shell-error);
       }
 
       /* Spinner */
@@ -487,7 +527,9 @@
         flex-shrink: 0;
       }
       @keyframes spin {
-        to { transform: rotate(360deg); }
+        to {
+          transform: rotate(360deg);
+        }
       }
     </style>
   </head>
@@ -500,9 +542,9 @@
         <span>Supergence // Beyond Ordinary Minds</span>
       </div>
 
-      <h1 class="hero-title" id="pageTitle">Personalize <em>Your Intelligence</em></h1>
+      <h1 class="hero-title" id="pageTitle">Make Supergence <em>yours</em></h1>
       <p class="hero-desc" id="pageDesc">
-        Choose your visual environment and typography, then link your verified Sleek ID to activate your workspace.
+        Choose a palette and font, then connect an activated Sleek account to open your workspace.
       </p>
 
       <!-- Step Stepper -->
@@ -525,64 +567,88 @@
       <section class="step-panel is-active" id="stepPanel1">
         <h2 class="panel-section-title">Select Color Theme</h2>
         <div class="grid-options" role="radiogroup" aria-label="Theme selection">
-          <!-- Obsidian -->
-          <button type="button" class="option-card is-selected" data-theme-val="obsidian" role="radio" aria-checked="true">
+          <!-- Lilac Mist -->
+          <button
+            type="button"
+            class="option-card is-selected"
+            data-theme-val="obsidian"
+            role="radio"
+            aria-checked="true"
+          >
             <div class="card-header">
-              <span class="card-title">Obsidian Luxury</span>
-              <span class="card-tag">Signature</span>
+              <span class="card-title">Lilac Mist</span>
+              <span class="card-tag">Default</span>
             </div>
-            <div class="swatches-row">
-              <span class="swatch" style="background:#0b0b0b;"></span>
-              <span class="swatch" style="background:#141614;"></span>
-              <span class="swatch" style="background:#c6ab98;"></span>
-              <span class="swatch" style="background:#10b981;"></span>
+            <div class="swatches-row" data-palette-preview="obsidian" aria-hidden="true">
+              <span class="swatch"></span>
+              <span class="swatch"></span>
+              <span class="swatch"></span>
+              <span class="swatch"></span>
             </div>
-            <p class="card-desc">Deep obsidian black surfaces with Champagne Bronze orbital glow.</p>
+            <p class="card-desc">Soft lilac surfaces with a plum accent.</p>
           </button>
 
-          <!-- Walnut -->
-          <button type="button" class="option-card" data-theme-val="warm" role="radio" aria-checked="false">
+          <!-- Apricot Cream -->
+          <button
+            type="button"
+            class="option-card"
+            data-theme-val="warm"
+            role="radio"
+            aria-checked="false"
+          >
             <div class="card-header">
-              <span class="card-title">Walnut Espresso</span>
+              <span class="card-title">Apricot Cream</span>
               <span class="card-tag">Editorial</span>
             </div>
-            <div class="swatches-row">
-              <span class="swatch" style="background:#15110d;"></span>
-              <span class="swatch" style="background:#1d1712;"></span>
-              <span class="swatch" style="background:#e9b98f;"></span>
-              <span class="swatch" style="background:#f5cfaa;"></span>
+            <div class="swatches-row" data-palette-preview="warm" aria-hidden="true">
+              <span class="swatch"></span>
+              <span class="swatch"></span>
+              <span class="swatch"></span>
+              <span class="swatch"></span>
             </div>
-            <p class="card-desc">Warm roasted espresso tones with golden copper and amber depth.</p>
+            <p class="card-desc">Cream and peach with a terracotta accent.</p>
           </button>
 
-          <!-- Midnight -->
-          <button type="button" class="option-card" data-theme-val="midnight" role="radio" aria-checked="false">
+          <!-- Lavender Dusk -->
+          <button
+            type="button"
+            class="option-card"
+            data-theme-val="midnight"
+            role="radio"
+            aria-checked="false"
+          >
             <div class="card-header">
-              <span class="card-title">Midnight Rose</span>
-              <span class="card-tag">Velvet</span>
+              <span class="card-title">Lavender Dusk</span>
+              <span class="card-tag">Dark</span>
             </div>
-            <div class="swatches-row">
-              <span class="swatch" style="background:#130f14;"></span>
-              <span class="swatch" style="background:#1b151e;"></span>
-              <span class="swatch" style="background:#cfa98c;"></span>
-              <span class="swatch" style="background:#e8c7ae;"></span>
+            <div class="swatches-row" data-palette-preview="midnight" aria-hidden="true">
+              <span class="swatch"></span>
+              <span class="swatch"></span>
+              <span class="swatch"></span>
+              <span class="swatch"></span>
             </div>
-            <p class="card-desc">Dark chocolate velvet framing with subtle rose copper illumination.</p>
+            <p class="card-desc">Deep violet surfaces with lavender highlights.</p>
           </button>
 
-          <!-- Cyber -->
-          <button type="button" class="option-card" data-theme-val="cyber" role="radio" aria-checked="false">
+          <!-- Mint Glass -->
+          <button
+            type="button"
+            class="option-card"
+            data-theme-val="cyber"
+            role="radio"
+            aria-checked="false"
+          >
             <div class="card-header">
-              <span class="card-title">Cyber Slate</span>
-              <span class="card-tag">Matrix</span>
+              <span class="card-title">Mint Glass</span>
+              <span class="card-tag">Cool</span>
             </div>
-            <div class="swatches-row">
-              <span class="swatch" style="background:#070a0d;"></span>
-              <span class="swatch" style="background:#0e141a;"></span>
-              <span class="swatch" style="background:#10b981;"></span>
-              <span class="swatch" style="background:#38bdf8;"></span>
+            <div class="swatches-row" data-palette-preview="cyber" aria-hidden="true">
+              <span class="swatch"></span>
+              <span class="swatch"></span>
+              <span class="swatch"></span>
+              <span class="swatch"></span>
             </div>
-            <p class="card-desc">Tactical deep slate with neon emerald telemetry accents.</p>
+            <p class="card-desc">Cool mint surfaces with a forest-green accent.</p>
           </button>
         </div>
 
@@ -590,7 +656,18 @@
           <div></div>
           <button type="button" class="btn btn-primary" id="btnNext1">
             <span>Continue to Font Selection</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
           </button>
         </div>
       </section>
@@ -600,62 +677,132 @@
         <h2 class="panel-section-title">Select Typography Pairing</h2>
         <div class="grid-options" role="radiogroup" aria-label="Font selection">
           <!-- Editorial Luxury -->
-          <button type="button" class="option-card is-selected" data-font-val="editorial" role="radio" aria-checked="true">
+          <button
+            type="button"
+            class="option-card is-selected"
+            data-font-val="editorial"
+            role="radio"
+            aria-checked="true"
+          >
             <div class="card-header">
-              <span class="card-title" style="font-family:'Instrument Serif', serif; font-size:18px;">Editorial Luxury</span>
+              <span
+                class="card-title"
+                style="font-family: 'Instrument Serif', serif; font-size: 18px"
+                >Editorial Luxury</span
+              >
               <span class="card-tag">Recommended</span>
             </div>
-            <div class="font-sample" style="font-family:'Instrument Serif', serif; font-size:16px;">
+            <div
+              class="font-sample"
+              style="font-family: 'Instrument Serif', serif; font-size: 16px"
+            >
               "Beyond Ordinary Minds."
             </div>
-            <p class="card-desc">Instrument Serif display moments paired with DM Sans interface body.</p>
+            <p class="card-desc">
+              Instrument Serif display moments paired with DM Sans interface body.
+            </p>
           </button>
 
           <!-- Modern Geometric -->
-          <button type="button" class="option-card" data-font-val="sans" role="radio" aria-checked="false">
+          <button
+            type="button"
+            class="option-card"
+            data-font-val="sans"
+            role="radio"
+            aria-checked="false"
+          >
             <div class="card-header">
-              <span class="card-title" style="font-family:'Manrope', sans-serif;">Modern Geometric</span>
+              <span class="card-title" style="font-family: 'Manrope', sans-serif"
+                >Modern Geometric</span
+              >
               <span class="card-tag">Clean</span>
             </div>
-            <div class="font-sample" style="font-family:'Manrope', sans-serif;">
+            <div class="font-sample" style="font-family: 'Manrope', sans-serif">
               Engineered for absolute technical clarity & precision.
             </div>
-            <p class="card-desc">Variable Manrope sans with crisp geometric balance across all screens.</p>
+            <p class="card-desc">
+              Variable Manrope sans with crisp geometric balance across all screens.
+            </p>
           </button>
 
           <!-- Terminal Mono -->
-          <button type="button" class="option-card" data-font-val="mono" role="radio" aria-checked="false">
+          <button
+            type="button"
+            class="option-card"
+            data-font-val="mono"
+            role="radio"
+            aria-checked="false"
+          >
             <div class="card-header">
-              <span class="card-title" style="font-family:'JetBrains Mono', monospace;">Hacker Mono</span>
+              <span class="card-title" style="font-family: 'JetBrains Mono', monospace"
+                >Hacker Mono</span
+              >
               <span class="card-tag">Developer</span>
             </div>
-            <div class="font-sample" style="font-family:'JetBrains Mono', monospace; font-size:11.5px;">
+            <div
+              class="font-sample"
+              style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px"
+            >
               const sis = new Superintelligence({ mode: 'autonomous' });
             </div>
-            <p class="card-desc">JetBrains Mono high-legibility monospace across all code and conversation.</p>
+            <p class="card-desc">
+              JetBrains Mono high-legibility monospace across all code and conversation.
+            </p>
           </button>
 
           <!-- Neo Grotesk -->
-          <button type="button" class="option-card" data-font-val="grotesk" role="radio" aria-checked="false">
+          <button
+            type="button"
+            class="option-card"
+            data-font-val="grotesk"
+            role="radio"
+            aria-checked="false"
+          >
             <div class="card-header">
-              <span class="card-title" style="font-family:'Space Grotesk', sans-serif;">Space Grotesk</span>
+              <span class="card-title" style="font-family: 'Space Grotesk', sans-serif"
+                >Space Grotesk</span
+              >
               <span class="card-tag">Futuristic</span>
             </div>
-            <div class="font-sample" style="font-family:'Space Grotesk', sans-serif;">
+            <div class="font-sample" style="font-family: 'Space Grotesk', sans-serif">
               Avant-garde typography with bold architectural rhythm.
             </div>
-            <p class="card-desc">Space Grotesk neo-grotesque display for a daring futuristic feel.</p>
+            <p class="card-desc">
+              Space Grotesk neo-grotesque display for a daring futuristic feel.
+            </p>
           </button>
         </div>
 
         <div class="actions-row">
           <button type="button" class="btn btn-secondary" id="btnBack2">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
             <span>Back</span>
           </button>
           <button type="button" class="btn btn-primary" id="btnNext2">
             <span>Continue to Sleek Account</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
           </button>
         </div>
       </section>
@@ -663,13 +810,31 @@
       <!-- Step 3: Sleek Connect -->
       <section class="step-panel" id="stepPanel3">
         <h2 class="panel-section-title">Authenticate & Link Workspace</h2>
-        
+
+        <div id="returningNotice" class="returning-notice" style="display: none;">
+          <div class="returning-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Setup Saved</span>
+          </div>
+          <span style="flex: 1;">Theme and typography preferences preserved.</span>
+          <button type="button" class="btn-reconfigure" id="btnReconfigureSetup">Change</button>
+        </div>
+
         <div class="sleek-connect-box">
           <div class="sleek-network-logo">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-              <polyline points="2 17 12 22 22 17"/>
-              <polyline points="2 12 12 17 22 12"/>
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--accent)"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polygon points="12 2 2 7 12 12 22 7 12 2" />
+              <polyline points="2 17 12 22 22 17" />
+              <polyline points="2 12 12 17 22 12" />
             </svg>
           </div>
 
@@ -679,23 +844,52 @@
           </p>
 
           <div class="neutrino-pill">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m12 6 4 6-4 6-4-6Z"/></svg>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="m12 6 4 6-4 6-4-6Z" />
+            </svg>
             <span>One-Time Activation: 400 Neutrinos</span>
           </div>
 
           <!-- Connect CTA -->
-          <button type="button" class="btn btn-primary btn-lg" id="btnConnectBrowser">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-              <polyline points="15 3 21 3 21 9"/>
-              <line x1="10" y1="14" x2="21" y2="3"/>
+          <button
+            type="button"
+            class="btn btn-primary btn-lg"
+            id="btnConnectBrowser"
+            style="width: 100%"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <polyline points="15 3 21 3 21 9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
             </svg>
             <span id="btnConnectText">Connect Sleek Account from Browser</span>
           </button>
-
           <!-- Fallback or manual action if needed -->
-          <div id="authExternalLinkWrapper" style="display:none; margin-top:14px;">
-            <a id="authExternalLink" href="#" target="_blank" rel="noopener noreferrer" style="color:var(--accent); font-size:12.5px; text-decoration:underline;">
+          <div id="authExternalLinkWrapper" style="display: none; margin-top: 14px">
+            <a
+              id="authExternalLink"
+              href="#"
+              target="_blank"
+              rel="noopener noreferrer"
+              style="color: var(--accent); font-size: 12.5px; text-decoration: underline"
+            >
               Browser tab didn't open? Click here to authorize manually
             </a>
           </div>
@@ -709,30 +903,68 @@
 
         <div class="actions-row">
           <button type="button" class="btn btn-secondary" id="btnBack3">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
             <span>Back</span>
           </button>
-          
-          <button type="button" class="btn btn-primary" id="btnEnterWorkspace" style="display:none;">
+
+          <button
+            type="button"
+            class="btn btn-primary"
+            id="btnEnterWorkspace"
+            style="display: none"
+          >
             <span>Launch Supergence</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
           </button>
         </div>
       </section>
     </main>
 
+    <script src="/scripts/modern-loader.js"></script>
     <script>
       (() => {
         let currentStep = 1;
-        let selectedTheme = localStorage.getItem('sis-ui-theme') || 'obsidian';
+        const params = new URLSearchParams(window.location.search);
+        const forceSetup = params.get('setup') === 'true';
+        const isSetupCompleted = !forceSetup && localStorage.getItem('sis_setup_completed') === 'true';
+
+        let selectedTheme = localStorage.getItem('sis-ui-theme');
+        if (!['obsidian', 'warm', 'midnight', 'cyber'].includes(selectedTheme))
+          selectedTheme = 'obsidian';
         let selectedFont = localStorage.getItem('sis-ui-font') || 'editorial';
         let pollTimer = null;
         let authState = null;
 
         // Elements
         const body = document.body;
-        const pills = [1, 2, 3].map(i => document.getElementById(`stepPill${i}`));
-        const panels = [1, 2, 3].map(i => document.getElementById(`stepPanel${i}`));
+        const pageTitle = document.getElementById('pageTitle');
+        const pageDesc = document.getElementById('pageDesc');
+        const returningNotice = document.getElementById('returningNotice');
+        const btnReconfigureSetup = document.getElementById('btnReconfigureSetup');
+        const pills = [1, 2, 3].map((i) => document.getElementById(`stepPill${i}`));
+        const panels = [1, 2, 3].map((i) => document.getElementById(`stepPanel${i}`));
         const btnNext1 = document.getElementById('btnNext1');
         const btnNext2 = document.getElementById('btnNext2');
         const btnBack2 = document.getElementById('btnBack2');
@@ -751,7 +983,7 @@
           selectedTheme = theme;
           body.dataset.theme = theme;
           localStorage.setItem('sis-ui-theme', theme);
-          document.querySelectorAll('[data-theme-val]').forEach(card => {
+          document.querySelectorAll('[data-theme-val]').forEach((card) => {
             const isMatch = card.dataset.themeVal === theme;
             card.classList.toggle('is-selected', isMatch);
             card.setAttribute('aria-checked', String(isMatch));
@@ -762,7 +994,7 @@
           selectedFont = font;
           body.dataset.font = font;
           localStorage.setItem('sis-ui-font', font);
-          document.querySelectorAll('[data-font-val]').forEach(card => {
+          document.querySelectorAll('[data-font-val]').forEach((card) => {
             const isMatch = card.dataset.fontVal === font;
             card.classList.toggle('is-selected', isMatch);
             card.setAttribute('aria-checked', String(isMatch));
@@ -773,12 +1005,12 @@
         applyFont(selectedFont);
 
         // Theme clicks
-        document.querySelectorAll('[data-theme-val]').forEach(card => {
+        document.querySelectorAll('[data-theme-val]').forEach((card) => {
           card.addEventListener('click', () => applyTheme(card.dataset.themeVal));
         });
 
         // Font clicks
-        document.querySelectorAll('[data-font-val]').forEach(card => {
+        document.querySelectorAll('[data-font-val]').forEach((card) => {
           card.addEventListener('click', () => applyFont(card.dataset.fontVal));
         });
 
@@ -804,14 +1036,34 @@
         btnNext2.addEventListener('click', () => goToStep(3));
         btnBack3.addEventListener('click', () => goToStep(2));
 
+        if (btnReconfigureSetup) {
+          btnReconfigureSetup.addEventListener('click', () => {
+            goToStep(1);
+            if (pageTitle) pageTitle.innerHTML = 'Make Supergence <em>yours</em>';
+            if (pageDesc) pageDesc.textContent = 'Choose a palette and font, then connect an activated Sleek account to open your workspace.';
+            if (returningNotice) returningNotice.style.display = 'none';
+          });
+        }
+
+        function showReturningMode() {
+          goToStep(3);
+          if (pageTitle) pageTitle.innerHTML = 'Welcome back to <em>Supergence</em>';
+          if (pageDesc) pageDesc.textContent = 'Connect your Sleek account to open your workspace.';
+          if (returningNotice) returningNotice.style.display = 'flex';
+        }
+
         // Step 3: Sleek Account Connect via Browser
         async function initiateSleekAuth() {
           btnConnectBrowser.disabled = true;
           btnConnectText.textContent = 'Connecting to Sleek...';
           statusBanner.className = 'status-banner is-loading';
           statusBanner.style.display = 'flex';
-          statusSpinner.style.display = 'block';
-          statusText.textContent = 'Preparing secure browser authentication...';
+          if (typeof window.renderModernLoader === 'function') {
+            statusBanner.innerHTML = window.renderModernLoader('Connecting to Sleek...', { size: 'sm' });
+          } else {
+            statusSpinner.style.display = 'block';
+            statusText.textContent = 'Preparing secure browser authentication...';
+          }
 
           try {
             // Initiate PKCE authorization request
@@ -822,6 +1074,9 @@
               body: JSON.stringify({ origin }),
             });
             const data = await res.json();
+            if (data.status === 'complete' && data.user) {
+              return onAuthSuccess(data.user);
+            }
 
             if (!res.ok || !data.url || !data.state) {
               throw new Error(data.message || 'Could not initiate browser authentication.');
@@ -837,20 +1092,28 @@
             // Open authentication tab in the browser
             const popup = window.open(authUrl, '_blank');
             if (!popup) {
-              statusText.textContent = 'Popup blocked. Please click the link below to authenticate in your browser.';
+              if (typeof window.renderModernLoader === 'function') {
+                statusBanner.innerHTML = '<span style="color:var(--shell-warning);">Popup blocked. Please use the link below to authorize in your browser.</span>';
+              } else {
+                statusText.textContent =
+                  'Popup blocked. Please click the link below to authenticate in your browser.';
+              }
             } else {
-              statusText.textContent = 'Browser tab opened! Please authorize Supergence in your browser...';
+              if (typeof window.renderModernLoader === 'function') {
+                statusBanner.innerHTML = window.renderModernLoader('Waiting for browser confirmation...', { size: 'sm' });
+              } else {
+                statusText.textContent =
+                  'Browser tab opened! Please authorize Supergence in your browser...';
+              }
             }
 
             btnConnectText.textContent = 'Waiting for browser confirmation...';
 
             // Poll for completion
             startPolling(authState);
-
           } catch (err) {
             statusBanner.className = 'status-banner is-error';
-            statusSpinner.style.display = 'none';
-            statusText.textContent = err.message || 'Connection failed.';
+            statusBanner.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>${err.message || 'Connection failed.'}</span>`;
             btnConnectBrowser.disabled = false;
             btnConnectText.textContent = 'Try Again';
           }
@@ -869,16 +1132,21 @@
 
               if (reply.status === 'complete') {
                 clearInterval(pollTimer);
-                onAuthSuccess(reply.user || { sleekId: '@verified_sleek_user' });
+                if (!reply.user?.sleekId || reply.user.supergenceActivated !== true)
+                  throw new Error(
+                    'Identity or activation was not confirmed. Reconnect with Sleek.',
+                  );
+                onAuthSuccess(reply.user);
               } else if (['failed', 'expired'].includes(reply.status)) {
                 clearInterval(pollTimer);
-                throw new Error('Authorization expired or cancelled. Please try again.');
+                throw new Error(
+                  reply.message || 'Authorization expired or cancelled. Please try again.',
+                );
               }
             } catch (err) {
               clearInterval(pollTimer);
               statusBanner.className = 'status-banner is-error';
-              statusSpinner.style.display = 'none';
-              statusText.textContent = err.message;
+              statusBanner.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>${err.message}</span>`;
               btnConnectBrowser.disabled = false;
               btnConnectText.textContent = 'Reconnect with Sleek';
             }
@@ -888,40 +1156,55 @@
         function onAuthSuccess(user) {
           localStorage.setItem('sis_setup_completed', 'true');
           statusBanner.className = 'status-banner is-success';
-          statusSpinner.style.display = 'none';
-          statusText.textContent = `✓ Connected to Sleek as ${user.sleekId || 'User'}! 400 Neutrinos Active.`;
+          statusBanner.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span>Welcome, ${user.sleekId}! Supergence is ready.</span>`;
           btnConnectBrowser.style.display = 'none';
           authExternalLinkWrapper.style.display = 'none';
           btnEnterWorkspace.style.display = 'inline-flex';
+          btnEnterWorkspace.focus();
           btnEnterWorkspace.addEventListener('click', () => {
             window.location.replace('/');
           });
-          // Auto enter after 1.5s
+          // Auto enter after 1.2s
           setTimeout(() => {
             window.location.replace('/');
-          }, 1400);
+          }, 1200);
         }
 
         btnConnectBrowser.addEventListener('click', initiateSleekAuth);
 
         // Pre-check if already signed in
         fetch('/api/silisleek/session')
-          .then(r => r.json())
-          .then(data => {
-            if (data.authenticated && data.user) {
-              btnConnectText.textContent = `Already Connected as ${data.user.sleekId || '@julianthorne'}`;
+          .then((r) => r.json())
+          .then((data) => {
+            if (
+              data.authenticated &&
+              data.user?.sleekId &&
+              data.user.supergenceActivated === true
+            ) {
+              if (isSetupCompleted) {
+                // Returning user already authenticated -> directly enter workspace!
+                window.location.replace('/');
+                return;
+              }
+              btnConnectText.textContent = `Connected as ${data.user.sleekId}`;
               statusBanner.className = 'status-banner is-success';
               statusBanner.style.display = 'flex';
-              statusSpinner.style.display = 'none';
-              statusText.textContent = `✓ Verified Sleek Account: ${data.user.sleekId || '@julianthorne'}`;
+              statusBanner.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span>Connected as ${data.user.sleekId}. Supergence activation confirmed.</span>`;
               btnEnterWorkspace.style.display = 'inline-flex';
               btnEnterWorkspace.addEventListener('click', () => {
                 localStorage.setItem('sis_setup_completed', 'true');
                 window.location.replace('/');
               });
+            } else if (isSetupCompleted) {
+              // Returning user who already completed setup before -> skip to Step 3
+              showReturningMode();
             }
           })
-          .catch(() => {});
+          .catch(() => {
+            if (isSetupCompleted) {
+              showReturningMode();
+            }
+          });
       })();
     </script>
   </body>

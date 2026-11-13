@@ -99,6 +99,8 @@ export class ContainerRunner {
           }
         } catch {}
       }, timeoutMs);
+      if (typeof timer.unref === 'function') timer.unref();
+      child.stdin?.end();
 
       child.stdout?.on('data', (d) => {
         stdout += d.toString();
@@ -122,6 +124,10 @@ export class ContainerRunner {
 
       child.on('close', (code) => {
         clearTimeout(timer);
+        try {
+          child.stdout?.destroy();
+          child.stderr?.destroy();
+        } catch {}
         const durationMs = Date.now() - startTime;
         resolve({
           exitCode: killed ? 124 : (code ?? 0),

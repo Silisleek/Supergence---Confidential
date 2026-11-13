@@ -68,7 +68,7 @@ test('REA rejects symlinks even when the target lies within the allowed workspac
 });
 
 test('REA process transport rejects malformed JSON, excess output and timeouts', async (t) => {
-  const { root, artifact, service } = await fixture(t, { maxOutputBytes: 128, timeoutMs: 1500 });
+  const { root, artifact, service } = await fixture(t, { maxOutputBytes: 128, timeoutMs: 5000 });
   const malformed = path.join(root, 'malformed.mjs');
   await fs.writeFile(malformed, "process.stdout.write('not json');");
   await assert.rejects(service.run(malformed, artifact, 'javascript-tree'), {

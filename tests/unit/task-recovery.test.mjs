@@ -109,6 +109,37 @@ test('an explicit user stop is durable and never auto-resumes', async (t) => {
   });
   assert.equal(replay.taskStatus, 'cancelled');
 });
+
+test('revoking sign-in aborts a running turn and prevents recovery replay', async (t) => {
+  const { turns } = fixture(t);
+  const authorization = new AbortController();
+  let started;
+  const ready = new Promise((resolve) => {
+    started = resolve;
+  });
+  const params = {
+    conversationId: 'sign-out',
+    requestId: 'request',
+    query: 'Build a report.',
+    signal: authorization.signal,
+  };
+  const pending = turns.run(params, {}, async (next) => {
+    started();
+    await new Promise((resolve) => next.signal.addEventListener('abort', resolve, { once: true }));
+    next.signal.throwIfAborted();
+  });
+  await ready;
+  const reason = Object.assign(new Error('Signed out.'), { code: 'TASK_CANCELLED' });
+  authorization.abort(reason);
+  await assert.rejects(pending, /Signed out/);
+  assert.equal(turns.status('sign-out', 'request').status, 'cancelled');
+  assert.equal(conversations.get('sign-out').activeRequest, undefined);
+  let resumed = false;
+  await turns.recoverPending(() => {
+    resumed = true;
+  });
+  assert.equal(resumed, false);
+});
 test('Full access authorizes ordinary application source edits and resolves a waiting source-only review', async (t) => {
   const { directory } = fixture(t);
   const access = new RuntimeAccess({ directory, timeoutMs: 1000 });

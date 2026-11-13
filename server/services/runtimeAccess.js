@@ -17,6 +17,12 @@ export const accessModes = ['full-access', 'approve-for-me', 'ask-before-executi
 export function operationPolicy(name, args = {}) {
   const tool = String(name).toLowerCase();
   const capabilities = new Set();
+  if (tool === 'study_topic') {
+    capabilities.add('browser');
+    capabilities.add('files');
+  }
+  if (tool === 'record_learning_experience') capabilities.add('files');
+  if (tool === 'superbox_reset') capabilities.add('files');
   if (tool.startsWith('figcraft_') || tool === 'open_design_to_figcraft') {
     capabilities.add('files');
     capabilities.add('terminal');
@@ -75,7 +81,10 @@ export function operationPolicy(name, args = {}) {
   const readOnly =
     /^(read_|get_|list_|search_|recall_|inspect_|reverse_engineer|reverse_engineering_status|tool_cognition_query)/.test(
       tool,
-    ) || /^(web_search|web_fetch|system_telemetry|telemetry|hardware_audit)$/.test(tool);
+    ) ||
+    /^(evaluate_knowledge|web_search|web_fetch|system_telemetry|telemetry|hardware_audit)$/.test(
+      tool,
+    );
   const localEdit =
     /^(write_file|create_file|retain_knowledge|edit_knowledge|retain_browser_page|store_memory|update_memory)$/.test(
       tool,
@@ -85,7 +94,14 @@ export function operationPolicy(name, args = {}) {
       .split(/[\\/]/)
       .includes('..');
   const routine =
-    readOnly || localEdit || tool === 'open_workspace_browser' || tool === 'send_agent_message';
+    readOnly ||
+    localEdit ||
+    [
+      'open_workspace_browser',
+      'send_agent_message',
+      'study_topic',
+      'record_learning_experience',
+    ].includes(tool);
   return { capabilities: [...capabilities], readOnly, routine };
 }
 
@@ -146,7 +162,12 @@ export class RuntimeAccess {
     return this.context.getStore() || {};
   }
   run(context, work) {
-    return this.context.run({ ...this.currentContext(), ...context, grants: new Set() }, work);
+    const parent = this.currentContext();
+    const signal =
+      parent.signal && context.signal && parent.signal !== context.signal
+        ? AbortSignal.any([parent.signal, context.signal])
+        : context.signal || parent.signal;
+    return this.context.run({ ...parent, ...context, signal, grants: new Set() }, work);
   }
   snapshot() {
     return {
@@ -213,6 +234,7 @@ export class RuntimeAccess {
         context.signal.addEventListener('abort', entry.onAbort, { once: true });
       }
     });
+    context.signal?.throwIfAborted();
     if (!allowed) throw new Error(`Execution declined or approval expired: ${tool}`);
     for (const capability of policy.capabilities) {
       if (this.settings[capability] === false)

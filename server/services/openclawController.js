@@ -230,6 +230,26 @@ export class OpenClawController {
           } catch (_) {}
         })
         .catch(() => {});
+    } else if (process.platform !== 'win32' && now - (this._lastDrivesScan || 0) > 300000) {
+      this._lastDrivesScan = now;
+      try {
+        if (typeof fs.statfsSync === 'function') {
+          const stats = fs.statfsSync('/');
+          const totalBytes = stats.bsize * stats.blocks;
+          const freeBytes = stats.bsize * stats.bfree;
+          const totalGB = Math.round((totalBytes / (1024 * 1024 * 1024)) * 10) / 10;
+          const freeGB = Math.round((freeBytes / (1024 * 1024 * 1024)) * 10) / 10;
+          this._cachedDrives = [
+            {
+              device: '/',
+              name: 'Root Filesystem',
+              totalGB,
+              freeGB,
+              usedGB: Math.round((totalGB - freeGB) * 10) / 10,
+            },
+          ];
+        }
+      } catch (_) {}
     }
     const drives = this._cachedDrives;
 
@@ -381,7 +401,10 @@ export class OpenClawController {
     const norm = resolved.toLowerCase().replace(/[/\\]+$/, '');
 
     // 1. Root drives (e.g. C:, C:\, D:, /, etc.)
-    const parsedRoot = path.parse(resolved).root.toLowerCase().replace(/[/\\]+$/, '');
+    const parsedRoot = path
+      .parse(resolved)
+      .root.toLowerCase()
+      .replace(/[/\\]+$/, '');
     if (/^[a-zA-Z]:$/i.test(norm) || norm === '' || norm === parsedRoot) {
       return true;
     }
@@ -397,22 +420,45 @@ export class OpenClawController {
       'C:\\Windows\\System32',
       'C:\\Program Files',
       'C:\\Program Files (x86)',
-      '/etc', '/usr', '/bin', '/sbin', '/boot', '/dev', '/sys', '/proc'
-    ].filter(Boolean).map((d) => path.resolve(d).toLowerCase().replace(/[/\\]+$/, ''));
+      '/etc',
+      '/usr',
+      '/bin',
+      '/sbin',
+      '/boot',
+      '/dev',
+      '/sys',
+      '/proc',
+    ]
+      .filter(Boolean)
+      .map((d) =>
+        path
+          .resolve(d)
+          .toLowerCase()
+          .replace(/[/\\]+$/, ''),
+      );
 
     if (sysDirs.some((sd) => norm === sd || norm.startsWith(sd + path.sep))) {
       return true;
     }
 
     // 3. User profile root itself
-    const homeNorm = path.resolve(os.homedir()).toLowerCase().replace(/[/\\]+$/, '');
+    const homeNorm = path
+      .resolve(os.homedir())
+      .toLowerCase()
+      .replace(/[/\\]+$/, '');
     if (norm === homeNorm) {
       return true;
     }
 
     // 4. Project root and workspace root directories themselves
-    const rootNorm = path.resolve(ROOT_DIR).toLowerCase().replace(/[/\\]+$/, '');
-    const wsNorm = path.resolve(WORKSPACE_DIR).toLowerCase().replace(/[/\\]+$/, '');
+    const rootNorm = path
+      .resolve(ROOT_DIR)
+      .toLowerCase()
+      .replace(/[/\\]+$/, '');
+    const wsNorm = path
+      .resolve(WORKSPACE_DIR)
+      .toLowerCase()
+      .replace(/[/\\]+$/, '');
     if (norm === rootNorm || norm === wsNorm) {
       return true;
     }
@@ -508,7 +554,9 @@ export class OpenClawController {
     const resolved = resolveWithinRoot(ROOT_DIR, filePath);
     if (!fs.existsSync(resolved)) throw new Error(`File does not exist: ${filePath}`);
     if (this._isProtectedSystemPath(resolved)) {
-      throw new Error(`Security Violation: Cannot delete protected path or root directory: ${filePath}`);
+      throw new Error(
+        `Security Violation: Cannot delete protected path or root directory: ${filePath}`,
+      );
     }
 
     const stat = fs.statSync(resolved);

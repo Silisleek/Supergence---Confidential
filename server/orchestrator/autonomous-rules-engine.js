@@ -402,7 +402,9 @@ export class AutonomousRulesEngine {
    * Get all active rules matching a domain and message context
    */
   getActiveRulesForContext({ domain = 'all', text = '', limit = 8 } = {}) {
-    const active = Array.from(this.rules.values()).filter((r) => r.isActive !== false);
+    const active = Array.from(this.rules.values()).filter(
+      (r) => r.isActive !== false && r.source !== 'web_research',
+    );
     const lowerText = String(text || '').toLowerCase();
 
     // Score rules based on relevance
@@ -467,7 +469,9 @@ export class AutonomousRulesEngine {
   }
 
   getActiveRules() {
-    return Array.from(this.rules.values()).filter((r) => r.isActive !== false);
+    return Array.from(this.rules.values()).filter(
+      (r) => r.isActive !== false && r.source !== 'web_research',
+    );
   }
 
   getRulesSummary() {

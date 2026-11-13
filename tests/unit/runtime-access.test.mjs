@@ -11,6 +11,20 @@ import {
   publicToolArguments,
 } from '../../server/services/assistantStream.js';
 
+test('nested tool scopes retain sign-in revocation as well as task cancellation', async () => {
+  const access = new RuntimeAccess();
+  const authorization = new AbortController();
+  const task = new AbortController();
+  await access.run({ signal: authorization.signal }, () =>
+    access.run({ signal: task.signal }, async () => {
+      authorization.abort(Object.assign(new Error('Signed out.'), { code: 'TASK_CANCELLED' }));
+      await assert.rejects(access.authorize('get_status'), /Signed out/);
+      assert.equal(access.currentContext().signal.aborted, true);
+      assert.equal(task.signal.aborted, false);
+    }),
+  );
+});
+
 test('access persists defaults and rejects invalid settings', async () => {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'sis-access-'));
   try {

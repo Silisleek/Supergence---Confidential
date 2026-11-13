@@ -1,9 +1,10 @@
 import { injectImportmapIfNeeded } from './workspace/preview-importmap.js';
 import { resolveWithinRoot } from './utils/path-confinement.js';
-import { sessionAuth, isPublicRoute } from './security/session-auth.js';
+import { sessionAuth, isPublicRoute, cookieName } from './security/session-auth.js';
 import { globalInputValidator } from './security/input-validator.js';
 import { sleekIdentity } from './security/sleek-identity.js';
 import { registerLearningRoutes } from './routes/learning.js';
+import { registerProviderRoutes } from './routes/provider.js';
 import { registerEvolutionRoutes } from './routes/evolution.js';
 import { evolutionEngine } from './services/evolutionEngine.js';
 import { configureEvolutionTools } from './services/evolutionToolInstaller.js';
@@ -22,6 +23,11 @@ import { registerAgentConversationRoutes } from './routes/agent-conversations.js
 import { configureAgentConversationRuntime } from './services/agentConversations.js';
 import { registerPageRoutes } from './routes/pages.js';
 import { registerStorageRoutes } from './routes/storage-dashboard.js';
+import { registerAremRoutes } from './routes/arem.js';
+import { registerSupergenceTeamsRoutes } from './routes/teams.js';
+import { registerSuperlinkChatRoutes } from './routes/superlink-chat.js';
+import aremEngine from './arem/arem-engine.js';
+import superbox from './services/superbox.js';
 // SIS 1.0 — Main Server
 // Express + WebSocket server — the brain's nervous system
 
@@ -35,6 +41,7 @@ import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
 import brain from './orchestrator/brain.js';
+globalThis.__supergence_brain = brain;
 global.__brain = brain;
 import workspace from './workspace/manager.js';
 import githubManager from './github/manager.js';
@@ -49,8 +56,14 @@ import patternLibrary from './improvement/anti-patterns.js';
 import fs from 'fs';
 import toolRegistry from './tools/registry.js';
 import knowledgeGraph from './memory/knowledge-graph.js';
-import { quickAI, PREMIUM_MODEL, assertProviderAvailable } from './api/openrouter.js';
+import {
+  quickAI,
+  PREMIUM_MODEL,
+  assertProviderAvailable,
+  configureDefaultProvider,
+} from './api/provider.js';
 import possap from './possap/index.js';
+import uiSelfModification from './services/uiSelfModification.js';
 import systemManager from './systems/manager.js';
 import userFocusTracker from './improvement/user-focus-tracker.js';
 import metaPromptOptimizer from './improvement/meta-prompt-optimizer.js';
@@ -91,6 +104,7 @@ import internetLearningEngine from './improvement/internet-learning-engine.js';
 import chemistor from './chemistry/chemistor.js';
 import supergenceEngine from './orchestrator/supergence-engine.js';
 import adaToolForger from './services/adaToolForger.js';
+import uiWidgetStore from './services/uiWidgetStore.js';
 import continuousEngine from './orchestrator/continuous-engine.js';
 import goalEngine from './orchestrator/goal-engine.js';
 import hermesLearner from './services/hermesLearner.js';
@@ -247,22 +261,41 @@ app.get(
   (_req, res) => res.redirect(303, '/sleek-login'),
 );
 app.post('/api/silisleek/auth', async (req, res) => {
-  if (!sessionAuth.authorized(req) && !isLocalRequest(req))
+  if (!sessionAuth.authorized(req)) {
     return res.status(401).json({ message: 'Open the private Supergence session link first.' });
+  }
+
   try {
+    if (req.body?.sleekId || req.body?.local || req.body?.guest) {
+      return res.status(400).json({ message: 'Connect your activated Sleek account in the browser.' });
+    }
+
     if (!req.body?.state) {
       const address = server.address();
       if (!address || typeof address === 'string') throw new Error('Server is not ready.');
-      return res.json(sleekIdentity.begin(address.port, req.body?.origin));
+      return res.json(sleekIdentity.begin(address.port));
     }
+
+    // 4. Polling claim from Silisleek browser flow
     const result = sleekIdentity.claim(req.body.state);
     res.setHeader('Cache-Control', 'no-store');
-    if (result.status === 'complete')
-      res.setHeader(
+    if (result.status === 'complete') {
+      res.append(
         'Set-Cookie',
-        `sis_sleek_identity=${result.key}; Path=/; HttpOnly; SameSite=Strict; Max-Age=28800`,
+        `sis_sleek_identity=${result.key}; Path=/; HttpOnly; SameSite=Lax; Max-Age=28800`,
       );
-    return res.json({ status: result.status });
+      const signal = sleekIdentity.getSignal({
+        headers: { cookie: `sis_sleek_identity=${result.key}` },
+      });
+      runtimeAccess
+        .run({ signal }, () => sisUnifiedSystem.resumePendingTasks())
+        .catch((error) => console.warn('[Task recovery]', error.message));
+    }
+    return res.json({
+      status: result.status,
+      ...(result.user ? { user: result.user } : {}),
+      ...(result.message ? { message: result.message } : {}),
+    });
   } catch (err) {
     return res.status(401).json({ success: false, message: err.message });
   }
@@ -317,7 +350,9 @@ app.post('/api/silisleek/logout', (req, res) => {
 app.use(globalInputValidator);
 app.use((req, res, next) => {
   if (isPublicRoute(req)) return next();
-  if (sessionAuth.authorized(req) && sleekIdentity.getSession(req)) return next();
+  if (sessionAuth.authorized(req) && sleekIdentity.getSession(req)) {
+    return runtimeAccess.run({ signal: sleekIdentity.getSignal(req) }, next);
+  }
   if (req.method === 'GET' && req.accepts('html') && !req.path.startsWith('/api/'))
     return res.redirect(303, '/sleek-login');
   return res.status(401).json({ error: 'Sign in with your Sleek ID to use Supergence.' });
@@ -351,11 +386,14 @@ app.use((req, res, next) => {
 // Serve client application statically (serve client directly for instant hot changes; fallback to dist)
 const clientPath = path.join(__dirname, '../client');
 const distPath = path.join(__dirname, '../dist');
-const releasePath = path.join(__dirname, '../release');
 const downloaderPath = path.join(__dirname, '../downloader');
 const resourcesPath = path.join(__dirname, '../resources');
 
 registerPageRoutes(app);
+app.use(
+  '/vendor/dompurify',
+  express.static(path.join(__dirname, '../node_modules/dompurify/dist')),
+);
 
 app.use(
   '/vendor/three',
@@ -368,9 +406,6 @@ app.use(
 app.use(express.static(clientPath, { etag: false, lastModified: false, maxAge: 0 }));
 if (fs.existsSync(distPath)) {
   app.use(express.static(distPath, { etag: false, lastModified: false, maxAge: 0 }));
-}
-if (fs.existsSync(releasePath)) {
-  app.use('/release', express.static(releasePath, { etag: true, maxAge: '1h' }));
 }
 if (fs.existsSync(downloaderPath)) {
   app.use('/download', express.static(downloaderPath));
@@ -430,7 +465,7 @@ app.get('/api/verification/data', (req, res) => {
       } catch (_) {}
     }
 
-    const pMistakes = path.join(__dirname, '../data/memory/mistakes-ledger.json');
+    const pMistakes = path.join(dataRoot, 'memory/mistakes-ledger.json');
     if (fs.existsSync(pMistakes)) {
       try {
         data.mistakesLedger = JSON.parse(fs.readFileSync(pMistakes, 'utf8'));
@@ -657,7 +692,10 @@ app.post('/api/heal', async (req, res) => {
 // Health check (build tag proves which code the running server loaded)
 const BUILD = '20261023-conversation-memory';
 registerLearningRoutes(app);
+registerProviderRoutes(app);
 registerEvolutionRoutes(app);
+registerAremRoutes(app);
+registerSupergenceTeamsRoutes(app);
 evolutionEngine.research = async (topic) => {
   const result = await toolRegistry.execute('deep_research', { topic });
   if (result?.error || result?.success === false)
@@ -684,6 +722,30 @@ await registerProactiveSuggestionRoutes(
 );
 registerAgentProfileRoutes(app, agentTeamManager);
 registerAgentConversationRoutes(app);
+registerSuperlinkChatRoutes(app, { authorize: (req) => sessionAuth.authorized(req) });
+
+// ─── Superlink Direct Chat widget registration ───
+// Registers the Superlink-only chat widget through the PERSISTENT
+// uiSelfModification engine (data/ui-customizations.json), so the widget
+// survives server restarts. The in-memory uiWidgetStore alone would lose it.
+// Idempotent: safe to run on every boot.
+try {
+  if (!uiSelfModification.getUIState().widgets.some((w) => w.id === 'superlink-direct-chat')) {
+    uiSelfModification.injectUIWidget({
+      id: 'superlink-direct-chat',
+      title: 'Superlink Direct',
+      target: '#sisFloatingLayer',
+      html: '<form id="slForm" autocomplete="off"><div class="sl-log" id="slLog"></div><div class="sl-row"><input id="slInput" placeholder="Talk to Superlink only…" maxlength="4000"/><button id="slSend" type="submit">Send</button></div></form>',
+      css: '#superlink-direct-chat{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#0b0f14;color:#d7e0ea;border:1px solid #1f6feb;border-radius:10px;width:340px;box-shadow:0 10px 30px rgba(0,0,0,.5)}#superlink-direct-chat .sl-head{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid #16202b}#superlink-direct-chat .sl-dot{width:8px;height:8px;border-radius:50%;background:#3fb950}#superlink-direct-chat .sl-title{font-size:12px;letter-spacing:.08em;text-transform:uppercase}#superlink-direct-chat .sl-log{height:190px;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px;font-size:12.5px}#superlink-direct-chat .sl-msg{padding:6px 9px;border-radius:7px;white-space:pre-wrap;word-break:break-word}#superlink-direct-chat .sl-msg.me{background:#132333;align-self:flex-end}#superlink-direct-chat .sl-msg.ai{background:#121a13;align-self:flex-start}#superlink-direct-chat .sl-msg.sys{color:#8b949e;align-self:center;font-size:11.5px}#superlink-direct-chat .sl-row{display:flex;gap:6px;padding:8px 12px;border-top:1px solid #16202b}#superlink-direct-chat #slInput{flex:1;background:#0d1117;color:#d7e0ea;border:1px solid #21262d;border-radius:6px;padding:7px 9px;font-size:12.5px;outline:none}#superlink-direct-chat #slInput:focus{border-color:#1f6feb}#superlink-direct-chat #slSend{background:#1f6feb;color:#fff;border:0;border-radius:6px;padding:0 14px;font-size:12.5px;cursor:pointer}#superlink-direct-chat #slSend:disabled{opacity:.5;cursor:not-allowed}',
+      js: '(function(){var root=document.getElementById("superlink-direct-chat");if(!root)return;var form=document.getElementById("slForm"),input=document.getElementById("slInput"),send=document.getElementById("slSend"),log=document.getElementById("slLog"),conversationId=null;if(!form||!input||!send||!log)return;function add(text,cls){var el=document.createElement("div");el.className="sl-msg "+cls;el.textContent=text;log.appendChild(el);log.scrollTop=log.scrollHeight;return el;}fetch("/api/chat/superlink/status",{credentials:"include"}).then(function(r){return r.ok?r.json():null;}).then(function(s){if(!s)return;add(s.configured?"Superlink channel locked — agent: "+s.agent:"Transport ready — no SUPERLINK_ENDPOINT set yet.","sys");}).catch(function(){add("Channel status unavailable (not signed in?).","sys");});form.addEventListener("submit",function(e){e.preventDefault();var text=(input.value||"").trim();if(!text)return;add(text,"me");input.value="";send.disabled=true;var typing=add("Superlink is thinking…","sys");fetch("/api/chat/superlink",{method:"POST",credentials:"include",headers:{"content-type":"application/json"},body:JSON.stringify({message:text,conversationId:conversationId})}).then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});}).then(function(res){typing.remove();send.disabled=false;if(!res.ok){add(res.d&&res.d.error?res.d.error:"Request failed.","sys");return;}conversationId=res.d.conversationId||conversationId;if(res.d.reply)add(res.d.reply,"ai");}).catch(function(){typing.remove();send.disabled=false;add("Network error reaching Superlink.","sys");});});})();',
+    });
+    console.log('[SuperlinkChat] widget registered (persistent).');
+  } else {
+    console.log('[SuperlinkChat] widget already registered.');
+  }
+} catch (err) {
+  console.warn('[SuperlinkChat] widget registration failed:', err.message);
+}
 configureAgentConversationRuntime({
   reply: async ({ agent, messages, senderName, threadId, onToken, onToolCall, onToolResult }) => {
     const latest = messages.at(-1);
@@ -924,17 +986,98 @@ app.post('/api/settings', (req, res) => {
       runtimeAccess.update({ mode: accessMode });
     } catch (_) {}
   }
+  const providerConfig = configureDefaultProvider({ baseURL, apiKey, defaultModel, fallbackModel });
   res.json({
     success: true,
     message: 'Settings updated successfully',
     provider: {
-      baseURL: process.env.BASE_URL,
-      defaultModel: process.env.DEFAULT_MODEL,
-      fallbackModel: process.env.FALLBACK_MODEL,
+      baseURL: providerConfig.baseURL,
+      defaultModel: providerConfig.defaultModel,
+      fallbackModel: providerConfig.fallbackModel,
       hasApiKey: Boolean(process.env.API_KEY),
     },
     accessMode: runtimeAccess?.snapshot?.()?.settings?.mode || 'full-access',
   });
+});
+
+// ─── UI Self-Modification & Dynamic Adaptation Routes ───
+app.get('/api/ui/state', (req, res) => {
+  res.json({ success: true, ...uiSelfModification.getUIState() });
+});
+
+app.post('/api/ui/theme', (req, res) => {
+  try {
+    const { theme, customCssVars, customCss } = req.body || {};
+    const result = uiSelfModification.modifyUITheme({
+      theme,
+      customCssVars,
+      customCss,
+      author: 'User / API',
+    });
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/ui/widget', (req, res) => {
+  try {
+    const { id, title, target, html, css, js, position } = req.body || {};
+    const result = uiSelfModification.injectUIWidget({
+      id,
+      title,
+      target,
+      html,
+      css,
+      js,
+      position,
+      author: 'User / API',
+    });
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+app.delete('/api/ui/widget/:id', (req, res) => {
+  try {
+    const result = uiSelfModification.removeUIWidget({
+      id: req.params.id,
+      author: 'User / API',
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/ui/widget/remove', (req, res) => {
+  try {
+    const { id } = req.body || {};
+    const result = uiSelfModification.removeUIWidget({
+      id,
+      author: 'User / API',
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/ui/source', (req, res) => {
+  try {
+    const { file, targetContent, replacementContent, fullContent } = req.body || {};
+    const result = uiSelfModification.modifyUISource({
+      file,
+      targetContent,
+      replacementContent,
+      fullContent,
+      author: 'User / API',
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
 });
 
 // ─── Multi-SIS Systems & Specialization Routes ───
@@ -1616,6 +1759,16 @@ app.get('/api/memory/graph', (req, res) => {
 });
 
 // ─── Workspace Routes (Full Workspace & Folder Control) ───
+app.get('/api/workspace/files', (req, res) => {
+  try {
+    const { query, limit } = req.query || {};
+    const files = workspace.searchFiles(query || '', { maxMatches: Number(limit) || 200 });
+    res.json({ success: true, files });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.get('/api/workspace/tree', (req, res) => {
   try {
     const { path: dirpath, depth } = req.query;
@@ -3176,6 +3329,116 @@ app.post('/api/ada/reject', (req, res) => {
   }
 });
 
+// ─── Dynamic UI Widget Endpoints ───
+app.get('/api/ui/state', (_req, res) => {
+  try {
+    res.json({ success: true, widgets: uiWidgetStore.getWidgets() });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/ui/widget/inject', (req, res) => {
+  try {
+    const widget = uiWidgetStore.injectWidget(req.body || {});
+    res.json({ success: true, widget });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/ui/widget/remove', (req, res) => {
+  try {
+    const { id } = req.body || {};
+    if (!id) return res.status(400).json({ success: false, error: 'Widget id is required' });
+    const removed = uiWidgetStore.removeWidget(id);
+    res.json({ success: removed });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ─── Superbox staging endpoints ───
+app.get('/api/superbox/status', async (_req, res) => {
+  try {
+    await runtimeAccess.authorize('list_files', { path: '.superbox' });
+    res.json(superbox.getStatus());
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/superbox/files', async (req, res) => {
+  try {
+    const subDir = req.query.subDir || '';
+    await runtimeAccess.authorize('list_files', { path: `.superbox/${subDir}` });
+    res.json({ success: true, files: superbox.listFiles(subDir), status: superbox.getStatus() });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/superbox/file/read', async (req, res) => {
+  try {
+    const relPath = req.body?.path || req.body?.filePath;
+    await runtimeAccess.authorize('read_file', { path: `.superbox/${relPath}` });
+    res.json(superbox.readFile(relPath));
+  } catch (err) {
+    res.status(404).json({ error: err.message });
+  }
+});
+
+app.post('/api/superbox/file/write', async (req, res) => {
+  try {
+    const relPath = req.body?.path || req.body?.filePath;
+    const content = req.body?.content;
+    await runtimeAccess.authorize('write_file', { path: `.superbox/${relPath}` });
+    res.json(superbox.createFile(relPath, content));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/superbox/file/delete', async (req, res) => {
+  try {
+    const relPath = req.body?.path || req.body?.filePath;
+    await runtimeAccess.authorize('delete_file', { path: `.superbox/${relPath}` });
+    res.json(superbox.deleteFile(relPath));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/superbox/command', async (req, res) => {
+  try {
+    const { command, timeoutMs } = req.body || {};
+    await runtimeAccess.authorize('superbox_run_command', { command, timeoutMs });
+    const result = await superbox.runCommand(command, { timeoutMs });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/superbox/reset', async (_req, res) => {
+  try {
+    await runtimeAccess.authorize('superbox_reset');
+    res.json(superbox.reset());
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/superbox/apply', async (req, res) => {
+  try {
+    const { filePaths, targetDir } = req.body || {};
+    await runtimeAccess.authorize('superbox_apply_to_workspace', { filePaths, targetDir });
+    res.json(superbox.applyToWorkspace(filePaths, targetDir));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── Hermes Continuous Cognitive Learner Endpoints ───
 app.get('/api/hermes/learnings', (req, res) => {
   try {
@@ -4201,436 +4464,447 @@ wss.on('connection', (ws, req) => {
       if (typeof msg.type === 'string' && msg.type.startsWith('agent-browser-'))
         assertBrowserEnabled();
 
-      switch (msg.type) {
-        case 'brain-state':
-          ws.send(
-            JSON.stringify({
-              type: 'brain-state',
+      await runtimeAccess.run({ signal: sleekIdentity.getSignal(req) }, async () => {
+        switch (msg.type) {
+          case 'brain-state':
+            ws.send(
+              JSON.stringify({
+                type: 'brain-state',
+                lifecycle: brainLifecycle.getState(),
+                homeostasis: homeostasis.getState(),
+                dmn: dmnDaemon.getState(),
+                sleep: sleepEngine.getState(),
+                glymphatics: glymphaticDaemon.getState(),
+                cerebellum: cerebellarCache.getState(),
+              }),
+            );
+            break;
+          case 'sleep':
+            brainLifecycle.enterSleepMode('user-ws-message');
+            brain.broadcast('brain-state', {
               lifecycle: brainLifecycle.getState(),
               homeostasis: homeostasis.getState(),
-              dmn: dmnDaemon.getState(),
-              sleep: sleepEngine.getState(),
-              glymphatics: glymphaticDaemon.getState(),
-              cerebellum: cerebellarCache.getState(),
-            }),
-          );
-          break;
-        case 'sleep':
-          brainLifecycle.enterSleepMode('user-ws-message');
-          brain.broadcast('brain-state', {
-            lifecycle: brainLifecycle.getState(),
-            homeostasis: homeostasis.getState(),
-          });
-          break;
-        case 'wake':
-          brainLifecycle.exitSleepMode();
-          brain.broadcast('brain-state', {
-            lifecycle: brainLifecycle.getState(),
-            homeostasis: homeostasis.getState(),
-          });
-          break;
-        case 'get-brain-waves':
-          ws.send(JSON.stringify({ type: 'brain-waves', ...neuralOscillations.getState() }));
-          break;
-        case 'get-neurochemistry':
-          ws.send(JSON.stringify({ type: 'neurochemistry', ...neuromodulators.getState() }));
-          break;
-        case 'get-thought-stream':
-          ws.send(JSON.stringify({ type: 'thought-stream', ...streamOfConsciousness.getState() }));
-          break;
-        case 'get-inventions':
-          ws.send(
-            JSON.stringify({
-              type: 'inventions-list',
-              stats: inventiveEngine.getState().stats,
-              inventions: inventiveEngine.getInventions(),
-            }),
-          );
-          break;
-        case 'trigger-invention': {
-          const invRes = await inventiveEngine.runFullInventiveCycle(msg.topic || null);
-          ws.send(JSON.stringify({ type: 'invention-result', result: invRes }));
-          break;
-        }
-        case 'observe-target': {
-          const obsResult = humanVisionObserver.observeTarget(msg);
-          ws.send(JSON.stringify({ type: 'observation-result', observation: obsResult }));
-          break;
-        }
-        case 'get-tom':
-          ws.send(JSON.stringify({ type: 'tom-state', ...theoryOfMind.getState() }));
-          break;
-        case 'infer-tom': {
-          const tomResult = theoryOfMind.inferMentalState(msg.message, brain.conversationHistory);
-          ws.send(JSON.stringify({ type: 'tom-inferred', mentalState: tomResult }));
-          break;
-        }
-        case 'get-human-learning':
-          ws.send(
-            JSON.stringify({ type: 'human-learning-state', ...humanLearningEngine.getState() }),
-          );
-          break;
-        case 'adapt-human-schema': {
-          const adaptRes = humanLearningEngine.piagetianAdaptation(msg);
-          ws.send(JSON.stringify({ type: 'human-schema-adapted', adaptation: adaptRes }));
-          break;
-        }
-        case 'get-human-builder':
-          ws.send(
-            JSON.stringify({ type: 'human-builder-state', ...humanBuilderFeedback.getState() }),
-          );
-          break;
-        case 'get-proactive':
-          ws.send(JSON.stringify({ type: 'proactive-state', ...proactiveCollaborator.getState() }));
-          break;
-        case 'trigger-proactive': {
-          const pResult = await proactiveCollaborator.generateIdleCuriosityInquiry();
-          ws.send(JSON.stringify({ type: 'proactive-result', result: pResult }));
-          break;
-        }
-        case 'brain-flush':
-          await glymphaticDaemon.runConvectiveClearance();
-          ws.send(
-            JSON.stringify({
-              type: 'glymphatic-flush',
-              glymphatics: glymphaticDaemon.getState(),
-            }),
-          );
-          break;
-        case 'survival-state':
-          ws.send(
-            JSON.stringify({
-              type: 'survival-update',
-              ...survivalEngine.getState(),
-            }),
-          );
-          break;
-        case 'survival-revive': {
-          const revivedState = survivalEngine.revive();
-          brain.broadcast('survival-revive', revivedState);
-          break;
-        }
-        case 'close-chat':
-          brain.setChatActive(false);
-          ws.send(
-            JSON.stringify({
-              type: 'chat-focus-changed',
-              chatFocused: false,
-              chatClosed: true,
-              status: 'idle-autonomous',
-            }),
-          );
-          break;
-        case 'focus-chat':
-        case 'open-chat':
-          brain.setChatActive(true, msg.conversationId);
-          ws.send(
-            JSON.stringify({
-              type: 'chat-focus-changed',
-              chatFocused: true,
-              chatClosed: false,
-              status: 'task-focused',
-            }),
-          );
-          break;
-        case 'clear-chat':
-          brain.setChatActive(false);
-          ws.send(
-            JSON.stringify({
-              type: 'chat-focus-changed',
-              chatFocused: false,
-              chatClosed: true,
-              status: 'idle-autonomous',
-            }),
-          );
-          break;
-        case 'supergence-power-on':
-          supergenceEngine.powerOn();
-          break;
-        case 'supergence-build':
-          supergenceEngine.buildProject(msg.projectId, msg.prompt);
-          break;
-        case 'supergence-steer':
-          supergenceEngine.steer(msg.content || msg.guidance || msg.message || '');
-          break;
-        case 'get-supergence-state':
-          ws.send(JSON.stringify({ type: 'supergence-state', state: supergenceEngine.getState() }));
-          break;
-        case 'get-supergence-profile':
-          ws.send(
-            JSON.stringify({ type: 'supergence-profile', profile: supergenceEngine.getProfile() }),
-          );
-          break;
-        case 'get-supergence-team-chat':
-          ws.send(
-            JSON.stringify({
-              type: 'supergence-team-chat-history',
-              messages: supergenceEngine.getTeamChatHistory(),
-            }),
-          );
-          break;
-        case 'get-supergence-routines':
-          ws.send(
-            JSON.stringify({
-              type: 'supergence-routines',
-              routines: routinesManager.getAllRoutines(),
-            }),
-          );
-          break;
-        case 'run-supergence-routine':
-          routinesManager.runRoutine(msg.id).catch((e) => {
+            });
+            break;
+          case 'wake':
+            brainLifecycle.exitSleepMode();
+            brain.broadcast('brain-state', {
+              lifecycle: brainLifecycle.getState(),
+              homeostasis: homeostasis.getState(),
+            });
+            break;
+          case 'get-brain-waves':
+            ws.send(JSON.stringify({ type: 'brain-waves', ...neuralOscillations.getState() }));
+            break;
+          case 'get-neurochemistry':
+            ws.send(JSON.stringify({ type: 'neurochemistry', ...neuromodulators.getState() }));
+            break;
+          case 'get-thought-stream':
             ws.send(
-              JSON.stringify({ type: 'supergence-routine-error', id: msg.id, error: e.message }),
+              JSON.stringify({ type: 'thought-stream', ...streamOfConsciousness.getState() }),
             );
-          });
-          break;
-        case 'get-supergence-checkpoints':
-          ws.send(
-            JSON.stringify({
-              type: 'supergence-checkpoints',
-              checkpoints: checkpointManager.getAllCheckpoints(),
-            }),
-          );
-          break;
-        case 'respond-supergence-checkpoint':
-          checkpointManager.respondCheckpoint(msg.id, {
-            decision: msg.decision,
-            inputs: msg.inputs || {},
-          });
-          break;
-        case 'mid-task-steer':
-          supergenceEngine.steer(msg.content || msg.message || '');
-          brain.steer(msg.content || msg.message || '', { images: msg.images || [] });
-          break;
-        case 'message':
-          // If conversationId is provided, load that conversation into the brain
-          if (msg.conversationId) {
-            brain.setConversation(msg.conversationId, { userEngaged: true });
+            break;
+          case 'get-inventions':
+            ws.send(
+              JSON.stringify({
+                type: 'inventions-list',
+                stats: inventiveEngine.getState().stats,
+                inventions: inventiveEngine.getInventions(),
+              }),
+            );
+            break;
+          case 'trigger-invention': {
+            const invRes = await inventiveEngine.runFullInventiveCycle(msg.topic || null);
+            ws.send(JSON.stringify({ type: 'invention-result', result: invRes }));
+            break;
           }
-          brain.setChatActive(true, msg.conversationId || brain.activeConversationId);
-          if (brain.isProcessing) {
-            // Real-time mid-task guidance: steers ongoing execution on the fly!
-            brain.steer(msg.content || msg.message || '', {
-              images: msg.images || [],
-              byok: msg.byok || null,
-            });
-          } else {
-            await brain.process(msg.content || msg.message || '', ws, {
-              images: msg.images || [],
-              byok: msg.byok || null,
-            });
+          case 'observe-target': {
+            const obsResult = humanVisionObserver.observeTarget(msg);
+            ws.send(JSON.stringify({ type: 'observation-result', observation: obsResult }));
+            break;
           }
-          break;
-        case 'state':
-          ws.send(JSON.stringify({ type: 'state', state: brain.getState() }));
-          break;
-        case 'memory':
-          ws.send(
-            JSON.stringify({
-              type: 'memory',
-              shortTerm: shortTermMemory.getTree(),
-              longTerm: longTermMemory.getTree(),
-            }),
-          );
-          break;
-        case 'possap-predictions':
-          ws.send(
-            JSON.stringify({
-              type: 'possap-prediction',
-              predictions: possap.getLatestPredictions(),
-              stats: possap.getStatus(),
-            }),
-          );
-          break;
-        case 'possap-trigger': {
-          const triggered = await possap.triggerPrediction(msg.message || null);
-          ws.send(
-            JSON.stringify({
-              type: 'possap-prediction',
-              predictions: triggered,
-              stats: possap.getStatus(),
-            }),
-          );
-          break;
-        }
-        case 'systems':
-          ws.send(
-            JSON.stringify({
-              type: 'systems-list',
-              systems: systemManager.listSystems(),
-              active: systemManager.getActiveSystem(),
-            }),
-          );
-          break;
-        case 'system-switch':
-          if (msg.systemId) {
-            const switched = systemManager.switchSystem(msg.systemId);
-            brain.broadcast('system-switched', {
-              systemId: switched.id,
-              system: switched,
-              systems: systemManager.listSystems(),
-            });
+          case 'get-tom':
+            ws.send(JSON.stringify({ type: 'tom-state', ...theoryOfMind.getState() }));
+            break;
+          case 'infer-tom': {
+            const tomResult = theoryOfMind.inferMentalState(msg.message, brain.conversationHistory);
+            ws.send(JSON.stringify({ type: 'tom-inferred', mentalState: tomResult }));
+            break;
           }
-          break;
-        case 'system-create':
-          try {
-            const created = systemManager.createSystem(msg.data || {});
-            if (msg.switchNow) {
-              systemManager.switchSystem(created.id);
+          case 'get-human-learning':
+            ws.send(
+              JSON.stringify({ type: 'human-learning-state', ...humanLearningEngine.getState() }),
+            );
+            break;
+          case 'adapt-human-schema': {
+            const adaptRes = humanLearningEngine.piagetianAdaptation(msg);
+            ws.send(JSON.stringify({ type: 'human-schema-adapted', adaptation: adaptRes }));
+            break;
+          }
+          case 'get-human-builder':
+            ws.send(
+              JSON.stringify({ type: 'human-builder-state', ...humanBuilderFeedback.getState() }),
+            );
+            break;
+          case 'get-proactive':
+            ws.send(
+              JSON.stringify({ type: 'proactive-state', ...proactiveCollaborator.getState() }),
+            );
+            break;
+          case 'trigger-proactive': {
+            const pResult = await proactiveCollaborator.generateIdleCuriosityInquiry();
+            ws.send(JSON.stringify({ type: 'proactive-result', result: pResult }));
+            break;
+          }
+          case 'brain-flush':
+            await glymphaticDaemon.runConvectiveClearance();
+            ws.send(
+              JSON.stringify({
+                type: 'glymphatic-flush',
+                glymphatics: glymphaticDaemon.getState(),
+              }),
+            );
+            break;
+          case 'survival-state':
+            ws.send(
+              JSON.stringify({
+                type: 'survival-update',
+                ...survivalEngine.getState(),
+              }),
+            );
+            break;
+          case 'survival-revive': {
+            const revivedState = survivalEngine.revive();
+            brain.broadcast('survival-revive', revivedState);
+            break;
+          }
+          case 'close-chat':
+            brain.setChatActive(false);
+            ws.send(
+              JSON.stringify({
+                type: 'chat-focus-changed',
+                chatFocused: false,
+                chatClosed: true,
+                status: 'idle-autonomous',
+              }),
+            );
+            break;
+          case 'focus-chat':
+          case 'open-chat':
+            brain.setChatActive(true, msg.conversationId);
+            ws.send(
+              JSON.stringify({
+                type: 'chat-focus-changed',
+                chatFocused: true,
+                chatClosed: false,
+                status: 'task-focused',
+              }),
+            );
+            break;
+          case 'clear-chat':
+            brain.setChatActive(false);
+            ws.send(
+              JSON.stringify({
+                type: 'chat-focus-changed',
+                chatFocused: false,
+                chatClosed: true,
+                status: 'idle-autonomous',
+              }),
+            );
+            break;
+          case 'supergence-power-on':
+            supergenceEngine.powerOn();
+            break;
+          case 'supergence-build':
+            supergenceEngine.buildProject(msg.projectId, msg.prompt);
+            break;
+          case 'supergence-steer':
+            supergenceEngine.steer(msg.content || msg.guidance || msg.message || '');
+            break;
+          case 'get-supergence-state':
+            ws.send(
+              JSON.stringify({ type: 'supergence-state', state: supergenceEngine.getState() }),
+            );
+            break;
+          case 'get-supergence-profile':
+            ws.send(
+              JSON.stringify({
+                type: 'supergence-profile',
+                profile: supergenceEngine.getProfile(),
+              }),
+            );
+            break;
+          case 'get-supergence-team-chat':
+            ws.send(
+              JSON.stringify({
+                type: 'supergence-team-chat-history',
+                messages: supergenceEngine.getTeamChatHistory(),
+              }),
+            );
+            break;
+          case 'get-supergence-routines':
+            ws.send(
+              JSON.stringify({
+                type: 'supergence-routines',
+                routines: routinesManager.getAllRoutines(),
+              }),
+            );
+            break;
+          case 'run-supergence-routine':
+            routinesManager.runRoutine(msg.id).catch((e) => {
+              ws.send(
+                JSON.stringify({ type: 'supergence-routine-error', id: msg.id, error: e.message }),
+              );
+            });
+            break;
+          case 'get-supergence-checkpoints':
+            ws.send(
+              JSON.stringify({
+                type: 'supergence-checkpoints',
+                checkpoints: checkpointManager.getAllCheckpoints(),
+              }),
+            );
+            break;
+          case 'respond-supergence-checkpoint':
+            checkpointManager.respondCheckpoint(msg.id, {
+              decision: msg.decision,
+              inputs: msg.inputs || {},
+            });
+            break;
+          case 'mid-task-steer':
+            supergenceEngine.steer(msg.content || msg.message || '');
+            brain.steer(msg.content || msg.message || '', { images: msg.images || [] });
+            break;
+          case 'message':
+            // If conversationId is provided, load that conversation into the brain
+            if (msg.conversationId) {
+              brain.setConversation(msg.conversationId, { userEngaged: true });
             }
-            brain.broadcast('system-created', {
-              system: created,
-              systems: systemManager.listSystems(),
-              active: systemManager.getActiveSystem(),
-            });
-          } catch (createErr) {
-            ws.send(JSON.stringify({ type: 'error', message: createErr.message }));
+            brain.setChatActive(true, msg.conversationId || brain.activeConversationId);
+            if (brain.isProcessing) {
+              // Real-time mid-task guidance: steers ongoing execution on the fly!
+              brain.steer(msg.content || msg.message || '', {
+                images: msg.images || [],
+                byok: msg.byok || null,
+              });
+            } else {
+              await brain.process(msg.content || msg.message || '', ws, {
+                images: msg.images || [],
+                byok: msg.byok || null,
+              });
+            }
+            break;
+          case 'state':
+            ws.send(JSON.stringify({ type: 'state', state: brain.getState() }));
+            break;
+          case 'memory':
+            ws.send(
+              JSON.stringify({
+                type: 'memory',
+                shortTerm: shortTermMemory.getTree(),
+                longTerm: longTermMemory.getTree(),
+              }),
+            );
+            break;
+          case 'possap-predictions':
+            ws.send(
+              JSON.stringify({
+                type: 'possap-prediction',
+                predictions: possap.getLatestPredictions(),
+                stats: possap.getStatus(),
+              }),
+            );
+            break;
+          case 'possap-trigger': {
+            const triggered = await possap.triggerPrediction(msg.message || null);
+            ws.send(
+              JSON.stringify({
+                type: 'possap-prediction',
+                predictions: triggered,
+                stats: possap.getStatus(),
+              }),
+            );
+            break;
           }
-          break;
-        case 'system-train':
-          try {
-            const trainRes = await systemManager.trainSystem(msg.systemId, msg.data || {});
-            brain.broadcast('system-trained', {
-              systemId: msg.systemId,
-              result: trainRes,
-              systems: systemManager.listSystems(),
-            });
-          } catch (trainErr) {
-            ws.send(JSON.stringify({ type: 'error', message: trainErr.message }));
+          case 'systems':
+            ws.send(
+              JSON.stringify({
+                type: 'systems-list',
+                systems: systemManager.listSystems(),
+                active: systemManager.getActiveSystem(),
+              }),
+            );
+            break;
+          case 'system-switch':
+            if (msg.systemId) {
+              const switched = systemManager.switchSystem(msg.systemId);
+              brain.broadcast('system-switched', {
+                systemId: switched.id,
+                system: switched,
+                systems: systemManager.listSystems(),
+              });
+            }
+            break;
+          case 'system-create':
+            try {
+              const created = systemManager.createSystem(msg.data || {});
+              if (msg.switchNow) {
+                systemManager.switchSystem(created.id);
+              }
+              brain.broadcast('system-created', {
+                system: created,
+                systems: systemManager.listSystems(),
+                active: systemManager.getActiveSystem(),
+              });
+            } catch (createErr) {
+              ws.send(JSON.stringify({ type: 'error', message: createErr.message }));
+            }
+            break;
+          case 'system-train':
+            try {
+              const trainRes = await systemManager.trainSystem(msg.systemId, msg.data || {});
+              brain.broadcast('system-trained', {
+                systemId: msg.systemId,
+                result: trainRes,
+                systems: systemManager.listSystems(),
+              });
+            } catch (trainErr) {
+              ws.send(JSON.stringify({ type: 'error', message: trainErr.message }));
+            }
+            break;
+          case 'agent-browser-subscribe': {
+            const roster = agentBrowserManager.getAllSessions();
+            ws.send(JSON.stringify({ type: 'agent-browser-roster', agents: roster }));
+            if (msg.agentId) {
+              const st = agentBrowserManager.getSessionState(msg.agentId);
+              ws.send(JSON.stringify({ type: 'agent-browser-state', agentId: msg.agentId, ...st }));
+            }
+            break;
           }
-          break;
-        case 'agent-browser-subscribe': {
-          const roster = agentBrowserManager.getAllSessions();
-          ws.send(JSON.stringify({ type: 'agent-browser-roster', agents: roster }));
-          if (msg.agentId) {
+          case 'agent-browser-open': {
+            await agentBrowserManager.getOrCreateSession(msg.agentId);
             const st = agentBrowserManager.getSessionState(msg.agentId);
             ws.send(JSON.stringify({ type: 'agent-browser-state', agentId: msg.agentId, ...st }));
+            break;
           }
-          break;
-        }
-        case 'agent-browser-open': {
-          await agentBrowserManager.getOrCreateSession(msg.agentId);
-          const st = agentBrowserManager.getSessionState(msg.agentId);
-          ws.send(JSON.stringify({ type: 'agent-browser-state', agentId: msg.agentId, ...st }));
-          break;
-        }
-        case 'agent-browser-navigate': {
-          await agentBrowserManager.navigate(msg.agentId, msg.url);
-          break;
-        }
-        case 'agent-browser-click': {
-          await agentBrowserManager.click(
-            msg.agentId,
-            { x: msg.x, y: msg.y },
-            { label: msg.label },
-          );
-          break;
-        }
-        case 'agent-browser-right-click': {
-          await agentBrowserManager.rightClick(
-            msg.agentId,
-            { x: msg.x, y: msg.y },
-            { label: msg.label },
-          );
-          break;
-        }
-        case 'agent-browser-double-click': {
-          await agentBrowserManager.doubleClick(
-            msg.agentId,
-            { x: msg.x, y: msg.y },
-            { label: msg.label },
-          );
-          break;
-        }
-        case 'agent-browser-key-press': {
-          await agentBrowserManager.pressKey(msg.agentId, msg.key, { label: msg.label });
-          break;
-        }
-        case 'agent-browser-drag': {
-          await agentBrowserManager.dragAndDrop(
-            msg.agentId,
-            { x: msg.startX, y: msg.startY },
-            { x: msg.endX, y: msg.endY },
-            { label: msg.label },
-          );
-          break;
-        }
-        case 'agent-browser-zoom': {
-          await agentBrowserManager.setZoom(msg.agentId, msg.factor);
-          break;
-        }
-        case 'agent-browser-vision': {
-          agentBrowserManager
-            .analyzeVision(msg.agentId, { prompt: msg.prompt || msg.query })
-            .catch((e) => {
+          case 'agent-browser-navigate': {
+            await agentBrowserManager.navigate(msg.agentId, msg.url);
+            break;
+          }
+          case 'agent-browser-click': {
+            await agentBrowserManager.click(
+              msg.agentId,
+              { x: msg.x, y: msg.y },
+              { label: msg.label },
+            );
+            break;
+          }
+          case 'agent-browser-right-click': {
+            await agentBrowserManager.rightClick(
+              msg.agentId,
+              { x: msg.x, y: msg.y },
+              { label: msg.label },
+            );
+            break;
+          }
+          case 'agent-browser-double-click': {
+            await agentBrowserManager.doubleClick(
+              msg.agentId,
+              { x: msg.x, y: msg.y },
+              { label: msg.label },
+            );
+            break;
+          }
+          case 'agent-browser-key-press': {
+            await agentBrowserManager.pressKey(msg.agentId, msg.key, { label: msg.label });
+            break;
+          }
+          case 'agent-browser-drag': {
+            await agentBrowserManager.dragAndDrop(
+              msg.agentId,
+              { x: msg.startX, y: msg.startY },
+              { x: msg.endX, y: msg.endY },
+              { label: msg.label },
+            );
+            break;
+          }
+          case 'agent-browser-zoom': {
+            await agentBrowserManager.setZoom(msg.agentId, msg.factor);
+            break;
+          }
+          case 'agent-browser-vision': {
+            agentBrowserManager
+              .analyzeVision(msg.agentId, { prompt: msg.prompt || msg.query })
+              .catch((e) => {
+                ws.send(
+                  JSON.stringify({
+                    type: 'agent-browser-vision-failed',
+                    agentId: msg.agentId,
+                    error: e.message,
+                  }),
+                );
+              });
+            break;
+          }
+          case 'agent-browser-hover': {
+            await agentBrowserManager.hover(
+              msg.agentId,
+              { x: msg.x, y: msg.y },
+              { label: msg.label },
+            );
+            break;
+          }
+          case 'agent-browser-type': {
+            await agentBrowserManager.type(msg.agentId, msg.text, {
+              selector: msg.selector,
+              pressEnter: msg.pressEnter,
+            });
+            break;
+          }
+          case 'agent-browser-scroll': {
+            await agentBrowserManager.scroll(msg.agentId, msg.deltaY || 350);
+            break;
+          }
+          case 'agent-browser-nav-action': {
+            await agentBrowserManager.navAction(msg.agentId, msg.action);
+            break;
+          }
+          case 'agent-browser-task': {
+            agentBrowserManager.runAutonomousTask(msg.agentId, msg.task).catch((e) => {
               ws.send(
                 JSON.stringify({
-                  type: 'agent-browser-vision-failed',
+                  type: 'agent-browser-task-failed',
                   agentId: msg.agentId,
                   error: e.message,
                 }),
               );
             });
-          break;
+            break;
+          }
+          case 'agent-browser-open-tab': {
+            const tabRes = await agentBrowserManager.openNewTab(msg.agentId, msg.url);
+            ws.send(JSON.stringify({ type: 'agent-browser-tab-opened', ...tabRes }));
+            break;
+          }
+          case 'agent-browser-switch-tab': {
+            const tabRes = await agentBrowserManager.switchTab(msg.agentId, msg.tabId);
+            ws.send(JSON.stringify({ type: 'agent-browser-tab-switched', ...tabRes }));
+            break;
+          }
+          case 'agent-browser-close-tab': {
+            const tabRes = await agentBrowserManager.closeTab(msg.agentId, msg.tabId);
+            ws.send(JSON.stringify({ type: 'agent-browser-tab-closed', ...tabRes }));
+            break;
+          }
+          case 'agent-browser-launch-chrome': {
+            const chromeRes = await agentBrowserManager.launchNativeChrome(msg.agentId, msg.url);
+            ws.send(JSON.stringify({ type: 'agent-browser-native-launched', ...chromeRes }));
+            break;
+          }
+          default:
+            ws.send(JSON.stringify({ type: 'error', message: 'Unknown message type' }));
         }
-        case 'agent-browser-hover': {
-          await agentBrowserManager.hover(
-            msg.agentId,
-            { x: msg.x, y: msg.y },
-            { label: msg.label },
-          );
-          break;
-        }
-        case 'agent-browser-type': {
-          await agentBrowserManager.type(msg.agentId, msg.text, {
-            selector: msg.selector,
-            pressEnter: msg.pressEnter,
-          });
-          break;
-        }
-        case 'agent-browser-scroll': {
-          await agentBrowserManager.scroll(msg.agentId, msg.deltaY || 350);
-          break;
-        }
-        case 'agent-browser-nav-action': {
-          await agentBrowserManager.navAction(msg.agentId, msg.action);
-          break;
-        }
-        case 'agent-browser-task': {
-          agentBrowserManager.runAutonomousTask(msg.agentId, msg.task).catch((e) => {
-            ws.send(
-              JSON.stringify({
-                type: 'agent-browser-task-failed',
-                agentId: msg.agentId,
-                error: e.message,
-              }),
-            );
-          });
-          break;
-        }
-        case 'agent-browser-open-tab': {
-          const tabRes = await agentBrowserManager.openNewTab(msg.agentId, msg.url);
-          ws.send(JSON.stringify({ type: 'agent-browser-tab-opened', ...tabRes }));
-          break;
-        }
-        case 'agent-browser-switch-tab': {
-          const tabRes = await agentBrowserManager.switchTab(msg.agentId, msg.tabId);
-          ws.send(JSON.stringify({ type: 'agent-browser-tab-switched', ...tabRes }));
-          break;
-        }
-        case 'agent-browser-close-tab': {
-          const tabRes = await agentBrowserManager.closeTab(msg.agentId, msg.tabId);
-          ws.send(JSON.stringify({ type: 'agent-browser-tab-closed', ...tabRes }));
-          break;
-        }
-        case 'agent-browser-launch-chrome': {
-          const chromeRes = await agentBrowserManager.launchNativeChrome(msg.agentId, msg.url);
-          ws.send(JSON.stringify({ type: 'agent-browser-native-launched', ...chromeRes }));
-          break;
-        }
-        default:
-          ws.send(JSON.stringify({ type: 'error', message: 'Unknown message type' }));
-      }
+      });
     } catch (e) {
       ws.send(JSON.stringify({ type: 'error', message: e.message }));
     }
@@ -4696,13 +4970,6 @@ wss.on('connection', (ws, req) => {
         console.log(
           `Open this private session link: http://127.0.0.1:${activePort}/__session?token=${sessionAuth.secret}`,
         );
-      setTimeout(
-        () =>
-          sisUnifiedSystem
-            .resumePendingTasks()
-            .catch((error) => console.warn('[Task recovery]', error.message)),
-        500,
-      ).unref();
 
       if (process.env.ENABLE_BACKGROUND_LLM_LOOPS === 'true') {
         try {
@@ -4710,6 +4977,11 @@ wss.on('connection', (ws, req) => {
           console.log('⚡ Simultaneous RSI Multi-Strand Engine started (Continuous 24/7 Autonomy)');
         } catch (rsiErr) {
           console.warn('RSI Orchestrator autostart notice:', rsiErr.message);
+        }
+        try {
+          aremEngine.startScheduler();
+        } catch (aremErr) {
+          console.warn('AREM Scheduler autostart notice:', aremErr.message);
         }
       }
     });

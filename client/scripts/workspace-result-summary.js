@@ -20,7 +20,7 @@
       return 'Reported an error';
     if (Number.isFinite(result?.exitCode)) return `Exit code ${result.exitCode}`;
     if (result?.passed === true) return 'Reported passing';
-    if (call.status === 'COMPLETED' || call.status === 'SUCCESS') return 'Returned';
+    if (['COMPLETED', 'RESOLVED', 'SUCCESS'].includes(call.status)) return 'Returned';
     return 'Outcome not confirmed';
   }
 
@@ -55,16 +55,85 @@
     item.append(details);
   }
 
+  function renderSource(source) {
+    if (typeof source?.url !== 'string' || source.url.length > 2048) return null;
+    let url;
+    try {
+      url = new URL(source.url);
+    } catch {
+      return null;
+    }
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) return null;
+
+    const item = node('li');
+    const title = typeof source.title === 'string' ? source.title.trim().slice(0, 180) : '';
+    const id = typeof source.id === 'string' ? source.id.trim().slice(0, 32) : '';
+    const text = [id, title || url.hostname].filter(Boolean).join(' · ');
+    if (source.fetchStatus === 'blocked-local-source') {
+      item.append(node('span', 'workspace-result-source-title', text));
+    } else {
+      const link = node('a', 'workspace-result-source-title', text);
+      link.href = url.href;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      item.append(link);
+    }
+
+    const excerpt = typeof source.excerpt === 'string' ? source.excerpt.trim() : '';
+    const snippet = typeof source.snippet === 'string' ? source.snippet.trim() : '';
+    const retrieved =
+      Number.isInteger(source.fetchStatus) &&
+      source.fetchStatus >= 200 &&
+      source.fetchStatus < 300 &&
+      !!excerpt;
+    const status = retrieved ? 'Page retrieved' : snippet ? 'Search snippet only' : 'Unavailable';
+    item.append(node('p', 'workspace-result-source-status', `${url.hostname} · ${status}`));
+    const passage = retrieved ? excerpt : snippet;
+    if (passage) item.append(node('p', '', passage.slice(0, 360)));
+    return item;
+  }
+
+  function appendSources(summary, calls) {
+    const results = calls
+      .filter((call) => call.tool === 'deep_research')
+      .map((call) => call.output ?? call.result)
+      .filter((result) => Array.isArray(result?.sources) && result.sources.length);
+    if (!results.length) return;
+
+    const details = node('details', 'workspace-result-sources');
+    let count = 0;
+    for (const { topic, sources } of results.slice(-4)) {
+      const items = sources.slice(0, 10).map(renderSource).filter(Boolean);
+      if (!items.length) continue;
+      if (results.length > 1 && typeof topic === 'string' && topic.trim()) {
+        details.append(node('h4', '', topic.slice(0, 240)));
+      }
+      const list = node('ul');
+      list.append(...items);
+      details.append(list);
+      count += items.length;
+    }
+    if (!count) return;
+    details.prepend(node('summary', '', `Research sources (${count})`));
+    if (results.length > 4) {
+      details.append(
+        node('p', 'workspace-result-note', 'Showing the four most recent research runs.'),
+      );
+    }
+    summary.append(details);
+  }
+
   function render(slot, data) {
     if (!slot) return;
     slot.querySelector('.workspace-result-summary')?.remove();
     const artifacts = Array.isArray(data.artifacts) ? data.artifacts : [];
     const calls = Array.isArray(data.toolCalls) ? data.toolCalls : [];
-    if (!artifacts.length && !calls.length && !data.completionAudit) return;
+    const state = data.taskStatus || data.status || (data.success === false ? 'error' : undefined);
+    const hasEvidence = artifacts.length || calls.length || data.completionAudit;
+    if (!hasEvidence && !['blocked', 'error', 'cancelled'].includes(state)) return;
     const summary = node('section', 'workspace-result-summary');
     summary.setAttribute('aria-label', 'Task result summary');
     summary.append(node('h3', '', 'Task result'));
-    const state = data.taskStatus || data.status;
     const label =
       {
         completed: 'Finished',
@@ -73,6 +142,10 @@
         cancelled: 'Stopped',
       }[state] || 'Status unavailable';
     summary.append(node('p', 'workspace-result-state', label));
+    if (!hasEvidence) {
+      slot.prepend(summary);
+      return;
+    }
     summary.append(
       node(
         'p',
@@ -82,6 +155,7 @@
           : 'No files or previews attached.',
       ),
     );
+    appendSources(summary, calls);
     const checks = calls.filter((call) =>
       /^(run_command|verify_and_execute_code|verify_.*|test_.*|browser_.*(?:test|inspect|verify))$/i.test(
         String(call.tool || ''),

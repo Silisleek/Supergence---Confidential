@@ -25,6 +25,7 @@
     artifacts: () => window.openArtifactsVaultModal(),
     mastery: () => window.toggleMasteryModal(true),
     features: () => window.toggleFiftyFeaturesModal(true),
+    learning: () => (window.LearningPanel ? window.LearningPanel.show() : null),
     preferences: () => preferences.showModal(),
     styles: () =>
       window.openStylesWindow ? window.openStylesWindow('styles') : preferences.showModal(),
@@ -55,6 +56,10 @@
   document.addEventListener('keydown', (event) => {
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
       event.preventDefault();
+      if (window.SupergenceLiquidGlass) {
+        window.SupergenceLiquidGlass.toggleDrawer(true, { focus: true });
+        return;
+      }
       const sidebar = document.getElementById('workspaceConversationsSidebar');
       sidebar.classList.remove('collapsed');
       if (window.matchMedia('(max-width: 800px)').matches) sidebar.classList.add('mobile-open');
@@ -69,8 +74,8 @@
 
   const theme = document.getElementById('shellThemePreference');
   const storedTheme = localStorage.getItem('sis-ui-theme');
-  const validThemes = ['obsidian', 'neutral', 'warm', 'midnight', 'cyber'];
-  const activeTheme = validThemes.includes(storedTheme) ? storedTheme : 'obsidian';
+  const validThemes = ['obsidian', 'warm', 'midnight', 'cyber'];
+  const activeTheme = validThemes.includes(storedTheme) ? storedTheme : 'midnight';
   if (theme) theme.value = activeTheme;
   document.body.dataset.theme = activeTheme;
   if (theme) {
@@ -134,11 +139,7 @@
     const isSocketOpen = socket?.readyState === WebSocket.OPEN;
     const isSocketConnecting = socket?.readyState === WebSocket.CONNECTING;
     const state =
-      (isSocketOpen || serverOnline)
-        ? 'connected'
-        : isSocketConnecting
-          ? 'connecting'
-          : 'offline';
+      isSocketOpen || serverOnline ? 'connected' : isSocketConnecting ? 'connecting' : 'offline';
     const connEl = document.getElementById('shellConnection');
     if (connEl) connEl.dataset.state = state;
     const labelEl = document.getElementById('shellConnectionLabel');

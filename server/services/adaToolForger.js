@@ -15,9 +15,7 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
-import toolRegistry from '../tools/registry.js';
-import brain from '../orchestrator/brain.js';
-import { quickAI, DEFAULT_MODEL } from '../api/openrouter.js';
+import { quickAI, DEFAULT_MODEL } from '../api/provider.js';
 import {
   classifyCapabilities,
   executeWithCapabilities,
@@ -41,6 +39,15 @@ function hashTool(code) {
   return crypto.createHash('sha256').update(String(code)).digest('hex');
 }
 
+function broadcastAdaEvent(type, payload) {
+  try {
+    const b = globalThis.__supergence_brain || globalThis.__brain;
+    if (b && typeof b.broadcast === 'function') {
+      b.broadcast(type, payload);
+    }
+  } catch (_) {}
+}
+
 export class AdaToolForger {
   constructor() {
     this.proposals = new Map(); // verified but awaiting user approval (privileged)
@@ -48,8 +55,22 @@ export class AdaToolForger {
     this.forgingHistory = [];
     this.loadedFromDisk = 0;
     this.purgedLegacy = 0;
+    this.registry = null;
     this._ensureStore();
     this._loadSavedTools();
+  }
+
+  setRegistry(reg) {
+    this.registry = reg;
+    if (this.registry && this.installedTools.size > 0) {
+      for (const item of this.installedTools.values()) {
+        this._registerIntoLiveRegistry(item, false);
+      }
+    }
+  }
+
+  getRegistry() {
+    return this.registry || globalThis.__supergence_tools || null;
   }
 
   _ensureStore() {
@@ -147,7 +168,7 @@ export class AdaToolForger {
         promoted++;
       } else {
         this.installedTools.delete(tool.id);
-        toolRegistry.unregister(tool.name);
+        this.getRegistry()?.unregister(tool.name);
         dropped++;
       }
     }
@@ -211,7 +232,7 @@ export class AdaToolForger {
     });
 
     if (!verdict.verified) {
-      brain.broadcast('ada-tool-rejected', {
+      broadcastAdaEvent('ada-tool-rejected', {
         name: cleanName,
         reason: verdict.error,
         message: `✗ Ada-SI rejected "${cleanName}" — it did not pass verification.`,
@@ -244,7 +265,7 @@ export class AdaToolForger {
     if (tool.privileged) {
       tool.status = 'PENDING_APPROVAL';
       this.proposals.set(tool.id, tool);
-      brain.broadcast('ada-tool-proposed', {
+      broadcastAdaEvent('ada-tool-proposed', {
         tool,
         message:
           `⚠ Ada-SI synthesized "${tool.displayName}" — needs ${tool.capabilities.join('/')} access. Approval required.` +
@@ -268,7 +289,7 @@ export class AdaToolForger {
       capabilities: tool.capabilities,
     });
 
-    brain.broadcast('ada-tool-approved', {
+    broadcastAdaEvent('ada-tool-approved', {
       tool,
       message: `✓ Ada-SI synthesized, verified and activated "${tool.displayName}".`,
     });
@@ -426,7 +447,7 @@ Return ONLY valid JSON, no markdown fences:
       timestamp: Date.now(),
     });
 
-    brain.broadcast('ada-tool-approved', {
+    broadcastAdaEvent('ada-tool-approved', {
       tool: proposal,
       message: `✓ "${proposal.displayName}" approved and live in the ToolRegistry.`,
     });
@@ -450,14 +471,16 @@ Return ONLY valid JSON, no markdown fences:
       timestamp: Date.now(),
     });
 
-    brain.broadcast('ada-tool-rejected', { toolId: proposal.id, name: proposal.name, reason });
+    broadcastAdaEvent('ada-tool-rejected', { toolId: proposal.id, name: proposal.name, reason });
     return true;
   }
 
   /** Register a verified tool into the live registry, executing at its isolation level. */
   _registerIntoLiveRegistry(tool, verbose = true) {
+    const reg = this.getRegistry();
+    if (!reg) return;
     try {
-      toolRegistry.register({
+      reg.register({
         name: tool.name,
         description: `[Ada-SI Forged] ${tool.description}`,
         parameters: tool.parameters || {},

@@ -515,6 +515,7 @@
     }
     panel.hidden = false;
     document.body.classList.add('has-workspace-browser');
+    document.body.classList.add('split-workspace-active');
     const button = document.getElementById('workspaceBtnSideBrowser');
     button?.setAttribute('aria-expanded', 'true');
     selectSection(options.section || 'browser');
@@ -528,6 +529,9 @@
     if (!panel) return;
     panel.hidden = true;
     document.body.classList.remove('has-workspace-browser');
+    if (!document.body.classList.contains('superbox-open')) {
+      document.body.classList.remove('split-workspace-active');
+    }
     document.getElementById('workspaceBtnSideBrowser')?.setAttribute('aria-expanded', 'false');
   }
 

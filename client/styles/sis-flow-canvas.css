@@ -1,0 +1,827 @@
+/* ─────────────────────────────────────────────────────────────
+   SIS 1.0 - AGENT FLOW CANVAS (Neural Swarm UI Style)
+   Directly matching video reference 3d562a6f3bbaf7eb361b33bae8a15697.mp4
+   ───────────────────────────────────────────────────────────── */
+
+.sis-flow-surface {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #07080b;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: 0 0;
+  user-select: none;
+  font-family:
+    'DM Sans',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  color: #f1f5f9;
+  z-index: 10;
+}
+
+/* ── LEFT NAVIGATION RAIL ── */
+.sis-flow-rail {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 60px;
+  background: rgba(10, 11, 16, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  z-index: 50;
+}
+
+.sis-flow-rail-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.sis-flow-logo-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: transform 0.2s ease;
+}
+
+.sis-flow-logo-btn:hover {
+  transform: scale(1.08);
+}
+
+.sis-flow-nav-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.sis-flow-rail-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sis-flow-rail-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.sis-flow-rail-btn.is-active {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.sis-flow-rail-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.sis-flow-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+  cursor: pointer;
+  background: #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.sis-flow-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── TOP HEADER CONTROLS ── */
+.sis-flow-header {
+  position: absolute;
+  top: 16px;
+  left: 80px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 40;
+}
+
+.sis-flow-header > * {
+  pointer-events: auto;
+}
+
+.sis-flow-header-center {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 auto;
+}
+
+.sis-flow-pill-btn {
+  padding: 7px 16px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+}
+
+.sis-flow-btn-ghost {
+  background: rgba(20, 22, 30, 0.8);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+}
+
+.sis-flow-btn-ghost:hover {
+  background: rgba(30, 34, 48, 0.95);
+  border-color: rgba(255, 255, 255, 0.24);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.sis-flow-btn-white {
+  background: #ffffff;
+  border: 1px solid #ffffff;
+  color: #0a0b0e;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.2);
+}
+
+.sis-flow-btn-white:hover {
+  background: #f1f5f9;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3);
+}
+
+.sis-flow-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sis-flow-icon-pill {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(20, 22, 30, 0.8);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sis-flow-icon-pill:hover {
+  background: rgba(30, 34, 48, 0.95);
+  color: #ffffff;
+}
+
+/* ── INTERACTIVE CANVAS VIEWPORT ── */
+.sis-flow-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  cursor: grab;
+}
+
+.sis-flow-viewport.is-dragging {
+  cursor: grabbing;
+}
+
+.sis-flow-world {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+/* ── BEZIER CONNECTOR SVG LAYER ── */
+.sis-flow-svg-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 15;
+}
+
+.sis-flow-wire {
+  stroke: rgba(255, 255, 255, 0.15);
+  stroke-width: 1.5;
+  fill: none;
+  stroke-linecap: round;
+  transition: stroke 0.3s ease;
+}
+
+.sis-flow-wire.is-active {
+  stroke: rgba(56, 189, 248, 0.45);
+  filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.3));
+}
+
+.sis-flow-pulse-particle {
+  fill: #38bdf8;
+  filter: drop-shadow(0 0 4px #38bdf8);
+}
+
+/* ── NODES LAYER ── */
+.sis-flow-nodes-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.sis-flow-node-item {
+  position: absolute;
+  pointer-events: auto;
+  user-select: none;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.05s linear;
+}
+
+/* ── CENTRAL COORDINATOR CARD ── */
+.sis-flow-coordinator-card {
+  width: 480px;
+  background: rgba(18, 20, 27, 0.92);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 26px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 24px 60px rgba(0, 0, 0, 0.8),
+    0 0 40px rgba(56, 189, 248, 0.06);
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  position: relative;
+}
+
+.sis-flow-active-badge {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(28, 30, 42, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 12px;
+  border-radius: 9999px;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  letter-spacing: 0.2px;
+}
+
+.sis-flow-coord-body {
+  padding: 24px 24px 16px 24px;
+}
+
+.sis-flow-coord-text {
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: #f1f5f9;
+  margin: 0;
+  min-height: 52px;
+  font-weight: 400;
+  outline: none;
+  word-break: break-word;
+}
+
+.sis-flow-coord-text:focus {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  padding: 2px 4px;
+}
+
+.sis-flow-thinking-row {
+  margin-top: 14px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sis-flow-thinking-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.sis-flow-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: transparent;
+  animation: loader-rotate 1.5s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes sisPulseGlow {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+.sis-flow-see-steps {
+  font-size: 11.5px;
+  color: #38bdf8;
+  text-decoration: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  transition: opacity 0.2s ease;
+}
+
+.sis-flow-see-steps:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.sis-flow-coord-footer {
+  padding: 12px 20px 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.sis-flow-coord-tools-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sis-flow-small-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sis-flow-small-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  transform: scale(1.05);
+}
+
+.sis-flow-model-pill {
+  padding: 5px 12px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sis-flow-model-pill:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.sis-flow-coord-tools-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sis-flow-run-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: none;
+  color: #07080b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.25);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sis-flow-run-btn:hover {
+  transform: scale(1.08);
+  background: #f8fafc;
+  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.4);
+}
+
+.sis-flow-run-btn:active {
+  transform: scale(0.96);
+}
+
+/* ── SATELLITE AGENT CARDS ── */
+.sis-flow-agent-card {
+  width: 270px;
+  background: rgba(18, 20, 27, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  padding: 18px 20px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 16px 40px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  cursor: grab;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.sis-flow-agent-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* Primary Active Glowing Card (Market Research Agent in video) */
+.sis-flow-agent-card.is-active-sapphire {
+  background: rgba(14, 28, 48, 0.82);
+  border: 1.5px solid rgba(56, 189, 248, 0.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 0 35px rgba(56, 189, 248, 0.25),
+    0 20px 50px rgba(0, 0, 0, 0.7);
+}
+
+.sis-flow-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sis-flow-card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sis-flow-card-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #38bdf8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sis-flow-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.sis-flow-card-sub {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.sis-flow-status-badge {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.sis-flow-status-analyzing {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+}
+
+.sis-flow-status-progress {
+  background: rgba(251, 191, 36, 0.15);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  color: #fbbf24;
+}
+
+.sis-flow-status-active {
+  background: rgba(52, 211, 153, 0.15);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  color: #34d399;
+}
+
+/* Activity Chips */
+.sis-flow-chip-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sis-flow-chip {
+  font-size: 11.5px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sis-flow-chip svg {
+  color: #38bdf8;
+  flex-shrink: 0;
+}
+
+/* Metric Rows */
+.sis-flow-metric-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: #94a3b8;
+}
+
+.sis-flow-metric-val {
+  color: #f1f5f9;
+  font-weight: 600;
+}
+
+.sis-flow-progress-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.sis-flow-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #38bdf8, #818cf8);
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+}
+
+.sis-flow-sparkline {
+  width: 44px;
+  height: 16px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* ── BOTTOM FLOATING CANVAS CONTROLS ── */
+.sis-flow-canvas-dock {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(18, 20, 27, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 4px 6px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 16px 36px rgba(0, 0, 0, 0.6);
+  z-index: 40;
+}
+
+.sis-flow-dock-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sis-flow-dock-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sis-flow-canvas-status {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 40;
+}
+
+.sis-flow-zoom-pill {
+  padding: 6px 12px;
+  border-radius: 9999px;
+  background: rgba(18, 20, 27, 0.88);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.sis-flow-zoom-pill button {
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0 3px;
+  font-size: 13px;
+}
+
+.sis-flow-zoom-pill button:hover {
+  color: #ffffff;
+}
+
+/* ── SETTINGS MODAL UI STYLE SECTION ── */
+.sis-style-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .sis-style-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sis-style-card {
+  border-radius: 16px;
+  background: var(--sis-card-inset, #111216);
+  border: 1.5px solid rgba(255, 255, 255, 0.06);
+  padding: 14px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.sis-style-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.sis-style-card.is-active {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 0 20px rgba(56, 189, 248, 0.2);
+}
+
+.sis-style-card-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.sis-style-card.is-active .sis-style-card-badge {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+}
+
+.sis-style-preview {
+  height: 80px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #090a0e;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.sis-style-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.sis-style-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.sis-style-desc {
+  font-size: 11px;
+  line-height: 1.4;
+  color: #94a3b8;
+}

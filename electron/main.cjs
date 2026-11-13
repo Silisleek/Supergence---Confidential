@@ -9,7 +9,6 @@ const {
   dialog,
   Notification,
   screen,
-  nativeTheme,
 } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -20,9 +19,6 @@ const { isTrustedApplicationUrl } = require('./navigation-policy.cjs');
 // Set Application User Model ID for Windows Taskbar & shell:appsfolder tile registration
 app.name = 'Supergence';
 app.setAppUserModelId('com.supergence.sis');
-
-// Enforce dark mode for native Windows title bar and OS dialogs
-nativeTheme.themeSource = 'dark';
 
 const appDataRoot = app.getPath('appData');
 const defaultUserDataDir = process.env.SIS_USER_DATA_DIR
@@ -163,7 +159,12 @@ async function ensureBackendRunning() {
   initializeAppDataStorage();
   let serverScript = path.join(__dirname, '../server/index.js');
   if (app.isPackaged) {
-    const unpackedScript = path.join(process.resourcesPath, 'app.asar.unpacked', 'server', 'index.js');
+    const unpackedScript = path.join(
+      process.resourcesPath,
+      'app.asar.unpacked',
+      'server',
+      'index.js',
+    );
     const appScript = path.join(process.resourcesPath, 'app', 'server', 'index.js');
     if (fs.existsSync(unpackedScript)) {
       serverScript = unpackedScript;
@@ -240,7 +241,7 @@ function createStartupWindow() {
     height: 260,
     resizable: false,
     title: 'Starting Supergence',
-    backgroundColor: '#101513',
+    backgroundColor: '#f0edf8',
     webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true },
   });
   startupWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
@@ -249,7 +250,7 @@ function createStartupWindow() {
     startupWindow = null;
     if (!mainWindow && !app.isQuitting) app.quit();
   });
-  const html = `<!doctype html><html lang="en"><meta charset="utf-8"><title>Starting Supergence</title><style>body{margin:0;background:#101513;color:#e8eee9;font:16px system-ui;padding:38px}h1{font-size:24px;margin:0 0 16px}p{line-height:1.55;color:#b8c7bd}</style><h1>Starting Supergence</h1><p>Starting local services. This can take longer when your computer is busy or low on memory.</p><p>You can close this window to cancel startup.</p></html>`;
+  const html = `<!doctype html><html lang="en"><meta charset="utf-8"><title>Starting Supergence</title><style>body{margin:0;background:#f0edf8;color:#27213b;font:16px system-ui;padding:38px}h1{font-size:24px;margin:0 0 16px}p{line-height:1.55;color:#5e566f}</style><h1>Starting Supergence</h1><p>Starting local services. This can take longer when your computer is busy or low on memory.</p><p>You can close this window to cancel startup.</p></html>`;
   void startupWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
 }
 
@@ -310,7 +311,7 @@ function createMainWindow() {
     minHeight: 560,
     frame: true, // Native Windows frame with caption buttons, snap layouts, and multi-monitor dragging
     autoHideMenuBar: true, // Clean modern appearance without legacy menu bar
-    backgroundColor: '#030812',
+    backgroundColor: '#f0edf8',
     backgroundMaterial: 'mica', // Windows 11 Mica glass effect
     show: false, // Show once ready-to-show
     icon: appIcon,

@@ -133,14 +133,18 @@
       }
       const waiting = make('div', 'sidechat-thinking');
       const agent = roster.find((item) => item.id === thread.replyingAgentId);
-      waiting.append(
-        portrait(thread.replyingAgentId),
-        make('span', '', `${agent?.name || 'Agent'} is working`),
-      );
-      const dots = make('span', 'sidechat-dots');
-      dots.innerHTML = '<i></i><i></i><i></i>';
-      dots.setAttribute('aria-hidden', 'true');
-      waiting.append(dots);
+      waiting.append(portrait(thread.replyingAgentId));
+      if (typeof window.renderModernLoader === 'function') {
+        const loaderContainer = make('div', 'sidechat-loader-inline');
+        loaderContainer.innerHTML = window.renderModernLoader(`${agent?.name || 'Agent'} is thinking...`, { size: 'sm' });
+        waiting.append(loaderContainer);
+      } else {
+        waiting.append(make('span', '', `${agent?.name || 'Agent'} is working`));
+        const dots = make('span', 'sidechat-dots');
+        dots.innerHTML = '<i></i><i></i><i></i>';
+        dots.setAttribute('aria-hidden', 'true');
+        waiting.append(dots);
+      }
       messages.append(waiting);
     }
     for (const activity of thread.activity || []) {
@@ -317,12 +321,17 @@
     else status('Ready for a separate conversation');
   });
   const show = () => browser.show({ section: 'sidechat' });
-  const action = button('Side chat', show);
-  action.id = 'workspaceBtnSideChat';
-  action.classList.add('shell-icon-btn');
-  action.innerHTML = `${icon}<span>Side chat</span>`;
-  action.setAttribute('aria-label', 'Open side chat with another agent');
-  document.getElementById('workspaceBtnSideBrowser')?.before(action);
+  let action = document.getElementById('workspaceBtnSideChat');
+  if (!action) {
+    action = button('Side chat', show);
+    action.id = 'workspaceBtnSideChat';
+    action.classList.add('shell-header-btn', 'shell-sidechat-btn');
+    action.innerHTML = `${icon}<span>Side chat</span>`;
+    action.setAttribute('aria-label', 'Open side chat with another agent');
+    document.getElementById('workspaceBtnSideBrowser')?.before(action);
+  } else {
+    action.onclick = show;
+  }
   // The header already carries a "Side chat" button; a second tab in the panel
   // strip duplicated the built-in "Agents" label, so only register the section.
   window.SupergenceSideChat = { show };

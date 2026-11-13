@@ -1,0 +1,484 @@
+/* ══════════════════════════════════════════════════════════════════════════════
+   SUPERGENCE AGENTS & MASCOTS — DANCING & INTERACTIVE ACTIONS
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* Stage Mascot Companion Container */
+.sis-workspace-ui .shell-empty-mascot {
+  position: absolute !important;
+  right: 28px !important;
+  top: 50% !important;
+  transform: translateY(-20%) !important;
+  width: 140px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  pointer-events: auto !important;
+  user-select: none !important;
+  z-index: 10 !important;
+}
+
+.sis-workspace-ui .shell-empty-mascot-figure {
+  position: relative !important;
+  width: 120px !important;
+  height: 120px !important;
+  cursor: pointer !important;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.25s ease !important;
+}
+
+.sis-workspace-ui .shell-empty-mascot-figure:hover {
+  transform: scale(1.08) !important;
+}
+
+.sis-workspace-ui .shell-empty-mascot-figure img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  display: block !important;
+  image-rendering: pixelated !important;
+  filter: drop-shadow(0 8px 24px rgba(255, 122, 0, 0.35)) !important;
+  transition: filter 0.3s ease !important;
+}
+
+/* Mascot Speech Bubble */
+.sis-workspace-ui .sg-mascot-speech-bubble {
+  position: absolute !important;
+  bottom: 128px !important;
+  right: 0 !important;
+  min-width: 180px !important;
+  max-width: 240px !important;
+  padding: 10px 14px !important;
+  background: rgba(20, 22, 28, 0.94) !important;
+  border: 1px solid rgba(255, 180, 0, 0.28) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55), 0 0 16px rgba(255, 140, 0, 0.12) !important;
+  backdrop-filter: blur(12px) !important;
+  color: #f1f5f9 !important;
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+  text-align: center !important;
+  pointer-events: none !important;
+  animation: sg-bubble-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both !important;
+  z-index: 20 !important;
+}
+
+.sis-workspace-ui .sg-mascot-speech-bubble::after {
+  content: '' !important;
+  position: absolute !important;
+  bottom: -6px !important;
+  right: 50px !important;
+  width: 12px !important;
+  height: 12px !important;
+  background: rgba(20, 22, 28, 0.94) !important;
+  border-right: 1px solid rgba(255, 180, 0, 0.28) !important;
+  border-bottom: 1px solid rgba(255, 180, 0, 0.28) !important;
+  transform: rotate(45deg) !important;
+}
+
+@keyframes sg-bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Floating Particle Container */
+.sis-workspace-ui .sg-mascot-particles {
+  position: absolute !important;
+  inset: -30px !important;
+  pointer-events: none !important;
+  overflow: visible !important;
+}
+
+.sis-workspace-ui .sg-float-particle {
+  position: absolute !important;
+  font-size: 16px !important;
+  animation: sg-particle-drift 1.4s ease-out forwards !important;
+  opacity: 0;
+  user-select: none !important;
+}
+
+@keyframes sg-particle-drift {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.6) rotate(0deg);
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx, 20px), -60px) scale(1.2) rotate(var(--rot, 25deg));
+  }
+}
+
+/* Stage Mascot Action Bar */
+.sis-workspace-ui .sg-mascot-dock {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 6px !important;
+  margin-top: 10px !important;
+  width: 100% !important;
+}
+
+.sis-workspace-ui .sg-mascot-action-pills {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  max-width: 160px !important;
+}
+
+.sis-workspace-ui .sg-action-btn {
+  background: rgba(26, 28, 36, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #94a3b8 !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  padding: 3px 8px !important;
+  border-radius: 999px !important;
+  cursor: pointer !important;
+  transition: all 0.18s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  line-height: 1.3 !important;
+}
+
+.sis-workspace-ui .sg-action-btn:hover {
+  background: #252834 !important;
+  border-color: rgba(212, 175, 55, 0.45) !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
+}
+
+.sis-workspace-ui .sg-action-btn.active {
+  background: rgba(212, 175, 55, 0.16) !important;
+  border-color: rgba(212, 175, 55, 0.75) !important;
+  color: #fce7b2 !important;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.25) !important;
+}
+
+.sis-workspace-ui .sg-mascot-selector-btn {
+  background: transparent !important;
+  border: 1px dashed rgba(255, 255, 255, 0.15) !important;
+  color: #64748b !important;
+  font-size: 10px !important;
+  padding: 2px 8px !important;
+  border-radius: 999px !important;
+  cursor: pointer !important;
+  transition: all 0.18s ease !important;
+  margin-top: 2px !important;
+}
+
+.sis-workspace-ui .sg-mascot-selector-btn:hover {
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  color: #cbd5e1 !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   MASCOT ACTION ANIMATIONS (DANCE, CELEBRATE, BUILD, THINK, WAVE, SLEEP)
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* 1. DANCING GROOVE */
+[data-mascot-state='dancing'] img,
+.shell-empty-mascot[data-action='dancing'] .shell-empty-mascot-figure img,
+.sg-mascot[data-mascot-state='dancing'] img {
+  animation: sg-mascot-dance-groove 0.7s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
+  filter: drop-shadow(0 0 20px color-mix(in srgb, var(--mascot-color, #ffaa00) 80%, transparent)) drop-shadow(0 12px 28px rgba(255, 120, 0, 0.5)) !important;
+}
+
+@keyframes sg-mascot-dance-groove {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(1, 1);
+  }
+  15% {
+    transform: translateY(-12px) rotate(-10deg) scale(0.92, 1.12);
+  }
+  30% {
+    transform: translateY(-20px) rotate(-4deg) scale(1.06, 1.02);
+  }
+  45% {
+    transform: translateY(-6px) rotate(8deg) scale(1.12, 0.92);
+  }
+  60% {
+    transform: translateY(-18px) rotate(14deg) scale(0.94, 1.1);
+  }
+  75% {
+    transform: translateY(-8px) rotate(4deg) scale(1.05, 0.98);
+  }
+  90% {
+    transform: translateY(-2px) rotate(-4deg) scale(1.08, 0.94);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg) scale(1, 1);
+  }
+}
+
+/* 2. CELEBRATING / CHEER */
+[data-mascot-state='celebrating'] img,
+.shell-empty-mascot[data-action='celebrating'] .shell-empty-mascot-figure img,
+.sg-mascot[data-mascot-state='celebrating'] img {
+  animation: sg-mascot-celebrate 0.85s cubic-bezier(0.34, 1.56, 0.64, 1) infinite !important;
+  filter: drop-shadow(0 0 24px #ffd700) drop-shadow(0 14px 32px rgba(255, 215, 0, 0.6)) !important;
+}
+
+@keyframes sg-mascot-celebrate {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  25% {
+    transform: translateY(-28px) rotate(-14deg) scale(1.18);
+  }
+  50% {
+    transform: translateY(-34px) rotate(14deg) scale(1.22);
+  }
+  75% {
+    transform: translateY(-14px) rotate(-6deg) scale(1.08);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 3. CODING / BUILD */
+[data-mascot-state='coding'] img,
+.shell-empty-mascot[data-action='coding'] .shell-empty-mascot-figure img,
+.sg-mascot[data-mascot-state='coding'] img {
+  animation: sg-mascot-code 0.4s ease-in-out infinite !important;
+  filter: drop-shadow(0 0 18px #00d2ff) drop-shadow(0 8px 24px rgba(0, 210, 255, 0.45)) !important;
+}
+
+@keyframes sg-mascot-code {
+  0%, 100% {
+    transform: translateY(0) scale(1) rotate(-2deg);
+  }
+  25% {
+    transform: translateY(-3px) scale(1.05, 0.95) rotate(3deg);
+  }
+  50% {
+    transform: translateY(2px) scale(0.95, 1.05) rotate(-3deg);
+  }
+  75% {
+    transform: translateY(-4px) scale(1.06, 0.96) rotate(2deg);
+  }
+}
+
+/* 4. THINKING / PONDER */
+[data-mascot-state='thinking'] img,
+.shell-empty-mascot[data-action='thinking'] .shell-empty-mascot-figure img,
+.sg-mascot[data-mascot-state='thinking'] img {
+  animation: sg-mascot-think-deep 1.8s ease-in-out infinite !important;
+  filter: drop-shadow(0 0 18px #c084fc) drop-shadow(0 8px 24px rgba(192, 132, 252, 0.4)) !important;
+}
+
+@keyframes sg-mascot-think-deep {
+  0%, 100% {
+    transform: translateY(0) rotate(-8deg) scale(0.95);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translateY(-14px) rotate(8deg) scale(1.08);
+    opacity: 1;
+  }
+}
+
+/* 5. WAVING / GREETING */
+[data-mascot-state='waving'] img,
+.shell-empty-mascot[data-action='waving'] .shell-empty-mascot-figure img,
+.sg-mascot[data-mascot-state='waving'] img {
+  animation: sg-mascot-wave-hi 0.75s ease-in-out infinite !important;
+  filter: drop-shadow(0 0 16px rgba(255, 180, 0, 0.4)) !important;
+}
+
+@keyframes sg-mascot-wave-hi {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+  25% {
+    transform: translateY(-8px) rotate(-16deg) scale(1.06);
+  }
+  50% {
+    transform: translateY(-12px) rotate(16deg) scale(1.08);
+  }
+  75% {
+    transform: translateY(-4px) rotate(-12deg) scale(1.04);
+  }
+}
+
+/* 6. SLEEPING / REST */
+[data-mascot-state='sleeping'] img,
+.shell-empty-mascot[data-action='sleeping'] .shell-empty-mascot-figure img,
+.sg-mascot[data-mascot-state='sleeping'] img {
+  animation: sg-mascot-sleep-soft 2.5s ease-in-out infinite !important;
+  filter: drop-shadow(0 4px 12px rgba(100, 116, 139, 0.3)) opacity(0.85) !important;
+}
+
+@keyframes sg-mascot-sleep-soft {
+  0%, 100% {
+    transform: translateY(0) scale(0.94, 0.92) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(-6px) scale(1.02, 1.04) rotate(1deg);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   AGENTS & MASCOTS STUDIO MODAL (RAILSTUDIO / PARTY DANCE ALL)
+   ══════════════════════════════════════════════════════════════════════════════ */
+.sis-workspace-ui .sg-studio-dialog {
+  width: min(840px, calc(100vw - 32px)) !important;
+  max-height: 88dvh !important;
+  overflow-y: auto !important;
+  padding: 32px !important;
+  background: #0d0f14 !important;
+  color: #f1f5f9 !important;
+  border: 1px solid rgba(212, 175, 55, 0.28) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8), 0 0 32px rgba(212, 175, 55, 0.12) !important;
+}
+
+.sis-workspace-ui .sg-studio-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding-bottom: 20px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  margin-bottom: 24px !important;
+}
+
+.sis-workspace-ui .sg-studio-title-wrap h2 {
+  font-family: var(--font-editorial, 'Instrument Serif', Georgia, serif) !important;
+  font-size: 32px !important;
+  font-weight: 400 !important;
+  color: #ffffff !important;
+  margin: 0 0 6px 0 !important;
+  letter-spacing: -0.02em !important;
+}
+
+.sis-workspace-ui .sg-studio-title-wrap p {
+  color: #94a3b8 !important;
+  font-size: 13px !important;
+  margin: 0 !important;
+}
+
+.sis-workspace-ui .sg-party-dance-btn {
+  background: linear-gradient(135deg, #f59e0b 0%, #ec4899 50%, #8b5cf6 100%) !important;
+  border: none !important;
+  color: #ffffff !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  padding: 10px 20px !important;
+  border-radius: 999px !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 18px rgba(236, 72, 153, 0.4) !important;
+  transition: all 0.2s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.sis-workspace-ui .sg-party-dance-btn:hover {
+  transform: scale(1.05) translateY(-2px) !important;
+  box-shadow: 0 6px 24px rgba(236, 72, 153, 0.6) !important;
+}
+
+.sis-workspace-ui .sg-studio-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
+  gap: 20px !important;
+}
+
+.sis-workspace-ui .sg-specialist-card {
+  background: #14161f !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 18px !important;
+  padding: 20px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+  position: relative !important;
+  transition: all 0.25s ease !important;
+}
+
+.sis-workspace-ui .sg-specialist-card:hover {
+  border-color: rgba(212, 175, 55, 0.35) !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4) !important;
+}
+
+.sis-workspace-ui .sg-specialist-avatar-wrap {
+  width: 80px !important;
+  height: 80px !important;
+  position: relative !important;
+  margin-bottom: 12px !important;
+  cursor: pointer !important;
+}
+
+.sis-workspace-ui .sg-specialist-avatar-wrap img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  image-rendering: pixelated !important;
+  filter: drop-shadow(0 6px 16px var(--card-glow, rgba(255, 255, 255, 0.2))) !important;
+}
+
+.sis-workspace-ui .sg-specialist-name {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: #f8fafc !important;
+  margin-bottom: 4px !important;
+}
+
+.sis-workspace-ui .sg-specialist-role {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  color: var(--card-color, #94a3b8) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  margin-bottom: 8px !important;
+}
+
+.sis-workspace-ui .sg-specialist-motto {
+  font-size: 12px !important;
+  color: #64748b !important;
+  line-height: 1.4 !important;
+  margin-bottom: 14px !important;
+  flex-grow: 1 !important;
+}
+
+.sis-workspace-ui .sg-specialist-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  width: 100% !important;
+  margin-bottom: 12px !important;
+}
+
+.sis-workspace-ui .sg-specialist-select-btn {
+  width: 100% !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #e2e8f0 !important;
+  padding: 8px 12px !important;
+  border-radius: 10px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.sis-workspace-ui .sg-specialist-select-btn:hover {
+  background: rgba(212, 175, 55, 0.2) !important;
+  border-color: rgba(212, 175, 55, 0.5) !important;
+  color: #fef08a !important;
+}

@@ -1,0 +1,99 @@
+name: Cross-Platform Build & Verification (Windows, macOS, Linux)
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test-and-verify:
+    name: Verify on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node-version: [22.x]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Cross-Platform Case-Sensitivity & Platform Check
+        run: node scripts/verify-cross-platform.mjs
+
+      - name: Run Unit Test Suite
+        run: npm run test:unit
+
+      - name: Run Production Web/Asset Build
+        run: npm run build
+
+  build-artifacts:
+    name: Build Native Apps for ${{ matrix.os }}
+    needs: test-and-verify
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: desktop:dist:win
+            artifact_name: windows-binaries
+            artifact_path: release/*.exe
+          - os: macos-latest
+            target: desktop:dist:mac
+            artifact_name: macos-binaries
+            artifact_path: |
+              release/*.dmg
+              release/*.zip
+          - os: ubuntu-latest
+            target: desktop:dist:linux
+            artifact_name: linux-binaries
+            artifact_path: |
+              release/*.AppImage
+              release/*.deb
+              release/*.tar.gz
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Linux Dependencies Setup
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libarchive-tools libfuse2
+
+      - name: Build Web Client
+        run: npm run build
+
+      - name: Build Desktop Distribution
+        run: npm run ${{ matrix.target }}
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_path }}
+          if-no-files-found: error

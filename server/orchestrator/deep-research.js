@@ -18,15 +18,22 @@ export class DeepResearchEngine {
     const maxHops = Math.max(1, Math.min(4, Number(options.maxHops) || 3));
     const maxSources = Math.max(1, Math.min(10, Number(options.maxSources) || 6));
     const started = performance.now();
-    const subQueries = [
-      cleanTopic,
-      `${cleanTopic} official documentation evidence`,
-      `${cleanTopic} limitations independent evaluation`,
-      `${cleanTopic} implementation examples`,
-    ].slice(0, maxHops);
+    const plannedQueries = (
+      Array.isArray(options.queries) && options.queries.length
+        ? options.queries.map((query) => String(query).slice(0, 500)).slice(0, 4)
+        : [
+            cleanTopic,
+            `${cleanTopic} official documentation evidence`,
+            `${cleanTopic} limitations independent evaluation`,
+            `${cleanTopic} implementation examples`,
+          ]
+    ).slice(0, maxHops);
+    const subQueries = options.sourceUrls?.length ? [] : plannedQueries;
     options.onProgress?.({
       stage: 'searching',
-      message: `Searching ${subQueries.length} perspectives.`,
+      message: subQueries.length
+        ? `Searching ${subQueries.length} perspectives.`
+        : 'Reading supplied references.',
     });
     const results = await Promise.allSettled(
       subQueries.map((query) => this.runTool('web_search', { query })),
@@ -34,6 +41,30 @@ export class DeepResearchEngine {
     const sources = [],
       seen = new Set(),
       gaps = [];
+    for (const candidate of (options.sourceUrls || []).slice(0, maxSources)) {
+      try {
+        const url = new URL(candidate);
+        if (
+          !['http:', 'https:'].includes(url.protocol) ||
+          url.username ||
+          url.password ||
+          seen.has(url.href)
+        )
+          continue;
+        seen.add(url.href);
+        sources.push({
+          id: `S${sources.length + 1}`,
+          title: url.hostname,
+          url: url.href,
+          query: 'User-selected reference',
+          snippet: '',
+          observedAt: new Date().toISOString(),
+          verification: 'unverified-source',
+        });
+      } catch {
+        /* Invalid references are excluded. */
+      }
+    }
     for (let i = 0; i < results.length; i++) {
       const result = results[i];
       if (result.status === 'rejected' || result.value?.error) {
@@ -90,7 +121,10 @@ export class DeepResearchEngine {
           if (result?.status >= 200 && result.status < 300 && result.content) {
             const $ = load(result.content);
             $('script,style,nav,footer').remove();
-            source.excerpt = $.text().replace(/\s+/g, ' ').trim().slice(0, 4500);
+            source.excerpt = ($('main, article').first().text() || $.text())
+              .replace(/\s+/g, ' ')
+              .trim()
+              .slice(0, 12000);
           } else
             gaps.push(`Could not read source ${source.id}; only its search snippet is available.`);
         } catch {

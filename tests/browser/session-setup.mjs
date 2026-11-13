@@ -20,6 +20,10 @@ globalThis.fetch = (input, init = {}) => {
 };
 const launch = chromium.launch.bind(chromium);
 async function authenticate(context) {
+  await context.addInitScript(() => {
+    localStorage.setItem('sis_setup_completed', 'true');
+    localStorage.setItem('sis_model_setup_seen', 'true');
+  });
   const pairing = await context.request.get(`${origin}/__session?token=${secret}`, {
     maxRedirects: 0,
   });

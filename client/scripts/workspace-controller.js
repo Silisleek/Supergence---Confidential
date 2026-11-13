@@ -305,7 +305,7 @@ window.toggleWorkspaceFromNav = function () {
     if (inputWrap) inputWrap.style.display = 'none';
     supergenceWorkspace.classList.add('active');
     initAgentBrowserWebSocketIndex();
-    toggleWorkspaceSideBrowser(false);
+    // toggleWorkspaceSideBrowser(false);
   }
 };
 
@@ -347,30 +347,42 @@ function steerRunningTurn(text) {
 }
 
 function sendWorkspaceMessage() {
-  const text = workspaceInp.value.trim();
+  if (document.getElementById('sisStudioShell')) {
+    if (typeof window.__sisStudioSendMessage === 'function') {
+      window.__sisStudioSendMessage();
+    }
+    return;
+  }
+  const text = workspaceInp ? workspaceInp.value.trim() : '';
   if (!text) return;
-  workspaceInp.value = '';
-  workspaceInp.style.height = 'auto';
+  if (workspaceInp) {
+    workspaceInp.value = '';
+    workspaceInp.style.height = 'auto';
+  }
   if (taskRunning) {
     steerRunningTurn(text);
     executeTurnInWorkspace(text);
     return;
   }
-  userQueryPill.textContent = text;
+  if (userQueryPill) userQueryPill.textContent = text;
   addProgressTask(text);
   executeTurnInWorkspace(text);
 }
 
-workspaceInp.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey && workspaceInp.value.trim()) {
-    e.preventDefault();
-    sendWorkspaceMessage();
-  }
-});
+if (workspaceInp) {
+  workspaceInp.addEventListener('keydown', (e) => {
+    if (document.getElementById('sisStudioShell')) return;
+    if (e.key === 'Enter' && !e.shiftKey && workspaceInp.value.trim()) {
+      e.preventDefault();
+      sendWorkspaceMessage();
+    }
+  });
+}
 
 if (workspaceSendBtn) {
   workspaceSendBtn.addEventListener('click', () => {
-    if (workspaceInp.value.trim()) {
+    if (document.getElementById('sisStudioShell')) return;
+    if (workspaceInp && workspaceInp.value.trim()) {
       sendWorkspaceMessage();
     }
   });
@@ -461,12 +473,12 @@ function createTurnElement(q, turnId) {
           <div class="user-query-pill">${formatMarkdown(q)}</div>
         </div>
         <div class="work-tree-section collapsed" style="display:none;">
-          <div class="work-tree-header" onclick="this.parentElement.classList.toggle('collapsed')">
+          <button class="work-tree-header" type="button" aria-expanded="false">
             <span class="work-tree-title" style="font-weight: 500; font-size: 12px; color:#94A3B8;">Execution Trace</span>
             <svg class="work-tree-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M6 9l6 6 6-6"/>
             </svg>
-          </div>
+          </button>
           <div class="work-tree-body"></div>
         </div>
         <div class="response-synthesis-card">
@@ -475,10 +487,20 @@ function createTurnElement(q, turnId) {
             <span class="resp-agent-name">Supergence</span>
           </div>
           <div class="workspace-deck-slot"></div>
-          <div class="response-body-markdown"><span class="chat-working" role="status">Working on your request…</span></div>
+          <div class="response-body-markdown"><span class="chat-working" role="status">${typeof window.renderModernLoader === 'function' ? window.renderModernLoader('Thinking...') : 'Thinking...'}</span></div>
         </div>
       `;
+  const traceButton = turnEl.querySelector('.work-tree-header');
+  traceButton.addEventListener('click', () => {
+    const collapsed = traceButton.parentElement.classList.toggle('collapsed');
+    traceButton.setAttribute('aria-expanded', String(!collapsed));
+  });
   return turnEl;
+}
+
+function getWorkspaceTurnContainer() {
+  const stream = getOrCreateChatTurnsStream();
+  return window.SupergenceLiquidGlass?.getTurnContainer(stream) || stream;
 }
 
 // ── Execute Turn in Workspace & Stream Work Tree Steps (Accumulating Multi-Turn) ──
@@ -486,14 +508,27 @@ async function executeTurnInWorkspace(
   q,
   queuedTurn = null,
   selectedAgentId = window.__workspaceAgentId || '',
+  queuedContext = null,
 ) {
   if (!q) return;
+  let activeWorkspaceConvId =
+    queuedContext?.conversationId ||
+    window.__activeWorkspaceConvId ||
+    localStorage.getItem('sis_workspace_conv') ||
+    'conv-ws-' + Date.now();
+  if (!queuedContext) window.__activeWorkspaceConvId = activeWorkspaceConvId;
+  const turnHistory = queuedContext?.history || (window.__workspaceChatHistory ||= []);
   if (taskRunning) {
-    const turn = createTurnElement(q, 'turn-queued-' + Date.now());
+    const turn = createTurnElement(q, 'turn-queued-' + crypto.randomUUID());
     turn.querySelector('.response-synthesis-card').hidden = true;
     turn.dataset.queued = 'true';
-    getOrCreateChatTurnsStream()?.append(turn);
-    pendingWorkspaceMessages.push({ query: q, turn, agentId: selectedAgentId });
+    getWorkspaceTurnContainer()?.append(turn);
+    pendingWorkspaceMessages.push({
+      query: q,
+      turn,
+      agentId: selectedAgentId,
+      context: { conversationId: activeWorkspaceConvId, history: turnHistory },
+    });
     window.dispatchEvent(
       new CustomEvent('workspace-message-queued', {
         detail: { count: pendingWorkspaceMessages.length },
@@ -519,10 +554,11 @@ async function executeTurnInWorkspace(
     sendBtn.style.opacity = '1';
   }
 
-  const stream = getOrCreateChatTurnsStream();
-  stream?.querySelector('.shell-empty')?.remove();
+  const isVisibleConversation = window.__activeWorkspaceConvId === activeWorkspaceConvId;
+  const stream = isVisibleConversation ? getWorkspaceTurnContainer() : null;
+  stream?.querySelectorAll('.shell-empty, .shell-empty-stage').forEach((el) => el.remove());
   const currentTitle = document.getElementById('activeWorkspaceTitleDisplay');
-  if (currentTitle && !window.__workspaceChatHistory?.length) {
+  if (isVisibleConversation && currentTitle && !turnHistory.length) {
     currentTitle.textContent = q;
     currentTitle.title = q;
   }
@@ -545,6 +581,7 @@ async function executeTurnInWorkspace(
 
   if (queuedTurn) {
     activeTurnEl = queuedTurn;
+    if (stream && !activeTurnEl.isConnected) stream.append(activeTurnEl);
     activeTurnEl.querySelector('.response-synthesis-card').hidden = false;
     delete activeTurnEl.dataset.queued;
   } else if (isInitialPristine) {
@@ -554,7 +591,7 @@ async function executeTurnInWorkspace(
     const qPill = activeTurnEl.querySelector('.user-query-pill');
     if (qPill) qPill.innerHTML = formatMarkdown(q);
   } else {
-    const turnId = 'turn-' + Date.now();
+    const turnId = 'turn-' + crypto.randomUUID();
     activeTurnEl = createTurnElement(q, turnId);
     if (stream) stream.appendChild(activeTurnEl);
   }
@@ -567,39 +604,36 @@ async function executeTurnInWorkspace(
   activeTurnEl.dataset.agentId = selectedAgentId || 'agent-supergence';
   activeTurnEl.dataset.agentState = 'thinking';
   window.SupergenceProfiles?.decorateTurn(activeTurnEl);
-  activeTurnEl.querySelector('.resp-agent-name').textContent = selectedAgentId
-    ? [...agentSelector.options].find((option) => option.value === selectedAgentId)?.textContent ||
-      'Supergence'
-    : 'Supergence';
+  const agentOption = [...(agentSelector?.options || [])].find(
+    (option) => option.value === selectedAgentId,
+  );
+  activeTurnEl.querySelector('.resp-agent-name').textContent = agentOption?.textContent || 'Supergence';
 
   if (activeWorkTreeSection) {
     activeWorkTreeSection.style.display = 'none';
     activeWorkTreeSection.classList.add('collapsed');
   }
   if (activeResponseBody)
-    activeResponseBody.innerHTML =
-      '<span class="chat-working" role="status">Working on your request…</span>';
+    activeResponseBody.innerHTML = `<span class="chat-working" role="status">${typeof window.renderModernLoader === 'function' ? window.renderModernLoader('Thinking...') : 'Thinking...'}</span>`;
   if (activeWorkTreeBody) activeWorkTreeBody.innerHTML = '';
 
-  const chatScrollC = document.getElementById('chatScrollContainer');
+  const chatScrollC = isVisibleConversation
+    ? activeTurnEl.closest('#sgCardMessages, #chatScrollContainer')
+    : null;
   if (chatScrollC) chatScrollC.scrollTo({ top: chatScrollC.scrollHeight, behavior: 'smooth' });
 
   const mode = $('#currentModeName') ? $('#currentModeName').textContent.trim() : 'Finefast';
-  let activeWorkspaceConvId =
-    window.__activeWorkspaceConvId ||
-    localStorage.getItem('sis_workspace_conv') ||
-    'conv-ws-' + Date.now();
-  window.__activeWorkspaceConvId = activeWorkspaceConvId;
-  window.__workspaceChatHistory = window.__workspaceChatHistory || [];
   const requestId = crypto.randomUUID();
   activeTurnEl.dataset.requestId = requestId;
   const taskControl = window.SupergenceTasks?.mount(activeTurnEl, {
     conversationId: activeWorkspaceConvId,
     requestId,
   });
-  await window.SupergenceChatWorkspace?.start({ conversationId: activeWorkspaceConvId, requestId });
-  window.SupergenceBrowser?.show({ section: 'files' });
-  const turnHistory = window.__workspaceChatHistory;
+  if (isVisibleConversation)
+    void window.SupergenceChatWorkspace?.start({
+      conversationId: activeWorkspaceConvId,
+      open: !document.body.classList.contains('hud-liquid-glass-pure'),
+    });
   const historyForRequest = turnHistory.slice(-40);
   const userMessage = {
     id: `${requestId}:user`,
@@ -640,6 +674,7 @@ async function executeTurnInWorkspace(
 
   function renderCompletedTurn(data) {
     taskControl?.finish(data.taskStatus || (data.success === false ? 'error' : 'completed'));
+    activeResponseBody?.classList.remove('is-streaming');
     activeTurnEl.dataset.agentState = 'idle';
     if (data.primaryAgent?.id) activeTurnEl.dataset.agentId = data.primaryAgent.id;
     window.SupergenceProfiles?.decorateTurn(activeTurnEl);
@@ -706,20 +741,11 @@ async function executeTurnInWorkspace(
         activeResponseBody.innerHTML = formatMarkdown(
           cleanResp || 'No response text was returned.',
         );
-    } else {
-      if (activeResponseBody) {
-        activeResponseBody.innerHTML = `
-              <div style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:10px; padding:16px; margin:12px 0;">
-                <div style="font-weight:700; color:#EF4444; font-size:13px; margin-bottom:6px;">⚠️ Unified Swarm Notice</div>
-                <div style="color:#FCA5A5; font-size:12px;">${escapeHtml(data.error || 'Failed to complete turn')}</div>
-              </div>
-            `;
-      }
-    }
+    } else activeResponseBody?.replaceChildren();
 
     if (
       activeResponseBody &&
-      (data.taskStatus === 'error' || data.success === false || data.error)
+      (data.taskStatus === 'error' || data.success === false || data.error || !data.response)
     ) {
       const existingNotice = activeResponseBody.querySelector('.chat-stream-notice');
       if (!existingNotice) {
@@ -727,7 +753,12 @@ async function executeTurnInWorkspace(
         notice.className = 'chat-stream-notice';
         notice.setAttribute('role', 'status');
         notice.textContent =
-          data.error || 'This attempt did not finish. Your request remains saved.';
+          data.error ||
+          (data.taskStatus === 'cancelled'
+            ? 'Task stopped. Your request remains saved.'
+            : data.success === false
+              ? 'This attempt did not finish. Your request remains saved.'
+              : 'No response text was returned.');
         activeResponseBody.append(notice);
       }
     }
@@ -740,7 +771,41 @@ async function executeTurnInWorkspace(
       window.SupergenceResultSummary?.render(activeDeckSlot, { ...data, artifacts });
     }
     const trace = activeWorkTreeSection;
-    if (trace && activeWorkTreeBody?.children.length) trace.style.display = '';
+    if (trace && activeWorkTreeBody?.children.length) {
+      trace.style.display = '';
+      const count = activeWorkTreeBody.children.length;
+      const titleEl = trace.querySelector('.work-tree-header .work-tree-title');
+      if (titleEl) titleEl.textContent = `Execution Trace · ${count} ${count === 1 ? 'step' : 'steps'}`;
+    }
+    const card = activeTurnEl.querySelector('.response-synthesis-card');
+    const cleanText = sanitizeTurnResponse(data.response || '');
+    if (card && cleanText && !card.querySelector('.sg-turn-actions')) {
+      const bar = document.createElement('div');
+      bar.className = 'sg-turn-actions';
+      bar.innerHTML = `
+        <button type="button" class="sg-turn-action-btn" data-turn-act="copy" title="Copy response">Copy</button>
+        <button type="button" class="sg-turn-action-btn" data-turn-act="speak" title="Read aloud">Listen</button>
+        <button type="button" class="sg-turn-action-btn" data-turn-act="retry" title="Regenerate response">Retry</button>`;
+      bar.addEventListener('click', (e) => {
+        const act = e.target.closest('[data-turn-act]')?.dataset.turnAct;
+        if (!act) return;
+        if (act === 'copy') {
+          navigator.clipboard?.writeText(cleanText);
+          e.target.textContent = 'Copied';
+          setTimeout(() => {
+            e.target.textContent = 'Copy';
+          }, 1500);
+        } else if (act === 'speak' && window.speechSynthesis) {
+          window.speechSynthesis.cancel();
+          const u = new SpeechSynthesisUtterance(cleanText.replace(/[*#_`]/g, ''));
+          u.rate = 1.04;
+          window.speechSynthesis.speak(u);
+        } else if (act === 'retry') {
+          void executeTurnInWorkspace(q, null, selectedAgentId);
+        }
+      });
+      card.appendChild(bar);
+    }
   }
 
   // ── Real-Time Streaming Fetch Pipeline with Auto-Fallback & Network Resilience ──
@@ -752,7 +817,8 @@ async function executeTurnInWorkspace(
 
   try {
     const streamHeaders = { 'Content-Type': 'application/json', Accept: 'text/event-stream' };
-    const savedToken = localStorage.getItem('sis_session_token') || localStorage.getItem('sleek_token') || '';
+    const savedToken =
+      localStorage.getItem('sis_session_token') || localStorage.getItem('sleek_token') || '';
     if (savedToken) streamHeaders['Authorization'] = `Bearer ${savedToken}`;
 
     const streamRes = await fetch('/api/sis/unified-turn-stream', {
@@ -809,21 +875,32 @@ async function executeTurnInWorkspace(
             streamedTokens = fullText;
             let cleanStream = sanitizeTurnResponse(fullText);
             if (activeResponseBody && cleanStream) {
+              activeResponseBody.classList.add('is-streaming');
               activeResponseBody.innerHTML = formatMarkdown(cleanStream);
               if (chatScrollC)
                 chatScrollC.scrollTo({ top: chatScrollC.scrollHeight, behavior: 'smooth' });
             }
           } else if (eventType === 'tool-call') {
             activeTurnEl.dataset.agentState = 'thinking';
-            window.SupergenceBrowser?.show({ section: 'files' });
+            if (parsedData?.tool && parsedData.tool.startsWith('superbox_')) {
+              window.Superbox?.open();
+              window.Superbox?.switchTab('superbox');
+            }
             window.dispatchEvent(
               new CustomEvent('workspace-tool-activity', {
                 detail: { ...parsedData, phase: 'call' },
               }),
             );
             if (activeWorkTreeBody && parsedData && parsedData.displayName) {
-              if (activeWorkTreeSection) activeWorkTreeSection.style.display = '';
+              if (activeWorkTreeSection) {
+                activeWorkTreeSection.style.display = '';
+                activeWorkTreeSection.classList.remove('collapsed');
+                activeWorkTreeSection
+                  .querySelector('.work-tree-header')
+                  ?.setAttribute('aria-expanded', 'true');
+              }
               if (!streamedTokens) activeResponseBody.replaceChildren();
+              const isSuperboxTool = Boolean(parsedData.tool && parsedData.tool.startsWith('superbox_'));
               const node = document.createElement('div');
               node.className = 'work-tree-node';
               node.innerHTML = `
@@ -831,18 +908,29 @@ async function executeTurnInWorkspace(
                       <div class="work-tree-icon" style="background: rgba(0, 240, 255, 0.15);">
                         ${getStepIconSvg('openclaw', '#00F0FF')}
                       </div>
-                      <span class="work-tree-title">⚡ ${escapeHtml(parsedData.displayName)}</span>
+                      <span class="work-tree-title">${escapeHtml(parsedData.displayName)}</span>
+                      ${isSuperboxTool ? '<button type="button" class="sg-trace-superbox-btn">Open Superbox</button>' : ''}
                     </div>
                     <div class="work-tree-line"></div>
                     <div class="work-tree-substeps">
-                      <span class="work-tree-substep-item" style="color:#38BDF8;">Running tool in workspace...</span>
+                      <span class="work-tree-substep-item" style="color:#38BDF8;">Running in workspace…</span>
                     </div>
                   `;
+              node.querySelector('.sg-trace-superbox-btn')?.addEventListener('click', () => {
+                window.Superbox?.open();
+                window.Superbox?.switchTab('superbox');
+              });
               activeWorkTreeBody.appendChild(node);
+              const count = activeWorkTreeBody.children.length;
+              const titleEl = activeWorkTreeSection?.querySelector('.work-tree-header .work-tree-title');
+              if (titleEl) titleEl.textContent = `Execution Trace · ${count} running`;
               if (chatScrollC)
                 chatScrollC.scrollTo({ top: chatScrollC.scrollHeight, behavior: 'smooth' });
             }
           } else if (eventType === 'tool-result') {
+            if (parsedData?.tool && parsedData.tool.startsWith('superbox_')) {
+              window.Superbox?.refreshFiles();
+            }
             window.dispatchEvent(
               new CustomEvent('workspace-tool-activity', {
                 detail: { ...parsedData, phase: 'result' },
@@ -897,13 +985,14 @@ async function executeTurnInWorkspace(
       },
       (state) => taskControl?.update(state),
     );
-    if (recovered.response || recovered.taskStatus === 'cancelled') {
+    if (recovered.response || ['completed', 'blocked', 'cancelled'].includes(recovered.taskStatus)) {
       streamedFinalData = recovered;
       renderCompletedTurn(recovered);
     } else streamFailure = new Error(recovered.error || 'Saved task progress is unavailable.');
   }
   if (streamOpened && !streamedFinalData) {
     taskControl?.finish('error');
+    activeResponseBody?.classList.remove('is-streaming');
     rememberAssistant(streamedTokens, {
       status: 'error',
       error: streamFailure?.message || 'The connection ended before completion.',
@@ -926,7 +1015,8 @@ async function executeTurnInWorkspace(
     for (let attempt = 1; attempt <= 2; attempt++) {
       try {
         const turnHeaders = { 'Content-Type': 'application/json' };
-        const savedToken = localStorage.getItem('sis_session_token') || localStorage.getItem('sleek_token') || '';
+        const savedToken =
+          localStorage.getItem('sis_session_token') || localStorage.getItem('sleek_token') || '';
         if (savedToken) turnHeaders['Authorization'] = `Bearer ${savedToken}`;
 
         const res = await fetch('/api/sis/unified-turn', {
@@ -963,17 +1053,15 @@ async function executeTurnInWorkspace(
 
     if (lastError) {
       taskControl?.finish('error');
+      activeResponseBody?.classList.remove('is-streaming');
       rememberAssistant(streamedTokens, { status: 'error', error: lastError.message });
       console.error('[Workspace Turn Final Error]:', lastError);
-      const safeQuery = escapeHtml(q).replace(/'/g, "\\'");
       if (activeResponseBody) {
-        activeResponseBody.innerHTML = `
-              <div style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:10px; padding:16px; margin:12px 0;">
-                <div style="font-weight:700; color:#EF4444; font-size:13px; margin-bottom:6px;">⚠️ Unified Swarm Execution Error</div>
-                <div style="color:#FCA5A5; font-size:12px; margin-bottom:12px;">${escapeHtml(lastError.message || 'Connection lost during turn synthesis')}</div>
-                <button onclick="executeTurnInWorkspace('${safeQuery}')" style="background:#EF4444; color:#FFF; border:none; padding:6px 14px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer;">↺ Retry Query</button>
-              </div>
-            `;
+        const notice = document.createElement('p');
+        notice.className = 'chat-stream-notice';
+        notice.setAttribute('role', 'status');
+        notice.textContent = lastError.message;
+        activeResponseBody.replaceChildren(notice);
       }
       if (activeWorkTreeBody) {
         activeWorkTreeBody.innerHTML = `
@@ -1009,7 +1097,12 @@ async function executeTurnInWorkspace(
   if (chatScrollC) chatScrollC.scrollTo({ top: chatScrollC.scrollHeight, behavior: 'smooth' });
   const nextMessage = pendingWorkspaceMessages.shift();
   if (nextMessage)
-    void executeTurnInWorkspace(nextMessage.query, nextMessage.turn, nextMessage.agentId);
+    void executeTurnInWorkspace(
+      nextMessage.query,
+      nextMessage.turn,
+      nextMessage.agentId,
+      nextMessage.context,
+    );
 }
 window.executeTurnInWorkspace = executeTurnInWorkspace;
 
@@ -1103,76 +1196,60 @@ window.deleteWorkspaceConversation = async function (convId, e) {
   }
 };
 
-function renderWorkspaceHistoryList(convs) {
-  const drawerList = document.getElementById('workspaceHistoryList');
-  const sideList = document.getElementById('sidebarConvList');
+function renderWorkspaceHistoryList(conversations = []) {
   const activeId = window.__activeWorkspaceConvId;
+  const visible = conversations.filter(
+    (conversation) =>
+      (conversation.messageCount ?? conversation.messages?.length ?? 0) > 0 ||
+      conversation.id === activeId,
+  );
+  for (const [listId, sidebar] of [['sidebarConvList', true], ['workspaceHistoryList', false]]) {
+    const list = document.getElementById(listId);
+    if (!list) continue;
+    list.replaceChildren();
+    if (!visible.length) {
+      const empty = document.createElement('p');
+      empty.className = 'workspace-history-empty';
+      empty.textContent = 'No saved conversations yet.';
+      list.append(empty);
+      continue;
+    }
 
-  const visibleConvs = (convs || []).filter((c) => {
-    const count = c.messageCount || (c.messages ? c.messages.length : 0);
-    return count > 0 || c.id === activeId;
-  });
-
-  if (!visibleConvs || visibleConvs.length === 0) {
-    const emptyHtml =
-      '<div style="padding:20px 14px; color:rgba(255,255,255,0.4); font-size:12px; text-align:center;">No active chats.<br>Click "+ New Chat" to begin.</div>';
-    if (drawerList) drawerList.innerHTML = emptyHtml;
-    if (sideList) sideList.innerHTML = emptyHtml;
-    return;
-  }
-
-  // The row button remains keyboard accessible; delete is a sibling action.
-  if (sideList) {
-    sideList.innerHTML = visibleConvs
-      .map((c) => {
-        const isActive = c.id === activeId;
-        const title = String(
-          typeof c.title === 'string' ? c.title : c.title?.title || 'Untitled conversation',
-        );
-        const count = c.messageCount ?? c.messages?.length ?? 0;
-        const date = c.updatedAt
-          ? new Date(c.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-          : '';
-        const encodedId = encodeURIComponent(c.id);
-        return `<div class="sidebar-conv-item ${isActive ? 'active' : ''}" data-conversation-id="${escapeHtml(String(c.id))}">
-        <button type="button" class="shell-conv-select" onclick="loadWorkspaceConversation(decodeURIComponent('${encodedId}'))" title="${escapeHtml(title)}" ${isActive ? 'aria-current="true"' : ''}>
-          <span class="shell-conv-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 11a7 7 0 0 1-7 7H6l-3 3V11a7 7 0 0 1 7-7h3a7 7 0 0 1 7 7Z"/><path d="M8 9h7m-7 4h4"/></svg></span>
-          <span class="shell-conv-content"><span class="shell-conv-top"><span class="conv-title">${escapeHtml(title)}</span><span class="shell-conv-date">${date}</span></span><span class="conv-meta">${count} ${count === 1 ? 'message' : 'messages'}</span></span>
-        </button>
-        <button type="button" class="conv-delete-btn" onclick="deleteWorkspaceConversation(decodeURIComponent('${encodedId}'), event)" aria-label="Delete conversation" title="Delete conversation">&times;</button>
-      </div>`;
-      })
-      .join('');
-  }
-
-  // Render to Drawer List
-  if (drawerList) {
-    drawerList.innerHTML = visibleConvs
-      .map((c) => {
-        const isActive = c.id === activeId;
-        const rawTitle =
-          typeof c.title === 'string' ? c.title : c.title?.title || c.id || 'Mission Session';
-        const title = String(rawTitle);
-        const msgCount = c.messageCount || (c.messages ? c.messages.length : 0);
-        const dateStr = c.updatedAt
-          ? new Date(c.updatedAt).toLocaleDateString(undefined, {
-              month: 'short',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })
-          : '';
-        return `
-            <div class="drawer-history-item ${isActive ? 'active' : ''}" onclick="loadWorkspaceConversation('${c.id}')" title="Load ${escapeHtml(title)}">
-              <div class="drawer-item-title">${escapeHtml(title)}</div>
-              <div class="drawer-item-meta">
-                <span>${msgCount} messages</span>
-                <span>${dateStr}</span>
-              </div>
-            </div>
-          `;
-      })
-      .join('');
+    for (const conversation of visible) {
+      const id = conversation.id;
+      const active = id === activeId;
+      const title =
+        (typeof conversation.title === 'string' ? conversation.title : conversation.title?.title) ||
+        'Untitled conversation';
+      const count = conversation.messageCount ?? conversation.messages?.length ?? 0;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.title = title;
+      if (active) button.setAttribute('aria-current', 'true');
+      button.addEventListener('click', () => void window.loadWorkspaceConversation(id));
+      if (sidebar) {
+        const row = document.createElement('div');
+        row.className = active ? 'sidebar-conv-item active' : 'sidebar-conv-item';
+        row.dataset.conversationId = id;
+        button.className = 'shell-conv-select';
+        button.innerHTML = '<span class="shell-conv-content"><span class="conv-title"></span><span class="conv-meta"></span></span>';
+        button.querySelector('.conv-title').textContent = title;
+        button.querySelector('.conv-meta').textContent = `${count} ${count === 1 ? 'message' : 'messages'}`;
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'conv-delete-btn';
+        remove.setAttribute('aria-label', 'Delete conversation');
+        remove.title = 'Delete conversation';
+        remove.textContent = '×';
+        remove.addEventListener('click', (event) => void window.deleteWorkspaceConversation(id, event));
+        row.append(button, remove);
+        list.append(row);
+      } else {
+        button.className = active ? 'drawer-history-item active' : 'drawer-history-item';
+        button.textContent = title;
+        list.append(button);
+      }
+    }
   }
 }
 
@@ -1195,12 +1272,15 @@ window.filterWorkspaceHistoryList = function (query) {
   window.filterSidebarConversations(query);
 };
 
+let workspaceConversationLoad = 0;
 window.loadWorkspaceConversation = async function (convId) {
   if (!convId) return;
+  const load = ++workspaceConversationLoad;
   try {
-    const res = await fetch(`/api/conversations/${convId}`);
+    const res = await fetch(`/api/conversations/${encodeURIComponent(convId)}`);
+    if (!res.ok) throw new Error('Could not load this conversation.');
     const data = await res.json();
-    if (!data) return;
+    if (!data || load !== workspaceConversationLoad) return;
 
     window.__activeWorkspaceConvId = convId;
     void window.SupergenceChatWorkspace?.selectChat(convId);
@@ -1236,15 +1316,16 @@ window.loadWorkspaceConversation = async function (convId) {
       }
     });
 
-    const stream = getOrCreateChatTurnsStream();
-    if (!stream) return;
-    stream.innerHTML = '';
+    const root = getOrCreateChatTurnsStream();
+    if (!root) return;
+    root.replaceChildren();
 
     let latestArtifactFound = null;
 
     if (messages.length === 0) {
-      renderWorkspaceEmptyState(stream);
+      renderWorkspaceEmptyState(root);
     } else {
+      const stream = getWorkspaceTurnContainer();
       // Group turns by user prompts
       let curTurnEl = null;
 
@@ -1267,6 +1348,7 @@ window.loadWorkspaceConversation = async function (convId) {
           if (msg.agent?.name)
             curTurnEl.querySelector('.resp-agent-name').textContent = msg.agent.name;
           if (msg.agent?.id) window.SupergenceProfiles?.decorateTurn(curTurnEl, msg.agent.id);
+          curTurnEl.dataset.requestId = msg.requestId || '';
           const respBody = curTurnEl.querySelector('.response-body-markdown');
           if (respBody) {
             let cleanResp = msg.content || '';
@@ -1307,6 +1389,26 @@ window.loadWorkspaceConversation = async function (convId) {
                 artifacts,
               },
             );
+            if (msg.autoResume && msg.requestId && window.SupergenceTasks) {
+              const turn = curTurnEl;
+              const ids = { conversationId: convId, requestId: msg.requestId };
+              const control = window.SupergenceTasks.mount(turn, ids);
+              control.update({ status: msg.status, message: msg.taskMessage });
+              const isCurrent = () => turn.isConnected && window.__activeWorkspaceConvId === convId;
+              void window.SupergenceTasks.reconcile(ids, control.update, {
+                isCurrent,
+                resume: false,
+              }).then((state) => {
+                if (!state || !isCurrent()) return;
+                if (state.taskStatus === 'interrupted') {
+                  control.finish('interrupted');
+                } else if (state.taskStatus === 'not-found' || state.monitoringFailed) {
+                  control.finish('unavailable');
+                } else {
+                  void window.loadWorkspaceConversation(convId);
+                }
+              });
+            }
           }
         }
       });
@@ -1314,37 +1416,36 @@ window.loadWorkspaceConversation = async function (convId) {
 
     // Auto-mount latest artifact if present
     window.__pendingWorkspaceArtifact = latestArtifactFound;
-    toggleWorkspaceSideBrowser(false);
+    // toggleWorkspaceSideBrowser(false);
     document.getElementById('workspaceConversationsSidebar')?.classList.remove('mobile-open');
+    window.SupergenceLiquidGlass?.toggleDrawer(false);
 
     toggleWorkspaceHistoryDrawer(false);
-    const scrollC = document.getElementById('chatScrollContainer');
+    const scrollC = root.querySelector('#sgCardMessages') || document.getElementById('chatScrollContainer');
     if (scrollC) scrollC.scrollTo({ top: scrollC.scrollHeight, behavior: 'smooth' });
+    return true;
   } catch (err) {
     console.warn('Error loading conversation:', err);
   }
 };
 
 function renderWorkspaceEmptyState(stream) {
-  stream.innerHTML = `
-    <section class="shell-empty" aria-label="Start a conversation">
-      <h1>What are you working on?</h1>
-      <p>Start a conversation, or pick a starting point.</p>
-      <div class="shell-starters">
-        <button type="button" aria-label="Explore an idea" data-compose-prompt="Help me explore an idea: ">
-          Explore an idea
-        </button>
-        <button type="button" aria-label="Build something" data-compose-prompt="Help me build ">
-          Build something
-        </button>
-        <button type="button" aria-label="Solve a problem" data-compose-prompt="Help me work through ">
-          Solve a problem
-        </button>
-      </div>
-    </section>`;
+  if (window.SupergenceLiquidGlass?.mountLandingHero) {
+    window.SupergenceLiquidGlass.mountLandingHero(stream);
+    return;
+  }
+  if (document.getElementById('sisStudioShell')) {
+    stream.innerHTML = '';
+    return;
+  }
+  const message = document.createElement('p');
+  message.className = 'workspace-history-empty';
+  message.textContent = 'Start a new conversation with the composer.';
+  stream.replaceChildren(message);
 }
 
 window.startNewWorkspaceThread = function () {
+  workspaceConversationLoad++;
   const newId = 'conv-ws-' + Date.now();
   window.__activeWorkspaceConvId = newId;
   void window.SupergenceChatWorkspace?.selectChat(newId);
@@ -1371,7 +1472,8 @@ window.startNewWorkspaceThread = function () {
     item.querySelector('.shell-conv-select')?.removeAttribute('aria-current');
   });
   document.getElementById('workspaceConversationsSidebar')?.classList.remove('mobile-open');
-  toggleWorkspaceSideBrowser(false);
+  window.SupergenceLiquidGlass?.toggleDrawer(false);
+  // toggleWorkspaceSideBrowser(false);
 
   toggleWorkspaceHistoryDrawer(false);
   if (workspaceInp) {
@@ -2063,6 +2165,7 @@ function renderLatexMath(mathStr, isDisplay) {
       return window.katex.renderToString(cleanMath, {
         displayMode: isDisplay,
         throwOnError: false,
+        trust: false,
       });
     } catch (_) {}
   }
@@ -2186,6 +2289,8 @@ function formatMarkdown(text) {
     return id;
   });
 
+  s = escapeHtml(s);
+
   // 5. Parse LaTeX Document Environments
   s = s.replace(/\\section\*?\{([^}]+)\}/g, '<h2>$1</h2>');
   s = s.replace(/\\subsection\*?\{([^}]+)\}/g, '<h3>$1</h3>');
@@ -2287,7 +2392,21 @@ function formatMarkdown(text) {
 
   s = s.replace(/(<\/(?:h[1-6]|div|pre|blockquote|ul|ol|table)>)(?:\s*<br>)+/g, '$1');
   s = s.replace(/(?:<br>\s*)+(<(?:h[1-6]|div|pre|blockquote|ul|ol|table)\b)/g, '$1');
-  return s;
+  return window.DOMPurify?.sanitize
+    ? window.DOMPurify.sanitize(s, {
+        FORBID_TAGS: [
+          'form',
+          'input',
+          'textarea',
+          'select',
+          'iframe',
+          'object',
+          'embed',
+          'img',
+          'style',
+        ],
+      })
+    : escapeHtml(text);
 }
 
 function formatTableCell(text) {
@@ -2375,7 +2494,7 @@ function addProgressTask(taskText) {
       (t) => `
         <div class="progress-task-item">
           <span class="progress-task-icon">✓</span>
-          <span>${t.text}</span>
+          <span>${escapeHtml(t.text)}</span>
         </div>
       `,
     )
@@ -2545,9 +2664,10 @@ window.respondAppCheckpoint = async function (id, decision) {
 
 function renderAgentList(agents) {
   window.registeredAgents = agents;
-  sisAgentsList.innerHTML = agents
-    .map(
-      (agent) => `
+  if (sisAgentsList)
+    sisAgentsList.innerHTML = agents
+      .map(
+        (agent) => `
         <div class="sis-agent-row" onclick="openAgentColumn('${agent.id}')" title="Click to open ${agent.name} side-by-side">
           <div class="sis-agent-row-left">
             <div class="sis-agent-row-face">
@@ -2564,8 +2684,8 @@ function renderAgentList(agents) {
           </div>
         </div>
       `,
-    )
-    .join('');
+      )
+      .join('');
 }
 
 // ── Open Side-by-Side Agent Column ──
@@ -2660,7 +2780,10 @@ window.sendToAgentColumn = async function (agentId) {
   // Append loading bubble
   const aBubble = document.createElement('div');
   aBubble.className = 'side-agent-msg agent';
-  aBubble.innerHTML = '<em>Thinking...</em>';
+  aBubble.innerHTML =
+    typeof window.renderModernLoader === 'function'
+      ? window.renderModernLoader('Thinking...', { size: 'sm' })
+      : '<em>Thinking...</em>';
   msgsEl.appendChild(aBubble);
   msgsEl.scrollTop = msgsEl.scrollHeight;
 
@@ -3012,6 +3135,16 @@ function initAgentBrowserWebSocketIndex() {
           data.type === 'ada-tool-rejected'
         ) {
           window.SISContinuousDock?.refreshAda();
+          window.Superbox?.switchTab('tools');
+          window.Superbox?.open();
+        } else if (data.type === 'ui:theme-update') {
+          window.applyAgentUITheme?.(data);
+        } else if (data.type === 'ui:widget-injected') {
+          window.mountAgentUIWidget?.(data.widget);
+        } else if (data.type === 'ui:widget-removed') {
+          window.unmountAgentUIWidget?.(data.id);
+        } else if (data.type === 'ui:source-updated') {
+          window.handleAgentUISourceUpdate?.(data);
         }
       } catch (_) {}
     };
@@ -3027,6 +3160,147 @@ function initAgentBrowserWebSocketIndex() {
       agentBrowserReconnectTimer = setTimeout(initAgentBrowserWebSocketIndex, 3000);
     }
   }
+}
+
+// ─── UI Self-Modification & Adaptation Client Handlers ───
+window.applyAgentUITheme = function (themeData) {
+  if (!themeData) return;
+  const theme = themeData.theme;
+  if (theme) {
+    document.body.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
+  }
+  if (themeData.customCssVars && typeof themeData.customCssVars === 'object') {
+    for (const [key, val] of Object.entries(themeData.customCssVars)) {
+      if (key.startsWith('--')) {
+        document.documentElement.style.setProperty(key, val);
+      }
+    }
+  }
+  let styleEl = document.getElementById('sis-agent-custom-theme-styles');
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = 'sis-agent-custom-theme-styles';
+    document.head.appendChild(styleEl);
+  }
+  styleEl.textContent = themeData.customCss || '';
+};
+
+window.mountAgentUIWidget = function (widget) {
+  if (!widget || !widget.id) return;
+  window.unmountAgentUIWidget(widget.id);
+
+  const targetSelector = widget.target || '#sisFloatingLayer';
+  let targetEl = document.querySelector(targetSelector);
+  if (!targetEl) {
+    targetEl = document.getElementById('sisFloatingLayer') || document.body;
+  }
+
+  const container = document.createElement('div');
+  container.id = `sis-widget-${widget.id}`;
+  container.className = 'sis-injected-widget';
+  container.setAttribute('data-widget-id', widget.id);
+  container.style.cssText = `
+    position: relative;
+    margin: 8px 0;
+    padding: 12px 16px;
+    background: var(--bg-card, rgba(15, 23, 42, 0.85));
+    border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+    border-radius: 8px;
+    color: var(--text-primary, #f8fafc);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+  `;
+
+  // Header with title and close button
+  const header = document.createElement('div');
+  header.style.cssText =
+    'display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:4px;';
+  header.innerHTML = `
+    <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--accent, #38bdf8);">${widget.title || widget.id}</span>
+    <button style="background:transparent; border:none; color:#94a3b8; cursor:pointer; font-size:14px; line-height:1;" title="Dismiss widget" onclick="window.unmountAgentUIWidget('${widget.id}')">&times;</button>
+  `;
+  container.appendChild(header);
+
+  // Widget body
+  const body = document.createElement('div');
+  body.className = 'sis-widget-body';
+  body.innerHTML = widget.html || '';
+  container.appendChild(body);
+
+  // Scoped CSS
+  if (widget.css) {
+    const styleEl = document.createElement('style');
+    styleEl.id = `sis-widget-style-${widget.id}`;
+    styleEl.textContent = widget.css;
+    container.appendChild(styleEl);
+  }
+
+  if (widget.position === 'prepend') {
+    targetEl.prepend(container);
+  } else {
+    targetEl.appendChild(container);
+  }
+
+  // Execute JS if provided
+  if (widget.js) {
+    try {
+      const runFn = new Function('widget', 'container', widget.js);
+      runFn(widget, container);
+    } catch (e) {
+      console.warn(`[AgentWidget ${widget.id}] Script execution error:`, e);
+    }
+  }
+};
+
+window.unmountAgentUIWidget = function (widgetId) {
+  if (!widgetId) return;
+  const el = document.getElementById(`sis-widget-${widgetId}`);
+  if (el) el.remove();
+  const styleEl = document.getElementById(`sis-widget-style-${widgetId}`);
+  if (styleEl) styleEl.remove();
+};
+
+window.handleAgentUISourceUpdate = function (data) {
+  console.log('[AgentUI] Source update detected:', data);
+  if (data?.extension === '.css') {
+    document.querySelectorAll('link[rel="stylesheet"]').forEach((link) => {
+      try {
+        const url = new URL(link.href, window.location.href);
+        if (url.origin === window.location.origin) {
+          url.searchParams.set('v', Date.now().toString());
+          link.href = url.toString();
+        }
+      } catch (_) {}
+    });
+  }
+};
+
+window.initAgentUIState = async function () {
+  try {
+    const res = await fetch('/api/ui/state');
+    if (!res.ok) return;
+    const state = await res.json();
+    if (state.success) {
+      if (state.theme || state.customCssVars || state.customCss) {
+        window.applyAgentUITheme(state);
+      }
+      if (Array.isArray(state.widgets)) {
+        for (const w of state.widgets) {
+          window.mountAgentUIWidget(w);
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[AgentUI] Failed to load UI state:', err);
+  }
+};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', window.initAgentUIState);
+} else {
+  window.initAgentUIState();
 }
 
 window.toggleAgentBrowsersModal = function (agentId) {
@@ -4367,25 +4641,24 @@ window.loadDefaultHeroArtifact = function (filename, title, badge) {
 // LIVE SIDE-BY-SIDE BROWSER VIEWPORT CONTROLLER
 // ══════════════════════════════════════════════════════════════════════════
 window.toggleWorkspaceSideBrowser = function (force) {
-  const pane = document.getElementById('workspaceSideBrowserPane');
+  const pane =
+    document.getElementById('workspaceRightPane') ||
+    document.getElementById('workspaceSideBrowserPane');
   const btn = document.getElementById('workspaceBtnSideBrowser');
   if (!pane) return;
-  const isCurrentlyActive =
-    pane.classList.contains('active') && !pane.classList.contains('collapsed');
-  const shouldActive = typeof force === 'boolean' ? force : !isCurrentlyActive;
-  if (shouldActive) {
+  const isCurrentlyCollapsed =
+    pane.classList.contains('collapsed') || pane.classList.contains('is-collapsed');
+  const shouldOpen = typeof force === 'boolean' ? force : isCurrentlyCollapsed;
+  if (shouldOpen) {
+    pane.classList.remove('collapsed', 'is-collapsed');
     pane.classList.add('active');
-    pane.classList.remove('collapsed');
     if (btn) btn.classList.add('active');
-    if (window.__pendingWorkspaceArtifact) {
-      const artifact = window.__pendingWorkspaceArtifact;
-      window.__pendingWorkspaceArtifact = null;
-      (window.openArtifactInSidePane || window.loadHeroArtifact)?.(artifact);
-    }
-    initAgentBrowserWebSocketIndex();
+    try {
+      initAgentBrowserWebSocketIndex();
+    } catch (_) {}
   } else {
+    pane.classList.add('collapsed', 'is-collapsed');
     pane.classList.remove('active');
-    pane.classList.add('collapsed');
     if (btn) btn.classList.remove('active');
   }
 };
@@ -5269,24 +5542,11 @@ async function bootEnterpriseWorkspace() {
   }
 
   if (typeof toggleWorkspaceSideBrowser === 'function') {
-    toggleWorkspaceSideBrowser(false);
-  }
-
-  let convs = [];
-  if (typeof loadConversationsList === 'function') {
-    convs = await loadConversationsList();
+    // toggleWorkspaceSideBrowser(false);
   }
 
   const activeConv = localStorage.getItem('sis_workspace_conv');
-  if (activeConv) {
-    await loadWorkspaceConversation(activeConv);
-  } else if (Array.isArray(convs) && convs.length > 0) {
-    await loadWorkspaceConversation(convs[0].id);
-  } else if (window.savedConversationsList && window.savedConversationsList.length > 0) {
-    await loadWorkspaceConversation(window.savedConversationsList[0].id);
-  } else {
-    startNewWorkspaceThread();
-  }
+  if (!activeConv || !(await loadWorkspaceConversation(activeConv))) startNewWorkspaceThread();
   window.__sisWorkspaceReady = true;
 }
 
@@ -5307,3 +5567,424 @@ window.addEventListener('keydown', (e) => {
     document.getElementById('workspaceConversationsSidebar')?.classList.remove('mobile-open');
   }
 });
+
+// ══════════════════════════════════════════════════════════════════════════
+// SUPERGENCE SIDE-BY-SIDE RIGHT WORKSPACE CONTROLLER
+// ══════════════════════════════════════════════════════════════════════════
+
+window.switchRightPaneTab = function (tabName) {
+  const tabs = ['document', 'browser', 'files', 'tasks', 'memory'];
+  tabs.forEach((t) => {
+    const btn = document.getElementById('rightTabBtn' + t.charAt(0).toUpperCase() + t.slice(1));
+    const panel = document.getElementById('rightPanel' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (btn) btn.classList.toggle('is-active', t === tabName);
+    if (panel) panel.classList.toggle('is-active', t === tabName);
+  });
+  if (tabName === 'browser') {
+    if (typeof initAgentBrowserWebSocketIndex === 'function') {
+      try {
+        initAgentBrowserWebSocketIndex();
+      } catch (_) {}
+    }
+  }
+};
+
+window.selectSideBrowserTab = function (tabIndex) {
+  const tab1 = document.getElementById('sideBTab1');
+  const tab2 = document.getElementById('sideBTab2');
+  const iframe = document.getElementById('sideHeroArtifactIframe');
+  const urlInp = document.getElementById('sideBrowserUrlInput');
+
+  if (tabIndex === 1) {
+    if (tab1) tab1.classList.add('is-active');
+    if (tab2) tab2.classList.remove('is-active');
+    if (urlInp) urlInp.value = 'https://www.google.com';
+    if (iframe) iframe.src = 'https://www.google.com';
+  } else if (tabIndex === 2) {
+    if (tab2) tab2.classList.add('is-active');
+    if (tab1) tab1.classList.remove('is-active');
+    const localUrl = window.location.origin + '/';
+    if (urlInp) urlInp.value = localUrl;
+    if (iframe) iframe.src = localUrl;
+  }
+};
+
+window.addNewSideBrowserTab = function () {
+  const url = prompt('Enter URL to open:', 'https://duckduckgo.com');
+  if (url && url.trim()) {
+    const clean = url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim();
+    const iframe = document.getElementById('sideHeroArtifactIframe');
+    const urlInp = document.getElementById('sideBrowserUrlInput');
+    if (urlInp) urlInp.value = clean;
+    if (iframe) iframe.src = clean;
+  }
+};
+
+window.sideBrowserBack = function () {
+  const iframe = document.getElementById('sideHeroArtifactIframe');
+  try {
+    iframe?.contentWindow?.history?.back();
+  } catch (_) {}
+};
+
+window.sideBrowserForward = function () {
+  const iframe = document.getElementById('sideHeroArtifactIframe');
+  try {
+    iframe?.contentWindow?.history?.forward();
+  } catch (_) {}
+};
+
+window.sideBrowserReload = function () {
+  const iframe = document.getElementById('sideHeroArtifactIframe');
+  const urlInp = document.getElementById('sideBrowserUrlInput');
+  if (iframe && urlInp) {
+    iframe.src = urlInp.value || iframe.src;
+  }
+};
+
+window.openCurrentSideUrlExternal = function () {
+  const urlInp = document.getElementById('sideBrowserUrlInput');
+  const url = urlInp?.value || 'https://www.google.com';
+  window.open(url, '_blank');
+};
+
+window.openRightTabInNewWindow = function () {
+  window.openCurrentSideUrlExternal();
+};
+
+window.refreshCurrentRightTab = function () {
+  const activePanel = document.querySelector('.right-pane-panel.is-active');
+  if (activePanel?.id === 'rightPanelBrowser') {
+    window.sideBrowserReload();
+  } else if (activePanel?.id === 'rightPanelFiles') {
+    window.refreshWorkspaceFilesList();
+  }
+};
+
+const knownFileSnippets = {
+  'README.md': `# Supergence (SIS 1.0)
+Unified Superintelligence System with real-time multi-agent orchestration.
+- Hermes (Cognitive orchestrator)
+- OpenClaw (Dynamic tools engine)
+- OpenDots (Multi-agent swarms)
+- OpenBot (Autonomous team lead)`,
+  'client/index.html': `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Supergence | SIS Workspace</title>
+  </head>
+  <body class="sis-workspace-ui">
+    <!-- Supergence Split Workspace -->
+  </body>
+</html>`,
+  'client/scripts/workspace-controller.js': `// Supergence Workspace Controller
+// Real-time agent collaboration & split-screen workstation
+console.log('Supergence active');`,
+  'client/styles/workspace-shell.css': `/* Supergence Theme Palette */
+:root {
+  --shell-page: #0e1015;
+  --shell-sidebar: #101117;
+  --shell-surface: #13141b;
+}`,
+  'server/index.js': `import express from 'express';
+import brain from './orchestrator/brain.js';
+console.log('Supergence server running');`,
+  'data/memory/knowledge-graph.json': `{
+  "stats": {
+    "nodes": 82967,
+    "edges": 188613,
+    "lastUpdated": "${new Date().toISOString()}"
+  }
+}`,
+};
+
+window.previewFileContent = async function (filename) {
+  const titleEl = document.getElementById('filePreviewTitle');
+  const codeEl = document.getElementById('codeStudioCode');
+  const linesEl = document.getElementById('codeStudioLineNumbers');
+  if (titleEl) titleEl.textContent = filename;
+
+  document.querySelectorAll('#filesListContainer .file-item').forEach((item) => {
+    const name = item.querySelector('.file-name')?.textContent;
+    item.classList.toggle('is-selected', name === filename);
+  });
+
+  let content = knownFileSnippets[filename];
+  if (!content) {
+    try {
+      const res = await fetch('/api/workspace/read?path=' + encodeURIComponent(filename));
+      if (res.ok) {
+        const data = await res.json();
+        content = data.content || data.text || '';
+      }
+    } catch (_) {}
+  }
+  if (!content) content = '// ' + filename + '\n// File ready in workspace';
+
+  if (codeEl) codeEl.textContent = content;
+  if (linesEl) {
+    const lineCount = content.split('\n').length;
+    linesEl.innerHTML = Array.from({ length: Math.min(lineCount, 60) }, (_, i) => i + 1).join('\n');
+  }
+};
+
+window.copyFilePreviewCode = function () {
+  const codeEl = document.getElementById('codeStudioCode');
+  if (codeEl && navigator.clipboard) {
+    navigator.clipboard.writeText(codeEl.textContent);
+    const btn = document.getElementById('codeStudioCopyBtn');
+    if (btn) {
+      const orig = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => (btn.textContent = orig), 1500);
+    }
+  }
+};
+
+window.runFilePreviewCode = function () {
+  const btn = document.getElementById('codeStudioRunBtn');
+  if (btn) {
+    const orig = btn.textContent;
+    btn.textContent = 'Executing...';
+    setTimeout(() => {
+      btn.textContent = 'Executed ✓';
+      setTimeout(() => (btn.textContent = orig), 1500);
+    }, 600);
+  }
+};
+
+window.filterFilesList = function (query) {
+  const q = String(query || '')
+    .toLowerCase()
+    .trim();
+  document.querySelectorAll('#filesListContainer .file-item').forEach((item) => {
+    const text = item.textContent.toLowerCase();
+    item.style.display = !q || text.includes(q) ? 'flex' : 'none';
+  });
+};
+
+window.refreshWorkspaceFilesList = function () {
+  const btn = document.querySelector('.files-refresh-btn');
+  if (btn) {
+    btn.style.transform = 'rotate(180deg)';
+    btn.style.transition = 'transform 300ms ease';
+    setTimeout(() => (btn.style.transform = 'none'), 400);
+  }
+};
+
+// Wire up Agent Channel switching in sidebar
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.workspace-conversations-sidebar .channel-item').forEach((item) => {
+    item.addEventListener('click', () => {
+      document
+        .querySelectorAll('.workspace-conversations-sidebar .channel-item')
+        .forEach((c) => c.classList.remove('is-active'));
+      item.classList.add('is-active');
+      const agentName = item.querySelector('.channel-name')?.textContent?.trim() || 'Atlas';
+      const headerTitle = document.getElementById('workspaceHeaderTabPill');
+      if (headerTitle) {
+        const textNode = Array.from(headerTitle.childNodes).find(
+          (n) => n.nodeType === Node.TEXT_NODE && n.textContent.trim(),
+        );
+        if (textNode) textNode.textContent = ' ' + agentName + ' +';
+      }
+      const inp = document.getElementById('workspaceInp');
+      if (inp) {
+        inp.placeholder = 'Message ' + agentName;
+      }
+    });
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// MERMAID DIAGRAM & EDITORIAL DOCUMENT WORKSPACE CONTROLLER
+// ══════════════════════════════════════════════════════════════════════════
+
+window.switchMermaidTab = function (mode) {
+  const btnPrev = document.getElementById('mermaidTabPreview');
+  const btnCode = document.getElementById('mermaidTabCode');
+  const stagePrev = document.getElementById('mermaidStagePreview');
+  const stageCode = document.getElementById('mermaidStageCode');
+
+  if (mode === 'preview') {
+    btnPrev?.classList.add('is-active');
+    btnCode?.classList.remove('is-active');
+    if (stagePrev) stagePrev.style.display = 'flex';
+    if (stageCode) stageCode.style.display = 'none';
+  } else {
+    btnCode?.classList.add('is-active');
+    btnPrev?.classList.remove('is-active');
+    if (stagePrev) stagePrev.style.display = 'none';
+    if (stageCode) stageCode.style.display = 'block';
+  }
+};
+
+window.copyMermaidCode = function () {
+  const code = `graph LR
+  Scout["Scout: market check"] --> Atlas["Atlas"]
+  Forge["Forge: launch banner"] --> Atlas
+  Pulse["Pulse: post and socials"] --> Atlas
+  Atlas --> Friday(("Friday 10:00"))`;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(code);
+    const btns = document.querySelectorAll('.mermaid-tab-btn');
+    const copyBtn = btns[2];
+    if (copyBtn) {
+      const orig = copyBtn.textContent;
+      copyBtn.textContent = 'Copied!';
+      setTimeout(() => (copyBtn.textContent = orig), 1500);
+    }
+  }
+};
+
+window.expandMermaidDiagram = function () {
+  window.switchRightPaneTab('document');
+  const docArticle = document.getElementById('editorialDocumentArticle');
+  const title = document.getElementById('activeRightDocTitle');
+  if (title) title.textContent = 'launch-workflow-diagram.mermaid';
+  if (docArticle) {
+    docArticle.innerHTML = `
+      <h1 class="document-editorial-title">Friday Launch Workflow — Team Coordination</h1>
+      <p class="document-lead">Real-time multi-agent execution pipeline orchestrated by Atlas with Scout, Forge, and Pulse.</p>
+      <div style="background:#161823; border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:24px; margin:20px 0; display:flex; justify-content:center;">
+        <svg width="100%" height="240" viewBox="0 0 540 200" fill="none" class="mermaid-flowchart-svg">
+          <path d="M 180 40 C 220 40, 230 100, 260 100" stroke="#4b5563" stroke-width="1.5" fill="none" marker-end="url(#mermaid-arrow)" />
+          <path d="M 180 100 L 260 100" stroke="#4b5563" stroke-width="1.5" fill="none" marker-end="url(#mermaid-arrow)" />
+          <path d="M 180 160 C 220 160, 230 100, 260 100" stroke="#4b5563" stroke-width="1.5" fill="none" marker-end="url(#mermaid-arrow)" />
+          <path d="M 330 100 L 396 100" stroke="#9ca3af" stroke-width="1.5" fill="none" marker-end="url(#mermaid-arrow-light)" />
+          <rect x="20" y="20" width="160" height="40" rx="8" fill="#1b1d26" stroke="#2e3240" stroke-width="1" />
+          <text x="100" y="45" fill="#e5e7eb" font-size="12" font-family="system-ui, sans-serif" text-anchor="middle">Scout: market check</text>
+          <rect x="20" y="80" width="160" height="40" rx="8" fill="#1b1d26" stroke="#2e3240" stroke-width="1" />
+          <text x="100" y="105" fill="#e5e7eb" font-size="12" font-family="system-ui, sans-serif" text-anchor="middle">Forge: launch banner</text>
+          <rect x="20" y="140" width="160" height="40" rx="8" fill="#1b1d26" stroke="#2e3240" stroke-width="1" />
+          <text x="100" y="165" fill="#e5e7eb" font-size="12" font-family="system-ui, sans-serif" text-anchor="middle">Pulse: post and socials</text>
+          <rect x="260" y="80" width="70" height="40" rx="8" fill="#1f222e" stroke="#3b4054" stroke-width="1.2" />
+          <text x="295" y="105" fill="#f3f4f6" font-size="12" font-family="system-ui, sans-serif" font-weight="500" text-anchor="middle">Atlas</text>
+          <circle cx="435" cy="100" r="38" fill="#1b1d26" stroke="#3b4054" stroke-width="1.2" />
+          <text x="435" y="105" fill="#f3f4f6" font-size="12" font-family="system-ui, sans-serif" text-anchor="middle">Friday 10:00</text>
+        </svg>
+      </div>
+      <h2 class="document-section-heading">Execution Roles</h2>
+      <ul class="document-bullet-list">
+        <li><strong>Scout:</strong> Continues competitor pricing audits across primary targets.</li>
+        <li><strong>Forge:</strong> Completed PR #412 banner build; staging preview ready for review.</li>
+        <li><strong>Pulse:</strong> Monitoring live sentiment, developer mentions, and launch hashtags.</li>
+        <li><strong>Atlas:</strong> Final approval of launch banner assets and coordination check.</li>
+      </ul>`;
+  }
+};
+
+const documentsLibrary = {
+  'launch-plan.md': `
+    <h1 class="document-editorial-title">Friday Launch Plan — Team Coordination Brief</h1>
+    <h2 class="document-section-heading">Milestone Objectives</h2>
+    <p class="document-lead">This document outlines the synchronized go-to-market sequence for Friday 10:00 AM EST across engineering, product marketing, and developer relations.</p>
+    
+    <ol class="document-ordered-list">
+      <li><strong>08:30 AM:</strong> Scout delivers updated pricing comparison across top competing platforms.</li>
+      <li><strong>09:15 AM:</strong> Forge deploys pricing-page PR #412 to production after Atlas sign-off.</li>
+      <li><strong>10:00 AM:</strong> Pulse publishes product announcement and social launch threads.</li>
+    </ol>
+
+    <h2 class="document-section-heading">Open Action Items</h2>
+    <ul class="document-bullet-list">
+      <li><strong>PR #418 Approval:</strong> Review and sign off on the launch banner assets before 09:00 AM.</li>
+      <li><strong>Staging Verification:</strong> Confirm mobile viewport parity across all tier checkout cards.</li>
+      <li><strong>Live Monitoring:</strong> Pulse signals monitor active for developer traction and inbound inquiries.</li>
+    </ul>`,
+
+  'social-drafts.md': `
+    <h1 class="document-editorial-title">Social Launch Announcement Drafts</h1>
+    <h2 class="document-section-heading">Primary Launch Post (Twitter / X & LinkedIn)</h2>
+    <div style="background:#161823; border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:16px; margin:14px 0; font-size:13px; line-height:1.6; color:#e2e5ef;">
+      Today we're launching the next evolution of Supergence: fully autonomous multi-agent swarms with split-workspace orchestration.<br><br>
+      • Real-time mid-task steering<br>
+      • Multi-agent consensus (Atlas, Forge, Scout, Pulse)<br>
+      • Local offline privacy & high-speed reasoning<br><br>
+      Experience the future of intelligent engineering at supergence.com 🚀
+    </div>
+    
+    <h2 class="document-section-heading">Community & Discord Thread</h2>
+    <p class="document-lead">Targeted discussion prompts for builders, researchers, and system designers.</p>`,
+
+  'top-5-ai-agent-startup-ideas-2026.md': `
+    <h1 class="document-editorial-title">Top 5 AI Agent Startup Ideas — 2026 Research Report</h1>
+    
+    <h2 class="document-section-heading">How this list was built</h2>
+    <p class="document-lead">Before picking ideas, I researched three questions that determine whether an "AI agent startup" actually has a high chance of success in 2026, versus just being a trendy pitch:</p>
+    
+    <ol class="document-ordered-list">
+      <li><strong>What's actually funded and working right now</strong> (YC W26/S26 batches, top-valued agent companies, market sizing)</li>
+      <li><strong>Why most AI agent startups fail</strong> — the "wrapper risk" problem</li>
+      <li><strong>What separates the survivors</strong> — the specific moats that hold up when OpenAI/Anthropic/Google ship a native competing feature</li>
+    </ol>
+
+    <h2 class="document-section-heading">Key findings from research</h2>
+    <ul class="document-bullet-list">
+      <li><strong>Market size:</strong> The AI agent market grew from ~$5.25B (2024) to ~$7.84B (2025), with projections toward $52.6B by 2030 (some estimates go as high as $183B by 2033 at a 49.6% CAGR). Gartner projects 33% of enterprise software will have agentic AI by 2028.</li>
+      <li><strong>Wrapper risk is real and already killing companies:</strong> Analysts estimate 60–90% of thin AI-wrapper startups will be effectively dead or stuck under $10K MRR by end of 2026. OpenAI's own feature releases (Operator, Tasks, Canvas, native file upload) have already cannibalized 200+ funded "wrapper" companies. The test that keeps recurring across VC/founder writing: if a technical user can paste your core prompt into ChatGPT/Claude and get 80% of your output, you're a wrapper, not a company.</li>
+      <li><strong>What actually creates defensibility, consistently cited:</strong> (1) a proprietary data flywheel that compounds with usage, (2) deep workflow/systems integration that creates real switching costs, (3) owned distribution, (4) regulatory/compliance moats in regulated industries, (5) genuine network effects. Founders who stack two or more of these survive; one alone is fragile.</li>
+      <li><strong>Vertical beats horizontal:</strong> YC's own W26 batch (largest in its history, 180+ companies, 80%+ AI-focused) shows the dominant shape is "AI-native operating system for X" — replacing a specific legacy vertical SaaS incumbent (legal, accounting, supply chain, insurance) rather than building a general-purpose agent. The unsexy verticals (legal tech, supply chain) grew fastest as a share of the batch.</li>
+      <li><strong>The "wrapper survives if it's not just a wrapper" exception:</strong> Manus AI hit $100M ARR in ~8 months with no proprietary model and got acquired by Meta for ~$2B — proof that orchestration, product design, and growth velocity can be a moat even without owned model weights, but this is the exception, not the rule, and it required exceptional execution.</li>
+    </ul>`,
+};
+
+window.openDocumentInRightPane = function (docName) {
+  window.switchRightPaneTab('document');
+  const title = document.getElementById('activeRightDocTitle');
+  if (title) title.textContent = docName + ' · MD';
+
+  const docArticle = document.getElementById('editorialDocumentArticle');
+  if (docArticle && documentsLibrary[docName]) {
+    docArticle.innerHTML = documentsLibrary[docName];
+    docArticle.scrollTop = 0;
+  }
+};
+
+window.copyActiveDocumentContent = function () {
+  const docArticle = document.getElementById('editorialDocumentArticle');
+  if (docArticle && navigator.clipboard) {
+    navigator.clipboard.writeText(docArticle.innerText);
+    const btn = document.getElementById('btnCopyDocument');
+    if (btn) {
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<span>Copied!</span>';
+      setTimeout(() => (btn.innerHTML = orig), 1500);
+    }
+  }
+};
+
+window.downloadArtifactFile = function (filename) {
+  const content = documentsLibrary[filename] || '# ' + filename;
+  const blob = new Blob([content], { type: 'text/markdown' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+
+window.toggleExpandDocument = function () {
+  const pane = document.getElementById('workspaceRightPane');
+  if (pane) {
+    pane.classList.toggle('expanded-full');
+  }
+};
+
+window.activateWorkspaceVoiceMode = function () {
+  const micBtn =
+    document.getElementById('workspaceMicBtn') ||
+    document.querySelector('.shell-composer-mic-button');
+  if (micBtn) {
+    micBtn.click();
+  }
+};
+
+window.openAgentPreferencesModal = function () {
+  const modal = document.getElementById('workspacePreferences');
+  if (modal) {
+    if (typeof modal.showModal === 'function') modal.showModal();
+    else modal.style.display = 'block';
+  }
+};

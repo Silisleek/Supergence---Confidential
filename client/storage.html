@@ -4,11 +4,21 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Large Files | Storage</title>
+    <link rel="stylesheet" href="/styles/sleek-fonts.css" />
+    <link rel="stylesheet" href="/styles/supergence-tokens.css" />
     <link rel="stylesheet" href="/styles/storage-dashboard.css?v=2" />
     <style>
-      body { margin: 0; background: #0a0d12; font-family: system-ui, sans-serif; }
-      .shell-rail-main { display: none; }
-      body[data-storage-standalone] .storage-close { display: none; }
+      body {
+        margin: 0;
+        background: var(--shell-page);
+        font-family: var(--font-ui);
+      }
+      .shell-rail-main {
+        display: none;
+      }
+      body[data-storage-standalone] .storage-close {
+        display: none;
+      }
     </style>
   </head>
   <body data-storage-standalone>

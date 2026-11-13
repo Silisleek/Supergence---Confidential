@@ -16,7 +16,8 @@ page.on('pageerror', (error) => errors.push(error.message));
 try {
   await page.goto(baseURL, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => window.__sisWorkspaceReady && window.LearningPanel);
-  await page.locator('#railLearning').click();
+  await page.locator('.sg-workspace-menu summary').click();
+  await page.getByRole('button', { name: 'Learning library', exact: true }).click();
   await page.locator('#learningStatus').filter({ hasText: 'retained sources' }).waitFor();
   await page.getByRole('button', { name: 'Retain knowledge', exact: true }).click();
   const extensions = [

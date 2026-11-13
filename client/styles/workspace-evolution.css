@@ -7,7 +7,7 @@
   color: var(--shell-text);
   border: 1px solid var(--shell-border);
   border-radius: 20px;
-  box-shadow: 0 32px 120px #0008;
+  box-shadow: var(--shell-shadow);
 }
 .evolution-dialog::backdrop {
   background: var(--shell-backdrop);

@@ -69,7 +69,7 @@ const templates = [
   },
 ];
 
-const allowedThemes = ['neutral', 'warm', 'midnight'];
+const allowedThemes = ['obsidian', 'neutral', 'warm', 'midnight', 'cyber'];
 function readTheme() {
   try {
     const value = localStorage.getItem('sis-ui-theme');

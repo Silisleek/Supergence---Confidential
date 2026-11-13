@@ -1,0 +1,2476 @@
+/* ==========================================================================
+   SUPERGENCE SIS 1.0: MODERN PASTEL STUDIO UI
+   Ultra-Modern Pastel Glassmorphism, Zero Legacy Clutter, Smooth Spring Motion
+   - Canvas: Void Obsidian (#0a0b0e)
+   - Pastel Accents: Lilac (#c4b5fd), Mint (#6ee7b7), Sky (#7dd3fc), Rose (#fda4af), Amber (#fed7aa)
+   - Borderless floating cards with soft specular top edge highlights
+   - Clean chat stream (NO hardcoded fake default messages, NO "What are you working on")
+   - Modern Top Control Bar with pastel navigation pills
+   - Dedicated Pastel Settings Page / Modal
+   - Real Supergence Mascots & Agent chat switching
+   - Expandable long glass composer + 4 circular action buttons
+   ========================================================================== */
+
+:root {
+  --sis-bg: #050608;
+  --sis-card-surface: #0b0c0f;
+  --sis-card-inset: #111216;
+  --sis-pill-surface: #18191e;
+  --sis-pill-hover: #222329;
+
+  /* Refined Subtle Accent System */
+  --pastel-lilac: #c4b5fd;
+  --pastel-lilac-soft: rgba(196, 181, 253, 0.1);
+  --pastel-lilac-border: rgba(196, 181, 253, 0.2);
+
+  --pastel-mint: #6ee7b7;
+  --pastel-mint-soft: rgba(110, 231, 183, 0.1);
+  --pastel-mint-border: rgba(110, 231, 183, 0.2);
+
+  --pastel-sky: #cbd5e1;
+  --pastel-sky-soft: rgba(255, 255, 255, 0.08);
+  --pastel-sky-border: rgba(255, 255, 255, 0.15);
+
+  --pastel-rose: #fda4af;
+  --pastel-rose-soft: rgba(253, 164, 175, 0.1);
+  --pastel-rose-border: rgba(253, 164, 175, 0.2);
+
+  --pastel-amber: #fed7aa;
+  --pastel-amber-soft: rgba(254, 215, 170, 0.1);
+  --pastel-amber-border: rgba(254, 215, 170, 0.2);
+
+  --sis-text-white: #ffffff;
+  --sis-text-body: #d1d5db;
+  --sis-text-muted: #71717a;
+
+  --sis-radius-card: 22px;
+  --sis-radius-inset: 18px;
+  --sis-radius-pill: 9999px;
+
+  --sis-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --sis-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   DYNAMIC PASTEL ACCENT THEMES
+   ───────────────────────────────────────────────────────────── */
+.sis-studio-shell,
+.sis-studio-shell[data-theme='lilac'] {
+  --sis-accent: var(--pastel-lilac);
+  --sis-accent-soft: var(--pastel-lilac-soft);
+  --sis-accent-border: var(--pastel-lilac-border);
+}
+
+.sis-studio-shell[data-theme='mint'] {
+  --sis-accent: var(--pastel-mint);
+  --sis-accent-soft: var(--pastel-mint-soft);
+  --sis-accent-border: var(--pastel-mint-border);
+}
+
+.sis-studio-shell[data-theme='sky'] {
+  --sis-accent: var(--pastel-sky);
+  --sis-accent-soft: var(--pastel-sky-soft);
+  --sis-accent-border: var(--pastel-sky-border);
+}
+
+.sis-studio-shell[data-theme='peach'] {
+  --sis-accent: var(--pastel-amber);
+  --sis-accent-soft: var(--pastel-amber-soft);
+  --sis-accent-border: var(--pastel-amber-border);
+}
+
+.sis-studio-shell[data-theme='rose'] {
+  --sis-accent: var(--pastel-rose);
+  --sis-accent-soft: var(--pastel-rose-soft);
+  --sis-accent-border: var(--pastel-rose-border);
+}
+
+.sis-studio-shell[data-theme='charcoal'] {
+  --sis-accent: #94a3b8;
+  --sis-accent-soft: rgba(148, 163, 184, 0.16);
+  --sis-accent-border: rgba(148, 163, 184, 0.28);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   STRICT GLOBAL ISOLATION: SUPPRESS ALL LEGACY BLEED-THROUGH
+   ───────────────────────────────────────────────────────────── */
+.workspace-rail,
+.shell-rail,
+.shell-tooltip,
+.workspace-conversations-sidebar,
+.chat-history-drawer,
+.proactive-open,
+.proactive-dialog,
+.storage-dialog,
+#workspaceBtnSideChat,
+.workspace-columns-viewport,
+.shell-empty,
+.shell-starters,
+.workspace-onboarding-modal,
+.workspace-onboarding-backdrop,
+#legacyCompatAnchors,
+#supergenceWorkspace,
+.sis-studio-shell .shell-empty,
+.sis-studio-shell .shell-starters,
+.sis-studio-shell .workspace-rail,
+.sis-studio-shell .workspace-conversations-sidebar,
+.sis-studio-shell .shell-rail,
+.sis-studio-shell .shell-tooltip,
+.sis-studio-shell .chat-history-drawer {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  left: -99999px !important;
+  top: -99999px !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Master body reset */
+html,
+body {
+  background-color: var(--sis-bg) !important;
+  color: var(--sis-text-white);
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  overflow: hidden !important;
+  height: 100vh;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   MASTER STUDIO CONTAINER (Obsidian with Pastel Ambient Gradients)
+   ───────────────────────────────────────────────────────────── */
+.sis-studio-shell {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  padding: 16px 20px 88px 20px;
+  background-color: var(--sis-bg);
+  overflow: hidden;
+  user-select: none;
+  z-index: 1000;
+}
+
+/* Ambient Deep Dark background - pure neutral monochrome */
+.sis-studio-shell::before {
+  content: '';
+  position: absolute;
+  top: -120px;
+  left: 25%;
+  width: 600px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.015) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.sis-studio-shell::after {
+  content: '';
+  position: absolute;
+  bottom: -100px;
+  right: 20%;
+  width: 500px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.012) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   1. TOP CONTROL BAR (Deep Dark Horizontal Bar)
+   ───────────────────────────────────────────────────────────── */
+.sis-top-control-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 56px;
+  padding: 0 18px;
+  margin-bottom: 14px;
+  background: rgba(14, 15, 19, 0.92);
+  border-radius: var(--sis-radius-pill);
+  border: none;
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  z-index: 100;
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* Left Brand Mark */
+.sis-top-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sis-top-brand-btn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: transparent;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.25s var(--sis-spring);
+}
+
+.sis-top-brand-btn:hover {
+  background: var(--pastel-lilac-soft);
+}
+
+.sis-top-mascot-img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(196, 181, 253, 0.4));
+  transition: transform 0.25s var(--sis-spring);
+}
+
+.sis-top-brand-btn:hover .sis-top-mascot-img {
+  transform: scale(1.12) rotate(-4deg);
+}
+
+.sis-top-brand-text {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  color: var(--sis-text-white);
+}
+
+/* Center Pastel Navigation Pills */
+.sis-top-nav-items {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sis-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 15px;
+  border-radius: var(--sis-radius-pill);
+  border: none;
+  background: rgba(255, 255, 255, 0.04);
+  color: #9ca3af;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s var(--sis-spring);
+  white-space: nowrap;
+}
+
+.sis-nav-btn svg {
+  flex-shrink: 0;
+  stroke: currentColor;
+  transition: stroke 0.2s ease;
+}
+
+.sis-nav-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.sis-nav-btn.is-active,
+.sis-nav-btn.is-active[data-nav='chat'],
+.sis-nav-btn.is-active[data-nav='swarms'],
+.sis-nav-btn.is-active[data-nav='universe'],
+.sis-nav-btn.is-active[data-nav='terminal'],
+.sis-nav-btn.is-active[data-nav='browser'] {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Right Action Controls */
+.sis-top-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sis-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.04);
+  border: none;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s var(--sis-spring);
+}
+
+.sis-icon-btn:hover {
+  background: var(--pastel-lilac-soft);
+  color: var(--pastel-lilac);
+  transform: scale(1.08);
+  box-shadow: inset 0 1px 0 var(--pastel-lilac-border);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   2. MAIN 3-COLUMN STUDIO GRID
+   ───────────────────────────────────────────────────────────── */
+.sis-studio-grid {
+  display: grid;
+  grid-template-columns: minmax(310px, 1.05fr) minmax(480px, 1.8fr) minmax(300px, 1fr);
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  z-index: 10;
+  margin-bottom: 0;
+}
+
+/* Shared Card Surface */
+.sis-card {
+  background: var(--sis-card-surface);
+  border: none;
+  border-radius: 26px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 16px 40px rgba(0, 0, 0, 0.75);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  transition: box-shadow 0.3s ease;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   COLUMN 1 (LEFT): CHAT CARD
+   Clean Void, NO default fake messages, smooth pastel bubble arrivals
+   ───────────────────────────────────────────────────────────── */
+.sis-col-chat {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 18px;
+}
+
+.sis-chat-stream {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+}
+
+.sis-chat-stream::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sis-chat-stream::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+/* Message Bubbles: Smooth Pastel Glass */
+.sis-msg-bubble {
+  padding: 14px 18px;
+  border-radius: 18px;
+  font-size: 13px;
+  line-height: 1.55;
+  letter-spacing: -0.1px;
+  max-width: 90%;
+  word-break: break-word;
+  border: none;
+  position: relative;
+  animation: sisBubbleSlideUp 0.35s var(--sis-spring);
+}
+
+@keyframes sisBubbleSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* User Message: Deep Dark Obsidian Glass */
+.sis-msg-user {
+  align-self: flex-end;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 6px 18px rgba(0, 0, 0, 0.6);
+}
+
+/* Assistant Message: Deep Dark Inset Glass */
+.sis-msg-assistant {
+  align-self: flex-start;
+  background: var(--sis-card-inset);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--sis-text-body);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 4px 14px rgba(0, 0, 0, 0.5);
+}
+
+/* Agent Avatar & Name Header inside Assistant Message */
+.sis-msg-agent-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  flex-wrap: nowrap;
+}
+
+.sis-thinking-tag {
+  font-size: 10.5px;
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 2px 7px;
+  border-radius: var(--sis-radius-pill);
+  font-weight: 500;
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.sis-msg-agent-avatar {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  border-radius: 50%;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+}
+
+.sis-msg-agent-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #f1f5f9;
+  white-space: nowrap;
+}
+
+.sis-msg-agent-role {
+  font-size: 11px;
+  color: #d4d4d8;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1px 7px;
+  border-radius: var(--sis-radius-pill);
+  white-space: nowrap;
+}
+
+.sis-msg-agent-text {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--sis-text-body);
+}
+
+/* Animated Typing Indicator Bubble */
+.sis-msg-typing {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 12px 18px;
+  width: fit-content;
+}
+
+.sis-typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--pastel-lilac);
+  animation: sisTypingBounce 1.4s infinite ease-in-out;
+}
+
+.sis-typing-dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.sis-typing-dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+.sis-typing-dot:nth-child(3) {
+  animation-delay: 0s;
+}
+
+@keyframes sisTypingBounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+
+  40% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+/* Smooth Typewriter / Fade for Generated Message Text */
+.sis-typewriter-text {
+  display: inline-block;
+  animation: sisTextFade 0.4s ease-out;
+}
+
+@keyframes sisTextFade {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Cognitive Execution Steps Dropdown */
+.sis-cognitive-details {
+  margin: 6px 0 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.sis-cognitive-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #94a3b8;
+  cursor: pointer;
+  user-select: none;
+}
+
+.sis-cognitive-summary:hover {
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.sis-cognitive-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--pastel-sky);
+  box-shadow: 0 0 6px var(--pastel-sky);
+}
+
+.sis-cognitive-steps-list {
+  padding: 4px 10px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sis-step-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #cbd5e1;
+}
+
+.sis-step-icon {
+  color: #34d399;
+  font-size: 11px;
+}
+
+/* Chat Artifact Cards */
+.sis-chat-artifact-card {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: rgba(14, 165, 233, 0.08);
+  border: 1px solid rgba(14, 165, 233, 0.22);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sis-artifact-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #f0f9ff;
+  font-weight: 500;
+}
+
+.sis-artifact-btn {
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(14, 165, 233, 0.2);
+  border: 1px solid rgba(14, 165, 233, 0.4);
+  color: #38bdf8;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sis-artifact-btn:hover {
+  background: rgba(14, 165, 233, 0.35);
+  color: #ffffff;
+}
+
+.sis-chat-h2,
+.sis-chat-h3,
+.sis-chat-h4 {
+  color: #ffffff;
+  font-weight: 600;
+  margin: 8px 0 4px;
+}
+.sis-chat-h2 {
+  font-size: 15px;
+}
+.sis-chat-h3 {
+  font-size: 13.5px;
+}
+.sis-chat-h4 {
+  font-size: 12.5px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   COLUMN 2 (CENTER): DUAL STACKED CARDS
+   ───────────────────────────────────────────────────────────── */
+.sis-col-center {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  height: 100%;
+}
+
+/* Upper Card: Tab Home (62% height) */
+.sis-card-tabhome {
+  flex: 1.48;
+  display: flex;
+  flex-direction: column;
+  padding: 14px;
+}
+
+.sis-tab-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 0 4px;
+}
+
+.sis-tab-list {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Tab Home Pill Button */
+.sis-tab-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: var(--sis-radius-pill);
+  background: var(--sis-pill-surface);
+  border: none;
+  color: #ffffff;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: all 0.2s var(--sis-spring);
+}
+
+.sis-tab-pill:hover,
+.sis-tab-pill.is-active {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.sis-tab-add-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--sis-pill-surface);
+  border: none;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.2s var(--sis-spring);
+}
+
+.sis-tab-add-btn:hover {
+  background: var(--pastel-mint-soft);
+  color: var(--pastel-mint);
+  transform: scale(1.1);
+}
+
+/* Inset Viewport Container: Dark box with DISTINCT LUMINOUS TOP RIM */
+.sis-viewport-inset {
+  flex: 1;
+  border-radius: var(--sis-radius-inset);
+  background: var(--sis-card-inset);
+  border: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 3px 10px rgba(0, 0, 0, 0.6);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+}
+
+/* Three.js Canvas Container */
+#sisThreeCanvasWrap {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+  cursor: grab;
+}
+
+#sisThreeCanvasWrap:active {
+  cursor: grabbing;
+}
+
+#sisThreeCanvasWrap canvas {
+  width: 100% !important;
+  height: 100% !important;
+  outline: none;
+}
+
+/* Minimalist Unobtrusive 3D HUD */
+.sis-3d-hud {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.sis-hud-pill {
+  padding: 3px 9px;
+  border-radius: var(--sis-radius-pill);
+  background: rgba(10, 10, 14, 0.7);
+  backdrop-filter: blur(10px);
+  border: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.sis-hud-hint {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 5px 12px;
+  border-radius: var(--sis-radius-pill);
+  background: rgba(10, 10, 14, 0.75);
+  backdrop-filter: blur(12px);
+  font-size: 11px;
+  color: #71717a;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* Lower Card: Agents Section (38% height) */
+.sis-card-agents {
+  flex: 0.95;
+  display: flex;
+  flex-direction: column;
+  padding: 14px;
+}
+
+.sis-agents-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 0 4px;
+}
+
+.sis-agents-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sis-agents-heading {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--sis-text-white);
+  letter-spacing: -0.2px;
+}
+
+.sis-agent-filter-pills {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sis-filter-pill {
+  padding: 4px 12px;
+  border-radius: var(--sis-radius-pill);
+  background: var(--sis-pill-surface);
+  border: none;
+  color: #e2e8f0;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s var(--sis-spring);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.sis-filter-pill:hover {
+  background: var(--sis-pill-hover);
+}
+
+.sis-filter-pill.is-active {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.sis-mascot-pill-img {
+  width: 17px;
+  height: 17px;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+/* Inset Container */
+.sis-agents-inset {
+  flex: 1;
+  border-radius: var(--sis-radius-inset);
+  background: var(--sis-card-inset);
+  border: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 3px 10px rgba(0, 0, 0, 0.6);
+  padding: 8px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Mascot Swarm Rows with Pastel Accents */
+.sis-agent-roster-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px;
+  border-radius: 12px;
+  background: rgba(14, 15, 20, 0.6);
+  border: none;
+  transition: all 0.22s var(--sis-spring);
+  cursor: pointer;
+}
+
+.sis-agent-roster-row:hover {
+  background: rgba(28, 29, 38, 0.95);
+  transform: translateX(3px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.sis-agent-roster-row.is-active-agent {
+  background: var(--pastel-sky-soft);
+  box-shadow: inset 0 1px 0 var(--pastel-sky-border);
+}
+
+.sis-agent-roster-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sis-roster-mascot-img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+.sis-agent-info-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sis-agent-name-line {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.sis-agent-desc-line {
+  font-size: 11px;
+  color: var(--sis-text-muted);
+}
+
+.sis-agent-status-pill {
+  font-size: 10.5px;
+  padding: 3px 8px;
+  border-radius: var(--sis-radius-pill);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--sis-text-muted);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   COLUMN 3 (RIGHT): "Space to do more"
+   Instrument Serif header + 3 tactile pills
+   ───────────────────────────────────────────────────────────── */
+.sis-col-space {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 20px;
+}
+
+.sis-space-heading {
+  font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  font-size: 2.9rem;
+  font-weight: 400;
+  color: #ffffff;
+  letter-spacing: -0.6px;
+  text-align: center;
+  margin-top: 55px;
+  margin-bottom: 42px;
+  user-select: none;
+}
+
+/* 3 Prominent Skeuomorphic Tactile Pills */
+.sis-space-buttons-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: 290px;
+}
+
+.sis-space-pill-button {
+  width: 100%;
+  height: 56px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #252731 0%, #15161d 100%);
+  border: none;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.18),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.7),
+    0 8px 24px rgba(0, 0, 0, 0.6);
+  color: #f3f4f6;
+  font-size: 1.22rem;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s var(--sis-spring);
+  position: relative;
+  overflow: hidden;
+}
+
+.sis-space-pill-button:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(180deg, #2f313c 0%, #1a1b22 100%);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.28),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.6),
+    0 14px 32px rgba(0, 0, 0, 0.8);
+}
+
+.sis-space-pill-button:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.8),
+    0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   3. BOTTOM DECK: ULTRA-PREMIUM REDESIGNED COMPOSER + CONTROLS
+   Fluid spring expansion, obsidian aero-glass, action chips,
+   agent selector popover, and glowing feedback
+   ───────────────────────────────────────────────────────────── */
+.sis-bottom-deck-anchor {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 12px;
+  z-index: 500;
+  pointer-events: none;
+}
+
+/* The Long Glass Card / Expandable Composer */
+.sis-glass-composer-card {
+  pointer-events: auto;
+  width: 520px;
+  max-width: calc(100vw - 260px);
+  height: 48px;
+  border-radius: 9999px;
+  background: rgba(16, 17, 22, 0.88);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px);
+  border: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 12px 36px rgba(0, 0, 0, 0.75);
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  transition:
+    height 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+    width 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+    border-radius 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+    background 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.25s var(--sis-spring);
+  position: relative;
+  cursor: text;
+}
+
+/* Resting State Hover Elevation */
+.sis-glass-composer-card:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 16px 44px rgba(0, 0, 0, 0.95);
+  transform: translateY(-2px);
+}
+
+/* Expanded State on Click OR Focus */
+.sis-glass-composer-card.is-expanded,
+.sis-glass-composer-card:focus-within {
+  height: 252px;
+  width: 740px;
+  max-width: calc(100vw - 120px);
+  border-radius: 24px;
+  background: rgba(12, 13, 17, 0.98);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px);
+  border: none;
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.98),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  transform: translateY(0);
+}
+
+/* Resting Pill State */
+.sis-composer-resting-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  padding: 0 18px;
+  width: 100%;
+  flex-shrink: 0;
+  transition: opacity 0.2s ease;
+  user-select: none;
+}
+
+.sis-glass-composer-card.is-expanded .sis-composer-resting-bar,
+.sis-glass-composer-card:focus-within .sis-composer-resting-bar {
+  display: none;
+}
+
+.sis-resting-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sis-resting-orb {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.sis-resting-orb img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.sis-orb-ring {
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 1.5px solid transparent;
+  border-top-color: #e4e4e7;
+  border-right-color: #52525b;
+  animation: sisOrbSpin 4s linear infinite;
+}
+
+@keyframes sisOrbSpin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.sis-resting-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sis-resting-agent-name {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #e4e4e7;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 8px;
+  border-radius: var(--sis-radius-pill);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.sis-resting-placeholder-text {
+  color: #94a3b8;
+  font-size: 13px;
+  letter-spacing: -0.1px;
+}
+
+.sis-resting-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sis-resting-model-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 3px 9px;
+  border-radius: var(--sis-radius-pill);
+}
+
+.sis-model-status-gem {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.sis-resting-kbd-hint {
+  display: flex;
+  gap: 3px;
+}
+
+.sis-kbd {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-family: inherit;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* Expanded Composer View */
+.sis-composer-expanded-view {
+  display: none;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 14px 18px;
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 0.25s ease 0.05s,
+    transform 0.25s var(--sis-spring) 0.05s;
+}
+
+.sis-glass-composer-card.is-expanded .sis-composer-expanded-view,
+.sis-glass-composer-card:focus-within .sis-composer-expanded-view {
+  display: flex;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.sis-expanded-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sis-expanded-top-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sis-agent-dropdown-wrap {
+  position: relative;
+}
+
+.sis-composer-target-tag {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 4px 10px;
+  border-radius: var(--sis-radius-pill);
+  cursor: pointer;
+  transition: all 0.2s var(--sis-spring);
+}
+
+.sis-composer-target-tag:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.sis-composer-mascot-mini {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+}
+
+.sis-composer-role-chip {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.14);
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: #f1f5f9;
+}
+
+.sis-caret-svg {
+  transition: transform 0.2s ease;
+}
+
+.sis-agent-dropdown-wrap.is-open .sis-caret-svg {
+  transform: rotate(180deg);
+}
+
+.sis-agent-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 250px;
+  background: rgba(18, 20, 28, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85);
+  padding: 6px;
+  z-index: 600;
+  display: none;
+  flex-direction: column;
+  gap: 3px;
+  backdrop-filter: blur(24px);
+  animation: sisBubbleSlideUp 0.2s ease;
+}
+
+.sis-agent-dropdown-wrap.is-open .sis-agent-dropdown-menu {
+  display: flex;
+}
+
+.sis-dropdown-header {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+  padding: 4px 8px;
+  font-weight: 600;
+}
+
+.sis-agent-opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: #f1f5f9;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.sis-agent-opt:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sis-agent-opt img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.sis-agent-opt div {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sis-agent-opt strong {
+  font-size: 12px;
+  color: #ffffff;
+}
+
+.sis-agent-opt span {
+  font-size: 10.5px;
+  color: #94a3b8;
+}
+
+.sis-composer-memory-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 3px 9px;
+  border-radius: var(--sis-radius-pill);
+}
+
+.sis-memory-pulse-node {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  box-shadow: 0 0 6px #cbd5e1;
+  animation: sisPulse 2s infinite;
+}
+
+.sis-expanded-top-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sis-composer-model-tag {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.sis-composer-close-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: none;
+  color: var(--sis-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sis-composer-close-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  transform: rotate(90deg);
+}
+
+/* Working Textarea */
+.sis-composer-input-wrap {
+  flex: 1;
+  display: flex;
+  width: 100%;
+}
+
+.sis-composer-textarea {
+  width: 100%;
+  height: 76px;
+  background: transparent;
+  border: none;
+  color: #f8fafc;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.55;
+  resize: none;
+  outline: none;
+  padding: 4px 2px;
+  letter-spacing: -0.1px;
+}
+
+.sis-composer-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.28);
+  font-size: 13.5px;
+}
+
+/* Suggestion & Action Chips */
+.sis-composer-action-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.sis-composer-action-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.sis-action-chip {
+  height: 25px;
+  padding: 0 10px;
+  border-radius: var(--sis-radius-pill);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s var(--sis-spring);
+}
+
+.sis-action-chip:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.sis-action-chip:active {
+  transform: scale(0.95);
+}
+
+/* Expanded Footer Action Bar */
+.sis-expanded-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sis-footer-left-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sis-tool-btn {
+  height: 30px;
+  padding: 0 10px;
+  border-radius: var(--sis-radius-pill);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: #94a3b8;
+  font-size: 11.5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sis-tool-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.sis-tool-btn.is-active-toggle {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #34d399;
+}
+
+.sis-tool-btn.is-recording {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #f87171;
+  animation: sisMicPulse 1.4s infinite;
+}
+
+@keyframes sisMicPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+  }
+}
+
+.sis-footer-right-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sis-char-counter {
+  font-size: 11px;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Redesigned Send Button (Deep Dark Obsidian with Silver Specular Highlight) */
+.sis-studio-shell .sis-send-btn {
+  width: auto !important;
+  height: 34px !important;
+  padding: 0 18px !important;
+  border-radius: 9999px !important;
+  background: linear-gradient(180deg, #27272a 0%, #151518 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.2px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  cursor: pointer !important;
+  transition: all 0.25s var(--sis-spring) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 4px 14px rgba(0, 0, 0, 0.7) !important;
+}
+
+.sis-studio-shell .sis-send-btn svg {
+  stroke: #ffffff !important;
+  stroke-width: 2.6 !important;
+  width: 13px !important;
+  height: 13px !important;
+  transition: transform 0.2s ease !important;
+}
+
+.sis-studio-shell .sis-send-btn:hover {
+  background: linear-gradient(180deg, #3f3f46 0%, #202024 100%) !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  transform: translateY(-1px) scale(1.02) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 8px 24px rgba(0, 0, 0, 0.9) !important;
+}
+
+.sis-studio-shell .sis-send-btn:hover svg {
+  transform: translateX(2px) !important;
+}
+
+.sis-studio-shell .sis-send-btn:active {
+  transform: scale(0.96) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   THE 4 CIRCULAR CONTROL BUTTONS (Next to Composer)
+   ───────────────────────────────────────────────────────────── */
+.sis-floating-controls-pill {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+}
+
+.sis-bottom-ctrl-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #242630 0%, #15161c 100%);
+  border: none;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s var(--sis-spring);
+  position: relative;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.7),
+    0 6px 16px rgba(0, 0, 0, 0.6);
+}
+
+.sis-bottom-ctrl-btn:hover {
+  transform: translateY(-2px) scale(1.06);
+  color: #ffffff;
+  background: linear-gradient(180deg, #2e303c 0%, #1a1b22 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.6),
+    0 10px 24px rgba(0, 0, 0, 0.8);
+}
+
+/* Button 1: Glowing Solid Red Dot */
+.sis-inner-red-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.9);
+  transition: all 0.2s ease;
+}
+
+.sis-bottom-ctrl-btn.is-active .sis-inner-red-dot {
+  transform: scale(1.3);
+  box-shadow: 0 0 18px rgba(239, 68, 68, 1);
+  animation: sisPulse 1s infinite alternate ease-in-out;
+}
+
+@keyframes sisPulse {
+  from {
+    transform: scale(1.1);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.7);
+  }
+
+  to {
+    transform: scale(1.4);
+    box-shadow: 0 0 22px rgba(239, 68, 68, 1);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   4. DEDICATED MODERN PASTEL SETTINGS MODAL / PAGE
+   ───────────────────────────────────────────────────────────── */
+.sis-settings-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 5, 8, 0.82);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  z-index: 600;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.sis-settings-overlay.is-open {
+  display: flex;
+  animation: sisFadeIn 0.25s ease;
+}
+
+.sis-settings-modal {
+  width: 680px;
+  max-width: 95vw;
+  max-height: 85vh;
+  background: #14151c;
+  border-radius: 24px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 24px 70px rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: sisModalPop 0.32s var(--sis-spring);
+}
+
+@keyframes sisModalPop {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes sisFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.sis-settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sis-settings-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sis-settings-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: -0.2px;
+}
+
+.sis-settings-tag {
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: var(--sis-radius-pill);
+  background: var(--pastel-lilac-soft);
+  color: var(--pastel-lilac);
+}
+
+.sis-settings-body {
+  padding: 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.sis-settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sis-settings-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #cbd5e1;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Pastel Theme Picker Cards */
+.sis-theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 10px;
+}
+
+.sis-theme-card {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--sis-card-inset);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.2s var(--sis-spring);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.sis-theme-card:hover {
+  transform: translateY(-2px);
+  background: rgba(40, 42, 54, 0.85);
+}
+
+.sis-theme-card.is-active {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 4px 14px rgba(0, 0, 0, 0.5);
+}
+
+.sis-theme-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.sis-theme-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: #f1f5f9;
+}
+
+/* Settings Row with Toggle Switch */
+.sis-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: var(--sis-card-inset);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.sis-toggle-switch {
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.25s ease;
+}
+
+.sis-toggle-switch.is-on {
+  background: var(--pastel-lilac);
+}
+
+.sis-toggle-knob {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.25s var(--sis-spring);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.sis-toggle-switch.is-on .sis-toggle-knob {
+  transform: translateX(20px);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   5. DRAWERS & MASCOT SHOWCASE
+   ───────────────────────────────────────────────────────────── */
+.sis-studio-drawer {
+  position: fixed;
+  top: 80px;
+  right: 18px;
+  bottom: 80px;
+  width: 380px;
+  max-width: 90vw;
+  background: rgba(18, 19, 26, 0.96);
+  backdrop-filter: blur(36px);
+  -webkit-backdrop-filter: blur(36px);
+  border: none;
+  border-radius: var(--sis-radius-card);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 20px 60px rgba(0, 0, 0, 0.85);
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  transform: translateX(110%);
+  transition: transform 0.35s var(--sis-spring);
+}
+
+.sis-studio-drawer.is-open {
+  transform: translateX(0);
+}
+
+.sis-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 16px;
+}
+
+.sis-drawer-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: -0.2px;
+}
+
+.sis-drawer-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--sis-text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+}
+
+.sis-drawer-close-btn:hover {
+  color: #ffffff;
+}
+
+.sis-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Mascot Showcase Cards inside Teams Drawer */
+.sis-mascot-showcase-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--sis-card-inset);
+  border: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: all 0.22s var(--sis-spring);
+  cursor: pointer;
+}
+
+.sis-mascot-showcase-card:hover {
+  background: rgba(36, 38, 48, 0.95);
+  transform: translateY(-2px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.sis-showcase-mascot-img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.6));
+}
+
+/* Floating Popovers */
+.sis-floating-popover {
+  position: absolute;
+  bottom: 68px;
+  background: rgba(18, 19, 26, 0.96);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: none;
+  border-radius: 18px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 16px 48px rgba(0, 0, 0, 0.75);
+  padding: 12px;
+  z-index: 300;
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 250px;
+}
+
+.sis-floating-popover.is-open {
+  display: flex;
+  animation: sisFadeIn 0.2s ease;
+}
+
+.sis-popover-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  color: #cbd5e1;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sis-popover-item:hover {
+  background: var(--pastel-lilac-soft);
+  color: #ffffff;
+}
+
+.sis-popover-item.is-selected {
+  background: var(--pastel-sky-soft);
+  color: var(--pastel-sky);
+}
+
+/* Cinema / Fullscreen mode */
+.sis-studio-shell.is-universe-fullscreen .sis-col-chat,
+.sis-studio-shell.is-universe-fullscreen .sis-card-agents,
+.sis-studio-shell.is-universe-fullscreen .sis-col-space {
+  display: none !important;
+}
+
+.sis-studio-shell.is-universe-fullscreen .sis-studio-grid {
+  grid-template-columns: 1fr;
+}
+
+.sis-studio-shell.is-universe-fullscreen .sis-card-tabhome {
+  flex: 1;
+  height: 100%;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   PROFESSIONAL UI POLISH & ULTRA-SMOOTH SPRING ANIMATIONS
+   ───────────────────────────────────────────────────────────── */
+
+/* Viewport Discreet Badge */
+.sis-viewport-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border-radius: var(--sis-radius-pill);
+  background: rgba(14, 15, 20, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  font-size: 11px;
+  font-weight: 500;
+  color: #94a3b8;
+  letter-spacing: 0.2px;
+  pointer-events: none;
+  z-index: 10;
+  animation: sisFadeIn 0.4s ease;
+}
+
+.sis-pulse-gem {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--pastel-sky);
+  box-shadow: 0 0 8px var(--pastel-sky);
+  animation: sisPulse 2s infinite ease-in-out;
+}
+
+/* Agent Role Badge */
+.sis-agent-role-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--sis-radius-pill);
+  background: rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+  letter-spacing: 0.2px;
+}
+
+/* Memory Engagement Indicator */
+.sis-memory-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+  padding: 6px 12px;
+  border-radius: var(--sis-radius-pill);
+  background: rgba(196, 181, 253, 0.1);
+  border: 1px solid rgba(196, 181, 253, 0.25);
+  font-size: 11px;
+  color: var(--pastel-lilac);
+  font-weight: 500;
+  animation: sisBubbleSlideUp 0.3s var(--sis-spring);
+}
+
+.sis-memory-pill svg {
+  color: var(--pastel-lilac);
+  flex-shrink: 0;
+}
+
+/* Code Card & Typography */
+.sis-code-card {
+  margin: 10px 0;
+  background: #0b0c10;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.sis-code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 11px;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sis-copy-code-btn {
+  background: transparent;
+  border: none;
+  color: var(--pastel-sky);
+  font-size: 11px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.sis-copy-code-btn:hover {
+  opacity: 0.8;
+}
+
+.sis-inline-code {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11.5px;
+  color: var(--pastel-sky);
+}
+
+.sis-chat-p {
+  margin: 0 0 8px 0;
+  line-height: 1.6;
+}
+
+.sis-chat-ul {
+  margin: 4px 0 8px 0;
+  padding-left: 20px;
+}
+
+.sis-chat-li {
+  margin-bottom: 4px;
+  line-height: 1.5;
+}
+
+/* Monospace Box for Memory Drawer */
+.sis-memory-code-box {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 10px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: #cbd5e1;
+  line-height: 1.5;
+  max-height: 180px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.sis-action-pill-btn {
+  background: var(--pastel-lilac-soft);
+  color: var(--pastel-lilac);
+  border: 1px solid var(--pastel-lilac-border);
+  padding: 4px 10px;
+  border-radius: var(--sis-radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s var(--sis-spring);
+}
+
+.sis-action-pill-btn:hover {
+  background: var(--pastel-lilac);
+  color: #090a0d;
+}
+
+/* Micro-interaction Spring Press */
+button {
+  transition:
+    transform 0.18s var(--sis-spring),
+    opacity 0.18s ease;
+}
+
+button:active {
+  transform: scale(0.96) !important;
+}
+
+/* Card Hover Specular Glow */
+.sis-card {
+  transition:
+    transform 0.25s var(--sis-spring),
+    box-shadow 0.25s var(--sis-spring);
+}
+
+.sis-card:hover {
+  box-shadow:
+    0 20px 48px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* Terminal Line Highlights */
+.term-line-info {
+  color: #94a3b8;
+  margin-bottom: 4px;
+  font-family: 'Space Mono', monospace;
+}
+.term-line-success {
+  color: var(--pastel-mint);
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+.term-line-sub {
+  color: #64748b;
+  margin-bottom: 2px;
+  font-size: 11.5px;
+}
+.term-line-ready {
+  color: var(--pastel-sky);
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+/* Clean Welcome Card for Pristine Chat Stream */
+.sis-chat-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 24px;
+  margin: auto;
+  animation: sisFadeIn 0.5s ease;
+}
+
+.sis-welcome-mascot {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  animation: sisFloat 4s ease-in-out infinite;
+}
+
+.sis-welcome-mascot img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}
+
+.sis-welcome-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.3px;
+}
+
+.sis-welcome-sub {
+  font-size: 12.5px;
+  color: #94a3b8;
+  max-width: 280px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+@keyframes sisFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   ACCESSIBILITY & INTERACTIVE AFFORDANCES (R-32, R-39)
+   ───────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--sis-accent, #c4b5fd) !important;
+  outline-offset: 2px !important;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+[role='button']:focus-visible,
+[tabindex='0']:focus-visible {
+  outline: 2px solid var(--sis-accent, #c4b5fd) !important;
+  outline-offset: 2px !important;
+}
+
+button,
+a[href],
+summary,
+select,
+input[type='checkbox'],
+input[type='radio'],
+label[for],
+[role='button'],
+[role='tab'],
+[role='switch'] {
+  cursor: pointer;
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed !important;
+  opacity: 0.55;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   MOTION REDUCTION PREFERENCE (R-39)
+   ───────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   RESPONSIVE BREAKPOINTS (R-03)
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 1080px) {
+  .sis-studio-shell {
+    padding: 12px 14px 92px 14px;
+    overflow-y: auto;
+  }
+
+  .sis-studio-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 12px;
+  }
+
+  .sis-col-space {
+    grid-column: span 2;
+    min-height: 240px;
+  }
+
+  .sis-glass-composer-card {
+    width: 440px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sis-studio-shell {
+    padding: 10px 10px 100px 10px;
+    position: relative;
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+  }
+
+  .sis-top-control-bar {
+    height: auto;
+    padding: 10px 14px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .sis-top-nav-items {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .sis-studio-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    height: auto;
+  }
+
+  .sis-col-chat {
+    min-height: 380px;
+  }
+
+  .sis-card-tabhome {
+    min-height: 320px;
+  }
+
+  .sis-card-agents {
+    min-height: 280px;
+  }
+
+  .sis-space-heading {
+    margin-top: 24px;
+    margin-bottom: 24px;
+    font-size: 2.2rem;
+  }
+
+  .sis-bottom-deck-anchor {
+    bottom: 12px;
+    width: 100%;
+    padding: 0 10px;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .sis-glass-composer-card {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .sis-floating-controls-pill {
+    order: 2;
+  }
+}

@@ -48,7 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
         idHint.textContent = '✓ Valid Sleek ID format';
         idHint.className = 'input-hint valid';
       } else {
-        idHint.textContent = 'Sleek ID must be 4–48 letters, numbers, dashes, underscores, or dots.';
+        idHint.textContent =
+          'Sleek ID must be 4–48 letters, numbers, dashes, underscores, or dots.';
         idHint.className = 'input-hint invalid';
       }
     });

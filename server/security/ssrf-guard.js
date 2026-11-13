@@ -10,7 +10,10 @@ import net from 'node:net';
 export function isPrivateOrReservedIP(ip) {
   if (!ip || typeof ip !== 'string') return true;
 
-  const cleanIp = ip.replace(/^\[|\]$/g, '').trim().toLowerCase();
+  const cleanIp = ip
+    .replace(/^\[|\]$/g, '')
+    .trim()
+    .toLowerCase();
   const version = net.isIP(cleanIp);
   if (version === 0) return false;
 

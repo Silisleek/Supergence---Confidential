@@ -518,6 +518,40 @@ The unified intelligence system will execute the tool, capture real output, moun
       });
     }
 
+    if (/\bsuperbox\b/i.test(q)) {
+      recommendations.push({
+        tool: 'superbox_create_file',
+        confidence: 0.96,
+        rationale: 'Create files in the Superbox staging folder',
+      });
+      recommendations.push({
+        tool: 'superbox_run_command',
+        confidence: 0.95,
+        rationale: 'Run host commands with Superbox as the working directory',
+      });
+    }
+
+    if (/tool|forge|new.*tool|custom.*tool|capability/i.test(q)) {
+      recommendations.push({
+        tool: 'create_tool',
+        confidence: 0.97,
+        rationale: 'Synthesize, sandbox-verify, and register a new custom tool into Supergence',
+      });
+    }
+
+    if (/ui|widget|custom.*ui|theme|restyl|button|element|control.*panel/i.test(q)) {
+      recommendations.push({
+        tool: 'inject_ui_widget',
+        confidence: 0.95,
+        rationale: 'Mount a dynamic interactive UI component or card into Supergence live',
+      });
+      recommendations.push({
+        tool: 'modify_ui_theme',
+        confidence: 0.92,
+        rationale: 'Update the Supergence interface theme or CSS variables live',
+      });
+    }
+
     return recommendations;
   }
 }

@@ -12,7 +12,7 @@
   height: 100%;
   padding: 18px;
   gap: 10px;
-  color: var(--shell-text, #e9e0d7);
+  color: var(--shell-text);
   font-family: var(--font-ui, Manrope, system-ui);
 }
 .cw-heading {
@@ -33,7 +33,7 @@
 .cw-status,
 .cw-note {
   font-size: 11px;
-  color: var(--shell-muted, #a69789);
+  color: var(--shell-muted);
   margin: 0;
   line-height: 1.6;
   overflow-wrap: anywhere;
@@ -50,8 +50,8 @@
 }
 .cw-button {
   border: 0;
-  background: var(--shell-surface, #29201b);
-  color: var(--shell-text, #e9e0d7);
+  background: var(--shell-surface);
+  color: var(--shell-text);
   border-radius: 9px;
   font: 12px var(--font-ui, system-ui);
   padding: 8px 11px;
@@ -60,8 +60,8 @@
 }
 .cw-button:hover,
 .cw-tabs [aria-pressed='true'] {
-  background: #493426;
-  color: #f1d2b7;
+  background: var(--shell-tint);
+  color: var(--shell-text);
 }
 .cw-button:disabled {
   opacity: 0.5;
@@ -84,7 +84,7 @@
   width: 100%;
   border: 0;
   border-radius: 10px;
-  background: var(--shell-surface, #241c17);
+  background: var(--shell-surface);
   padding: 10px 12px;
   color: inherit;
   font: 12px var(--font-ui, system-ui);
@@ -117,7 +117,7 @@
 .cw-command {
   padding: 14px;
   border-radius: 14px;
-  background: var(--shell-surface, #201a16);
+  background: var(--shell-surface);
   margin-bottom: 10px;
   overflow: hidden;
 }
@@ -134,7 +134,7 @@
 }
 .cw-command-line {
   display: block;
-  color: #e7b98e;
+  color: var(--shell-accent);
   margin-bottom: 6px;
 }
 .cw-command-output {
@@ -142,7 +142,7 @@
 }
 .cw-command-state {
   display: block;
-  color: #c5ab95;
+  color: var(--shell-muted);
   font-size: 10px;
 }
 .cw-commands {
@@ -151,7 +151,7 @@
   flex: 1;
 }
 .cw-preview {
-  background: var(--shell-surface, #201a16);
+  background: var(--shell-surface);
   border-radius: 14px;
   padding: 0;
 }
@@ -196,5 +196,5 @@
 .cw-terminal-title {
   font-size: 11px;
   font-weight: 600;
-  color: #c7a78c;
+  color: var(--shell-muted);
 }

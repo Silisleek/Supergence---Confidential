@@ -1,6 +1,10 @@
 import { learningTools } from './learning-tools.js';
 import { creationTools } from './creation-tools.js';
 import { evolutionTools } from './evolution-tools.js';
+import { toolSynthesisTools } from './tool-synthesis.js';
+import { uiTools } from './ui-tools.js';
+import { superboxTools } from './superbox-tools.js';
+import adaToolForger from '../services/adaToolForger.js';
 import { actionMonitor } from '../security/action-monitor.js';
 import { localAccessTools } from './local-access-tools.js';
 import { runtimeAccess } from '../services/runtimeAccess.js';
@@ -20,6 +24,7 @@ import { resolveWithinRoot } from '../utils/path-confinement.js';
 import { childEnvironment } from '../security/child-environment.js';
 import { safeEvaluateMath } from '../utils/safe-math.js';
 import { assertSafeExternalUrl } from '../security/ssrf-guard.js';
+import { fetchPublicSource } from '../services/publicSource.js';
 import shortTermMemory from '../memory/short-term.js';
 import longTermMemory from '../memory/long-term.js';
 import generator3D from '../3d/generator.js';
@@ -167,8 +172,19 @@ const TOOLS = {
   ...creationTools,
   ...evolutionTools,
   ...learningTools,
+  ...toolSynthesisTools,
+  ...uiTools,
+  ...superboxTools,
   ...localAccessTools,
   ...agentMessageTools,
+  create_tool: {
+    name: 'create_tool',
+    description:
+      'Dynamically synthesize, test in sandbox, and register a new tool in Supergence. The code must be the BODY of an async function receiving "params" and returning an object.',
+    parameters: toolSynthesisTools.synthesize_dynamic_tool.parameters,
+    required: ['name', 'description', 'code'],
+    execute: async (args) => toolSynthesisTools.synthesize_dynamic_tool.execute(args),
+  },
   // ─── 3D Generation Tools ───
   generate_3d_scene: {
     name: 'generate_3d_scene',
@@ -2037,10 +2053,16 @@ function playProceduralSound(ctx) {
     parameters: { url: 'string' },
     execute: async ({ url }) => {
       try {
-        assertSafeExternalUrl(url);
-        const resp = await fetch(url, { signal: AbortSignal.timeout(20000) });
-        const text = await resp.text();
-        return { content: text.substring(0, 5000), status: resp.status };
+        const result = await fetchPublicSource(url);
+        let content = result.content;
+        if (/html/i.test(result.contentType)) {
+          const $ = await loadCheerio(content);
+          $('script, style, nav, footer, header, aside, noscript').remove();
+          content = ($('main, article').first().text() || $('body').text() || $.text())
+            .replace(/\s+/g, ' ')
+            .trim();
+        }
+        return { ...result, content: content.slice(0, 40000) };
       } catch (e) {
         return { error: e.message };
       }
@@ -4203,9 +4225,11 @@ class ToolRegistry {
   }
 
   initialize() {
+    globalThis.__supergence_tools = this;
     for (const [name, tool] of Object.entries(TOOLS)) {
       this.tools.set(name, tool);
     }
+    adaToolForger.setRegistry(this);
     this.loadLearnedSkillsAsTools();
     this.loadCustomPersistedTools();
     console.log(

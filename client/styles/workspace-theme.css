@@ -72,17 +72,25 @@
   display: block;
   padding: 12px 14px;
   border: 0;
-  border-radius: 6px;
-  background: transparent;
+  border-radius: 14px;
+  background: var(--starter-fill, var(--shell-tint));
   color: var(--shell-muted);
   font-size: 12px;
   text-align: center;
   transition: background 150ms ease;
 }
 
+.shell-starters button:nth-child(2) {
+  --starter-fill: var(--shell-mint);
+}
+
+.shell-starters button:nth-child(3) {
+  --starter-fill: var(--shell-blue);
+}
+
 .shell-starters button:hover,
 .shell-starters button:focus-visible {
-  background: var(--shell-hover);
+  background: var(--shell-selected);
   color: var(--shell-text);
 }
 
@@ -107,7 +115,7 @@
 }
 
 .workspace-quick-launch .cockpit-button {
-  background: transparent;
+  background: var(--shell-surface);
   box-shadow: none;
 }
 
@@ -212,7 +220,12 @@
 .sis-workspace-ui .sidebar-conv-item.active {
   background: var(--shell-selected);
 }
-.sis-workspace-ui .sidebar-conv-item.active .shell-conv-icon {
+
+.sis-workspace-ui .shell-rail-button.is-active {
+  background: color-mix(in srgb, var(--shell-accent) 18%, transparent);
+  color: var(--shell-accent);
+}
+.sis-workspace-ui .sidebar-conv-item.active .shell-conv-icon:not([class*='pastel-avatar']) {
   background: var(--shell-surface);
   color: var(--shell-accent);
 }

@@ -23,6 +23,10 @@ export default defineConfig(({ mode, command }) => {
         ],
       },
       proxy: {
+        '/vendor/dompurify': {
+          target: `http://127.0.0.1:${backendPort}`,
+          changeOrigin: true,
+        },
         '/__project-preview': {
           target: `http://127.0.0.1:${backendPort}`,
           changeOrigin: true,

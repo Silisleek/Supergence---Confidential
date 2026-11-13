@@ -12,6 +12,7 @@ import { unzipSync } from 'fflate';
 import { randomUUID } from 'node:crypto';
 import { currentWorkspace, conversationWorkspaces } from '../services/conversationWorkspaces.js';
 import { childEnvironment } from '../security/child-environment.js';
+import { runtimeAccess } from '../services/runtimeAccess.js';
 
 const execFileAsync = promisify(execFile);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -1061,6 +1062,8 @@ class WorkspaceManager {
    * Run a shell command in workspace or a subfolder
    */
   async runCommand(command, cwd = '', timeout = 60000) {
+    const signal = runtimeAccess.currentContext().signal;
+    signal?.throwIfAborted();
     if (this._isDangerousCommand(command)) {
       const msg = `Safety Protection: Potentially catastrophic or destructive command rejected: "${command}"`;
       return {
@@ -1101,13 +1104,23 @@ class WorkspaceManager {
         maxBuffer: 1024 * 1024 * 10, windowsHide: true,
         env: childEnvironment({ PYTHONIOENCODING: 'utf-8', PYTHONUTF8: '1' }),
       }, (error, stdout, stderr) => {
+        signal?.removeEventListener('abort', stop);
         const result = { stdout: stdout || '', stderr: stderr || error?.message || '',
           exitCode: error ? error.code || 1 : 0, cwd: this._toRelative(workDir),
           absoluteCwd: workDir, commandId, durationMs: Date.now() - start };
+        if (signal?.aborted) Object.assign(result, { cancelled: true, error: signal.reason?.message || 'Command cancelled.', exitCode: 1 });
         publish({ kind:'command-end', exitCode:result.exitCode, durationMs:result.durationMs, error:error?.message });
         this.activeProcesses.delete(commandId);
         resolve(result);
       });
+      const stop = () => {
+        if (!child.pid || child.exitCode !== null) return;
+        if (process.platform === 'win32')
+          execFile('taskkill.exe', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true }, () => {});
+        else child.kill('SIGTERM');
+      };
+      signal?.addEventListener('abort', stop, { once: true });
+      if (signal?.aborted) stop();
       this.activeProcesses.set(commandId, { child, command, cwd:workDir, conversationId:scope?.conversationId });
       for (const [stream, name] of [[child.stdout,'stdout'],[child.stderr,'stderr']]) {
         stream?.on('data', data => {

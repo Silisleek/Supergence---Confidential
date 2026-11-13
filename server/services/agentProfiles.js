@@ -5,12 +5,13 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const MASCOTS = Object.freeze(
   [
-    { id: 'superake', name: 'Superake', color: '#6579dc' },
-    { id: 'supermull', name: 'Supermull', color: '#b974a0' },
-    { id: 'supersion', name: 'Supersion', color: '#d96480' },
-    { id: 'superbold', name: 'Superbold', color: '#dfc18e' },
-    { id: 'superbit', name: 'Superbit', color: '#afc3a7' },
-  ].map((mascot) => Object.freeze({ ...mascot, src: `/images/mascots/${mascot.id}.png` })),
+    { id: 'sparky', name: 'Ignis Flame (Official)', color: '#ff7a00', src: '/images/silisleek/supergence-official.png' },
+    { id: 'superake', name: 'Superake', color: '#6579dc', src: '/images/mascots/superake.png' },
+    { id: 'supermull', name: 'Supermull', color: '#b974a0', src: '/images/mascots/supermull.png' },
+    { id: 'supersion', name: 'Supersion', color: '#d96480', src: '/images/mascots/supersion.png' },
+    { id: 'superbold', name: 'Superbold', color: '#dfc18e', src: '/images/mascots/superbold.png' },
+    { id: 'superbit', name: 'Superbit', color: '#afc3a7', src: '/images/mascots/superbit.png' },
+  ],
 );
 
 const DEFAULTS = Object.freeze({

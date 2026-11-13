@@ -6,11 +6,11 @@
        Zero Gradients. Sleek Hairline Borders. No Neon.
        ========================================================================== */
 :root {
-  --color-coffee: #1a120e;
-  --color-coffee-dark: #120c09;
-  --color-coffee-surface: #241712;
-  --color-coffee-card: rgba(36, 23, 18, 0.94);
-  --color-coffee-border: rgba(141, 110, 99, 0.22);
+  --color-coffee: #16171d;
+  --color-coffee-dark: #111216;
+  --color-coffee-surface: #1a1b22;
+  --color-coffee-card: #181920;
+  --color-coffee-border: rgba(255, 255, 255, 0.08);
 
   --color-blue: #2563eb;
   --color-blue-light: #3b82f6;
@@ -26,19 +26,19 @@
   --color-pistachio: #84cc16;
   --color-candyfloss: #3b82f6;
 
-  --void: #120c09;
-  --surface-dark: #1a120e;
-  --text: #f5ebe6;
-  --text-dim: #a89085;
-  --text-ghost: #7d6b62;
+  --void: #111216;
+  --surface-dark: #14151b;
+  --text: #f4f5f8;
+  --text-dim: #8e92a4;
+  --text-ghost: #5a5d6e;
 
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-out: cubic-bezier(0.33, 1, 0.68, 1);
   --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  --glass: rgba(36, 23, 18, 0.92);
-  --glass-border: 1px solid rgba(141, 110, 99, 0.22);
+  --glass: #181920;
+  --glass-border: 1px solid rgba(255, 255, 255, 0.08);
   --glass-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   --glass-reflex: rgba(255, 255, 255, 0.04);
   --glass-glow: rgba(59, 130, 246, 0.12);
@@ -81,8 +81,8 @@ body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #120c09;
-  color: #f5ebe6;
+  background: #111216;
+  color: #f4f5f8;
   font-family: var(--font-ui);
   user-select: none;
 }
@@ -94,7 +94,7 @@ body {
   pointer-events: none;
   z-index: 0;
   display: block !important;
-  background: #120c09;
+  background: #111216;
   filter: none;
   opacity: 1;
   animation: none;
@@ -1661,7 +1661,7 @@ body {
 .workspace-composer-wrap {
   padding: 16px 36px 20px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(14, 22, 20, 0.5);
+  background: #111216;
   backdrop-filter: blur(20px);
 }
 

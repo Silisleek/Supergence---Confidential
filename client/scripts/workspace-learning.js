@@ -19,6 +19,223 @@
     <section data-learning-view="import" hidden><form id="learningImportForm" class="learning-form"><label>Source title<input name="title" class="learning-input" required maxlength="180" placeholder="What would you like Supergence to remember?"></label><label>Source material<textarea name="content" class="learning-input" rows="8" placeholder="Paste notes, documentation, a worked example, or code."></textarea></label><label>Or choose a text or code file<input id="learningFile" type="file" accept=".txt,.md,.json,.css,.js,.ts,.py,.html,.csv,.yml,.yaml,.rs,.go,.cpp,.h"></label><button class="learning-primary" type="submit">Retain source</button></form></section>
     <section data-learning-view="rea" hidden><div id="learningREAStatus"></div><form id="learningREAForm" class="learning-form"><label>Artifact path inside workspace/<input name="path" class="learning-input" required placeholder="apps/example-build"></label><label>Artifact kind<select name="kind" class="learning-input"><option value="javascript-tree">JavaScript application tree</option><option value="asar">Electron ASAR</option></select></label><button class="learning-primary" type="submit">Analyze and retain evidence</button></form><details class="learning-instructions"><summary>Installed REA workflow</summary><pre id="learningSkillText"></pre></details><p class="learning-note">Static inspection does not execute the application. Native engines are required separately for other artifact types.</p></section>`;
   document.body.append(dialog);
+  const curriculumTab = node('button', '', 'Explore & learn');
+  curriculumTab.type = 'button';
+  curriculumTab.dataset.learningTab = 'curriculum';
+  dialog.querySelector('.learning-tabs').append(curriculumTab);
+  const curriculumView = node('section');
+  curriculumView.dataset.learningView = 'curriculum';
+  curriculumView.hidden = true;
+  curriculumView.innerHTML = `<p class="learning-note">Study a topic in any field, then apply it to a different task. Supergence builds questions, reads sources, saves cited notes, and proposes practical exercises and related topics.</p>
+    <details id="learningStudyEntry" open><summary>Add a learning topic</summary><form id="learningStudyForm" class="learning-form"><label>What should Supergence learn?<textarea name="topic" class="learning-input" rows="2" required maxlength="1000" placeholder="A task, a question, a technique, or an unfamiliar subject"></textarea></label>
+    <label>Reference URLs (optional, one per line)<textarea name="sources" class="learning-input" rows="2" placeholder="Primary sources help focus the study"></textarea></label>
+    <label class="learning-explore-option"><input name="exploreRelated" type="checkbox"> Also study up to two related topics</label><p class="learning-note">The topic is sent to your configured model and, without supplied references, public search. Observed chat tasks stay local until you choose to study them.</p><button type="submit" class="learning-primary">Start study</button></form></details>
+    <p id="learningCurriculumStatus" role="status"></p><div id="learningStudies"></div><details><summary>Recent tasks noticed in chat</summary><div id="learningObservedTasks"></div></details>`;
+  dialog.append(curriculumView);
+  let curriculumTimer;
+  let curriculumDigest = '';
+  let curriculumLoaded = false;
+  const studyForm = curriculumView.querySelector('#learningStudyForm');
+  studyForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const submit = studyForm.querySelector('button');
+    submit.disabled = true;
+    try {
+      await api('/api/learning/studies', {
+        topic: studyForm.elements.topic.value,
+        sourceUrls: studyForm.elements.sources.value
+          .split('\n')
+          .map((url) => url.trim())
+          .filter(Boolean),
+        exploreRelated: studyForm.elements.exploreRelated.checked,
+      });
+      studyForm.reset();
+      curriculumView.querySelector('#learningStudyEntry').open = false;
+      await refreshCurriculum();
+    } catch (error) {
+      curriculumView.querySelector('#learningCurriculumStatus').textContent = error.message;
+    } finally {
+      submit.disabled = false;
+    }
+  });
+  curriculumTab.addEventListener('click', () => refreshCurriculum());
+  dialog.addEventListener('close', () => clearTimeout(curriculumTimer));
+
+  async function refreshCurriculum() {
+    clearTimeout(curriculumTimer);
+    const message = curriculumView.querySelector('#learningCurriculumStatus');
+    try {
+      const data = await api('/api/learning/curriculum');
+      if (!curriculumLoaded) {
+        curriculumView.querySelector('#learningStudyEntry').open = !data.studies.length;
+        curriculumLoaded = true;
+      }
+      message.textContent =
+        data.storageError ||
+        `${data.studies.filter((study) => study.status === 'studied').length} studied topics · ${data.families.length} task families · ${data.studies.filter((study) => ['queued', 'planning', 'researching'].includes(study.status)).length} pending`;
+      const digest = JSON.stringify(data.studies);
+      if (
+        digest !== curriculumDigest &&
+        !document.activeElement?.closest('[data-experience-form]')
+      ) {
+        const container = curriculumView.querySelector('#learningStudies');
+        container.replaceChildren();
+        for (const study of data.studies) {
+          const card = node('article', 'learning-source');
+          card.dataset.studyId = study.id;
+          card.append(
+            node('h3', '', study.topic),
+            node(
+              'p',
+              'learning-source-meta',
+              `${study.plan?.taskFamily || 'Awaiting plan'} · ${study.status}`,
+            ),
+          );
+          if (study.error) card.append(node('p', 'learning-note', study.error));
+          if (study.progress && study.status !== 'studied')
+            card.append(node('p', 'learning-note', study.progress));
+          if (study.plan) {
+            const plan = node('details');
+            plan.append(node('summary', '', 'Questions and practical tasks'));
+            study.plan.questions.forEach((question) =>
+              plan.append(node('p', 'learning-note', question)),
+            );
+            study.plan.practiceTasks.forEach((practice) =>
+              plan.append(
+                node(
+                  'p',
+                  'learning-note',
+                  `${practice.task}\nLook for: ${practice.successCriteria}`,
+                ),
+              ),
+            );
+            card.append(plan);
+          }
+          if (study.notes) {
+            const notes = node('details');
+            notes.append(
+              node('summary', '', 'Study notes and sources'),
+              node('pre', 'learning-source-text', study.notes),
+            );
+            for (const source of study.sources || []) {
+              const link = node(
+                'a',
+                'learning-note',
+                `${source.id}: ${source.title} · ${source.fetchStatus || 'Unread'}`,
+              );
+              try {
+                const url = new URL(source.url);
+                if (['https:', 'http:'].includes(url.protocol)) link.href = url.href;
+              } catch {}
+              link.target = '_blank';
+              link.rel = 'noopener noreferrer';
+              notes.append(link, node('br'));
+            }
+            for (const gap of study.gaps || []) notes.append(node('p', 'learning-note', gap));
+            card.append(
+              notes,
+              node(
+                'p',
+                'learning-note',
+                'Source-backed notes. Practice is proposed; mastery has not been established.',
+              ),
+            );
+          }
+          const actions = node('div', 'learning-source-actions');
+          if (study.status === 'studied') {
+            actions.append(
+              button('Apply in chat', () => {
+                const input = document.getElementById('workspaceInp');
+                input.value = `Apply the retained study “${study.topic}” to a new practical task. Read the study notes (${study.notesSourceId}) and sources first, then `;
+                input.dispatchEvent(new Event('input'));
+                dialog.close();
+                input.focus();
+              }),
+            );
+            actions.append(
+              button('Record an application', () => {
+                if (card.querySelector('[data-experience-form]')) return;
+                const form = node('form', 'learning-form');
+                form.dataset.experienceForm = 'true';
+                form.innerHTML =
+                  '<label>Task you applied it to<input name="task" class="learning-input" required maxlength="1000"></label><label>What actually happened?<textarea name="observation" class="learning-input" rows="3" required maxlength="4000"></textarea></label><label>Outcome<select name="outcome" class="learning-input"><option value="worked">Worked in this task</option><option value="needs-work">Needs more work</option><option value="inconclusive">Inconclusive</option></select></label><p class="learning-note">Saved as your report, without claiming independent verification.</p><button type="submit" class="learning-primary">Save experience</button>';
+                form.addEventListener('submit', async (event) => {
+                  event.preventDefault();
+                  try {
+                    await api(
+                      `/api/learning/studies/${study.id}/experience`,
+                      Object.fromEntries(new FormData(form)),
+                    );
+                    form.remove();
+                    await refreshCurriculum();
+                  } catch (error) {
+                    message.textContent = error.message;
+                  }
+                });
+                card.append(form);
+                form.elements.task.focus();
+              }),
+            );
+            const related = node('details');
+            related.append(node('summary', '', 'Explore related tasks'));
+            const relatedActions = node('div', 'learning-source-actions');
+            for (const topic of study.plan.relatedTopics)
+              relatedActions.append(
+                button(topic, () => {
+                  studyForm.elements.topic.value = topic;
+                  studyForm.elements.sources.value = '';
+                  curriculumView.querySelector('#learningStudyEntry').open = true;
+                  studyForm.elements.topic.focus();
+                }),
+              );
+            related.append(relatedActions);
+            card.append(related);
+          }
+          if (['interrupted', 'needs-attention'].includes(study.status))
+            actions.append(
+              button('Retry study', async () => {
+                try {
+                  await api(`/api/learning/studies/${study.id}/retry`, {});
+                  await refreshCurriculum();
+                } catch (error) {
+                  message.textContent = error.message;
+                }
+              }),
+            );
+          card.append(actions);
+          for (const experience of study.experiences || [])
+            card.append(
+              node(
+                'p',
+                'learning-note',
+                `${experience.outcome} · ${experience.provenance}: ${experience.task}\n${experience.observation}`,
+              ),
+            );
+          container.append(card);
+        }
+        curriculumDigest = digest;
+      }
+      const observed = curriculumView.querySelector('#learningObservedTasks');
+      observed.classList.add('learning-source-actions');
+      observed.replaceChildren();
+      for (const observation of data.observations.slice(0, 10))
+        observed.append(
+          button(observation.task, () => {
+            studyForm.elements.topic.value = observation.task;
+            curriculumView.querySelector('#learningStudyEntry').open = true;
+            studyForm.elements.topic.focus();
+          }),
+        );
+      if (
+        dialog.open &&
+        !curriculumView.hidden &&
+        data.studies.some((study) => ['queued', 'planning', 'researching'].includes(study.status))
+      )
+        curriculumTimer = setTimeout(refreshCurriculum, 2000);
+    } catch (error) {
+      message.textContent = error.message;
+    }
+  }
   const fileInput = dialog.querySelector('#learningFile');
   fileInput.multiple = true;
   fileInput.removeAttribute('accept');
@@ -157,6 +374,17 @@
       }
     });
     card.append(details);
+    const review = source.review;
+    if (review)
+      card.append(
+        node(
+          'p',
+          'learning-note',
+          review.ready
+            ? `${review.due ? 'Recall review due' : `Next recall review: ${new Date(review.dueAt).toLocaleDateString()}`} · ${review.consecutivePasses} consecutive retrieval passes`
+            : 'Add a recall question to schedule spaced review.',
+        ),
+      );
     const actions = node('div', 'learning-source-actions');
     actions.append(
       button('Use in chat', () => {
@@ -191,6 +419,21 @@
       }),
     );
     card.append(actions);
+    if (review?.ready)
+      actions.append(
+        button('Review recall', async () => {
+          try {
+            const { check } = await api(`/api/learning/sources/${source.id}/check`, {
+              question: review.question,
+              expectedText: review.expectedText,
+            });
+            await refresh();
+            status.textContent = `${check.passed ? 'Recall review passed' : 'Recall review failed'} · Whole-library retrieval only.`;
+          } catch (error) {
+            status.textContent = error.message;
+          }
+        }),
+      );
     actions.append(
       button('Edit source', async () => {
         if (card.querySelector('.learning-edit-form')) return;
@@ -281,7 +524,7 @@
       formatText.textContent = data.capabilities.formats.join(', ');
       importNote.textContent = `${data.capabilities.formats.length} formats · Up to 50 files per import · 8 MiB per file · 2 MiB extracted text. Document imports retain readable text; SQLite imports retain table rows. Scanned PDFs, images and proprietary vector database files require a text/JSONL export.`;
       indexStatus.textContent = data.capabilities.index.available
-        ? `${data.capabilities.index.chunks} indexed excerpts · Local SQLite vectors and keyword search. Saved sources are searched automatically in chat.`
+        ? `${data.capabilities.index.chunks} indexed excerpts · BM25 and local vectors with diverse results. Saved sources are searched automatically in chat.`
         : `Vector storage unavailable: ${data.capabilities.index.error || 'Connecting'}. Source text remains available for search.`;
     }
     status.textContent = `${sources.length} retained sources · ${data.skills.length} installed workflows`;
@@ -420,14 +663,6 @@
       status.textContent = error.message;
     }
   });
-  const rail = node('button', 'shell-rail-button');
-  rail.id = 'railLearning';
-  rail.type = 'button';
-  rail.setAttribute('aria-label', 'Learning library');
-  rail.title = 'Learning library';
-  rail.innerHTML = icon;
-  rail.addEventListener('click', () => window.LearningPanel.show());
-  document.querySelector('.shell-rail-main').append(rail);
   const tools = button('Learning library', () => {
     document.getElementById('composerToolsMenu').hidden = true;
     window.LearningPanel.show();
@@ -440,7 +675,12 @@
   selector.id = 'workspaceAgentSelect';
   selector.setAttribute('aria-label', 'Chat agent');
   selector.append(new Option('Supergence · Auto', ''));
-  document.querySelector('.shell-composer-context').replaceWith(selector);
+  const composerContext = document.querySelector('.shell-composer-context');
+  if (composerContext) {
+    composerContext.replaceWith(selector);
+  } else {
+    document.querySelector('.shell-composer')?.prepend(selector);
+  }
   api('/api/agents/team')
     .then(({ agents }) => {
       agents.forEach((agent) => selector.append(new Option(agent.name, agent.id)));

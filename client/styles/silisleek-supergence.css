@@ -266,7 +266,9 @@ body.sis-workspace-ui {
   font-family: inherit;
   font-size: 14px;
   box-sizing: border-box;
-  transition: box-shadow 150ms ease, background 150ms ease;
+  transition:
+    box-shadow 150ms ease,
+    background 150ms ease;
 }
 .form-input::placeholder {
   color: var(--shell-subtle);
@@ -328,7 +330,9 @@ body.sis-workspace-ui {
   padding: 14px;
   cursor: pointer;
   text-align: left;
-  transition: background 150ms ease, transform 150ms ease;
+  transition:
+    background 150ms ease,
+    transform 150ms ease;
   color: var(--shell-text);
   display: flex;
   flex-direction: column;
@@ -337,7 +341,7 @@ body.sis-workspace-ui {
 .role-card:hover {
   background: var(--shell-hover);
 }
-.role-card[aria-pressed="true"] {
+.role-card[aria-pressed='true'] {
   background: var(--shell-selected);
   outline: 2px solid var(--shell-accent);
   outline-offset: 2px;
@@ -361,7 +365,7 @@ body.sis-workspace-ui {
   color: var(--shell-accent);
   opacity: 0;
 }
-.role-card[aria-pressed="true"] .role-check {
+.role-card[aria-pressed='true'] .role-check {
   opacity: 1;
 }
 .role-desc {
@@ -410,7 +414,9 @@ body.sis-workspace-ui {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  transition: background 150ms ease, transform 150ms ease;
+  transition:
+    background 150ms ease,
+    transform 150ms ease;
 }
 .btn-primary:hover {
   background: var(--shell-accent-hover);

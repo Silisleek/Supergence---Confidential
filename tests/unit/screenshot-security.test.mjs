@@ -98,7 +98,7 @@ test('visual tools confine files, report actual image effects, and enforce acces
       SIS_WORKSPACE_DIR: directory,
       SIS_TEST_OUTSIDE_HTML: outside,
     },
-    timeout: 30000,
+    timeout: 60000,
   });
   assert.equal(await fs.readFile(image, 'utf8'), 'existing content');
   assert.equal(

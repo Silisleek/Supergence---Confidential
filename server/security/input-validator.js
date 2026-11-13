@@ -6,8 +6,9 @@
 
 const DANGEROUS_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 const TRAVERSAL_PATTERN = /(?:\.\.[/\\]|%2e%2e)/i;
-const SCRIPT_INJECTION_PATTERN = /<(?:script|iframe|object|embed|svg\b[^>]*\bonload)\b|javascript\s*:|data\s*:\s*text\/html|on(?:load|error|click|mouseover)\s*=/i;
-const SLEEK_ID_PATTERN = /^[a-zA-Z0-9_\-.]{4,48}$/;
+const SCRIPT_INJECTION_PATTERN =
+  /<(?:script|iframe|object|embed|svg\b[^>]*\bonload)\b|javascript\s*:|data\s*:\s*text\/html|on(?:load|error|click|mouseover)\s*=/i;
+const SLEEK_ID_PATTERN = /^[a-zA-Z0-9_\-.@+]{3,64}$/;
 
 /**
  * Validates a Sleek ID format.
@@ -58,7 +59,9 @@ function scanAndValidate(data, depth = 0, isCodeEndpoint = false) {
     // Check if object prototype was tampered with or has dangerous own properties
     for (const dangerous of DANGEROUS_KEYS) {
       if (Object.prototype.hasOwnProperty.call(data, dangerous)) {
-        throw new Error(`Input validation: Prototype pollution attempt detected via '${dangerous}'.`);
+        throw new Error(
+          `Input validation: Prototype pollution attempt detected via '${dangerous}'.`,
+        );
       }
     }
 
@@ -72,7 +75,9 @@ function scanAndValidate(data, depth = 0, isCodeEndpoint = false) {
     if (!Array.isArray(data)) {
       const proto = Object.getPrototypeOf(data);
       if (proto !== Object.prototype && proto !== null) {
-        throw new Error('Input validation: Prototype pollution attempt detected via modified prototype.');
+        throw new Error(
+          'Input validation: Prototype pollution attempt detected via modified prototype.',
+        );
       }
     }
 
@@ -94,9 +99,13 @@ function scanAndValidate(data, depth = 0, isCodeEndpoint = false) {
 export function globalInputValidator(req, res, next) {
   try {
     const isCodeEndpoint =
-      req.path.startsWith('/api/workspace') ||
-      req.path.startsWith('/api/coder') ||
-      req.path.startsWith('/api/execution');
+      /^\/api\/(?:workspace|coder|execution)(?:\/|$)/i.test(req.path) ||
+      /^\/api\/sis\/unified-turn(?:-stream)?\/?$/i.test(req.path) ||
+      /^\/api\/(?:chat|tools\/execute)\/?$/i.test(req.path) ||
+      /^\/api\/agent-conversations\/[^/]+\/messages\/?$/i.test(req.path) ||
+      /^\/api\/learning\/(?:sources(?:\/[^/]+(?:\/check)?)?|upload|search|studies(?:\/[^/]+\/experience)?)\/?$/i.test(
+        req.path,
+      );
 
     // Validate query parameters
     if (req.query && typeof req.query === 'object') {

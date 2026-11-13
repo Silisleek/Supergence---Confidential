@@ -6,16 +6,14 @@
   max-height: 88vh;
   overflow: auto;
   padding: 28px;
-  border: 1px solid #46515f;
+  border: 1px solid var(--shell-border);
   border-radius: 18px;
-  color: #e8edf3;
-  background: #171c24;
-  font:
-    14px/1.5 system-ui,
-    sans-serif;
+  color: var(--shell-text);
+  background: var(--shell-panel);
+  font: 14px/1.5 var(--font-ui);
 }
 .creation-studio::backdrop {
-  background: #000a;
+  background: var(--shell-backdrop);
 }
 .creation-studio header {
   display: flex;
@@ -30,7 +28,7 @@
   margin: 24px 0 10px;
 }
 .creation-studio p {
-  color: #aebccc;
+  color: var(--shell-muted);
   overflow-wrap: anywhere;
 }
 .creation-studio form {
@@ -51,10 +49,10 @@
 .creation-studio button {
   font: inherit;
   padding: 9px 12px;
-  border: 1px solid #485568;
+  border: 1px solid var(--shell-border);
   border-radius: 8px;
   color: inherit;
-  background: #242d39;
+  background: var(--shell-surface);
 }
 .creation-studio textarea {
   width: 100%;
@@ -78,7 +76,7 @@
   overflow-wrap: anywhere;
 }
 .creation-studio .studio-project[aria-pressed='true'] {
-  border-color: #91c7fa;
+  border-color: var(--shell-accent);
 }
 .creation-studio .studio-result {
   margin-top: 18px;
@@ -92,7 +90,7 @@
   border-radius: 10px;
 }
 .creation-studio a {
-  color: #9dceff;
+  color: var(--shell-accent);
 }
 .creation-studio .studio-saved-assets {
   display: flex;

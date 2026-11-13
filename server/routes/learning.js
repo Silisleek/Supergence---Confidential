@@ -1,5 +1,20 @@
 import library from '../services/learningLibrary.js';
 import { reverseEngineeringService as rea } from '../services/reverseEngineeringService.js';
+import { runtimeAccess } from '../services/runtimeAccess.js';
+import { taskLearning } from '../services/taskLearning.js';
+
+export function learningFileAccess(req, res, next, access = runtimeAccess) {
+  const pathname = req.path.toLowerCase().replace(/\/+$/, '');
+  if (
+    req.method === 'POST' &&
+    (pathname === '/analyze' || (pathname === '/sources' && req.body?.path)) &&
+    !access.settings.files
+  )
+    return res
+      .status(403)
+      .json({ success: false, error: 'File access is disabled in Access settings.' });
+  next();
+}
 
 export async function analyzeAndRetain(args) {
   const evidence = await rea.analyze(args);
@@ -18,6 +33,7 @@ export function retainAnalysisEvidence(evidence, args, store = library) {
 }
 
 export function registerLearningRoutes(app) {
+  app.use('/api/learning', learningFileAccess);
   const route = (method, path, handler) =>
     app[method](path, async (req, res) => {
       try {
@@ -48,6 +64,15 @@ export function registerLearningRoutes(app) {
   route('post', '/api/learning/search', (req) =>
     library.search(req.body?.query, { limit: req.body?.limit, sourceId: req.body?.sourceId }),
   );
+  route('post', '/api/learning/evaluate', (req) => ({ evaluation: library.evaluate(req.body) }));
+  route('get', '/api/learning/curriculum', () => taskLearning.snapshot());
+  route('post', '/api/learning/studies', (req) => ({ study: taskLearning.enqueue(req.body) }));
+  route('post', '/api/learning/studies/:id/retry', (req) => ({
+    study: taskLearning.retry(req.params.id),
+  }));
+  route('post', '/api/learning/studies/:id/experience', (req) => ({
+    experience: taskLearning.recordExperience(req.params.id, req.body),
+  }));
   route('post', '/api/learning/sources/:id/check', (req) => ({
     check: library.checkRecall(req.params.id, req.body),
   }));

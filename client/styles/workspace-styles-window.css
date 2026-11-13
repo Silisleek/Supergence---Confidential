@@ -9,7 +9,7 @@
   padding: 0;
   color: var(--shell-text);
   background: var(--shell-raised);
-  box-shadow: 0 24px 120px rgba(0, 0, 0, 0.75);
+  box-shadow: var(--shell-shadow);
   font-family: var(--font-ui);
   display: none;
   flex-direction: column;
@@ -96,18 +96,16 @@
   gap: 6px;
   padding: 10px 28px;
   background: var(--shell-sidebar);
+  flex-shrink: 0;
   overflow-x: auto;
-  scrollbar-width: none;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
 }
 
-.sw-nav::-webkit-scrollbar {
-  display: none;
-}
-
-.sw-nav-tab {
+.sw-nav .sw-nav-tab {
   border: 0;
   border-radius: 10px;
-  padding: 8px 14px;
+  padding: 8px 11px;
   font-family: var(--font-ui);
   font-size: 12.5px;
   font-weight: 600;
@@ -186,6 +184,10 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 12px;
+}
+
+.sw-palette-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
 }
 
 .sw-theme-btn {

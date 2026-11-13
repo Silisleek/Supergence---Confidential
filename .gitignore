@@ -40,6 +40,7 @@ coverage/
 .cache/
 test-results/
 tests/screenshots/
+/*.png
 .nyc_output/
 
 # IDE & Editor Settings
@@ -87,3 +88,4 @@ artifacts/
 tests/.temp_test/
 tests/.tmp*/
 *.tmp
+/release-candidate/

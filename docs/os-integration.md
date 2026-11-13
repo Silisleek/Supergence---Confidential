@@ -53,11 +53,12 @@ check does not verify model responses or OS integration.
 - The server exposes HTTP routes under `/api`, a WebSocket server, and workspace
   files under `/workspace`. The source of truth for current routes and messages
   is `server/index.js`; consumers should not assume their schemas are stable.
-- The server currently listens on `0.0.0.0`, and CORS is enabled. Workspace
-  endpoints include file mutation and command execution. Do not expose this
-  service to untrusted networks or users without a separately reviewed access
-  boundary. Integration needs authentication, authorization, network isolation,
-  and a review of both HTTP and WebSocket operations.
+- The server binds strictly to the local loopback interface (`127.0.0.1`), ensuring
+  it is not accessible from external networks by default. Supergence is a local-first
+  system where workspace operations include file mutation and local command execution.
+  Do not bind this service to public interfaces (`0.0.0.0`) without a dedicated
+  reverse proxy, mutual TLS, and authentication layer. Integration requires a review
+  of both HTTP and WebSocket security boundaries.
 - Chat workspaces provide per-conversation working directories and path checks,
   but they are not an OS sandbox. Commands run with the application's host
   permissions. See [chat workspaces](chat-workspaces.md).

@@ -3014,6 +3014,7 @@ ${(synthData.pitfalls || []).map((p) => `- ⚠️ ${p}`).join('\n')}
           qualityScore: skillData.verifiedScore,
           speedupGain: skillData.speedupGain,
           verificationGrade: skillData.verificationGrade,
+          verification: skillData.verification,
           source: `autonomous-cycle-#${cycleRecord.cycleNumber}`,
         });
       } catch (exErr) {

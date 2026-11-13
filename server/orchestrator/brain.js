@@ -35,6 +35,7 @@ import systemManager from '../systems/manager.js';
 import userFocusTracker from '../improvement/user-focus-tracker.js';
 import metaPromptOptimizer from '../improvement/meta-prompt-optimizer.js';
 import exemplarBank from '../improvement/exemplar-bank.js';
+import { hasPassingOracle } from '../trajectory/learning-grade.js';
 import rsiOrchestrator from '../rsi/simultaneous-orchestrator.js';
 import survivalEngine from '../survival/survival.js';
 import brainLifecycle, { BRAIN_STATES } from './brain-lifecycle.js';
@@ -2561,6 +2562,7 @@ class Brain {
 
           // Harvest Golden Trace into ExemplarBank (STaR In-Context Reinforcement)
           if (
+            hasPassingOracle(result.verification) &&
             result.heuristicScore >= 0.9 &&
             !isCorrection &&
             reviewIssues.length === 0 &&
@@ -2572,6 +2574,7 @@ class Brain {
               rationale: 'High-scoring verified interactive exchange',
               solutionBlueprint: fullResponse.slice(0, 2000),
               qualityScore: result.heuristicScore,
+              verification: result.verification,
               source: 'user-interaction',
             });
             this.broadcast('learning-event', {

@@ -61,4 +61,3 @@ A slow, subtle float (the earlier hero used a 12px movement over nine seconds) c
 At approximately 800px and below, stack editorial splits and feature cards, reduce section padding, and adjust the hero artwork so it does not obscure text or actions. At narrow phone widths, keep artwork within the viewport, wrap actions naturally, and check the complete page rather than only the first screen.
 
 Verify the real page in Chrome at desktop and phone widths. Check actual image loads, link destinations, keyboard focus, reduced motion, browser errors, and horizontal overflow. Review the visual result at full size and revise collisions or illegible text. Run the repository's applicable lint and browser checks, and report any environment or test limitations honestly.
-

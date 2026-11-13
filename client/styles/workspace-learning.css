@@ -64,6 +64,13 @@
 .learning-form textarea {
   resize: vertical;
 }
+.learning-form .learning-explore-option {
+  display: flex;
+  align-items: center;
+}
+.learning-source h3 {
+  overflow-wrap: anywhere;
+}
 .learning-primary {
   justify-self: start;
   background: var(--shell-accent);

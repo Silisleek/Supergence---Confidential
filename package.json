@@ -4,7 +4,11 @@
   "description": "Superintelligence System — Brain-like AI orchestration",
   "type": "module",
   "main": "electron/main.cjs",
+  "bin": {
+    "supergence": "./bin/supergence.mjs"
+  },
   "scripts": {
+    "start": "node bin/supergence.mjs",
     "dev": "node scripts/dev.mjs",
     "server": "node server/index.js",
     "client": "vite --host 127.0.0.1",
@@ -16,11 +20,16 @@
     "desktop:portable": "electron-builder --win portable --x64",
     "desktop:build": "electron-builder --win nsis --x64",
     "desktop:dist": "electron-builder --win --x64",
+    "desktop:dist:win": "electron-builder --win --x64",
+    "desktop:dist:mac": "electron-builder --mac --x64 --arm64",
+    "desktop:dist:linux": "electron-builder --linux AppImage deb tar.gz --x64",
+    "desktop:dist:all": "electron-builder -mwl",
     "lint": "eslint client server electron scripts/maintenance scripts/build.mjs scripts/dev.mjs tests/unit tests/browser vite.config.js eslint.config.js --max-warnings 0",
     "format": "prettier --write client server electron scripts tests docs wiki demos *.md *.json *.js --ignore-unknown",
     "format:check": "prettier --check client server electron scripts tests docs wiki demos *.md *.json *.js --ignore-unknown",
-    "test:unit": "node --test tests/unit/*.test.mjs",
+    "test:unit": "node scripts/test-unit.mjs",
     "test:browser": "node --import ./tests/browser/session-setup.mjs tests/browser/workspace-smoke.mjs",
+    "test:security-learning": "node tests/browser/security-learning.mjs",
     "test:preview": "node tests/browser/project-preview-security.mjs && node --import ./tests/browser/session-setup.mjs tests/browser/project-preview-app.mjs && node --import ./tests/browser/session-setup.mjs tests/browser/preview-error.mjs",
     "test:artifact-security": "node --import ./tests/browser/session-setup.mjs tests/browser/artifacts-security.mjs",
     "test:screenshot": "node tests/browser/screenshot-live.mjs",
@@ -45,6 +54,7 @@
     "chokidar": "^4.0.0",
     "concurrently": "^9.0.1",
     "cors": "^2.8.5",
+    "dompurify": "3.4.17",
     "dotenv": "^16.4.5",
     "esbuild": "0.25.12",
     "express": "^4.21.0",
@@ -60,7 +70,8 @@
     "yazl": "^3.3.1"
   },
   "overrides": {
-    "qs": "^6.17.0"
+    "qs": "^6.17.0",
+    "minimatch@>=7.0.0 <11.0.1": "^11.0.4"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -116,7 +127,52 @@
         }
       ]
     },
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "icon": "resources/icon.ico",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ]
+    },
+    "linux": {
+      "category": "Development",
+      "icon": "resources/icon.ico",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "tar.gz",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
     "nsis": {
+      "preCompressedFileExtensions": [],
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,

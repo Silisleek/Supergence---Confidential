@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import workspace from '../../server/workspace/manager.js';
+import { runtimeAccess } from '../../server/services/runtimeAccess.js';
 import {
   ConversationWorkspaces,
   containedPath,
@@ -21,6 +22,39 @@ function fixture(t) {
   });
   return { directory, service, baseRoot: workspace.baseRoot };
 }
+
+test('revocation stops a running workspace process before it can write a delayed result', async (t) => {
+  const { service, baseRoot } = fixture(t);
+  const controller = new AbortController();
+  await service.run({ baseRoot, conversationId: 'cancel-process', requestId: 'r' }, async () => {
+    const record = service.ensure(baseRoot, 'cancel-process');
+    const command = `"${process.execPath}" -e "console.log('READY');setTimeout(()=>require('fs').writeFileSync('must-not-exist.txt','late'),10000)"`;
+    const ready = new Promise((resolve) => {
+      const listener = (event) => {
+        if (event.kind === 'command-output' && event.text.includes('READY')) {
+          record.listeners.delete(listener);
+          resolve();
+        }
+      };
+      record.listeners.add(listener);
+    });
+    const pending = runtimeAccess.run({ signal: controller.signal }, () =>
+      workspace.runCommand(command),
+    );
+    await Promise.race([
+      ready,
+      new Promise((_, reject) => {
+        const timer = setTimeout(() => reject(new Error('Command never became ready.')), 5000);
+        timer.unref();
+      }),
+    ]);
+    controller.abort(new Error('Signed out.'));
+    const result = await pending;
+    assert.equal(result.cancelled, true);
+    assert.match(result.error, /Signed out/);
+    assert.equal(fs.existsSync(path.join(record.root, 'must-not-exist.txt')), false);
+  });
+});
 test('concurrent chats use separate real directories for relative files and commands', async (t) => {
   const { service, baseRoot } = fixture(t);
   await Promise.all(

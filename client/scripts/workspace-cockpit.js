@@ -109,6 +109,8 @@
     const results = make('div', 'cockpit-list');
     sharedSection.append(search, results);
     const targetParent = container.querySelector('.cw-files') || container;
+    for (const previous of targetParent.querySelectorAll(':scope > .cockpit-shared-files'))
+      previous.remove();
     targetParent.append(sharedSection);
     let sequence = 0;
     let timer;

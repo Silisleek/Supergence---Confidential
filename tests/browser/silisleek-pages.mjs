@@ -41,20 +41,52 @@ try {
 
   // Verify Panel 2 Cognition cutouts
   assert.equal(await page.locator('.sl-galaxy-img').isVisible(), true, 'Galaxy must be visible');
-  assert.equal(await page.locator('.sl-starburst-img').isVisible(), true, 'Starburst must be visible');
+  assert.equal(
+    await page.locator('.sl-starburst-img').isVisible(),
+    true,
+    'Starburst must be visible',
+  );
 
   // Verify Panel 3 Memories cutouts
-  assert.equal(await page.locator('.sl-golden-record-img').isVisible(), true, 'Golden Record must be visible');
-  assert.equal(await page.locator('.sl-chess-knight-img').first().isVisible(), true, 'Chess Knight must be visible');
+  assert.equal(
+    await page.locator('.sl-golden-record-img').isVisible(),
+    true,
+    'Golden Record must be visible',
+  );
+  assert.equal(
+    await page.locator('.sl-chess-knight-img').first().isVisible(),
+    true,
+    'Chess Knight must be visible',
+  );
 
   // Verify Panel 4 Security cutouts
-  assert.equal(await page.locator('.sl-glass-neuron-img').first().isVisible(), true, 'Glass Neuron must be visible');
-  assert.equal(await page.locator('.sl-glass-chains-img').isVisible(), true, 'Glass Chains must be visible');
+  assert.equal(
+    await page.locator('.sl-glass-neuron-img').first().isVisible(),
+    true,
+    'Glass Neuron must be visible',
+  );
+  assert.equal(
+    await page.locator('.sl-glass-chains-img').isVisible(),
+    true,
+    'Glass Chains must be visible',
+  );
 
   // Verify Panel 5 Superintelligence cutouts
-  assert.equal(await page.locator('.sl-emblem-butterfly').isVisible(), true, 'Butterfly must be visible');
-  assert.equal(await page.locator('.sl-emblem-atom').isVisible(), true, 'Atom ring must be visible');
-  assert.equal(await page.locator('.sl-science-badge-img').isVisible(), true, 'Science badge must be visible');
+  assert.equal(
+    await page.locator('.sl-emblem-butterfly').isVisible(),
+    true,
+    'Butterfly must be visible',
+  );
+  assert.equal(
+    await page.locator('.sl-emblem-atom').isVisible(),
+    true,
+    'Atom ring must be visible',
+  );
+  assert.equal(
+    await page.locator('.sl-science-badge-img').isVisible(),
+    true,
+    'Science badge must be visible',
+  );
 
   // Verify Verified Release Packages section on silisleek page
   const pageSetupHash = await page.locator('#hashSetup').innerText();

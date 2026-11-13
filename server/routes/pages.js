@@ -28,10 +28,7 @@ export function registerPageRoutes(app) {
       ],
       'client/silisleek-supergence.html',
     ],
-    [
-      ['/silisleek', '/silisleek.html'],
-      'client/silisleek.html',
-    ],
+    [['/silisleek', '/silisleek.html'], 'client/silisleek.html'],
     [
       [
         '/installer',

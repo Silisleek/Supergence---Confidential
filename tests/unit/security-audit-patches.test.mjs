@@ -93,7 +93,9 @@ test('Action monitor flags sensitive credentials and keys', () => {
     command: 'type installation.key',
   });
   assert.equal(checkInstallationKey.risk, 'high');
-  assert.ok(checkInstallationKey.findings.some((f) => f.includes('Credential or sensitive-file access')));
+  assert.ok(
+    checkInstallationKey.findings.some((f) => f.includes('Credential or sensitive-file access')),
+  );
 
   const checkKeyring = assessAction('run_command', {
     command: 'cat keyring.json',

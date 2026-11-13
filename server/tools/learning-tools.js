@@ -3,8 +3,66 @@ import { reverseEngineeringService as rea } from '../services/reverseEngineering
 import { analyzeAndRetain } from '../routes/learning.js';
 import browser from '../services/agentBrowserManager.js';
 import { readWorkspaceBrowserPage } from '../routes/workspace-browser.js';
+import { taskLearning } from '../services/taskLearning.js';
 
 export const learningTools = {
+  study_topic: {
+    name: 'study_topic',
+    description:
+      'Start a durable study in any field: research questions, read actual sources, retain cited notes, propose practical tasks and related topics. Returns a job; inspect_learning reports progress. Use only for topics the user asked to study. This does not establish mastery or execute practice tasks.',
+    parameters: {
+      topic: 'string',
+      exploreRelated: 'boolean',
+      sourceUrls: { type: 'array', items: { type: 'string' }, maxItems: 4 },
+    },
+    required: ['topic'],
+    execute: (args) => ({ study: taskLearning.enqueue(args) }),
+  },
+  inspect_learning: {
+    name: 'inspect_learning',
+    description:
+      'Inspect current cross-domain studies, cited notes, practice tasks, related topic suggestions, real reported experiences and learning gaps.',
+    parameters: {},
+    execute: () => taskLearning.snapshot(),
+  },
+  record_learning_experience: {
+    name: 'record_learning_experience',
+    description:
+      'Retain the concrete result of applying a studied topic to a new task. Describe what was actually observed and what failed. Runtime-reported observations remain distinct from independently verified mastery; never invent practice results.',
+    parameters: {
+      studyId: 'string',
+      task: 'string',
+      observation: 'string',
+      outcome: { type: 'string', enum: ['worked', 'needs-work', 'inconclusive'] },
+    },
+    required: ['studyId', 'task', 'observation', 'outcome'],
+    execute: ({ studyId, ...args }) =>
+      taskLearning.recordExperience(studyId, args, 'runtime-reported'),
+  },
+  evaluate_knowledge: {
+    name: 'evaluate_knowledge',
+    description:
+      'Evaluate up to 30 supplied question/excerpt cases against the entire retained library. Reports recall and reciprocal rank; never establishes factual truth or trains model weights.',
+    parameters: {
+      cases: {
+        type: 'array',
+        maxItems: 30,
+        items: {
+          type: 'object',
+          properties: {
+            sourceId: { type: 'string' },
+            question: { type: 'string' },
+            expectedText: { type: 'string' },
+          },
+          required: ['sourceId', 'question', 'expectedText'],
+          additionalProperties: false,
+        },
+      },
+      limit: 'number',
+    },
+    required: ['cases'],
+    execute: (args) => library.evaluate(args),
+  },
   capture_reference_feature: {
     name: 'capture_reference_feature',
     description:

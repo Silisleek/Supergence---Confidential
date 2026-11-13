@@ -6,20 +6,40 @@ Welcome to Supergence! Supergence is a local-first AI workspace with a Node.js b
 
 ## Quick Start
 
-Getting Supergence up and running takes just a few moments:
+### Option 1: Install the Desktop App (Non-Developers)
 
-```powershell
-# 1. Install dependencies
-npm install
+Download the standalone executable for your operating system:
 
-# 2. Set up your environment file
-if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+- **Windows**: Download `Supergence-Portable-1.0.0.exe` (or Setup `.exe`). Double-click to run. No admin rights or Node required.
+- **macOS**: Download `Supergence-1.0.0.dmg`. Drag to Applications and open.
+- **Linux**: Download `Supergence-1.0.0.AppImage` (`chmod +x && ./Supergence-1.0.0.AppImage`) or `.deb`.
 
-# 3. Launch the development environment
-npm run dev
+Once opened, click **"Connect with Sleek"** to authorize in your browser and pick any model (local Ollama, OpenRouter, OpenAI, or Gemini) to begin.
+
+---
+
+### Option 2: Clone the Repo & Run `supergence` (Developers)
+
+Clone the repository and run the universal `supergence` command. It automatically installs dependencies, creates `.env`, starts the engine, and opens your browser:
+
+#### macOS & Linux:
+
+```bash
+git clone https://github.com/silisleek/supergence.git
+cd supergence
+./supergence
 ```
 
-`npm run dev` starts the backend and Vite frontend. First open the private session link printed by the backend, then open the Vite URL printed in the terminal (typically `http://127.0.0.1:5173`). Both must use `127.0.0.1`, because browser cookies are host-specific. The backend defaults to `http://127.0.0.1:3001`; check its startup banner for the active port. The server listens only on loopback. Keep session links private and restart the backend if a link is exposed.
+#### Windows (PowerShell or CMD):
+
+```powershell
+git clone https://github.com/silisleek/supergence.git
+cd supergence
+.\supergence
+# Or simply: npm start
+```
+
+That's it! Supergence will automatically launch and open `http://127.0.0.1:3001` in your browser.
 
 ### Running Services Independently
 

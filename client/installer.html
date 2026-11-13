@@ -3,296 +3,149 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Install Supergence (SIS 1.0) — Windows Setup &amp; Portable Downloads</title>
-    <meta
-      name="description"
-      content="Download official Supergence (SIS 1.0) Windows installer and standalone portable executables. 100% offline-first, local 127.0.0.1 privacy, and zero synthetic telemetry."
-    />
+    <meta name="description" content="Release status for Supergence on Windows." />
+    <title>Supergence for Windows</title>
     <link rel="icon" type="image/png" href="/images/supergence-logo.png" />
-    <link rel="stylesheet" href="/styles/silisleek.css" />
-    <script type="module" src="/scripts/silisleek.js"></script>
+    <link rel="stylesheet" href="/styles/sleek-fonts.css" />
+    <link rel="stylesheet" href="/styles/supergence-tokens.css" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        background: var(--shell-page);
+        color: var(--shell-text);
+        font: 16px/1.65 var(--font-ui);
+      }
+      header,
+      main {
+        width: min(920px, calc(100% - 36px));
+        margin: 0 auto;
+      }
+      header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 24px 0;
+      }
+      a {
+        color: var(--shell-accent);
+        text-underline-offset: 4px;
+      }
+      a:focus-visible {
+        outline: 2px solid var(--shell-accent);
+        outline-offset: 4px;
+      }
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: inherit;
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .brand img {
+        border-radius: 50%;
+      }
+      .release {
+        padding: clamp(26px, 6vw, 68px);
+        background: var(--shell-panel);
+        border-radius: 28px;
+        box-shadow: var(--shell-shadow);
+      }
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 12px;
+        border-radius: 999px;
+        background: var(--shell-tint);
+        color: var(--shell-text);
+        font-size: 13px;
+        font-weight: 650;
+      }
+      .status::before {
+        content: '';
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--shell-accent);
+      }
+      h1 {
+        max-width: 14ch;
+        margin: 18px 0 12px;
+        font: 500 clamp(38px, 7vw, 67px)/1.06 var(--font-display);
+        letter-spacing: -0.035em;
+      }
+      .release > p {
+        max-width: 54ch;
+        color: var(--shell-muted);
+        margin: 0;
+      }
+      .formats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+        gap: 14px;
+        margin-top: 32px;
+      }
+      .format {
+        padding: 19px 21px;
+        border-radius: 18px;
+        background: var(--shell-blue);
+      }
+      .format + .format {
+        background: var(--shell-mint);
+      }
+      .format h2 {
+        margin: 0 0 5px;
+        font-size: 16px;
+      }
+      .format p {
+        margin: 0;
+        color: var(--shell-text-secondary);
+        font-size: 14px;
+      }
+      .guide {
+        margin: 23px 0 40px;
+        color: var(--shell-muted);
+        font-size: 14px;
+      }
+    </style>
   </head>
-  <body class="sis-silisleek-page">
-    <a class="sl-skip-link" href="#main">Skip to main content</a>
-
-    <!-- Floating Capsule Navigation -->
-    <header class="sl-header">
-      <div class="sl-nav-container">
-        <a class="sl-brand" href="/silisleek" aria-label="Silisleek Supergence Homepage">
-          <span class="sl-brand-logo-text">Supergence</span>
-        </a>
-
-        <nav class="sl-capsule-nav" aria-label="Main Navigation">
-          <a class="sl-nav-pill" href="/silisleek">Overview</a>
-          <a class="sl-nav-pill" href="/silisleek#cognition">Cognition</a>
-          <a class="sl-nav-pill" href="/silisleek#philosophy">Philosophy</a>
-          <a class="sl-nav-pill active" href="/installer.html">Installer Hub</a>
-          <a class="sl-nav-pill" href="/guide.html">Guide</a>
-        </nav>
-
-        <div class="sl-nav-actions">
-          <a class="sl-btn-stark" href="/installer.html#downloads">
-            Download v1.0.0 <span class="sl-pill-arrow">↓</span>
-          </a>
-        </div>
-      </div>
+  <body>
+    <header>
+      <a href="/" class="brand"
+        ><img src="/images/supergence-logo.png" width="32" height="32" alt="" /> Supergence</a
+      >
+      <a href="/guide.html">User guide</a>
     </header>
-
-    <main id="main">
-      <!-- Hero Section -->
-      <section class="sl-hero" id="overview">
-        <h1 class="sl-hero-title">
-          <span class="sl-hero-lead-text">Deploy Supergence.</span>
-          <span class="sl-serif-accent">Native. Zero-Telemetry.</span>
-        </h1>
-
-        <p class="sl-hero-subtitle">
-          Engineered for high-performance Windows 10, Windows 11, and Snapdragon ARM64 devices.<br />
-          Strict loopback 127.0.0.1 air-gapped isolation, child process token scrubbing, and real
-          Chrome execution.
+    <main>
+      <section class="release" id="downloads" aria-labelledby="release-title">
+        <span class="status">Release verification in progress</span>
+        <h1 id="release-title">Supergence for Windows</h1>
+        <p>
+          Windows x64 downloads will be available here after release verification. Supergence uses a
+          local workspace and connects to Sleek for sign-in and to your chosen model provider for
+          inference.
         </p>
-
-        <!-- Live Diagnostic Bar -->
-        <div class="sl-readiness-widget" aria-label="Client Environment Diagnostics">
-          <div class="sl-diag-item">
-            <span>Operating System:</span>
-            <span class="sl-diag-val" id="diagOS">Windows 10 / 11 (Verified)</span>
-          </div>
-          <div class="sl-diag-item">
-            <span>Architecture:</span>
-            <span class="sl-diag-val" id="diagArch">x86_64 / x64 (Native)</span>
-          </div>
-          <div class="sl-diag-item">
-            <span>Display Scale:</span>
-            <span class="sl-diag-val" id="diagScreen">Detecting DPR...</span>
-          </div>
-          <div class="sl-diag-item">
-            <span>Hardware GPU:</span>
-            <span class="sl-diag-val" id="diagWebGL">Hardware Accelerated</span>
-          </div>
-          <div class="sl-diag-item">
-            <span>Local Instance:</span>
-            <span class="sl-diag-val" id="diagLocalApp">Ready to Deploy</span>
-          </div>
+        <div class="formats">
+          <article class="format">
+            <h2>Windows setup</h2>
+            <p>The installer adds Supergence to the Start menu.</p>
+          </article>
+          <article class="format">
+            <h2>Portable app</h2>
+            <p>The portable executable starts Supergence without an install wizard.</p>
+          </article>
         </div>
       </section>
-
-      <!-- 3 Monolithic Distribution Cards -->
-      <section class="sl-installer-section" id="downloads" style="margin-top: -30px">
-        <div class="sl-section-header">
-          <div class="sl-section-label">DISTRIBUTION // 01</div>
-          <h2 class="sl-section-title">Verified Release Packages</h2>
-          <p class="sl-section-subtitle">
-            Every package is cryptographically hashed with non-destructive data preservation.
-          </p>
-        </div>
-
-        <div
-          class="sl-dist-grid"
-          style="grid-template-columns: repeat(auto-fit, minmax(340px, 1fr))"
-        >
-          <!-- Card 1: Windows Setup Installer -->
-          <div class="sl-dist-card featured">
-            <div>
-              <div class="sl-dist-header">
-                <span class="sl-dist-badge">Automated Desktop Setup</span>
-                <h3 class="sl-dist-title">Windows Setup (.exe)</h3>
-                <p class="sl-dist-subtitle">
-                  Single-click automated installation. Full Start Menu integration, desktop
-                  shortcut, native Windows Snap layouts, and automated updater.
-                </p>
-              </div>
-
-              <div class="sl-dist-specs">
-                <span>Version 1.0.0</span>
-                <span>Size: 591 MB</span>
-                <span>x64 &amp; ARM64</span>
-              </div>
-
-              <div class="sl-hash-box">
-                <div style="overflow: hidden">
-                  <div class="sl-hash-label">Verified SHA-256 Checksum</div>
-                  <div class="sl-hash-value" id="hashSetup">
-                    BB1CDB8BFB6A2FE519E3C7AFF91F85826C73AD8EDB297AAF8415ACF0152571DE
-                  </div>
-                </div>
-                <button
-                  class="sl-copy-btn"
-                  data-copy="BB1CDB8BFB6A2FE519E3C7AFF91F85826C73AD8EDB297AAF8415ACF0152571DE"
-                  aria-label="Copy SHA-256 checksum"
-                >
-                  Copy
-                </button>
-              </div>
-            </div>
-
-            <a
-              class="sl-btn-stark"
-              href="/release/Supergence%20Setup%201.0.0.exe"
-              download="Supergence Setup 1.0.0.exe"
-            >
-              Download Setup (591 MB) <span class="sl-pill-arrow">↓</span>
-            </a>
-          </div>
-
-          <!-- Card 2: Windows Portable Standalone -->
-          <div class="sl-dist-card">
-            <div>
-              <div class="sl-dist-header">
-                <span class="sl-dist-badge">Zero Installation</span>
-                <h3 class="sl-dist-title">Standalone Portable (.exe)</h3>
-                <p class="sl-dist-subtitle">
-                  Self-contained single executable. Run directly from USB drives or sandboxed
-                  folders without modifying the Windows registry or requiring admin rights.
-                </p>
-              </div>
-
-              <div class="sl-dist-specs">
-                <span>Version 1.0.0</span>
-                <span>Size: 590 MB</span>
-                <span>Zero Registry Footprint</span>
-              </div>
-
-              <div class="sl-hash-box">
-                <div style="overflow: hidden">
-                  <div class="sl-hash-label">Verified SHA-256 Checksum</div>
-                  <div class="sl-hash-value" id="hashPortable">
-                    02730AD008BDF2ECBBD0B35912853E0E354FD6260404E168B69324EDFB9CE77E
-                  </div>
-                </div>
-                <button
-                  class="sl-copy-btn"
-                  data-copy="02730AD008BDF2ECBBD0B35912853E0E354FD6260404E168B69324EDFB9CE77E"
-                  aria-label="Copy SHA-256 checksum"
-                >
-                  Copy
-                </button>
-              </div>
-            </div>
-
-            <a
-              class="sl-btn-dark-pill"
-              href="/release/Supergence-Portable-1.0.0.exe"
-              download="Supergence-Portable-1.0.0.exe"
-            >
-              Download Portable (590 MB) <span class="sl-pill-arrow">↓</span>
-            </a>
-          </div>
-
-          <!-- Card 3: Developer & CLI Source -->
-          <div class="sl-dist-card">
-            <div>
-              <div class="sl-dist-header">
-                <span class="sl-dist-badge">Full Source Engine</span>
-                <h3 class="sl-dist-title">Developer CLI &amp; Node.js</h3>
-                <p class="sl-dist-subtitle">
-                  Run directly from local Git source. Full access to raw Node.js orchestrator,
-                  Playwright test harness, and SQLite cognitive substrates.
-                </p>
-              </div>
-
-              <div class="sl-dist-specs">
-                <span>Node.js v20+</span>
-                <span>Native Subprocesses</span>
-                <span>Full Test Harness</span>
-              </div>
-
-              <div class="sl-hash-box">
-                <div style="overflow: hidden">
-                  <div class="sl-hash-label">Quickstart Command</div>
-                  <div class="sl-hash-value" id="cliCommand">
-                    git clone https://github.com/Silisleek/Supergence.git
-                  </div>
-                </div>
-                <button
-                  class="sl-copy-btn"
-                  data-copy="git clone https://github.com/Silisleek/Supergence.git"
-                  aria-label="Copy git command"
-                >
-                  Copy
-                </button>
-              </div>
-            </div>
-
-            <a class="sl-btn-dark-pill" href="/guide.html">
-              View Developer Guide <span class="sl-pill-arrow">→</span>
-            </a>
-          </div>
-        </div>
-
-        <!-- CLI Quickstart Console Tabs -->
-        <div class="sl-cockpit-preview" style="max-width: 980px; margin: 40px auto 60px">
-          <div class="sl-cockpit-bar">
-            <div class="sl-window-dots">
-              <span class="sl-window-dot close"></span>
-              <span class="sl-window-dot min"></span>
-              <span class="sl-window-dot max"></span>
-            </div>
-            <div class="sl-cockpit-title">TERMINAL QUICKSTART</div>
-            <div class="sl-cockpit-nav" id="cliNav">
-              <button class="sl-cockpit-tab active" data-cli="cliPwsh">PowerShell</button>
-              <button class="sl-cockpit-tab" data-cli="cliBash">Bash</button>
-              <button class="sl-cockpit-tab" data-cli="cliCmd">CMD</button>
-            </div>
-          </div>
-
-          <div class="sl-cockpit-body" style="min-height: 140px">
-            <div class="sl-cli-pane" id="cliPwsh">
-              <pre
-                class="sl-code-specimen"
-              ><span class="token-comment"># 1. Clone &amp; Install Dependencies</span>
-git clone https://github.com/Silisleek/Supergence.git
-cd Supergence
-npm install
-
-<span class="token-comment"># 2. Launch Local Supergence Server</span>
-$env:PORT="3009"; npm run server</pre>
-            </div>
-
-            <div class="sl-cli-pane" id="cliBash" style="display: none">
-              <pre
-                class="sl-code-specimen"
-              ><span class="token-comment"># 1. Clone &amp; Install Dependencies</span>
-git clone https://github.com/Silisleek/Supergence.git
-cd Supergence
-npm install
-
-<span class="token-comment"># 2. Launch Local Supergence Server</span>
-PORT=3009 npm run server</pre>
-            </div>
-
-            <div class="sl-cli-pane" id="cliCmd" style="display: none">
-              <pre class="sl-code-specimen">
-:: 1. Clone &amp; Install Dependencies
-git clone https://github.com/Silisleek/Supergence.git
-cd Supergence
-npm install
-
-:: 2. Launch Local Supergence Server
-set PORT=3009 &amp;&amp; npm run server</pre>
-            </div>
-          </div>
-        </div>
-      </section>
+      <p class="guide">
+        Explore the workspace and learning tools in the <a href="/guide.html">Supergence guide</a>.
+      </p>
     </main>
-
-    <!-- Footer -->
-    <footer class="sl-footer">
-      <div class="sl-footer-inner">
-        <a class="sl-footer-brand" href="/silisleek">
-          <span>Supergence SIS 1.0</span>
-        </a>
-
-        <div class="sl-footer-links">
-          <a class="sl-footer-link" href="/silisleek">Silisleek Showcase</a>
-          <a class="sl-footer-link" href="/guide.html">User Guide</a>
-          <a class="sl-footer-link" href="/">Web Cockpit</a>
-        </div>
-
-        <div class="sl-footer-copy">
-          &copy; 2026 Silisleek Technologies. Zero synthetic telemetry. Cryptographically verified.
-        </div>
-      </div>
-    </footer>
   </body>
 </html>

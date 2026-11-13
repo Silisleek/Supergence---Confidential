@@ -10,15 +10,34 @@ const core = [
   'create_workspace_project',
   'verify_workspace_artifact',
   'tool_cognition_query',
+  'superbox_create_file',
+  'superbox_read_file',
+  'superbox_list_files',
+  'superbox_run_command',
+  'superbox_apply_to_workspace',
+  'create_tool',
+  'synthesize_dynamic_tool',
+  'inject_ui_widget',
+  'get_ui_state',
 ];
 export function selectWorkspaceTools(definitions, query = '') {
   const selected = new Set(core);
   const add = (names) => names.forEach((name) => selected.add(name));
   // Recall is useful even when the user does not mention memory explicitly.
   selected.add('recall_knowledge');
+  if (/superbox|sandbox|isolate|safe.*exec|experiment/i.test(query))
+    add(['superbox_create_file', 'superbox_read_file', 'superbox_list_files', 'superbox_run_command', 'superbox_apply_to_workspace', 'superbox_reset']);
+  if (/tool|forge|synthesiz|custom.*tool|capability|subconscious|new.*tool/i.test(query))
+    add(['synthesize_dynamic_tool', 'create_tool', 'list_dynamic_tools', 'execute_dynamic_tool']);
+  if (/ui|widget|theme|style|button|panel|component|modify.*ui|inject.*ui|custom.*ui|layout/i.test(query))
+    add(['get_ui_state', 'modify_ui_theme', 'inject_ui_widget', 'remove_ui_widget', 'modify_ui_source']);
   if (/retain|remember|memory|knowledge|\brules?\b|learn|import|saved.*source/i.test(query))
     add(['retain_knowledge', 'inspect_knowledge', 'edit_knowledge']);
   if (/skill|learn|reverse.engineer/i.test(query)) selected.add('read_learning_skill');
+  if (/learn|study|curriculum|new.*task|apply.*knowledge/i.test(query))
+    add(['study_topic', 'inspect_learning', 'record_learning_experience']);
+  if (/recall|retrieval|evaluat.*knowledge|benchmark.*learn/i.test(query))
+    selected.add('evaluate_knowledge');
   if (/remember|memory|previous|earlier|history|last time/i.test(query))
     add(['recall_knowledge', 'search_chat_history', 'get_chat_history']);
   if (

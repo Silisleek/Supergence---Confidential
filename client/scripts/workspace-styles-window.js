@@ -46,48 +46,65 @@
       <div class="sw-body">
         <section class="sw-pane" id="swPaneStyles" role="tabpanel">
           <div class="sw-card">
+            <h3 class="sw-card-title">UI Style &amp; Workspace Architecture</h3>
+            <p class="sw-card-desc">Select your workspace layout and agent interaction style.</p>
+            <div class="sw-theme-grid" role="radiogroup" aria-label="UI style selection">
+              <button type="button" class="sw-font-btn sw-ui-style-btn" data-ui-style="flow-canvas" role="radio" aria-checked="false" style="padding:12px; border-radius:12px; background:var(--shell-surface); border:1px solid var(--shell-border); color:inherit; text-align:left; cursor:pointer;">
+                <span style="font-size:9.5px; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.4px;">★ Video Design</span>
+                <strong style="display:block; font-size:13.5px; margin:4px 0 2px 0;">Agent Flow Canvas</strong>
+                <span style="font-size:11px; color:var(--shell-muted);">Multi-agent graph canvas with bezier wires &amp; live cards</span>
+              </button>
+              <button type="button" class="sw-font-btn sw-ui-style-btn" data-ui-style="obsidian-studio" role="radio" aria-checked="true" style="padding:12px; border-radius:12px; background:var(--shell-surface); border:1px solid var(--shell-border); color:inherit; text-align:left; cursor:pointer;">
+                <span style="font-size:9.5px; font-weight:700; color:#cbd5e1; text-transform:uppercase; letter-spacing:0.4px;">3D Universe</span>
+                <strong style="display:block; font-size:13.5px; margin:4px 0 2px 0;">Obsidian Studio</strong>
+                <span style="font-size:11px; color:var(--shell-muted);">Deep dark 3D landscape with agent beacons &amp; composer</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="sw-card">
             <h3 class="sw-card-title">Theme Palette</h3>
-            <p class="sw-card-desc">Deep dark work areas with brown outer surfaces and copper highlights.</p>
-            <div class="sw-theme-grid">
+            <p class="sw-card-desc">Choose a pastel palette for your workspace.</p>
+            <div class="sw-theme-grid sw-palette-grid" role="radiogroup" aria-label="Theme palette">
               <button type="button" class="sw-theme-btn" data-theme-val="obsidian" role="radio" aria-checked="true">
-                <div class="sw-theme-swatches">
-                  <span class="sw-swatch" style="background:#0b0b0b;"></span>
-                  <span class="sw-swatch" style="background:#141614;"></span>
-                  <span class="sw-swatch" style="background:#c6ab98;"></span>
-                  <span class="sw-swatch" style="background:#10b981;"></span>
+                <div class="sw-theme-swatches" data-palette-preview="obsidian" aria-hidden="true">
+                  <span class="sw-swatch"></span>
+                  <span class="sw-swatch"></span>
+                  <span class="sw-swatch"></span>
+                  <span class="sw-swatch"></span>
                 </div>
-                <strong>Obsidian Luxury</strong>
-                <span style="font-size:11px; color:var(--shell-muted);">Deep obsidian with champagne bronze</span>
+                <strong>Lilac Mist</strong>
+                <span style="font-size:11px; color:var(--shell-muted);">Soft lilac and plum</span>
               </button>
               <button type="button" class="sw-theme-btn" data-theme-val="warm" role="radio" aria-checked="false">
-                <div class="sw-theme-swatches">
-                  <span class="sw-swatch" style="background:#15110d;"></span>
-                  <span class="sw-swatch" style="background:#1d1712;"></span>
-                  <span class="sw-swatch" style="background:#e9b98f;"></span>
-                  <span class="sw-swatch" style="background:#f5cfaa;"></span>
+                <div class="sw-theme-swatches" data-palette-preview="warm" aria-hidden="true">
+                  <span class="sw-swatch"></span>
+                  <span class="sw-swatch"></span>
+                  <span class="sw-swatch"></span>
+                  <span class="sw-swatch"></span>
                 </div>
-                <strong>Walnut Espresso</strong>
-                <span style="font-size:11px; color:var(--shell-muted);">Golden copper and roast amber</span>
+                <strong>Apricot Cream</strong>
+                <span style="font-size:11px; color:var(--shell-muted);">Cream, peach and terracotta</span>
               </button>
               <button type="button" class="sw-theme-btn" data-theme-val="midnight" role="radio" aria-checked="false">
-                <div class="sw-theme-swatches">
-                  <span class="sw-swatch" style="background:#130f14;"></span>
-                  <span class="sw-swatch" style="background:#1b151e;"></span>
-                  <span class="sw-swatch" style="background:#cfa98c;"></span>
-                  <span class="sw-swatch" style="background:#e8c7ae;"></span>
+                <div class="sw-theme-swatches" data-palette-preview="midnight" aria-hidden="true">
+                  <span class="sw-swatch"></span>
+                  <span class="sw-swatch"></span>
+                  <span class="sw-swatch"></span>
+                  <span class="sw-swatch"></span>
                 </div>
-                <strong>Midnight Rose</strong>
-                <span style="font-size:11px; color:var(--shell-muted);">Rich velvet chocolate and rose copper</span>
+                <strong>Lavender Dusk</strong>
+                <span style="font-size:11px; color:var(--shell-muted);">Deep violet and soft lavender</span>
               </button>
               <button type="button" class="sw-theme-btn" data-theme-val="cyber" role="radio" aria-checked="false">
-                <div class="sw-theme-swatches">
-                  <span class="sw-swatch" style="background:#070a0d;"></span>
-                  <span class="sw-swatch" style="background:#0e141a;"></span>
-                  <span class="sw-swatch" style="background:#10b981;"></span>
-                  <span class="sw-swatch" style="background:#38bdf8;"></span>
+                <div class="sw-theme-swatches" data-palette-preview="cyber" aria-hidden="true">
+                  <span class="sw-swatch"></span>
+                  <span class="sw-swatch"></span>
+                  <span class="sw-swatch"></span>
+                  <span class="sw-swatch"></span>
                 </div>
-                <strong>Cyber Slate</strong>
-                <span style="font-size:11px; color:var(--shell-muted);">Tactical dark slate with neon emerald</span>
+                <strong>Mint Glass</strong>
+                <span style="font-size:11px; color:var(--shell-muted);">Cool mint and forest green</span>
               </button>
             </div>
           </div>
@@ -356,6 +373,17 @@
       tabBtn.addEventListener('click', () => switchTab(tabBtn.dataset.tab));
     });
 
+    dialog.querySelectorAll('.sw-ui-style-btn').forEach((styleBtn) => {
+      styleBtn.addEventListener('click', () => {
+        const styleId = styleBtn.dataset.uiStyle;
+        dialog
+          .querySelectorAll('.sw-ui-style-btn')
+          .forEach((b) => b.setAttribute('aria-checked', 'false'));
+        styleBtn.setAttribute('aria-checked', 'true');
+        if (window.__sisApplyUIStyle) window.__sisApplyUIStyle(styleId);
+      });
+    });
+
     dialog.querySelectorAll('.sw-theme-btn').forEach((themeBtn) => {
       themeBtn.addEventListener('click', () => {
         const themeVal = themeBtn.dataset.themeVal;
@@ -427,7 +455,9 @@
       const isSelected = btn.dataset.fontVal === fontVal;
       btn.setAttribute('aria-checked', String(isSelected));
       btn.style.borderColor = isSelected ? 'var(--shell-accent)' : 'var(--shell-border)';
-      btn.style.background = isSelected ? 'color-mix(in srgb, var(--shell-accent) 12%, var(--shell-surface))' : 'var(--shell-surface)';
+      btn.style.background = isSelected
+        ? 'color-mix(in srgb, var(--shell-accent) 12%, var(--shell-surface))'
+        : 'var(--shell-surface)';
     });
     document.body.dataset.font = fontVal;
     localStorage.setItem('sis-ui-font', fontVal);
@@ -436,8 +466,10 @@
   async function loadSettings() {
     mount();
 
-    const storedTheme = localStorage.getItem('sis-ui-theme') || 'obsidian';
-    selectTheme(storedTheme);
+    const storedTheme = localStorage.getItem('sis-ui-theme');
+    selectTheme(
+      ['obsidian', 'warm', 'midnight', 'cyber'].includes(storedTheme) ? storedTheme : 'obsidian',
+    );
 
     const storedFont = localStorage.getItem('sis-ui-font') || 'editorial';
     selectFont(storedFont);

@@ -44,7 +44,7 @@ try {
   );
   await page.waitForFunction(() => agentBrowserWs?.readyState === WebSocket.OPEN);
   assert.equal(await page.title(), 'Supergence | SIS Workspace');
-  assert.ok(await page.locator('#workspaceInp').isVisible());
+  await page.locator('#sgLandingInput, #sgCardInput').waitFor({ state: 'visible' });
   assert.ok(sockets.some((socket) => new URL(socket.url()).pathname === '/ws'));
 
   for (const asset of [
@@ -75,8 +75,13 @@ try {
   await page.locator('#workspaceTreeModal').waitFor({ state: 'hidden' });
   assert.equal(await page.evaluate(() => agentBrowserWs.readyState), 1);
 
-  await page.evaluate(() => window.toggleFiftyFeaturesModal(true));
+  await page.locator('.sg-workspace-menu summary').click();
+  await page.getByRole('button', { name: 'Feature catalogue', exact: true }).click();
   await page.locator('#sisFiftyFeaturesModal.active').waitFor();
+  assert.equal(
+    await page.locator('#fiftyFeedbackMsg').innerText(),
+    'Availability is shown on each card.',
+  );
   assert.equal(await page.locator('.fifty-card').count(), 50);
   assert.equal(await page.locator('#card-feat-7 button').isDisabled(), true);
   await page.locator('#card-feat-21 button').click();
@@ -111,7 +116,8 @@ try {
   await page.unroute('**/api/memory/stats');
   await page.evaluate(() => window.toggleFiftyFeaturesModal(false));
 
-  await page.evaluate(() => window.toggleWorkspaceTreeModal(true, 'memory'));
+  await page.locator('.sg-workspace-menu summary').click();
+  await page.getByRole('button', { name: 'Memory', exact: true }).click();
   await page.locator('#treePaneMemory .memory-kpi-grid').waitFor({ timeout: 30000 });
   assert.match(await page.locator('#inspectNodeConfidence').innerText(), /Unavailable/);
   const graph = await (await page.request.get(`${baseURL}/api/memory/graph`)).json();
@@ -139,25 +145,24 @@ try {
 
   await page.screenshot({ path: path.join(resultsDirectory, 'desktop.png') });
   await page.setViewportSize({ width: 390, height: 844 });
-  assert.ok(await page.locator('#workspaceInp').isVisible());
-  const composer = await page.locator('#workspaceInp').boundingBox();
+  const visibleComposer = page.locator('#sgLandingInput, #sgCardInput');
+  const composer = await visibleComposer.boundingBox();
   assert.ok(
     composer.x >= 0 && composer.x + composer.width <= 390,
     'Composer must fit within the mobile viewport',
   );
-  const header = await page.locator('.enterprise-header').boundingBox();
-  const columns = await page.locator('.workspace-columns-viewport').boundingBox();
+  const header = await page.locator('#sgTopDynamicIsland').boundingBox();
   assert.ok(
-    columns.y >= header.y + header.height - 1,
+    composer.y >= header.y + header.height - 1,
     'Mobile header must not overlap the conversation',
   );
-  await page.locator('#workspaceInp').fill('Mobile layout check');
-  assert.equal(await page.locator('#workspaceInp').inputValue(), 'Mobile layout check');
-  await page.locator('#workspaceInp').fill('');
-  await page.locator('#sidebarToggleBtn').click();
-  await page.locator('#workspaceConversationsSidebar.mobile-open').waitFor({ state: 'visible' });
+  await visibleComposer.fill('Mobile layout check');
+  assert.equal(await visibleComposer.inputValue(), 'Mobile layout check');
+  await visibleComposer.fill('');
+  await page.getByRole('button', { name: 'Conversations', exact: true }).click();
+  await page.locator('#workspaceConversationsSidebar.drawer-open').waitFor();
   await page.keyboard.press('Escape');
-  await page.locator('#workspaceConversationsSidebar').waitFor({ state: 'hidden' });
+  assert.equal(await page.locator('#workspaceConversationsSidebar').getAttribute('inert'), '');
   await page.screenshot({ path: path.join(resultsDirectory, 'mobile.png') });
   assert.deepEqual(failures, [], 'Uncaught browser errors');
   const summary = {
