@@ -1,9 +1,15 @@
+import { mountWorkspaceAppearance } from './workspace-appearance.js';
+import { mountComponentAppearance } from './workspace-component-appearance.js';
+
 (() => {
   let dialog = null;
   let activeTab = 'styles';
   let cachedSettings = null;
+  let savedProactive = null;
+  let loading = false;
 
   const svgIcons = {
+    general: '<path d="M4 7h16M4 12h16M4 17h16M8 4v6m8-1v6m-5-1v6"/>',
     styles: '<path d="M12 2v20M2 12h20M7 7l10 10M17 7 7 17"/>',
     provider: '<circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/>',
     paths: '<path d="M3 7a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v9H3Z"/>',
@@ -28,34 +34,42 @@
 
     dialog.innerHTML = `
       <header class="sw-header">
-        <div>
-          <span class="sw-eyebrow">System Architecture &amp; Theme</span>
-          <h2 class="sw-title" id="stylesWindowTitle">Workspace <em class="sw-editorial">Styles &amp; Control</em></h2>
-        </div>
+        <h2 class="sw-title" id="stylesWindowTitle">Settings</h2>
         <button type="button" class="sw-close-btn" id="swCloseBtn" aria-label="Close settings window">${getSvg('close')}</button>
       </header>
 
       <nav class="sw-nav" role="tablist" aria-label="Settings categories">
-        <button type="button" class="sw-nav-tab" role="tab" data-tab="styles" aria-selected="true">${getSvg('styles')}<span>Appearance &amp; Style</span></button>
-        <button type="button" class="sw-nav-tab" role="tab" data-tab="provider" aria-selected="false">${getSvg('provider')}<span>API Providers</span></button>
-        <button type="button" class="sw-nav-tab" role="tab" data-tab="paths" aria-selected="false">${getSvg('paths')}<span>Paths &amp; Storage</span></button>
-        <button type="button" class="sw-nav-tab" role="tab" data-tab="runtime" aria-selected="false">${getSvg('runtime')}<span>Autonomy &amp; Access</span></button>
-        <button type="button" class="sw-nav-tab" role="tab" data-tab="system" aria-selected="false">${getSvg('system')}<span>System Telemetry</span></button>
+        <button type="button" class="sw-nav-tab" role="tab" data-tab="general" aria-selected="true">${getSvg('general')}<span>General</span></button>
+        <button type="button" class="sw-nav-tab" role="tab" data-tab="styles" aria-selected="false">${getSvg('styles')}<span>Appearance</span></button>
+        <button type="button" class="sw-nav-tab" role="tab" data-tab="provider" aria-selected="false">${getSvg('provider')}<span>Models &amp; providers</span></button>
+        <button type="button" class="sw-nav-tab" role="tab" data-tab="paths" aria-selected="false">${getSvg('paths')}<span>Storage</span></button>
+        <button type="button" class="sw-nav-tab" role="tab" data-tab="runtime" aria-selected="false">${getSvg('runtime')}<span>Access &amp; autonomy</span></button>
+        <button type="button" class="sw-nav-tab" role="tab" data-tab="system" aria-selected="false">${getSvg('system')}<span>System</span></button>
       </nav>
 
       <div class="sw-body">
-        <section class="sw-pane" id="swPaneStyles" role="tabpanel">
+        <section class="sw-pane" id="swPaneGeneral" role="tabpanel">
+          <div class="sw-card">
+            <h3 class="sw-card-title">Workspace preferences</h3>
+            <div id="swGeneralControls"></div>
+            <button type="button" class="sw-btn sw-btn-secondary" id="swResetPanels">Reset panel sizes</button>
+          </div>
+          <details class="sw-card" id="swGeneralPins">
+            <summary>Agent pins <span class="sg-agent-pin-count" role="status"></span></summary>
+            <div class="sg-agent-pin-list"></div>
+          </details>
+        </section>
+        <section class="sw-pane" id="swPaneStyles" role="tabpanel" hidden>
+          <div class="sw-card" id="swWorkspaceAppearance"></div>
           <div class="sw-card">
             <h3 class="sw-card-title">UI Style &amp; Workspace Architecture</h3>
             <p class="sw-card-desc">Select your workspace layout and agent interaction style.</p>
             <div class="sw-theme-grid" role="radiogroup" aria-label="UI style selection">
-              <button type="button" class="sw-font-btn sw-ui-style-btn" data-ui-style="flow-canvas" role="radio" aria-checked="false" style="padding:12px; border-radius:12px; background:var(--shell-surface); border:1px solid var(--shell-border); color:inherit; text-align:left; cursor:pointer;">
-                <span style="font-size:9.5px; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.4px;">★ Video Design</span>
+              <button type="button" class="sw-font-btn sw-ui-style-btn" data-ui-style="flow-canvas" role="radio" aria-checked="false">
                 <strong style="display:block; font-size:13.5px; margin:4px 0 2px 0;">Agent Flow Canvas</strong>
                 <span style="font-size:11px; color:var(--shell-muted);">Multi-agent graph canvas with bezier wires &amp; live cards</span>
               </button>
-              <button type="button" class="sw-font-btn sw-ui-style-btn" data-ui-style="obsidian-studio" role="radio" aria-checked="true" style="padding:12px; border-radius:12px; background:var(--shell-surface); border:1px solid var(--shell-border); color:inherit; text-align:left; cursor:pointer;">
-                <span style="font-size:9.5px; font-weight:700; color:#cbd5e1; text-transform:uppercase; letter-spacing:0.4px;">3D Universe</span>
+              <button type="button" class="sw-font-btn sw-ui-style-btn" data-ui-style="obsidian-studio" role="radio" aria-checked="true">
                 <strong style="display:block; font-size:13.5px; margin:4px 0 2px 0;">Obsidian Studio</strong>
                 <span style="font-size:11px; color:var(--shell-muted);">Deep dark 3D landscape with agent beacons &amp; composer</span>
               </button>
@@ -64,7 +78,7 @@
 
           <div class="sw-card">
             <h3 class="sw-card-title">Theme Palette</h3>
-            <p class="sw-card-desc">Choose a pastel palette for your workspace.</p>
+            <p class="sw-card-desc">Choose a dark palette for your workspace.</p>
             <div class="sw-theme-grid sw-palette-grid" role="radiogroup" aria-label="Theme palette">
               <button type="button" class="sw-theme-btn" data-theme-val="obsidian" role="radio" aria-checked="true">
                 <div class="sw-theme-swatches" data-palette-preview="obsidian" aria-hidden="true">
@@ -73,8 +87,7 @@
                   <span class="sw-swatch"></span>
                   <span class="sw-swatch"></span>
                 </div>
-                <strong>Lilac Mist</strong>
-                <span style="font-size:11px; color:var(--shell-muted);">Soft lilac and plum</span>
+                <strong>Obsidian</strong>
               </button>
               <button type="button" class="sw-theme-btn" data-theme-val="warm" role="radio" aria-checked="false">
                 <div class="sw-theme-swatches" data-palette-preview="warm" aria-hidden="true">
@@ -83,8 +96,7 @@
                   <span class="sw-swatch"></span>
                   <span class="sw-swatch"></span>
                 </div>
-                <strong>Apricot Cream</strong>
-                <span style="font-size:11px; color:var(--shell-muted);">Cream, peach and terracotta</span>
+                <strong>Charcoal</strong>
               </button>
               <button type="button" class="sw-theme-btn" data-theme-val="midnight" role="radio" aria-checked="false">
                 <div class="sw-theme-swatches" data-palette-preview="midnight" aria-hidden="true">
@@ -93,8 +105,7 @@
                   <span class="sw-swatch"></span>
                   <span class="sw-swatch"></span>
                 </div>
-                <strong>Lavender Dusk</strong>
-                <span style="font-size:11px; color:var(--shell-muted);">Deep violet and soft lavender</span>
+                <strong>Midnight</strong>
               </button>
               <button type="button" class="sw-theme-btn" data-theme-val="cyber" role="radio" aria-checked="false">
                 <div class="sw-theme-swatches" data-palette-preview="cyber" aria-hidden="true">
@@ -103,8 +114,7 @@
                   <span class="sw-swatch"></span>
                   <span class="sw-swatch"></span>
                 </div>
-                <strong>Mint Glass</strong>
-                <span style="font-size:11px; color:var(--shell-muted);">Cool mint and forest green</span>
+                <strong>Graphite</strong>
               </button>
             </div>
           </div>
@@ -113,19 +123,19 @@
             <h3 class="sw-card-title">Typography &amp; Font</h3>
             <p class="sw-card-desc">Select the font pairing used across conversations, agent tools, and code.</p>
             <div class="sw-theme-grid">
-              <button type="button" class="sw-font-btn" data-font-val="editorial" role="radio" aria-checked="true" style="padding:12px; border-radius:12px; background:var(--shell-surface); border:1px solid var(--shell-border); color:inherit; text-align:left; cursor:pointer;">
+              <button type="button" class="sw-font-btn" data-font-val="editorial" role="radio" aria-checked="true" style="padding:12px; border-radius:12px; background:var(--shell-surface); border:0; color:inherit; text-align:left; cursor:pointer;">
                 <strong style="display:block; font-family:'Instrument Serif', serif; font-size:15px; margin-bottom:4px;">Editorial Luxury</strong>
                 <span style="font-size:11px; color:var(--shell-muted);">Instrument Serif + DM Sans</span>
               </button>
-              <button type="button" class="sw-font-btn" data-font-val="sans" role="radio" aria-checked="false" style="padding:12px; border-radius:12px; background:var(--shell-surface); border:1px solid var(--shell-border); color:inherit; text-align:left; cursor:pointer;">
+              <button type="button" class="sw-font-btn" data-font-val="sans" role="radio" aria-checked="false" style="padding:12px; border-radius:12px; background:var(--shell-surface); border:0; color:inherit; text-align:left; cursor:pointer;">
                 <strong style="display:block; font-family:'Manrope', sans-serif; font-size:13px; margin-bottom:4px;">Modern Geometric</strong>
                 <span style="font-size:11px; color:var(--shell-muted);">Manrope + Inter Sans</span>
               </button>
-              <button type="button" class="sw-font-btn" data-font-val="mono" role="radio" aria-checked="false" style="padding:12px; border-radius:12px; background:var(--shell-surface); border:1px solid var(--shell-border); color:inherit; text-align:left; cursor:pointer;">
+              <button type="button" class="sw-font-btn" data-font-val="mono" role="radio" aria-checked="false" style="padding:12px; border-radius:12px; background:var(--shell-surface); border:0; color:inherit; text-align:left; cursor:pointer;">
                 <strong style="display:block; font-family:'JetBrains Mono', monospace; font-size:12px; margin-bottom:4px;">Hacker Mono</strong>
                 <span style="font-size:11px; color:var(--shell-muted);">JetBrains Monospace</span>
               </button>
-              <button type="button" class="sw-font-btn" data-font-val="grotesk" role="radio" aria-checked="false" style="padding:12px; border-radius:12px; background:var(--shell-surface); border:1px solid var(--shell-border); color:inherit; text-align:left; cursor:pointer;">
+              <button type="button" class="sw-font-btn" data-font-val="grotesk" role="radio" aria-checked="false" style="padding:12px; border-radius:12px; background:var(--shell-surface); border:0; color:inherit; text-align:left; cursor:pointer;">
                 <strong style="display:block; font-family:'Space Grotesk', sans-serif; font-size:13px; margin-bottom:4px;">Space Grotesk</strong>
                 <span style="font-size:11px; color:var(--shell-muted);">Futuristic Neo-Grotesque</span>
               </button>
@@ -140,45 +150,17 @@
             </button>
           </div>
 
-          <div class="sw-preview-card">
-            <p class="sw-preview-quote">"Thinking alongside you in borderless clarity."</p>
-            <p class="sw-preview-body">Crafted with locally bundled Manrope UI sans-serif and selective Instrument Serif display moments. Borderless surfaces with purposeful elevation and copper orbital light.</p>
-          </div>
-
-          <div class="sw-card">
-            <h3 class="sw-card-title">Motion &amp; Interaction</h3>
-            <label class="sw-toggle-row">
-              <div class="sw-toggle-info">
-                <span class="sw-toggle-title">Ambient Motion &amp; Particles</span>
-                <span class="sw-toggle-desc">Background copper particle physics and pointer hover glow. Respects system reduced-motion.</span>
-              </div>
-              <input type="checkbox" class="sw-checkbox" id="swOptMotion">
-            </label>
-            <label class="sw-toggle-row">
-              <div class="sw-toggle-info">
-                <span class="sw-toggle-title">Acoustic Audio Feedback</span>
-                <span class="sw-toggle-desc">Subtle sci-fi sound effects when sending prompts and switching tabs.</span>
-              </div>
-              <input type="checkbox" class="sw-checkbox" id="swOptSounds">
-            </label>
-            <label class="sw-toggle-row">
-              <div class="sw-toggle-info">
-                <span class="sw-toggle-title">Compact Workspace Spacing</span>
-                <span class="sw-toggle-desc">Tighter paddings to keep more of the conversation in view.</span>
-              </div>
-              <input type="checkbox" class="sw-checkbox" id="swOptCompact">
-            </label>
-          </div>
         </section>
 
         <section class="sw-pane" id="swPaneProvider" role="tabpanel" hidden>
+          <div id="swModelProfiles"></div>
           <div class="sw-card">
             <h3 class="sw-card-title">Intelligence Gateway &amp; Models</h3>
             <p class="sw-card-desc">Configure the AI model provider. Works with local OpenCode routers, OpenRouter, vLLM, Ollama, and OpenAI-compatible gateways.</p>
 
             <div class="sw-field-group">
               <label class="sw-field-label" for="swBaseUrl">Provider Base URL (BASE_URL)</label>
-              <input type="text" class="sw-input" id="swBaseUrl" placeholder="http://127.0.0.1:20128/v1" autocomplete="off" spellcheck="false">
+              <input type="text" class="sw-input" id="swBaseUrl" placeholder="https://openrouter.ai/api/v1" autocomplete="off" spellcheck="false">
             </div>
 
             <div class="sw-field-group">
@@ -191,7 +173,7 @@
 
             <div class="sw-field-group">
               <label class="sw-field-label" for="swDefaultModel">Primary Model (DEFAULT_MODEL)</label>
-              <input type="text" class="sw-input" id="swDefaultModel" placeholder="opus-4.6" autocomplete="off" spellcheck="false">
+              <input type="text" class="sw-input" id="swDefaultModel" placeholder="openai/gpt-4o-mini" autocomplete="off" spellcheck="false">
             </div>
 
             <div class="sw-field-group">
@@ -199,7 +181,7 @@
               <input type="text" class="sw-input" id="swFallbackModel" placeholder="Optional secondary fallback model" autocomplete="off" spellcheck="false">
             </div>
 
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:12px; flex-wrap:wrap;">
               <button type="button" class="sw-btn sw-btn-secondary" id="swTestConnBtn">Test Provider Connection</button>
               <span id="swTestBadge" class="sw-status-badge" style="display:none;"></span>
             </div>
@@ -267,17 +249,8 @@
 
         <section class="sw-pane" id="swPaneRuntime" role="tabpanel" hidden>
           <div class="sw-card">
-            <h3 class="sw-card-title">Execution Autonomy &amp; Permissions</h3>
-            <p class="sw-card-desc">Control whether Supergence executes commands and file creations without pausing for confirmation checkpoints.</p>
-
-            <div class="sw-field-group">
-              <label class="sw-field-label" for="swAccessMode">Autonomy Mode</label>
-              <select class="sw-select" id="swAccessMode">
-                <option value="full-access">Full Access (Autonomous execution, auto double-checks task completion)</option>
-                <option value="approve-for-me">Routine Work Approved (Prompts only on destructive changes)</option>
-                <option value="review-all">Review All (Requests approval before any tool run)</option>
-              </select>
-            </div>
+            <h3 class="sw-card-title">Tool permissions</h3>
+            <div id="swAccessControls"></div>
           </div>
 
           <div class="sw-card">
@@ -340,21 +313,36 @@
       </div>
 
       <footer class="sw-footer">
-        <span class="sw-feedback" id="swFeedback">Ready</span>
+        <span class="sw-feedback" id="swFeedback" role="status"></span>
         <div class="sw-actions">
-          <button type="button" class="sw-btn sw-btn-secondary" id="swResetBtn">Reset to Defaults</button>
-          <button type="button" class="sw-btn sw-btn-primary" id="swSaveBtn">${getSvg('check')}<span>Save &amp; Apply</span></button>
+          <button type="button" class="sw-btn sw-btn-primary" id="swSaveBtn">${getSvg('check')}<span>Save changes</span></button>
         </div>
       </footer>
     `;
 
     document.body.appendChild(dialog);
+    mountWorkspaceAppearance(dialog.querySelector('#swWorkspaceAppearance'));
+    mountComponentAppearance(() => {
+      openStylesWindow('styles');
+      dialog.querySelector('#swBackground').focus();
+    });
+    const general = dialog.querySelector('#swGeneralControls');
+    for (const id of ['shellSoundsPreference', 'shellCompactPreference', 'shellMotionPreference', 'shellAutostartPreference']) {
+      const row = document.getElementById(id)?.closest('label');
+      if (row) general.append(row);
+    }
     setupEvents();
     return dialog;
   }
 
   function setupEvents() {
     dialog.querySelector('#swCloseBtn')?.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('close', () => {
+      const key = dialog.querySelector('#swApiKey');
+      key.value = '';
+      key.type = 'password';
+      dialog.querySelector('#swToggleKeyVisibility').textContent = 'Show';
+    });
 
     dialog.addEventListener('click', (event) => {
       const rect = dialog.getBoundingClientRect();
@@ -369,8 +357,41 @@
       }
     });
 
-    dialog.querySelectorAll('.sw-nav-tab').forEach((tabBtn) => {
+    const tabs = [...dialog.querySelectorAll('.sw-nav-tab')];
+    const vertical = window.matchMedia('(min-width: 720px)');
+    const nav = dialog.querySelector('.sw-nav');
+    const setOrientation = () => nav.setAttribute('aria-orientation', vertical.matches ? 'vertical' : 'horizontal');
+    setOrientation();
+    vertical.addEventListener('change', setOrientation);
+    tabs.forEach((tabBtn, index) => {
+      const tab = tabBtn.dataset.tab;
+      const panel = dialog.querySelector(`#swPane${tab[0].toUpperCase()}${tab.slice(1)}`);
+      tabBtn.id = `swTab-${tab}`;
+      tabBtn.setAttribute('aria-controls', panel.id);
+      panel.setAttribute('aria-labelledby', tabBtn.id);
       tabBtn.addEventListener('click', () => switchTab(tabBtn.dataset.tab));
+      tabBtn.addEventListener('keydown', (event) => {
+        const next = {
+          ArrowLeft: (index + tabs.length - 1) % tabs.length,
+          ArrowRight: (index + 1) % tabs.length,
+          ArrowUp: vertical.matches ? (index + tabs.length - 1) % tabs.length : undefined,
+          ArrowDown: vertical.matches ? (index + 1) % tabs.length : undefined,
+          Home: 0,
+          End: tabs.length - 1,
+        }[event.key];
+        if (next === undefined) return;
+        event.preventDefault();
+        switchTab(tabs[next].dataset.tab);
+        tabs[next].focus();
+      });
+    });
+    dialog.querySelector('#swGeneralPins').addEventListener('toggle', (event) => {
+      if (event.target.open) window.SupergenceLiquidGlass?.refreshAgentPins();
+    });
+    dialog.querySelector('#swResetPanels').addEventListener('click', () => {
+      if (!window.SupergenceLiquidGlass) return;
+      window.SupergenceLiquidGlass.resetPanelSizes();
+      dialog.querySelector('#swFeedback').textContent = 'Panel sizes reset.';
     });
 
     dialog.querySelectorAll('.sw-ui-style-btn').forEach((styleBtn) => {
@@ -391,7 +412,7 @@
       });
     });
 
-    dialog.querySelectorAll('.sw-font-btn').forEach((fontBtn) => {
+    dialog.querySelectorAll('[data-font-val]').forEach((fontBtn) => {
       fontBtn.addEventListener('click', () => {
         const fontVal = fontBtn.dataset.fontVal;
         selectFont(fontVal);
@@ -418,8 +439,20 @@
     dialog
       .querySelector('#swTriggerProactiveBtn')
       ?.addEventListener('click', triggerProactiveCheck);
-    dialog.querySelector('#swResetBtn')?.addEventListener('click', resetDefaults);
     dialog.querySelector('#swSaveBtn')?.addEventListener('click', saveSettings);
+    window.addEventListener('sis-model-changed', ({ detail }) => {
+      const active = detail?.active;
+      const provider = cachedSettings?.provider;
+      if (!active || !provider) return;
+      for (const [selector, field, value] of [
+        ['#swBaseUrl', 'baseURL', active.baseURL],
+        ['#swDefaultModel', 'defaultModel', active.model],
+      ]) {
+        const input = dialog.querySelector(selector);
+        if (input.value === (provider[field] || '')) input.value = value || '';
+        provider[field] = value;
+      }
+    });
 
     document.querySelectorAll('[data-v="settings"]').forEach((el) => {
       el.addEventListener('click', (e) => {
@@ -430,14 +463,20 @@
   }
 
   function switchTab(tabId) {
+    if (!dialog.querySelector(`#swTab-${tabId}`)) tabId = 'general';
     activeTab = tabId;
     dialog.querySelectorAll('.sw-nav-tab').forEach((btn) => {
-      btn.setAttribute('aria-selected', String(btn.dataset.tab === tabId));
+      const selected = btn.dataset.tab === tabId;
+      btn.setAttribute('aria-selected', String(selected));
+      btn.tabIndex = selected ? 0 : -1;
     });
 
     dialog.querySelectorAll('.sw-pane').forEach((pane) => {
       pane.hidden = pane.id !== `swPane${tabId.charAt(0).toUpperCase() + tabId.slice(1)}`;
     });
+    dialog.querySelector('#swSaveBtn').hidden = !['provider', 'paths', 'runtime'].includes(tabId);
+    if (tabId === 'provider') window.SisModelSwitcher?.mountInSettings(dialog.querySelector('#swModelProfiles'));
+    if (tabId === 'runtime') window.SupergenceAccess?.mount(dialog.querySelector('#swAccessControls'));
   }
 
   function selectTheme(themeVal) {
@@ -451,7 +490,7 @@
   }
 
   function selectFont(fontVal) {
-    dialog.querySelectorAll('.sw-font-btn').forEach((btn) => {
+    dialog.querySelectorAll('[data-font-val]').forEach((btn) => {
       const isSelected = btn.dataset.fontVal === fontVal;
       btn.setAttribute('aria-checked', String(isSelected));
       btn.style.borderColor = isSelected ? 'var(--shell-accent)' : 'var(--shell-border)';
@@ -465,29 +504,16 @@
 
   async function loadSettings() {
     mount();
+    cachedSettings = null;
+    savedProactive = null;
 
     const storedTheme = localStorage.getItem('sis-ui-theme');
     selectTheme(
-      ['obsidian', 'warm', 'midnight', 'cyber'].includes(storedTheme) ? storedTheme : 'obsidian',
+      ['obsidian', 'warm', 'midnight', 'cyber'].includes(storedTheme) ? storedTheme : 'warm',
     );
 
     const storedFont = localStorage.getItem('sis-ui-font') || 'editorial';
     selectFont(storedFont);
-
-    const optMotion = dialog.querySelector('#swOptMotion');
-    if (optMotion) {
-      optMotion.checked = localStorage.getItem('sis-visual-motion') !== 'false';
-    }
-
-    const optSounds = dialog.querySelector('#swOptSounds');
-    if (optSounds) {
-      optSounds.checked = localStorage.getItem('sis-ui-sounds') === 'true';
-    }
-
-    const optCompact = dialog.querySelector('#swOptCompact');
-    if (optCompact) {
-      optCompact.checked = localStorage.getItem('sis-ui-compact') === 'true';
-    }
 
     try {
       const res = await fetch('/api/settings');
@@ -532,7 +558,7 @@
           const memEl = dialog.querySelector('#swSysMemory');
           const uptimeEl = dialog.querySelector('#swSysUptime');
           if (portEl) portEl.textContent = String(data.provider?.port || 3001);
-          if (nodeEl) nodeEl.textContent = data.system.nodeVersion || process?.version || '-';
+          if (nodeEl) nodeEl.textContent = data.system.nodeVersion || 'Unavailable';
           if (platEl)
             platEl.textContent = `${data.system.platform || '-'} (${data.system.arch || '-'})`;
           if (memEl)
@@ -545,10 +571,6 @@
             uptimeEl.textContent = `${h}h ${m}m ${s}s`;
           }
 
-          const accessSelect = dialog.querySelector('#swAccessMode');
-          if (accessSelect && data.system.accessMode) {
-            accessSelect.value = data.system.accessMode;
-          }
         }
       }
     } catch (_) {}
@@ -558,6 +580,7 @@
       if (resP.ok) {
         const pData = await resP.json();
         if (pData?.settings) {
+          savedProactive = pData.settings;
           const enEl = dialog.querySelector('#swProactiveEnabled');
           const intEl = dialog.querySelector('#swProactiveInterval');
           const actEl = dialog.querySelector('#swProactiveActivity');
@@ -575,6 +598,13 @@
         }
       }
     } catch (_) {}
+    const unavailable = [
+      !cachedSettings && 'Provider and system settings',
+      !savedProactive && 'Proactive scan settings',
+    ].filter(Boolean);
+    dialog.querySelector('#swFeedback').textContent = unavailable.length
+      ? `${unavailable.join(' and ')} unavailable.`
+      : '';
   }
 
   async function testConnection() {
@@ -605,7 +635,7 @@
       const res = await fetch('/api/config/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ baseURL: baseUrl, apiKey, model: model || 'opus-4.6' }),
+        body: JSON.stringify({ baseURL: baseUrl, apiKey, model: model || 'openai/gpt-4o-mini' }),
       });
       const data = await res.json();
       const latency = Date.now() - start;
@@ -646,61 +676,22 @@
     }
   }
 
-  function resetDefaults() {
-    selectTheme('neutral');
-    const optMotion = dialog.querySelector('#swOptMotion');
-    const optSounds = dialog.querySelector('#swOptSounds');
-    const optCompact = dialog.querySelector('#swOptCompact');
-    if (optMotion) optMotion.checked = true;
-    if (optSounds) optSounds.checked = true;
-    if (optCompact) optCompact.checked = false;
-
-    const baseUrlEl = dialog.querySelector('#swBaseUrl');
-    const modelEl = dialog.querySelector('#swDefaultModel');
-    const fallbackEl = dialog.querySelector('#swFallbackModel');
-    if (baseUrlEl) baseUrlEl.value = 'http://127.0.0.1:20128/v1';
-    if (modelEl) modelEl.value = 'opus-4.6';
-    if (fallbackEl) fallbackEl.value = '';
-
-    const accessSelect = dialog.querySelector('#swAccessMode');
-    if (accessSelect) accessSelect.value = 'full-access';
-
-    const feedback = dialog.querySelector('#swFeedback');
-    if (feedback) feedback.textContent = 'Form reset to default values.';
-  }
-
   async function saveSettings() {
+    if (loading) return;
     const saveBtn = dialog.querySelector('#swSaveBtn');
     const feedback = dialog.querySelector('#swFeedback');
+    if ((activeTab === 'provider' && !cachedSettings?.provider) ||
+      (['paths', 'runtime'].includes(activeTab) && !savedProactive)) {
+      feedback.textContent = 'These settings are unavailable. Reopen Settings to retry.';
+      return;
+    }
     if (saveBtn) saveBtn.disabled = true;
     if (feedback) feedback.textContent = 'Applying settings...';
-
-    const optMotion = dialog.querySelector('#swOptMotion');
-    if (optMotion) {
-      localStorage.setItem('sis-visual-motion', String(optMotion.checked));
-      window.dispatchEvent(
-        new CustomEvent('sis-motion-preference-changed', {
-          detail: { enabled: optMotion.checked },
-        }),
-      );
-    }
-
-    const optSounds = dialog.querySelector('#swOptSounds');
-    if (optSounds) {
-      localStorage.setItem('sis-ui-sounds', String(optSounds.checked));
-    }
-
-    const optCompact = dialog.querySelector('#swOptCompact');
-    if (optCompact) {
-      localStorage.setItem('sis-ui-compact', String(optCompact.checked));
-      document.body.dataset.compact = String(optCompact.checked);
-    }
 
     const baseUrl = dialog.querySelector('#swBaseUrl')?.value.trim();
     const apiKey = dialog.querySelector('#swApiKey')?.value.trim();
     const defaultModel = dialog.querySelector('#swDefaultModel')?.value.trim();
     const fallbackModel = dialog.querySelector('#swFallbackModel')?.value.trim();
-    const accessMode = dialog.querySelector('#swAccessMode')?.value;
 
     const selectedFolders = [];
     dialog.querySelectorAll('#swProactiveFoldersList input[type="checkbox"]').forEach((chk) => {
@@ -713,38 +704,50 @@
       10,
     );
     const proactiveActivity = dialog.querySelector('#swProactiveActivity')?.checked ?? true;
+    const provider = cachedSettings?.provider;
+    const providerChanged = provider && (Boolean(apiKey) ||
+      baseUrl !== (provider.baseURL || '') ||
+      defaultModel !== (provider.defaultModel || '') ||
+      fallbackModel !== (provider.fallbackModel || ''));
+    const proactive = {
+      enabled: proactiveEnabled,
+      intervalMinutes: proactiveInterval,
+      activity: proactiveActivity,
+      folders: selectedFolders,
+    };
+    const proactiveChanged = savedProactive && (
+      proactive.enabled !== Boolean(savedProactive.enabled) ||
+      proactive.activity !== Boolean(savedProactive.activity) ||
+      proactive.intervalMinutes !== Number(savedProactive.intervalMinutes) ||
+      [...proactive.folders].sort().join(',') !== [...(savedProactive.folders || [])].sort().join(',')
+    );
 
     try {
-      await fetch('/api/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          baseURL: baseUrl,
-          apiKey,
-          defaultModel,
-          fallbackModel,
-          accessMode,
-        }),
-      });
-
-      await fetch('/api/proactive-suggestions/settings', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          enabled: proactiveEnabled,
-          intervalMinutes: proactiveInterval,
-          activity: proactiveActivity,
-          folders: selectedFolders,
-        }),
-      });
-
-      if (feedback) feedback.textContent = '✓ All settings and styles successfully applied';
-      if (typeof window.showToast === 'function') {
-        window.showToast('Workspace settings & style applied', 'success');
+      if (providerChanged) {
+        const response = await fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ baseURL: baseUrl, apiKey: apiKey || undefined, defaultModel, fallbackModel }),
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.error || 'Provider settings could not be saved.');
+        cachedSettings.provider = result.provider;
+        dialog.querySelector('#swApiKey').value = '';
+        void window.SisModelSwitcher?.refresh();
       }
-      setTimeout(() => {
-        if (dialog.open) dialog.close();
-      }, 700);
+      if (proactiveChanged) {
+        const response = await fetch('/api/proactive-suggestions/settings', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(proactive),
+        });
+        const result = await response.json();
+        if (!response.ok || result.success === false) throw new Error(result.error || 'Proactive settings could not be saved.');
+        savedProactive = result.settings || proactive;
+      }
+      if (feedback) feedback.textContent = providerChanged || proactiveChanged
+        ? 'Changes saved.'
+        : 'No changes to save.';
     } catch (err) {
       if (feedback) feedback.textContent = `Error saving settings: ${err.message}`;
     } finally {
@@ -752,11 +755,21 @@
     }
   }
 
-  function openStylesWindow(tab = 'styles') {
+  function openStylesWindow(tab = 'general') {
     mount();
+    const wasOpen = dialog.open;
+    if (!wasOpen) dialog.showModal();
     switchTab(tab);
-    void loadSettings();
-    if (!dialog.open) dialog.showModal();
+    dialog.querySelector(`#swTab-${activeTab}`).focus();
+    if (!wasOpen && !loading) {
+      const save = dialog.querySelector('#swSaveBtn');
+      loading = true;
+      save.disabled = true;
+      void loadSettings().finally(() => {
+        loading = false;
+        save.disabled = false;
+      });
+    }
   }
 
   function toggleStylesWindow(tab = 'styles') {

@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
+import { aremAgentMemory } from '../arem/arem-agent-memory.js';
 import { mergeConversationHistory } from './conversationContext.js';
 import { compactTaskCall, resumableTaskError } from './taskCompletion.js';
 
@@ -11,7 +12,8 @@ export class ConversationTurns {
     this.retryDelayMs = retryDelayMs;
   }
   async run(params, emitter, execute) {
-    const query = params.query || params.prompt || params.message || params.userPrompt || params.input;
+    const query =
+      params.query || params.prompt || params.message || params.userPrompt || params.input;
     if (typeof query !== 'string' || !query.trim())
       throw new Error('Query must be a non-empty string.');
     const conversationId = params.conversationId || params.id || `conv-${randomUUID()}`;
@@ -46,7 +48,7 @@ export class ConversationTurns {
       : entry.controller.signal;
     this.active.set(key, entry);
     const dispatch = Object.fromEntries(
-      ['onToolCall', 'onToolResult', 'onStreamToken', 'onInteractiveUI', 'onTaskStatus'].map(
+      ['onToolCall', 'onToolResult', 'onStreamToken', 'onInteractiveUI', 'onTaskStatus', 'onAremActivity', 'onWorkStep'].map(
         (name) => [
           name,
           (...args) => {
@@ -96,8 +98,10 @@ export class ConversationTurns {
       recoveryAttempt: record.recoveryAttempt || 0,
       completionAudit: record.completionAudit || null,
       toolCalls: record.toolCalls || [],
+      workSteps: record.workSteps || [],
       artifacts: record.artifacts || [],
       primaryAgent: record.agent || null,
+      memory: { arem: record.arem || null, saved: true },
     };
   }
   cancel(conversationId, requestId) {
@@ -158,8 +162,10 @@ export class ConversationTurns {
           requestId,
           artifacts: previous.artifacts || [],
           toolCalls: previous.toolCalls || [],
+          workSteps: previous.workSteps || [],
           completionAudit: previous.completionAudit || null,
           primaryAgent: previous.agent || null,
+          memory: { arem: previous.arem || null, saved: true },
           replayed: true,
         };
       if (!previous?.autoResume)
@@ -189,7 +195,9 @@ export class ConversationTurns {
     );
     const signal = entry.signal;
     let checkpointAt = 0,
-      persistenceError = null;
+      persistenceError = null,
+      aremActivity = previous?.arem || null;
+    const workSteps = Array.isArray(previous?.workSteps) ? [...previous.workSteps] : [];
     const save = (status, extra = {}) => {
       const record = {
         id: `${requestId}:assistant`,
@@ -204,6 +212,8 @@ export class ConversationTurns {
         taskParameters: { mode: params.mode, agentId: params.agentId },
         toolCalls: [...activity.values()].map(compactTaskCall),
         timestamp: Date.now(),
+        arem: aremActivity,
+        workSteps,
         ...extra,
       };
       entry.snapshot = record;
@@ -231,14 +241,27 @@ export class ConversationTurns {
         emitter.onStreamToken?.(token, full);
       },
       onToolCall: (event) => {
+        if (event.id && !activity.has(event.id)) workSteps.push({ kind: 'tool', id: event.id });
         activity.set(event.id, { ...activity.get(event.id), ...event });
         checkpoint('running');
         emitter.onToolCall?.(event);
       },
       onToolResult: (event) => {
         activity.set(event.id, { ...activity.get(event.id), ...event });
-        checkpoint('running');
+        checkpoint('running', { taskMessage: 'Reviewing tool results…' });
         emitter.onToolResult?.(event);
+      },
+      onWorkStep: (event) => {
+        if (event?.kind !== 'commentary' || typeof event.text !== 'string') return;
+        const step = { kind: 'commentary', text: event.text.slice(0, 600) };
+        workSteps.push(step);
+        checkpoint('running');
+        emitter.onWorkStep?.(step);
+      },
+      onAremActivity: (event) => {
+        aremActivity = event;
+        checkpoint('running');
+        emitter.onAremActivity?.(event);
       },
       onTaskStatus: (event) => {
         checkpoint(event.status, { taskMessage: event.message, remaining: event.remaining });
@@ -280,6 +303,7 @@ export class ConversationTurns {
             query: attempt ? 'continue' : user.content,
             history: resumeHistory,
             persistConversation: false,
+            savedConversation: persist,
             signal,
             recoveryAttempt: attempt,
             requireReconciliation:
@@ -316,11 +340,42 @@ export class ConversationTurns {
           continue;
         }
         const taskStatus = result.completionAudit?.status === 'blocked' ? 'blocked' : 'completed';
+        const trace = result.memory?.arem || aremActivity;
+        if (trace) {
+          trace.agentWrites = [...activity.values()]
+            .filter((call) => ['store_arem_memory', 'create_arem_memory'].includes(call.tool) && call.status === 'RESOLVED' && call.output?.node?.id)
+            .map((call) => call.output.node.id);
+          trace.workingCheckpoint = 'not-saved';
+        }
         save(taskStatus, {
           artifacts: result.artifacts || [],
           completionAudit: result.completionAudit || null,
           toolCalls: [...activity.values()],
           agent: result.primaryAgent || null,
+          arem: trace || null,
+          autoResume: false,
+        });
+        if (persist && taskStatus === 'completed' && trace) {
+          try {
+            aremAgentMemory.checkpoint({
+              chat: conversationId,
+              requestId,
+              sourceCount: trace.retainedSources?.length || 0,
+              toolCount: activity.size,
+            });
+            trace.workingCheckpoint = 'saved';
+          } catch (error) {
+            trace.workingCheckpoint = 'unavailable';
+            console.warn('[AREM] Could not save working checkpoint:', error.message);
+          }
+        }
+        aremActivity = trace;
+        save(taskStatus, {
+          artifacts: result.artifacts || [],
+          completionAudit: result.completionAudit || null,
+          toolCalls: [...activity.values()],
+          agent: result.primaryAgent || null,
+          arem: trace || null,
           autoResume: false,
         });
         return {
@@ -329,8 +384,13 @@ export class ConversationTurns {
           conversationId,
           requestId,
           toolCalls: [...activity.values()],
+          workSteps,
           recoveryAttempts: attempt,
-          memory: { priorMessages: history.length, saved: persist },
+          memory: {
+            arem: trace || null,
+            priorMessages: history.length,
+            saved: persist,
+          },
         };
       } catch (error) {
         partial = error.partialResponse || partial;

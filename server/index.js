@@ -1,3 +1,4 @@
+import { monitorEventLoopDelay } from 'node:perf_hooks';
 import { injectImportmapIfNeeded } from './workspace/preview-importmap.js';
 import { resolveWithinRoot } from './utils/path-confinement.js';
 import { sessionAuth, isPublicRoute, cookieName } from './security/session-auth.js';
@@ -15,6 +16,7 @@ import { registerRuntimeAccessRoutes } from './routes/runtime-access.js';
 import { registerProactiveSuggestionRoutes } from './routes/proactive-suggestions.js';
 import { registerConversationWorkspaceRoutes } from './routes/conversation-workspaces.js';
 import { runtimeAccess } from './services/runtimeAccess.js';
+import { currentWorkspace } from './services/conversationWorkspaces.js';
 import { childEnvironment } from './security/child-environment.js';
 import { assertBrowserEnabled, browserAccessMiddleware } from './security/browser-access.js';
 import { createProjectPreviewService } from './security/project-preview.js';
@@ -23,10 +25,12 @@ import { registerAgentConversationRoutes } from './routes/agent-conversations.js
 import { configureAgentConversationRuntime } from './services/agentConversations.js';
 import { registerPageRoutes } from './routes/pages.js';
 import { registerStorageRoutes } from './routes/storage-dashboard.js';
+import { registerAutostartRoutes } from './routes/autostart.js';
 import { registerAremRoutes } from './routes/arem.js';
+import { syncAremCatalog } from './arem/arem-catalog.js';
 import { registerSupergenceTeamsRoutes } from './routes/teams.js';
 import { registerSuperlinkChatRoutes } from './routes/superlink-chat.js';
-import aremEngine from './arem/arem-engine.js';
+import aremEngine, { automaticSleepEnabled } from './arem/arem-engine.js';
 import superbox from './services/superbox.js';
 // SIS 1.0 — Main Server
 // Express + WebSocket server — the brain's nervous system
@@ -35,7 +39,6 @@ import express from 'express';
 import { WebSocketServer } from 'ws';
 import { localBoundary, isLocalRequest } from './security/local-boundary.js';
 import dotenv from 'dotenv';
-import OpenAI from 'openai';
 import { createServer } from 'http';
 import path from 'path';
 import os from 'os';
@@ -59,9 +62,13 @@ import knowledgeGraph from './memory/knowledge-graph.js';
 import {
   quickAI,
   PREMIUM_MODEL,
-  assertProviderAvailable,
   configureDefaultProvider,
+  resolveProviderKey,
+  getBaseURL,
+  getDefaultModel,
+  getFallbackModel,
 } from './api/provider.js';
+import { evolutionSettings } from './services/evolutionSettings.js';
 import possap from './possap/index.js';
 import uiSelfModification from './services/uiSelfModification.js';
 import systemManager from './systems/manager.js';
@@ -266,8 +273,31 @@ app.post('/api/silisleek/auth', async (req, res) => {
   }
 
   try {
-    if (req.body?.sleekId || req.body?.local || req.body?.guest) {
-      return res.status(400).json({ message: 'Connect your activated Sleek account in the browser.' });
+    if (req.body?.local || req.body?.guest || req.body?.offline) {
+      const customId =
+        typeof req.body?.sleekId === 'string' && req.body.sleekId.trim()
+          ? req.body.sleekId.trim()
+          : 'local-operator';
+      const localResult = sleekIdentity.createLocalSession({
+        id: customId,
+        sleekId: customId,
+        name: 'Local Operator',
+      });
+      res.setHeader('Cache-Control', 'no-store');
+      res.append(
+        'Set-Cookie',
+        `sis_sleek_identity=${localResult.key}; Path=/; HttpOnly; SameSite=Lax; Max-Age=28800`,
+      );
+      const signal = sleekIdentity.getSignal({
+        headers: { cookie: `sis_sleek_identity=${localResult.key}` },
+      });
+      runtimeAccess
+        .run({ signal }, () => sisUnifiedSystem.resumePendingTasks())
+        .catch((error) => console.warn('[Task recovery]', error.message));
+      return res.json({
+        status: 'complete',
+        user: localResult.user,
+      });
     }
 
     if (!req.body?.state) {
@@ -318,7 +348,19 @@ app.get('/__sleek/callback', async (req, res) => {
 
 app.get('/api/silisleek/session', (req, res) => {
   try {
-    const session = sessionAuth.authorized(req) ? sleekIdentity.getSession(req) : null;
+    let session = sessionAuth.authorized(req) ? sleekIdentity.getSession(req) : null;
+    if (!session && isLocalRequest(req)) {
+      const localResult = sleekIdentity.createLocalSession({
+        id: 'local-operator',
+        sleekId: 'local-operator',
+        name: 'Local Operator',
+      });
+      res.append(
+        'Set-Cookie',
+        `sis_sleek_identity=${localResult.key}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000`,
+      );
+      session = localResult.user;
+    }
     res.json({
       authenticated: Boolean(session),
       user: session,
@@ -350,6 +392,28 @@ app.post('/api/silisleek/logout', (req, res) => {
 app.use(globalInputValidator);
 app.use((req, res, next) => {
   if (isPublicRoute(req)) return next();
+  if (isLocalRequest(req)) {
+    if (!sleekIdentity.getSession(req)) {
+      const localResult = sleekIdentity.createLocalSession({
+        id: 'local-operator',
+        sleekId: 'local-operator',
+        name: 'Local Operator',
+      });
+      res.append(
+        'Set-Cookie',
+        `sis_sleek_identity=${localResult.key}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000`,
+      );
+      const existing = req.headers.cookie ? `${req.headers.cookie}; ` : '';
+      req.headers.cookie = `${existing}sis_sleek_identity=${localResult.key}`;
+    }
+    if (!sessionAuth.authorized(req)) {
+      const sName = cookieName(req);
+      res.append('Set-Cookie', `${sName}=${sessionAuth.secret}; Path=/; HttpOnly; SameSite=Strict`);
+      const existing = req.headers.cookie ? `${req.headers.cookie}; ` : '';
+      req.headers.cookie = `${existing}${sName}=${sessionAuth.secret}`;
+    }
+    return runtimeAccess.run({ signal: sleekIdentity.getSignal(req) }, next);
+  }
   if (sessionAuth.authorized(req) && sleekIdentity.getSession(req)) {
     return runtimeAccess.run({ signal: sleekIdentity.getSignal(req) }, next);
   }
@@ -358,6 +422,7 @@ app.use((req, res, next) => {
   return res.status(401).json({ error: 'Sign in with your Sleek ID to use Supergence.' });
 });
 registerStorageRoutes(app);
+registerAutostartRoutes(app);
 app.use('/api/browser', browserAccessMiddleware);
 app.use('/api/workspace', (req, res, next) => {
   if (req.path !== '/command' && !runtimeAccess.settings.files)
@@ -393,6 +458,10 @@ registerPageRoutes(app);
 app.use(
   '/vendor/dompurify',
   express.static(path.join(__dirname, '../node_modules/dompurify/dist')),
+);
+app.use(
+  '/vendor/ace',
+  express.static(path.join(__dirname, '../node_modules/ace-builds/src-min-noconflict')),
 );
 
 app.use(
@@ -747,9 +816,12 @@ try {
   console.warn('[SuperlinkChat] widget registration failed:', err.message);
 }
 configureAgentConversationRuntime({
-  reply: async ({ agent, messages, senderName, threadId, onToken, onToolCall, onToolResult }) => {
+  reply: async ({ agent, messages, senderName, threadId, projectId, onToken, onToolCall, onToolResult }) => {
     const latest = messages.at(-1);
-    const result = await sisUnifiedSystem.executeUnifiedTurnStream(
+    const parentWorkspace = currentWorkspace();
+    const internal = projectId ? { workspaceConversationId: projectId,
+      projectDirectory: parentWorkspace?.conversationId === projectId ? parentWorkspace.projectDirectory : undefined } : {};
+    const result = await runtimeAccess.run({ teamProjectId: projectId || undefined, teamWorker: Boolean(projectId) }, () => sisUnifiedSystem.executeUnifiedTurnStream(
       {
         query: latest.content,
         agentId: agent.id,
@@ -766,12 +838,16 @@ configureAgentConversationRuntime({
         onToolCall: (activity) => onToolCall?.(activity),
         onToolResult: (activity) => onToolResult?.(activity),
       },
-    );
-    if (!result.success)
-      throw new Error(result.error || 'The agent could not complete this message.');
+      internal,
+    ));
+    if (!result.success || ['blocked', 'cancelled', 'error'].includes(result.taskStatus))
+      throw new Error(result.error || result.completionAudit?.remaining?.join('; ') || `Agent task ${result.taskStatus || 'failed'}.`);
     return result.response;
   },
 });
+
+const eventLoopDelay = monitorEventLoopDelay({ resolution: 20 });
+eventLoopDelay.enable();
 
 app.get('/api/health', (req, res) => {
   res.json({
@@ -779,6 +855,14 @@ app.get('/api/health', (req, res) => {
     name: 'SIS 1.0 Superintelligence',
     build: BUILD,
     uptime: process.uptime(),
+    eventLoopDelayMs: eventLoopDelay.count
+      ? {
+          samples: eventLoopDelay.count,
+          p50: eventLoopDelay.percentile(50) / 1e6,
+          p95: eventLoopDelay.percentile(95) / 1e6,
+          max: eventLoopDelay.max / 1e6,
+        }
+      : null,
   });
 });
 
@@ -854,6 +938,98 @@ app.get('/api/learning/ledger', (req, res) => {
   }
 });
 
+app.get('/api/activity/messages', async (req, res) => {
+  const { timeZone = 'UTC' } = req.query;
+  if (typeof timeZone !== 'string') return res.status(400).json({ error: 'Invalid time zone.' });
+  try {
+    res.json({ dailyCounts: await conversations.countUserMessagesByDay(timeZone) });
+  } catch (error) {
+    if (error instanceof RangeError) return res.status(400).json({ error: 'Invalid time zone.' });
+    console.warn('[Activity] Could not count saved messages:', error.message);
+    res.status(500).json({ error: 'Message activity is unavailable.' });
+  }
+});
+
+// Kept for clients using the original activity endpoint.
+app.get('/api/activity/contributions', (req, res) => {
+  try {
+    const dailyCounts = {};
+    const recentTimeline = [];
+    const convs = conversations.list() || [];
+
+    for (const c of convs) {
+      if (c.createdAt) {
+        const d = new Date(c.createdAt);
+        if (!isNaN(d.getTime())) {
+          const key = d.toISOString().slice(0, 10);
+          dailyCounts[key] = (dailyCounts[key] || 0) + 1;
+        }
+      }
+      if (c.updatedAt && c.updatedAt !== c.createdAt) {
+        const d = new Date(c.updatedAt);
+        if (!isNaN(d.getTime())) {
+          const key = d.toISOString().slice(0, 10);
+          dailyCounts[key] = (dailyCounts[key] || 0) + 1;
+        }
+      }
+      recentTimeline.push({
+        id: c.id,
+        type: 'conversation',
+        title: c.title || 'Conversation Turn',
+        timestamp: c.updatedAt || c.createdAt || Date.now(),
+      });
+    }
+
+    recentTimeline.sort((a, b) => b.timestamp - a.timestamp);
+
+    const totalContributions = Object.values(dailyCounts).reduce((sum, n) => sum + n, 0);
+    const today = new Date();
+    let currentStreak = 0;
+    let longestStreak = 0;
+    let tempStreak = 0;
+
+    for (let i = 365; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      const count = dailyCounts[key] || 0;
+      if (count > 0) {
+        tempStreak++;
+        if (tempStreak > longestStreak) longestStreak = tempStreak;
+      } else {
+        tempStreak = 0;
+      }
+    }
+
+    for (let i = 0; i <= 365; i++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      const count = dailyCounts[key] || 0;
+      if (count > 0) {
+        currentStreak++;
+      } else if (i > 0) {
+        break;
+      }
+    }
+
+    res.json({
+      success: true,
+      totalContributions,
+      dailyCounts,
+      stats: {
+        totalContributions,
+        totalConversations: convs.length,
+        currentStreak,
+        longestStreak,
+      },
+      recentTimeline: recentTimeline.slice(0, 50),
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Send message (non-streaming fallback with BYOK provider support)
 app.post('/api/message', async (req, res) => {
   try {
@@ -871,57 +1047,6 @@ app.post('/api/message', async (req, res) => {
 });
 
 // ─── BYOK (Bring Your Own Key) Provider Validation Route ───
-app.post('/api/config/validate', async (req, res) => {
-  const { baseURL, apiKey, model, orgId } = req.body || {};
-  if (!baseURL) {
-    return res.status(400).json({ success: false, error: 'Base URL is required' });
-  }
-
-  const cleanUrl = String(baseURL).trim().replace(/\/+$/, '');
-  const cleanKey = apiKey ? String(apiKey).trim() : 'dummy-key';
-  const cleanOrg = orgId ? String(orgId).trim() : undefined;
-  const testModel = model ? String(model).trim() : 'gpt-4o-mini';
-
-  try {
-    assertProviderAvailable(cleanUrl);
-  } catch (error) {
-    return res.status(400).json({ success: false, error: error.message });
-  }
-
-  const startTime = Date.now();
-  try {
-    const testClient = new OpenAI({
-      baseURL: cleanUrl,
-      apiKey: cleanKey,
-      defaultHeaders: cleanOrg ? { 'OpenAI-Organization': cleanOrg } : undefined,
-    });
-
-    const completion = await Promise.race([
-      testClient.chat.completions.create({
-        model: testModel,
-        messages: [{ role: 'user', content: 'Ping. Reply with "pong".' }],
-        max_tokens: 10,
-      }),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Connection timed out after 9000ms')), 9000),
-      ),
-    ]);
-
-    const latencyMs = Date.now() - startTime;
-    return res.json({
-      success: true,
-      latencyMs,
-      modelUsed: testModel,
-      reply: completion?.choices?.[0]?.message?.content || 'OK',
-    });
-  } catch (err) {
-    console.warn(`[BYOK Validate] Error testing ${cleanUrl}:`, err.message);
-    return res.status(400).json({
-      success: false,
-      error: err.message || 'Failed to authenticate with provider',
-    });
-  }
-});
 
 app.get('/api/settings', (req, res) => {
   const mem = process.memoryUsage();
@@ -944,10 +1069,9 @@ app.get('/api/settings', (req, res) => {
       },
     },
     provider: {
-      baseURL:
-        process.env.BASE_URL || process.env.OPENROUTER_BASE_URL || 'http://127.0.0.1:20128/v1',
-      defaultModel: process.env.DEFAULT_MODEL || 'opus-4.6',
-      fallbackModel: process.env.FALLBACK_MODEL || process.env.FALLBACK_MODELS || '',
+      baseURL: evolutionSettings.provider()?.baseURL || getBaseURL(),
+      defaultModel: evolutionSettings.provider()?.model || getDefaultModel(),
+      fallbackModel: getFallbackModel(),
       hasApiKey: Boolean(
         process.env.API_KEY || process.env.OPENROUTER_API_KEY || process.env.LOCAL_ROUTER_API_KEY,
       ),
@@ -969,24 +1093,29 @@ app.get('/api/settings', (req, res) => {
 
 app.post('/api/settings', (req, res) => {
   const { baseURL, apiKey, defaultModel, fallbackModel, accessMode } = req.body || {};
-  if (baseURL) {
-    process.env.BASE_URL = String(baseURL).trim();
-  }
-  if (apiKey !== undefined && apiKey !== null && String(apiKey).trim().length > 0) {
-    process.env.API_KEY = String(apiKey).trim();
-  }
-  if (defaultModel) {
-    process.env.DEFAULT_MODEL = String(defaultModel).trim();
-  }
-  if (fallbackModel !== undefined) {
-    process.env.FALLBACK_MODEL = String(fallbackModel).trim();
+  let providerConfig;
+  try {
+    const saved = evolutionSettings.provider();
+    const endpoint = baseURL || saved?.baseURL || getBaseURL();
+    const model = defaultModel || saved?.model || getDefaultModel();
+    const key = resolveProviderKey(endpoint, apiKey);
+    evolutionSettings.update({
+      provider: { enabled: true, baseURL: endpoint, model, apiKey: key },
+    });
+    providerConfig = configureDefaultProvider({
+      baseURL: endpoint,
+      apiKey: key,
+      defaultModel: model,
+      fallbackModel,
+    });
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
   }
   if (accessMode && runtimeAccess) {
     try {
       runtimeAccess.update({ mode: accessMode });
     } catch (_) {}
   }
-  const providerConfig = configureDefaultProvider({ baseURL, apiKey, defaultModel, fallbackModel });
   res.json({
     success: true,
     message: 'Settings updated successfully',
@@ -2036,23 +2165,12 @@ app.post('/api/workspace/execute', async (req, res) => {
       });
     }
 
-    let runCmd = null;
-    if (lang === 'python' || lang === 'py') {
-      runCmd = `python "${cleanFn}"`;
-    } else if (lang === 'typescript' || lang === 'ts') {
-      runCmd = `node --import tsx "${cleanFn}"`;
-    } else if (lang === 'javascript' || lang === 'js' || lang === 'mjs' || lang === 'cjs') {
-      runCmd = `node "${cleanFn}"`;
-    } else if (lang === 'cpp' || lang === 'c++') {
-      runCmd = `g++ -std=c++20 "${cleanFn}" -o "${cleanFn}.exe" && "${cleanFn}.exe"`;
-    }
-
     const { default: sandbox } = await import('./coder/sandbox.js');
     const result = await sandbox.execute({
       targetFile: cleanFn,
       language: lang,
       code: content,
-      runCommand: runCmd,
+      execute: true,
     });
 
     res.json({
@@ -2527,6 +2645,7 @@ app.get('/api/conversations/:id/memory', (req, res) => {
 app.delete('/api/conversations/:id', (req, res) => {
   const ok = conversations.delete(req.params.id);
   if (!ok) return res.status(404).json({ error: 'Conversation not found' });
+  aremEngine.forgetChat(req.params.id);
   if (brain.activeConversationId === req.params.id) {
     brain.setChatActive(false);
     brain.setConversation(null);
@@ -3288,7 +3407,8 @@ app.delete('/api/goals/:id', (req, res) => {
 // ─── Ada-SI Dynamic Tool Forger Endpoints ───
 app.get('/api/ada/status', (req, res) => {
   try {
-    res.json(adaToolForger.getStatus());
+    const status = adaToolForger.getStatus();
+    res.json(req.query.pending === '1' ? { pendingApproval: status.pendingApproval } : status);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -3308,9 +3428,9 @@ app.post('/api/ada/forge', async (req, res) => {
 
 app.post('/api/ada/approve', (req, res) => {
   try {
-    const { toolId } = req.body || {};
+    const { toolId, integrity } = req.body || {};
     if (!toolId) return res.status(400).json({ error: 'toolId is required' });
-    const approved = adaToolForger.approveTool(toolId);
+    const approved = adaToolForger.approveTool(toolId, integrity);
     if (!approved.success) return res.status(404).json(approved);
     res.json(approved);
   } catch (err) {
@@ -3320,9 +3440,14 @@ app.post('/api/ada/approve', (req, res) => {
 
 app.post('/api/ada/reject', (req, res) => {
   try {
-    const { toolId, reason } = req.body || {};
+    const { toolId, reason, integrity } = req.body || {};
     if (!toolId) return res.status(400).json({ error: 'toolId is required' });
-    const ok = adaToolForger.rejectTool(toolId, reason);
+    const ok = adaToolForger.rejectTool(toolId, reason, integrity);
+    if (!ok)
+      return res.status(409).json({
+        success: false,
+        error: 'The proposal is no longer pending. Refresh Notifications.',
+      });
     res.json({ success: ok });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -3570,6 +3695,8 @@ app.post('/api/sis/unified-turn-stream', async (req, res) => {
       onStreamToken: (token, fullText) => sendEvent('token', { token, fullText }),
       onInteractiveUI: (ui) => sendEvent('interactive-ui', ui),
       onTaskStatus: (status) => sendEvent('task-status', status),
+      onAremActivity: (activity) => sendEvent('arem-activity', activity),
+      onWorkStep: (step) => sendEvent('work-step', step),
     });
     clearInterval(heartbeatTimer);
     sendEvent('done', result);
@@ -4921,6 +5048,11 @@ wss.on('connection', (ws, req) => {
 (async () => {
   await brain.initialize();
   await configureEvolutionTools(evolutionEngine, toolRegistry)();
+  try {
+    syncAremCatalog(toolRegistry.getAll(), learningLibrary);
+  } catch (error) {
+    console.warn('[AREM] Catalog unavailable:', error.message);
+  }
 
   let activePort = parseInt(PORT, 10) || 3008;
   let retryCount = 0;
@@ -4978,12 +5110,8 @@ wss.on('connection', (ws, req) => {
         } catch (rsiErr) {
           console.warn('RSI Orchestrator autostart notice:', rsiErr.message);
         }
-        try {
-          aremEngine.startScheduler();
-        } catch (aremErr) {
-          console.warn('AREM Scheduler autostart notice:', aremErr.message);
-        }
       }
+      if (automaticSleepEnabled()) aremEngine.startScheduler();
     });
   };
 

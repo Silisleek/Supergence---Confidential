@@ -56,6 +56,7 @@ export class AgentConversations {
     this.active = new Set();
     this.loaded = false;
     this.threads = new Map();
+    this.teamPending = new Map();
   }
 
   load() {
@@ -116,7 +117,7 @@ export class AgentConversations {
     return { removed: true, id };
   }
 
-  async create({ agentIds, title } = {}) {
+  async create({ agentIds, title, projectId } = {}) {
     this.load();
     const roster = await this.roster();
     const ids = [...new Set(Array.isArray(agentIds) ? agentIds : [])];
@@ -124,8 +125,11 @@ export class AgentConversations {
       throw new Error('Select between one and eight available agents.');
     if (this.threads.size >= 100)
       throw new Error('Conversation limit reached. Reuse an existing conversation.');
+    if (projectId && !/^[a-zA-Z0-9_-]{1,180}$/.test(projectId))
+      throw new Error('Invalid project conversation ID.');
     const thread = {
       id: `thread-${randomUUID()}`,
+      ...(projectId ? { projectId } : {}),
       title: String(
         title || ids.map((id) => roster.find((agent) => agent.id === id).name).join(' + '),
       ).slice(0, 120),
@@ -138,6 +142,37 @@ export class AgentConversations {
     this.threads.set(thread.id, thread);
     this.save(thread);
     return structuredClone(thread);
+  }
+
+  team(projectId) {
+    this.load();
+    if (!/^[a-zA-Z0-9_-]{1,180}$/.test(String(projectId || '')))
+      throw new Error('Select a valid project chat.');
+    const thread = [...this.threads.values()].find((item) => item.projectId === projectId);
+    return thread ? structuredClone(thread) : null;
+  }
+
+  async ensureTeam(projectId, targetAgentId) {
+    const existing = this.team(projectId);
+    if (existing) return existing;
+    if (this.teamPending.has(projectId)) return this.teamPending.get(projectId);
+    const pending = this.create({ agentIds: [targetAgentId], title: 'Team chat', projectId });
+    this.teamPending.set(projectId, pending);
+    try { return await pending; } finally { this.teamPending.delete(projectId); }
+  }
+
+  async sendTeam(projectId, { content, targetAgentId, senderAgentId = 'user', provenance = 'user' }) {
+    const roster = await this.roster();
+    if (!roster.some((agent) => agent.id === targetAgentId && agent.active !== false && agent.enabled !== false && !['INACTIVE', 'OFFLINE', 'DISABLED'].includes(String(agent.status || '').toUpperCase())))
+      throw new Error('Select an available agent.');
+    const team = await this.ensureTeam(projectId, targetAgentId);
+    const thread = this.threads.get(team.id);
+    if (this.active.has(team.id)) throw new Error('This conversation is already waiting for an agent reply.');
+    if (!thread.agentIds.includes(targetAgentId)) {
+      thread.agentIds.push(targetAgentId);
+      this.save(thread);
+    }
+    return this.send(team.id, { content, targetAgentId, senderAgentId, provenance });
   }
 
   async send(id, { content, targetAgentId, senderAgentId = 'user', provenance = 'user' } = {}) {
@@ -177,7 +212,7 @@ export class AgentConversations {
     delete thread.error;
     this.save(thread);
     try {
-      const responder = provenance === 'user' && configuredReply ? configuredReply : this.reply;
+      const responder = (provenance === 'user' || thread.projectId) && configuredReply ? configuredReply : this.reply;
       const recordActivity = (activity, phase) => {
         thread.activity ||= [];
         const existing = thread.activity.find((item) => item.id === activity.id);
@@ -191,6 +226,8 @@ export class AgentConversations {
         messages: structuredClone(thread.messages),
         senderName,
         threadId: id,
+        projectId: thread.projectId || null,
+        provenance,
         onToken: (text) => {
           thread.streamingReply = String(text || '').slice(0, 32000);
         },
@@ -228,8 +265,11 @@ export class AgentConversations {
     return structuredClone(thread);
   }
 
-  async messageAgent({ targetAgentId, content, threadId, senderAgentId = 'supergence' }) {
+  async messageAgent({ targetAgentId, content, threadId, senderAgentId = 'supergence', projectId }) {
+    if (projectId && !threadId) return this.sendTeam(projectId, { targetAgentId, content, senderAgentId, provenance: 'agent-tool' });
     const thread = threadId ? this.get(threadId) : await this.create({ agentIds: [targetAgentId] });
+    if (projectId && threadId && thread.projectId && thread.projectId !== projectId)
+      throw new Error('That team conversation belongs to another project.');
     return this.send(thread.id, {
       content,
       targetAgentId,

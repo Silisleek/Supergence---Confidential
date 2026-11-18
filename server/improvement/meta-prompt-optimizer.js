@@ -250,7 +250,7 @@ export class MetaPromptOptimizer {
     this.directives[domain].push(newDirective);
 
     if (this.directives[domain].length > 12) {
-      this.directives[domain].sort((a, b) => b.fitness - a.fitness);
+      this.directives[domain].sort((a, b) => (b.fitness ?? 0.9) - (a.fitness ?? 0.9));
       this.directives[domain] = this.directives[domain].slice(0, 12);
     }
 
@@ -304,7 +304,7 @@ Output strict JSON only:
         const newDirective = {
           id: `dir_${domain}_correction_${Date.now()}`,
           rule: parsed.rule.trim(),
-          fitness: 0.99,
+          fitness: null,
           generation: this.generation,
           source: 'user-correction-hardening',
           rationale: parsed.rationale || '',

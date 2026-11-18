@@ -260,7 +260,7 @@ export class AremMemoryStore {
     if (!query || typeof query !== 'string') return pages.slice(0, limit);
 
     const qLower = query.toLowerCase();
-    const terms = qLower.split(/\s+/).filter(Boolean);
+    const terms = [...new Set(qLower.match(/[\p{L}\p{N}_-]{3,}/gu) || [])].slice(0, 32);
 
     const scored = pages.map((page) => {
       const full = this.readWikiPage(page.slug)?.content || '';
@@ -273,7 +273,7 @@ export class AremMemoryStore {
       for (const t of terms) {
         if (page.slug.includes(t)) score += 3;
         if (page.title.toLowerCase().includes(t)) score += 3;
-        const matches = (fLower.match(new RegExp(t, 'g')) || []).length;
+        const matches = fLower.split(t, 6).length - 1;
         score += Math.min(matches, 5);
       }
 

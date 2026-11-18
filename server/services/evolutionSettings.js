@@ -95,6 +95,16 @@ export class EvolutionSettings {
     }
     if (patch.provider) {
       const p = patch.provider;
+      if (p.profileId !== undefined) {
+        if (
+          p.profileId !== '' &&
+          (typeof p.profileId !== 'string' || !/^[\w-]{1,100}$/.test(p.profileId))
+        )
+          throw new Error('Invalid provider profile ID.');
+        next.provider.profileId = p.profileId;
+      } else if (p.baseURL !== undefined || p.model !== undefined || p.apiKey !== undefined) {
+        delete next.provider.profileId;
+      }
       if (p.baseURL !== undefined && p.baseURL !== '') {
         const url = new URL(p.baseURL);
         if (url.hostname === 'groq.com' || url.hostname.endsWith('.groq.com'))

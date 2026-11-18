@@ -19,6 +19,7 @@ const PUBLIC_PATTERNS = [
   /^\/scripts\/.*$/,
   /^\/images\/.*$/,
   /^\/fonts\/.*$/,
+  /^\/vendor\/katex\/(?:katex\.min\.(?:css|js)|fonts\/KaTeX_[\w-]+\.(?:ttf|woff2?))$/,
   /^\/favicon\.ico$/,
   /^\/sleek-login$/,
   /^\/__sleek\/callback$/,
@@ -91,7 +92,7 @@ export function createSessionAuth(
     if (isPublicRoute(req)) return next();
     if (authorized(req)) return next();
     if (
-      req.method === 'GET' &&
+      ['GET', 'HEAD'].includes(req.method) &&
       (req.headers.accept?.includes('text/html') || !req.path.startsWith('/api/')) &&
       (req.path === '/' ||
         req.path === '/index.html' ||
@@ -100,10 +101,7 @@ export function createSessionAuth(
     ) {
       res.setHeader('Cache-Control', 'no-store');
       res.setHeader('Referrer-Policy', 'no-referrer');
-      res.setHeader(
-        'Set-Cookie',
-        `${cookieName(req)}=${secret}; Path=/; HttpOnly; SameSite=Strict`,
-      );
+      res.setHeader('Set-Cookie', `${cookieName(req)}=${secret}; Path=/; HttpOnly; SameSite=Lax`);
       const existing = req.headers.cookie ? `${req.headers.cookie}; ` : '';
       req.headers.cookie = `${existing}${cookieName(req)}=${secret}`;
       return next();

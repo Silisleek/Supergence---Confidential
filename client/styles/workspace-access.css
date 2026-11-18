@@ -21,7 +21,7 @@
   font: 12px/1.65 var(--font-ui);
   color: var(--shell-muted);
 }
-.access-dialog select {
+:is(.access-dialog, .workspace-access-controls) select {
   width: 100%;
   padding: 10px;
   border: 0;

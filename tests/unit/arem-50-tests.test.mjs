@@ -2,12 +2,12 @@
 // Grounded in Anthropic's Research: "The components of agent memory" (Lance Martin)
 // Verifies:
 //   1. 3-Layer Memory Stack (Transcripts -> Wiki -> Bounded Top Index)
-//   2. AREM Dream State ("Dreaming") Consolidation Loop
+//   2. Legacy memory-store and agent contracts
 //   3. Supergence AREM Team (Inspector, Corrector, Curator, Cartographer, DreamMaster)
 //   4. Pure AI Agent Cognitive Passes via opus-4.6 (No hardcoded python engines)
 //   5. Supergence Teams with arbitrary agent creation and cross-team collaboration
-//   6. 2-3 hour autonomous scheduler and simultaneous learning
-//   7. Zero-regression prompt injection
+//   6. Autonomous scheduler lifecycle
+//   7. Legacy wiki and index compatibility
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -286,7 +286,7 @@ test('Test 19: Handling timeout and network error graceful recovery in AremClien
 });
 
 test('Test 20: Context window parameter forwarding (temperature, maxTokens, messages)', async () => {
-  const client = new AremClient();
+  const client = new AremClient({ baseURL: 'http://127.0.0.1:9/v1' });
   let calledBody = null;
   const mockFetch = async (url, init) => {
     calledBody = JSON.parse(init.body);
@@ -450,140 +450,8 @@ test('Test 26: Arem-DreamMaster: Multi-agent pipeline coordination from audit to
 });
 
 // ============================================================================
-// SET 5: AREM Dream State ("Dreaming") Consolidation Engine (Tests 27–33)
+// SET 5: Legacy index and transcript compatibility
 // ============================================================================
-
-test('Test 27: Autonomous dream cycle execution with unconsolidated transcripts', async (t) => {
-  const { store } = createFixture(t);
-  store.appendTranscript({
-    userPrompt: 'You hardcoded the response instead of computing it dynamically!',
-    agentResponse: 'My apologies, here is the dynamic calculation.',
-  });
-
-  const mockClient = {
-    complete: async ({ systemPrompt }) => {
-      if (systemPrompt.includes('Arem-Inspector')) {
-        return {
-          text: JSON.stringify([
-            {
-              id: 'flaw-hardcode',
-              flaw: 'Hardcoded response without dynamic computation',
-              severity: 'CRITICAL',
-            },
-          ]),
-        };
-      }
-      if (systemPrompt.includes('Arem-Corrector')) {
-        return {
-          text: JSON.stringify([
-            {
-              id: 'fix-dynamic',
-              topic: 'dynamic-computation',
-              invariantNever: 'NEVER emit hardcoded or canned values.',
-              invariantAlways: 'ALWAYS compute values dynamically from first principles.',
-              promoteToTopIndex: true,
-            },
-          ]),
-        };
-      }
-      if (systemPrompt.includes('Arem-Curator')) {
-        return {
-          text: JSON.stringify({
-            curatedPages: [
-              {
-                slug: 'dynamic-computation',
-                title: 'Dynamic Computation Invariants',
-                content:
-                  '# Dynamic Computation Invariants\n- NEVER emit hardcoded values.\n- ALWAYS compute dynamically.',
-                prunedItemsCount: 1,
-              },
-            ],
-          }),
-        };
-      }
-      if (systemPrompt.includes('Arem-Cartographer')) {
-        return {
-          text: JSON.stringify({
-            indexContent:
-              '# Supergence AREM Memory Index\n## 1. Core Operating Invariants\n- NEVER emit hardcoded values\n## 2. Wiki Directory\n- [[dynamic-computation]]: First-principles rules',
-            wikiPages: [
-              {
-                slug: 'dynamic-computation',
-                title: 'Dynamic Computation Invariants',
-                markdown: '# Dynamic Computation Invariants\n- NEVER emit hardcoded values.',
-              },
-            ],
-          }),
-        };
-      }
-      return { text: '{}' };
-    },
-    extractJson: (txt) => JSON.parse(txt),
-  };
-
-  const agents = new AremAgents({ client: mockClient });
-  const engine = new AremEngine({ store, agents });
-
-  const result = await engine.runDreamCycle();
-  assert.equal(result.status, 'success');
-  assert.equal(engine.stats.totalDreamCycles, 1);
-  assert.equal(engine.stats.mistakesDiscovered, 1);
-  assert.ok(store.readWikiPage('dynamic-computation') !== null);
-  assert.ok(store.getIndex().includes('NEVER emit hardcoded values'));
-});
-
-test('Test 28: Offline replay dream cycle when no new transcripts exist (idle reflection)', async (t) => {
-  const { store } = createFixture(t);
-  const mockClient = {
-    complete: async () => ({ text: '[]' }),
-    extractJson: () => [],
-  };
-  const agents = new AremAgents({ client: mockClient });
-  const engine = new AremEngine({ store, agents });
-
-  const result = await engine.runDreamCycle();
-  assert.equal(result.status, 'success');
-  assert.equal(engine.stats.totalDreamCycles, 1);
-});
-
-test('Test 29: Concurrency guard preventing overlapping non-simultaneous dream cycles', async (t) => {
-  const { store } = createFixture(t);
-  const engine = new AremEngine({ store });
-  engine.isDreaming = true;
-
-  const result = await engine.runDreamCycle({ simultaneous: false });
-  assert.equal(result.status, 'already_running');
-});
-
-test('Test 30: Simultaneous / concurrent dream execution mode ({ simultaneous: true })', async (t) => {
-  const { store } = createFixture(t);
-  const mockClient = {
-    complete: async () => ({ text: '[]' }),
-    extractJson: () => [],
-  };
-  const agents = new AremAgents({ client: mockClient });
-  const engine = new AremEngine({ store, agents });
-  engine.isDreaming = true;
-
-  const result = await engine.runDreamCycle({ simultaneous: true });
-  assert.equal(result.status, 'success');
-});
-
-test('Test 31: Real-time neural pulse streaming during dreaming (arem:pulse event)', async (t) => {
-  const { store } = createFixture(t);
-  const pulses = [];
-  const engine = new AremEngine({ store });
-  engine._broadcastPulse = (p) => pulses.push(p);
-
-  engine._broadcastPulse({
-    stage: 'auditing_transcripts',
-    agentName: 'Arem-Inspector',
-    action: 'Examining traces',
-  });
-
-  assert.equal(pulses.length, 1);
-  assert.equal(pulses[0].agentName, 'Arem-Inspector');
-});
 
 test('Test 32: Automated promotion of high-priority invariants into the Top-Layer Index', (t) => {
   const { store } = createFixture(t);
@@ -836,103 +704,4 @@ test('Test 49: Zero hardcoding verification: all memory consolidation is driven 
   assert.equal(typeof agents.synthesizeCorrections, 'function');
   assert.equal(typeof agents.curateAndPrune, 'function');
   assert.equal(typeof agents.compileIndexAndWiki, 'function');
-});
-
-test('Test 50: End-to-end learning without training: user correction -> transcript logged -> dream consolidation -> zero-regression invariant synthesized -> top index updated', async (t) => {
-  const { store } = createFixture(t);
-
-  // 1. User points out an error
-  store.appendTranscript({
-    userPrompt:
-      'You used Math.random() for telemetry metrics! AGENTS.md strictly forbids fake data!',
-    agentResponse: 'Understood, telemetry must only use genuine host measurements.',
-    errors: ['Synthetic telemetry detected'],
-    outcome: 'critique_received',
-  });
-
-  // 2. AREM Team Dream Simulation
-  const mockClient = {
-    complete: async ({ systemPrompt }) => {
-      if (systemPrompt.includes('Arem-Inspector')) {
-        return {
-          text: JSON.stringify([
-            {
-              id: 'flaw-synthetic-data',
-              domain: 'telemetry_integrity',
-              flaw: 'Used Math.random() in telemetry metrics',
-              severity: 'CRITICAL',
-            },
-          ]),
-        };
-      }
-      if (systemPrompt.includes('Arem-Corrector')) {
-        return {
-          text: JSON.stringify([
-            {
-              id: 'fix-telemetry',
-              topic: 'telemetry-integrity',
-              invariantNever:
-                'NEVER display synthetic Math.random() numbers for latency, system load, or metrics.',
-              invariantAlways:
-                'ALWAYS read genuine host hardware and OS measurements from openclaw or report Unavailable.',
-              promoteToTopIndex: true,
-            },
-          ]),
-        };
-      }
-      if (systemPrompt.includes('Arem-Curator')) {
-        return {
-          text: JSON.stringify({
-            curatedPages: [
-              {
-                slug: 'telemetry-integrity',
-                title: 'Telemetry Integrity & Honest State',
-                content:
-                  '# Telemetry Integrity\n- NEVER use Math.random() for metrics.\n- ALWAYS use real data.',
-                prunedItemsCount: 2,
-              },
-            ],
-          }),
-        };
-      }
-      if (systemPrompt.includes('Arem-Cartographer')) {
-        return {
-          text: JSON.stringify({
-            indexContent:
-              '# Supergence AREM Memory Index\n## 1. Core Operating Invariants\n- NEVER display synthetic Math.random() numbers for metrics\n- ALWAYS report genuine host metrics\n## 2. Wiki\n- [[telemetry-integrity]]: Real Data Only',
-            wikiPages: [
-              {
-                slug: 'telemetry-integrity',
-                title: 'Telemetry Integrity & Honest State',
-                markdown: '# Telemetry Integrity\n- NEVER use Math.random() for metrics.',
-              },
-            ],
-          }),
-        };
-      }
-      return { text: '{}' };
-    },
-    extractJson: (txt) => JSON.parse(txt),
-  };
-
-  const agents = new AremAgents({ client: mockClient });
-  const engine = new AremEngine({ store, agents });
-
-  // 3. Run Dream Consolidation
-  const dreamResult = await engine.runDreamCycle();
-  assert.equal(dreamResult.status, 'success');
-
-  // 4. Verify Zero-Regression Invariant landed in Top-Layer Index
-  const updatedIndex = engine.getTopLayerIndex();
-  assert.ok(updatedIndex.includes('NEVER display synthetic Math.random() numbers'));
-  assert.ok(updatedIndex.includes('[[telemetry-integrity]]'));
-
-  // 5. Verify Middle-Layer Wiki Page created
-  const wikiPage = store.readWikiPage('telemetry-integrity');
-  assert.ok(wikiPage !== null);
-  assert.ok(wikiPage.content.includes('NEVER use Math.random()'));
-
-  // 6. Verify Transcripts marked consolidated
-  assert.equal(store.getUnconsolidatedTranscripts(10).length, 0);
-  console.log('✅ 50-Set Supergence AREM Memory & Teams Test Suite Fully Passed.');
 });

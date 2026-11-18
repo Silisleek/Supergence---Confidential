@@ -1,3 +1,10 @@
+/* ==========================================================================
+   SUPERGENCE DESIGN TOKENS — Unified Design System
+   Single source of truth for all colors, typography, spacing, motion.
+   Replaces: workspace.css tokens, workspace-liquid-glass.css tokens
+   ========================================================================== */
+
+/* ── Font Faces ── */
 @font-face {
   font-family: 'Manrope';
   src: url('/fonts/Manrope-Variable.ttf') format('truetype');
@@ -19,198 +26,201 @@
   font-weight: 400;
   font-display: swap;
 }
-
-/* Modern, pastel, refined dark surfaces inspired by the modern agent OS workspace. */
+/* ── Core Tokens (Default: Deep Dark Obsidian) ── */
 :root {
   color-scheme: dark;
-  --shell-page: #101114;
-  --shell-panel: #16171d;
-  --shell-sidebar: #131419;
-  --shell-surface: #1e2028;
-  --shell-border: rgba(255, 255, 255, 0.08);
-  --shell-text: #f4f5f8;
-  --shell-muted: #6f7387;
-  --shell-accent: #a78bfa;
-  --shell-accent-hover: #c4b5fd;
-  --shell-accent-ink: #101114;
-  --shell-text-secondary: #9ea2b6;
-  --shell-subtle: #56596c;
-  --shell-hover: rgba(255, 255, 255, 0.05);
-  --shell-selected: #242632;
-  --shell-code: #13141a;
-  --shell-raised: #1d1e26;
-  --shell-success: #34d399;
-  --shell-warning: #fb923c;
-  --shell-error: #f87171;
-  --shell-info: #38bdf8;
-  --shell-mint: #34d399;
-  --shell-peach: #fb923c;
-  --shell-blue: #38bdf8;
-  --shell-rose: #f472b6;
-  --shell-backdrop: rgba(10, 11, 15, 0.82);
-  --shell-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
-  --shell-rail: 64px;
-  --shell-history: 264px;
-  --font-ui: 'Manrope', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-display: 'Manrope', Georgia, serif;
-  --font-editorial: 'Manrope', Georgia, serif;
+
+  /* Canvas */
+  --sg-void: #050608;
+  --sg-page: #0a0c10;
+
+  /* Surfaces — elevation ladder */
+  --sg-surface-1: #0f1117;
+  --sg-surface-2: #14171e;
+  --sg-surface-3: #1a1e27;
+
+  /* Borders & Dividers */
+  --sg-border: rgba(255, 255, 255, 0.08);
+  --sg-border-strong: rgba(255, 255, 255, 0.14);
+  --sg-divider: rgba(255, 255, 255, 0.06);
+
+  /* Text */
+  --sg-text: #f4f4f5;
+  --sg-text-dim: #94a3b8;
+  --sg-text-muted: #64748b;
+  --sg-text-inverse: #050608;
+
+  /* Accent — ONE purposeful color: Cyan/Teal */
+  --sg-accent: #06b6d4;
+  --sg-accent-hover: #0891b2;
+  --sg-accent-soft: rgba(6, 182, 212, 0.12);
+  --sg-accent-glow: rgba(6, 182, 212, 0.18);
+
+  /* Semantic — derived, not new hues */
+  --sg-success: #10b981;
+  --sg-success-soft: rgba(16, 185, 129, 0.12);
+  --sg-warning: #f59e0b;
+  --sg-warning-soft: rgba(245, 158, 11, 0.12);
+  --sg-error: #ef4444;
+  --sg-error-soft: rgba(239, 68, 68, 0.12);
+
+  /* Typography Families */
+  --sg-font-ui: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --sg-font-display: 'Instrument Serif', Georgia, serif;
+  --sg-font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+
+  /* Typography Scale */
+  --sg-display-xl: clamp(2.5rem, 4vw + 1rem, 4rem) / 1.1 var(--sg-font-display);
+  --sg-display-lg: clamp(1.75rem, 2.5vw + 1rem, 2.5rem) / 1.15 var(--sg-font-display);
+  --sg-display-md: clamp(1.375rem, 1.5vw + 1rem, 1.75rem) / 1.2 var(--sg-font-display);
+  --sg-heading-lg: 1.25rem / 1.3 var(--sg-font-ui);
+  --sg-heading-md: 1.125rem / 1.35 var(--sg-font-ui);
+  --sg-heading-sm: 1rem / 1.4 var(--sg-font-ui);
+  --sg-body-lg: 1rem / 1.6 var(--sg-font-ui);
+  --sg-body: 0.9375rem / 1.6 var(--sg-font-ui);
+  --sg-body-sm: 0.875rem / 1.55 var(--sg-font-ui);
+  --sg-caption: 0.8125rem / 1.5 var(--sg-font-ui);
+  --sg-micro: 0.75rem / 1.4 var(--sg-font-ui);
+  --sg-mono-lg: 0.9375rem / 1.6 var(--sg-font-mono);
+  --sg-mono: 0.875rem / 1.6 var(--sg-font-mono);
+  --sg-mono-sm: 0.8125rem / 1.55 var(--sg-font-mono);
+  --sg-mono-xs: 0.75rem / 1.5 var(--sg-font-mono);
+  --sg-wt-light: 300;
+  --sg-wt-regular: 400;
+  --sg-wt-medium: 500;
+  --sg-wt-semibold: 600;
+  --sg-wt-bold: 700;
+
+  /* Motion */
+  --sg-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --sg-ease-out: cubic-bezier(0.33, 1, 0.68, 1);
+  --sg-duration-fast: 120ms;
+  --sg-duration-normal: 180ms;
+  --sg-duration-slow: 240ms;
+
+  /* Layout */
+  --sg-rail-width: 64px;
+  --sg-rail-width-expanded: 200px;
+  --sg-sidebar-width: 280px;
+  --sg-sidebar-width-collapsed: 48px;
+  --sg-sidebrowser-width: 320px;
+  --sg-sidebrowser-width-min: 240px;
+  --sg-sidebrowser-width-max: 520px;
+  --sg-composer-max-h: 140px;
+  --sg-topbar-height: 48px;
+  --sg-radius-sm: 6px;
+  --sg-radius-md: 10px;
+  --sg-radius-lg: 14px;
+  --sg-radius-full: 999px;
+
+  /* Shadows — elevation only */
+  --sg-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --sg-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45);
+  --sg-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
+  --sg-shadow-xl: 0 20px 48px rgba(0, 0, 0, 0.55);
+
+  /* Focus */
+  --sg-focus-ring: 0 0 0 2px var(--sg-accent);
+
+  /* Backdrops */
+  --sg-backdrop-modal: rgba(5, 6, 8, 0.6);
+  --sg-backdrop-drawer: rgba(5, 6, 8, 0.5);
 }
 
-/* Typography Choices */
-body[data-font='editorial'],
-:root[data-font='editorial'] {
-  --font-ui: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-display: 'Instrument Serif', Georgia, serif;
-  --font-editorial: 'Instrument Serif', Georgia, serif;
+/* ── Theme Variants ── */
+
+/* Charcoal */
+[data-theme="warm"] {
+  --sg-void: #09090b;
+  --sg-page: #101012;
+  --sg-surface-1: #151517;
+  --sg-surface-2: #202023;
+  --sg-surface-3: #29292d;
+  --sg-border: rgb(255 255 255 / 14%);
+  --sg-border-strong: rgb(255 255 255 / 22%);
+  --sg-divider: rgb(255 255 255 / 8%);
+  --sg-text: #f2f1f3;
+  --sg-text-dim: #b9b7bd;
+  --sg-text-muted: #939199;
+  --sg-accent: #e8b38b;
+  --sg-accent-hover: #f3c9a8;
+  --sg-accent-soft: rgb(232 179 139 / 12%);
+  --sg-accent-glow: rgb(232 179 139 / 18%);
+  --sg-focus-ring: 0 0 0 2px var(--sg-accent);
 }
 
-body[data-font='sans'],
-:root[data-font='sans'] {
-  --font-ui: 'Manrope', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-display: 'Manrope', Inter, -apple-system, sans-serif;
-  --font-editorial: 'Manrope', sans-serif;
+/* Midnight — Deep blue undertones */
+[data-theme="midnight"] {
+  --sg-void: #06060c;
+  --sg-page: #0b0b14;
+  --sg-surface-1: #11111d;
+  --sg-surface-2: #181828;
+  --sg-surface-3: #1f1f32;
+  --sg-border: rgba(139, 92, 246, 0.14);
+  --sg-border-strong: rgba(139, 92, 246, 0.22);
+  --sg-divider: rgba(139, 92, 246, 0.08);
+  --sg-text: #f8f6fc;
+  --sg-text-dim: #c8c2d9;
+  --sg-text-muted: #8b82a3;
+  --sg-accent: #a78bfa;
+  --sg-accent-hover: #8b5cf6;
+  --sg-accent-soft: rgba(167, 139, 250, 0.12);
+  --sg-accent-glow: rgba(167, 139, 250, 0.18);
+  --sg-focus-ring: 0 0 0 2px var(--sg-accent);
 }
 
-body[data-font='mono'],
-:root[data-font='mono'] {
-  --font-ui: 'JetBrains Mono', 'Fira Code', monospace;
-  --font-display: 'JetBrains Mono', monospace;
-  --font-editorial: 'JetBrains Mono', monospace;
+/* Cyber — Teal/Green undertones */
+[data-theme="cyber"] {
+  --sg-void: #050a08;
+  --sg-page: #08120e;
+  --sg-surface-1: #0c1a15;
+  --sg-surface-2: #10241e;
+  --sg-surface-3: #142d25;
+  --sg-border: rgba(16, 185, 129, 0.14);
+  --sg-border-strong: rgba(16, 185, 129, 0.22);
+  --sg-divider: rgba(16, 185, 129, 0.08);
+  --sg-text: #effbf5;
+  --sg-text-dim: #b8d9c8;
+  --sg-text-muted: #7aa88a;
+  --sg-accent: #10b981;
+  --sg-accent-hover: #059669;
+  --sg-accent-soft: rgba(16, 185, 129, 0.12);
+  --sg-accent-glow: rgba(16, 185, 129, 0.18);
+  --sg-focus-ring: 0 0 0 2px var(--sg-accent);
 }
 
-body[data-font='grotesk'],
-:root[data-font='grotesk'] {
-  --font-ui: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-display: 'Space Grotesk', -apple-system, sans-serif;
-  --font-editorial: 'Space Grotesk', sans-serif;
+/* ── Font Preference Overrides ── */
+[data-font="editorial"] {
+  --sg-font-ui: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --sg-font-display: 'Instrument Serif', Georgia, serif;
+}
+[data-font="sans"] {
+  --sg-font-ui: 'Manrope', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --sg-font-display: 'Manrope', Inter, -apple-system, sans-serif;
+}
+[data-font="mono"] {
+  --sg-font-ui: 'JetBrains Mono', 'Fira Code', monospace;
+  --sg-font-display: 'JetBrains Mono', monospace;
+}
+[data-font="grotesk"] {
+  --sg-font-ui: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  --sg-font-display: 'Space Grotesk', -apple-system, sans-serif;
+}
+[data-font="inter"] {
+  --sg-font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --sg-font-display: 'Inter', -apple-system, sans-serif;
 }
 
-body[data-font='inter'],
-:root[data-font='inter'] {
-  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-display: 'Inter', -apple-system, sans-serif;
-  --font-editorial: 'Inter', sans-serif;
-}
-
-/* Theme keys stay compatible with saved preferences. */
-body.sis-workspace-ui[data-theme='obsidian'],
-body.sis-workspace-ui[data-theme='neutral'],
-body.sis-workspace-ui:not([data-theme]) {
-  color-scheme: dark;
-  --shell-page: #101114;
-  --shell-panel: #16171d;
-  --shell-sidebar: #131419;
-  --shell-surface: #1e2028;
-  --shell-border: rgba(255, 255, 255, 0.08);
-  --shell-text: #f4f5f8;
-  --shell-muted: #6f7387;
-  --shell-accent: #a78bfa;
-  --shell-accent-hover: #c4b5fd;
-  --shell-accent-ink: #101114;
-  --shell-text-secondary: #9ea2b6;
-  --shell-subtle: #56596c;
-  --shell-hover: rgba(255, 255, 255, 0.05);
-  --shell-selected: #242632;
-  --shell-code: #13141a;
-  --shell-raised: #1d1e26;
-  --shell-success: #34d399;
-  --shell-warning: #fb923c;
-  --shell-error: #f87171;
-  --shell-info: #38bdf8;
-  --shell-mint: #34d399;
-  --shell-peach: #fb923c;
-  --shell-blue: #38bdf8;
-  --shell-rose: #f472b6;
-  --shell-backdrop: rgba(10, 11, 15, 0.82);
-  --shell-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
-}
-
-body.sis-workspace-ui[data-theme='warm'] {
-  color-scheme: dark;
-  --shell-page: #131110;
-  --shell-panel: #1a1715;
-  --shell-sidebar: #161312;
-  --shell-surface: #221e1a;
-  --shell-border: rgba(251, 146, 60, 0.14);
-  --shell-text: #f8f1eb;
-  --shell-text-secondary: #c9bcaf;
-  --shell-muted: #8c7e73;
-  --shell-subtle: #6b5f56;
-  --shell-hover: rgba(251, 146, 60, 0.07);
-  --shell-selected: #34281f;
-  --shell-code: #100d0b;
-  --shell-raised: #221e1a;
-  --shell-accent: #fb923c;
-  --shell-accent-hover: #fdba74;
-  --shell-accent-ink: #1c1007;
-  --shell-success: #34d399;
-  --shell-warning: #fb923c;
-  --shell-error: #f87171;
-  --shell-info: #38bdf8;
-  --shell-mint: #34d399;
-  --shell-peach: #fb923c;
-  --shell-blue: #38bdf8;
-  --shell-rose: #f472b6;
-  --shell-backdrop: rgba(16, 11, 8, 0.86);
-  --shell-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
-}
-
-body.sis-workspace-ui[data-theme='midnight'] {
-  color-scheme: dark;
-  --shell-page: #101017;
-  --shell-panel: #161622;
-  --shell-sidebar: #13131c;
-  --shell-surface: #1e1e2d;
-  --shell-border: rgba(192, 132, 252, 0.14);
-  --shell-text: #f5f2fb;
-  --shell-text-secondary: #c2bdd3;
-  --shell-muted: #857e9d;
-  --shell-subtle: #625c77;
-  --shell-hover: rgba(192, 132, 252, 0.07);
-  --shell-selected: #2d2642;
-  --shell-code: #0c0c14;
-  --shell-raised: #1f1f2e;
-  --shell-accent: #c084fc;
-  --shell-accent-hover: #d8b4fe;
-  --shell-accent-ink: #1e0933;
-  --shell-success: #34d399;
-  --shell-warning: #fb923c;
-  --shell-error: #f87171;
-  --shell-info: #38bdf8;
-  --shell-mint: #34d399;
-  --shell-peach: #fb923c;
-  --shell-blue: #38bdf8;
-  --shell-rose: #f472b6;
-  --shell-backdrop: rgba(12, 10, 18, 0.86);
-  --shell-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
-}
-
-body.sis-workspace-ui[data-theme='cyber'] {
-  color-scheme: dark;
-  --shell-page: #0d1211;
-  --shell-panel: #121917;
-  --shell-sidebar: #101614;
-  --shell-surface: #18221f;
-  --shell-border: rgba(52, 211, 153, 0.15);
-  --shell-text: #eff7f4;
-  --shell-text-secondary: #b6cbc4;
-  --shell-muted: #79938b;
-  --shell-subtle: #577069;
-  --shell-hover: rgba(52, 211, 153, 0.07);
-  --shell-selected: #1f342e;
-  --shell-code: #090e0c;
-  --shell-raised: #1a2622;
-  --shell-accent: #34d399;
-  --shell-accent-hover: #6ee7b7;
-  --shell-accent-ink: #042f1a;
-  --shell-success: #34d399;
-  --shell-warning: #fb923c;
-  --shell-error: #f87171;
-  --shell-info: #38bdf8;
-  --shell-mint: #34d399;
-  --shell-peach: #fb923c;
-  --shell-blue: #38bdf8;
-  --shell-rose: #f472b6;
-  --shell-backdrop: rgba(8, 14, 12, 0.86);
-  --shell-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+/* ── Reduced Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --sg-duration-fast: 0ms;
+    --sg-duration-normal: 0ms;
+    --sg-duration-slow: 0ms;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

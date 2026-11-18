@@ -51,6 +51,7 @@ class StreamOfConsciousness extends EventEmitter {
     setTimeout(() => this._pulseThought(), 1000);
 
     this._interval = setInterval(() => this._pulseThought(), this._cadenceMs);
+    this._interval?.unref?.();
   }
 
   stop() {

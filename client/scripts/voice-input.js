@@ -16,6 +16,7 @@ export class VoiceInput {
     this.onStateChange = options.onStateChange || null;
     this.autoSubmit = options.autoSubmit !== false;
     this.inputId = options.inputId || 'chat-input';
+    this.button = options.button || null;
 
     this.supported = !!SpeechRecognitionCtor;
     this.listening = false;
@@ -40,12 +41,12 @@ export class VoiceInput {
 
   init() {
     if (this._bound) return true;
-    this.btn = document.getElementById('sbt-btn-dictate');
+    this.btn = this.button || document.getElementById('sbt-btn-dictate');
     if (!this.btn) {
       console.warn('[VoiceInput] Dictate button not found');
       return false;
     }
-    this.labelEl = document.getElementById('sbt-dictate-label');
+    this.labelEl = this.button ? null : document.getElementById('sbt-dictate-label');
     this.meterEl = this.btn.querySelector('.sbt-mic-meter');
     this.meterFill = this.btn.querySelector('.sbt-mic-meter-fill');
 
@@ -61,7 +62,7 @@ export class VoiceInput {
       return false;
     }
 
-    window.addEventListener('beforeunload', () => this.stop());
+    if (!this.button) window.addEventListener('beforeunload', () => this.stop());
 
     this._render();
     return true;
@@ -79,13 +80,22 @@ export class VoiceInput {
   }
 
   async start() {
-    if (!this.supported || this.listening) return;
+    if (!this.supported || this.listening || this.starting) return;
+    this.starting = true;
+    this.cancelStart = false;
+    this._permissionError = null;
 
     // Secure the microphone first so a denied permission never leaves the
     // button stuck in a listening state with nothing behind it.
     const ok = await this._startMeter();
+    this.starting = false;
+    if (this.cancelStart || !this.btn?.isConnected) {
+      this._stopMeter();
+      return;
+    }
     if (!ok) {
       this._render();
+      this._notifyState('microphone-unavailable');
       return;
     }
 
@@ -98,6 +108,7 @@ export class VoiceInput {
     recognition.interimResults = true;
 
     recognition.addEventListener('result', (e) => {
+      if (this.recognition !== recognition || !this.btn?.isConnected) return;
       let interim = '';
       let finalText = '';
       for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -111,8 +122,8 @@ export class VoiceInput {
 
       if (finalText) {
         const base = this._committedText ? `${this._committedText} ` : '';
-        target.value = `${base}${finalText.trim()}`.trim();
-        this._committedText = target.value;
+        this._committedText = `${base}${finalText.trim()}`.trim();
+        target.value = this.autoSubmit ? this._committedText : `${this._committedText} ${interim}`.trim();
         target.dispatchEvent(new Event('input'));
         if (this.autoSubmit) {
           const text = target.value.trim();
@@ -127,18 +138,19 @@ export class VoiceInput {
     });
 
     recognition.addEventListener('error', (ev) => {
+      if (this.recognition !== recognition) return;
       const reason = ev.error;
       // 'no-speech' is routine while listening; anything else is fatal.
       if (reason !== 'no-speech' && reason !== 'aborted') {
         console.warn('[VoiceInput] recognition error:', reason);
-        this._notifyState(reason);
         this.stop();
+        this._notifyState(reason);
       }
     });
 
     recognition.addEventListener('end', () => {
       // Chrome ends the session periodically — keep it alive while armed.
-      if (this.listening) {
+      if (this.listening && this.recognition === recognition) {
         try {
           recognition.start();
         } catch {
@@ -155,6 +167,7 @@ export class VoiceInput {
       this.listening = false;
       this._stopMeter();
       this._render();
+      this._notifyState('recognition-unavailable');
       console.warn('[VoiceInput] start failed:', err.message);
       return;
     }
@@ -163,6 +176,7 @@ export class VoiceInput {
   }
 
   stop() {
+    this.cancelStart = true;
     this.listening = false;
     if (this.recognition) {
       try {
@@ -192,6 +206,7 @@ export class VoiceInput {
     }
 
     const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx || !this.meterFill) return true;
     this.audioCtx = new Ctx();
     if (this.audioCtx.state === 'suspended') {
       await this.audioCtx.resume().catch(() => {});
@@ -245,6 +260,11 @@ export class VoiceInput {
     this.btn.classList.toggle('is-active', this.listening);
     this.btn.classList.toggle('is-listening', this.listening);
     this.btn.setAttribute('aria-pressed', String(this.listening));
+    if (this.button && this.supported) {
+      const label = this.listening ? 'Stop dictation' : 'Dictate';
+      this.btn.setAttribute('aria-label', label);
+      this.btn.title = label;
+    }
     if (this.labelEl) {
       if (!this.supported) this.labelEl.textContent = 'NO STT';
       else if (this._permissionError) this.labelEl.textContent = 'DENIED';

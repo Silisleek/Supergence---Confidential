@@ -7,11 +7,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { HybridSearchEngine } from '../memory/hybrid-search.js';
+import { resolveWithinRoot } from '../utils/path-confinement.js';
 import { AstParser } from '../lsp/ast-parser.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '../../');
-const WORKSPACE_DIR = path.resolve(PROJECT_ROOT, 'workspace');
+const WORKSPACE_DIR = path.resolve(
+  process.env.SIS_WORKSPACE_DIR || path.join(PROJECT_ROOT, 'workspace'),
+);
 
 export class ContextScanner {
   constructor(workspaceDir = WORKSPACE_DIR, projectRoot = PROJECT_ROOT) {
@@ -19,7 +22,8 @@ export class ContextScanner {
     this.projectRoot = projectRoot;
     this.searchEngine = new HybridSearchEngine({ k1: 1.5, b: 0.75, rrfK: 60 });
     this.lastIndexedTime = 0;
-    this.indexedFiles = new Map(); // path -> mtime
+    this.indexedFiles = new Map();
+    this.indexedRoot = null;
   }
 
   /**
@@ -68,7 +72,7 @@ export class ContextScanner {
    * @returns {Promise<string>} Formatted context packet
    */
   async buildContext(userMessage = '', options = {}) {
-    const targetDir = options.targetDir || this.workspaceDir;
+    const targetDir = path.resolve(options.targetDir || this.workspaceDir);
     const constitution = this.buildRepoConstitution(targetDir);
 
     // Ensure hybrid search index is populated & up-to-date
@@ -77,14 +81,20 @@ export class ContextScanner {
     // Stage 1 & 2: Lexical + Dense RRF Search
     const searchResults = this.searchEngine.search(userMessage, { top_k: 12 });
 
+    const queryTokens = new Set(userMessage.toLowerCase().match(/[\w$]+/g) || []);
     const snippets = [];
     const visitedFiles = new Set();
 
     // Priority insertion for targetFile and testFile if specified
     const priorityFiles = [options.targetFile, options.testFile].filter(Boolean);
     for (const pf of priorityFiles) {
-      const fullPf = path.isAbsolute(pf) ? pf : path.resolve(targetDir, pf);
-      if (fs.existsSync(fullPf) && !visitedFiles.has(fullPf)) {
+      let fullPf;
+      try {
+        fullPf = resolveWithinRoot(targetDir, pf);
+      } catch {
+        continue;
+      }
+      if (fs.statSync(fullPf, { throwIfNoEntry: false })?.isFile() && !visitedFiles.has(fullPf)) {
         visitedFiles.add(fullPf);
         const content = fs.readFileSync(fullPf, 'utf8');
         const relPath = path.relative(this.projectRoot, fullPf).replace(/\\/g, '/');
@@ -103,10 +113,7 @@ export class ContextScanner {
       const content = fs.readFileSync(filePath, 'utf8');
       const relPath = path.relative(this.projectRoot, filePath).replace(/\\/g, '/');
 
-      // Stage 3 & 5: Symbol extraction & enclosing scope emission
-      const ext = path.extname(filePath).toLowerCase();
-      const lang = ext === '.py' ? 'python' : 'javascript';
-      const symbols = AstParser.extractSymbols(content, lang);
+      const symbols = AstParser.extractSymbols(content, path.extname(filePath).slice(1));
 
       const symbolLines = [];
       if (symbols.exports?.length > 0) {
@@ -130,24 +137,36 @@ export class ContextScanner {
         );
       }
 
-      // Check for query matches in functions and extract enclosing body
-      const queryTokens = userMessage.toLowerCase().match(/\b\w{3,}\b/g) || [];
       const lines = content.split('\n');
+      const matchingSymbols = [
+        ...symbols.functions,
+        ...symbols.classes,
+        ...symbols.classes.flatMap((symbol) => symbol.methods),
+        ...symbols.variables,
+        ...symbols.exports,
+      ].filter(
+        ({ name }) =>
+          name &&
+          (queryTokens.has(name.toLowerCase()) ||
+            name
+              .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+              .toLowerCase()
+              .split(/[_\s]+/)
+              .some((part) => part.length >= 3 && queryTokens.has(part))),
+      );
       const relevantScopes = [];
-
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        const hasMatch = queryTokens.some((t) => line.toLowerCase().includes(t));
-        if (hasMatch) {
-          // Extract 15-line enclosing window
-          const start = Math.max(0, i - 4);
-          const end = Math.min(lines.length, i + 12);
-          relevantScopes.push(
-            `  // ... lines ${start + 1}-${end} ...\n` + lines.slice(start, end).join('\n'),
-          );
-          i = end; // skip past extracted window
-          if (relevantScopes.length >= 2) break;
-        }
+      const seenLines = new Set();
+      for (const symbol of matchingSymbols.sort(
+        (a, b) => a.endLine - a.line - (b.endLine - b.line),
+      )) {
+        if (seenLines.has(symbol.line)) continue;
+        const start = symbol.line - 1;
+        const end = Math.min(symbol.endLine, start + 16);
+        relevantScopes.push(
+          `  // ${symbol.name} (lines ${start + 1}-${end})\n` + lines.slice(start, end).join('\n'),
+        );
+        seenLines.add(symbol.line);
+        if (relevantScopes.length >= 2) break;
       }
 
       const snippetBlock = [
@@ -179,22 +198,41 @@ export class ContextScanner {
   }
 
   _ensureIndex(dir) {
-    if (!fs.existsSync(dir)) return;
+    if (dir !== this.indexedRoot) {
+      for (const filePath of this.indexedFiles.keys()) this.searchEngine.removeDocument(filePath);
+      this.indexedFiles.clear();
+      this.indexedRoot = dir;
+    }
     const now = Date.now();
     // Reindex if > 30s elapsed or files modified
     if (now - this.lastIndexedTime < 30000 && this.indexedFiles.size > 0) return;
 
     const files = this._listAllFiles(dir);
+    const currentFiles = new Set(files.map(({ fullPath }) => fullPath));
+    for (const filePath of this.indexedFiles.keys()) {
+      if (currentFiles.has(filePath)) continue;
+      this.searchEngine.removeDocument(filePath);
+      this.indexedFiles.delete(filePath);
+    }
     for (const f of files) {
       const prevMtime = this.indexedFiles.get(f.fullPath);
       if (prevMtime && prevMtime === f.mtime) continue;
 
       try {
         const content = fs.readFileSync(f.fullPath, 'utf8');
-        // Index with symbols and body budgeting
+        const symbols = AstParser.extractSymbols(content, f.ext.slice(1));
+        const names = [
+          ...symbols.functions,
+          ...symbols.classes,
+          ...symbols.variables,
+          ...symbols.exports,
+          ...symbols.classes.flatMap((symbol) => symbol.methods),
+        ]
+          .map((symbol) => symbol.name)
+          .filter(Boolean);
         this.searchEngine.indexDocument(
           f.fullPath,
-          `${f.relativePath}\n${content.slice(0, 10000)}`,
+          `${f.relativePath}\n${[...new Set(names)].join(' ')}\n${content.slice(0, 10000)}`,
           {
             filePath: f.fullPath,
             relativePath: f.relativePath,
@@ -251,6 +289,8 @@ export class ContextScanner {
       '.cjs',
       '.ts',
       '.tsx',
+      '.mts',
+      '.cts',
       '.jsx',
       '.py',
       '.json',
@@ -289,7 +329,7 @@ export class ContextScanner {
 
           if (entry.isDirectory()) {
             walk(fullPath);
-          } else {
+          } else if (entry.isFile()) {
             const ext = path.extname(entry.name).toLowerCase();
             if (!ALLOWED_EXTS.has(ext)) continue;
 

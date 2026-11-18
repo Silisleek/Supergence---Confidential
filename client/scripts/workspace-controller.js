@@ -486,8 +486,8 @@ function createTurnElement(q, turnId) {
             <span class="resp-agent-indicator"></span>
             <span class="resp-agent-name">Supergence</span>
           </div>
-          <div class="workspace-deck-slot"></div>
           <div class="response-body-markdown"><span class="chat-working" role="status">${typeof window.renderModernLoader === 'function' ? window.renderModernLoader('Thinking...') : 'Thinking...'}</span></div>
+          <div class="workspace-deck-slot"></div>
         </div>
       `;
   const traceButton = turnEl.querySelector('.work-tree-header');
@@ -501,6 +501,244 @@ function createTurnElement(q, turnId) {
 function getWorkspaceTurnContainer() {
   const stream = getOrCreateChatTurnsStream();
   return window.SupergenceLiquidGlass?.getTurnContainer(stream) || stream;
+}
+
+// ── Obsidian Real-Time Character-by-Character Token Streamer ──
+function formatStreamingMarkdown(text) {
+  if (!text) return '';
+  let s = text;
+  const tripleBackticks = (s.match(/```/g) || []).length;
+  if (tripleBackticks % 2 !== 0) {
+    s += '\n```';
+  }
+  return formatMarkdown(s);
+}
+
+function createSmoothTokenStreamer(onUpdate, onComplete) {
+  let targetText = '';
+  let displayedLength = 0;
+  let animFrameId = null;
+  let isDone = false;
+  function tick() {
+    if (displayedLength < targetText.length) {
+      const remaining = targetText.length - displayedLength;
+      const step =
+        remaining > 120 ? Math.ceil(remaining / 5) : remaining > 30 ? 3 : remaining > 10 ? 2 : 1;
+      displayedLength = Math.min(targetText.length, displayedLength + step);
+      onUpdate(targetText.slice(0, displayedLength), false);
+    }
+
+    if (displayedLength < targetText.length) {
+      animFrameId = requestAnimationFrame(tick);
+    } else {
+      animFrameId = null;
+      if (isDone) {
+        onComplete(targetText);
+        }
+    }
+  }
+
+  return {
+    reset() {
+      if (animFrameId) cancelAnimationFrame(animFrameId);
+      animFrameId = null;
+      targetText = '';
+      displayedLength = 0;
+      onUpdate('', true);
+    },
+    push(fullText) {
+      targetText = fullText || '';
+      if (!animFrameId) {
+        animFrameId = requestAnimationFrame(tick);
+      }
+    },
+    finish(finalText) {
+      isDone = true;
+      if (finalText !== undefined) {
+        targetText = finalText || '';
+      }
+      if (!animFrameId && displayedLength >= targetText.length) {
+        onComplete(targetText);
+        }
+    },
+    flush() {
+      if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+      }
+      displayedLength = targetText.length;
+      onUpdate(targetText, true);
+    },
+    stop() {
+      if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+      }
+    },
+  };
+}
+
+function showTurnSteps(turn) {
+  const section = turn.querySelector('.work-tree-section');
+  if (!section) return null;
+  section.style.display = '';
+  section.classList.remove('collapsed');
+  section.querySelector('.work-tree-header')?.setAttribute('aria-expanded', 'true');
+  const count = section.querySelectorAll('.work-tree-node').length;
+  const label = section.querySelector('.work-tree-title');
+  if (label) label.textContent = `Activity · ${count} ${count === 1 ? 'step' : 'steps'}`;
+  return section.querySelector('.work-tree-body');
+}
+
+function isLegacyToolProgress(text, tool) {
+  const value = String(text || '').trim();
+  if (['list_files', 'list_local_directory'].includes(tool))
+    return /^Listing (?:workspace|[^\r\n]{1,240})\.{3}$/.test(value);
+  return false;
+}
+
+function removeLegacyToolProgress(text, calls = []) {
+  const listCalls = calls.filter((call) => ['list_files', 'list_local_directory'].includes(call.tool));
+  if (!listCalls.length) return text || '';
+  const generated = new Set(listCalls.map((call) => `Listing ${call.args?.path || call.args?.directory || 'workspace'}...`));
+  return String(text || '').split(/\n\s*\n/).filter((part) => !generated.has(part.trim())).join('\n\n').trim();
+}
+
+function renderWorkCommentary(turn, text) {
+  if (typeof text !== 'string' || !text.trim()) return;
+  const body = turn.querySelector('.work-tree-body');
+  if (!body) return;
+  const item = document.createElement('div');
+  item.className = 'work-tree-node sg-work-commentary';
+  item.textContent = text;
+  body.append(item);
+  showTurnSteps(turn);
+}
+
+function renderWorkTool(turn, call) {
+  if (!call?.id || !call.tool) return;
+  const body = turn.querySelector('.work-tree-body');
+  if (!body) return;
+  let item = [...body.querySelectorAll('[data-work-tool-id]')].find((node) => node.dataset.workToolId === String(call.id));
+  if (!item) {
+    item = document.createElement('div');
+    item.className = 'work-tree-node sg-work-tool';
+    item.dataset.workToolId = String(call.id);
+    const title = document.createElement('strong');
+    const state = document.createElement('span');
+    state.className = 'sg-work-tool-state';
+    item.append(title, state);
+    body.append(item);
+  }
+  const names = { list_team_agents: 'Find team members', send_agent_message: 'Consult teammate', read_agent_conversation: 'Read team conversation', search_arem_memory: 'Search AREM memory', read_arem_memory: 'Read AREM memory', link_arem_memory: 'Connect AREM memories', read_arem_connections: 'Inspect memory connections', unlink_arem_memory: 'Remove memory connection', create_arem_memory: 'Create AREM memory', store_arem_memory: 'Save AREM memory', archive_arem_memory: 'Archive AREM memory', read_arem_catalog: 'Read AREM catalog', run_command: 'Run a command', read_file: 'Read a file', write_file: 'Write a file', edit_file: 'Edit a file' };
+  item.querySelector('strong').textContent = names[call.tool] || call.tool.replaceAll('_', ' ');
+  const failed = call.status === 'FAILED' || call.output?.error || call.output?.success === false;
+  item.querySelector('.sg-work-tool-state').textContent = failed ? 'Failed' : call.status === 'RESOLVED' ? 'Completed' : 'Running';
+  item.dataset.status = failed ? 'failed' : call.status === 'RESOLVED' ? 'completed' : 'running';
+  showTurnSteps(turn);
+}
+
+function renderAremActivity(turn, activity) {
+  if (!activity || activity.system !== 'AREM') return;
+  const body = turn.querySelector('.work-tree-body');
+  if (!body) return;
+  let details = body.querySelector('.sg-arem-activity');
+  if (!details) {
+    details = document.createElement('details');
+    details.className = 'work-tree-node sg-arem-activity';
+    body.prepend(details);
+  }
+  const wasOpen = details.open;
+  details.replaceChildren();
+  const summary = document.createElement('summary');
+  const retrieved = (activity.agentNodes?.length || 0) + (activity.linkedNodes?.length || 0) + (activity.sleepNotes || 0) +
+    (activity.retainedSources?.length || 0) + (activity.wikiPages?.length || 0);
+  summary.textContent = retrieved ? `Checked AREM · ${retrieved} retrieved` : 'Checked AREM';
+  const list = document.createElement('ul');
+  const rules = activity.ruleScopes || {};
+  const lines = [
+    `Context: ${activity.workingMessages || 0} earlier messages${activity.compactedMessages ? `, plus a recap of ${activity.compactedMessages} older messages` : ''}`,
+    `Rules: ${rules['short-term'] || 0} for this turn, ${rules.chat || 0} for this chat, ${rules['long-term'] || 0} across chats`,
+    `Retrieved: ${activity.agentNodes?.length || 0} agent notes, ${activity.linkedNodes?.length || 0} linked notes, ${activity.sleepNotes || 0} consolidated notes, ${activity.wikiPages?.length || 0} wiki pages, ${activity.retainedSources?.length || 0} retained sources`,
+  ];
+  if (activity.agentMemoryUnavailable) lines.push('Agent memory retrieval unavailable');
+  if (activity.savedRule) lines.push(`Recorded a ${activity.savedRule.scope} rule`);
+  if (activity.savedNote) lines.push('Saved an explicit user memory');
+  if (activity.agentWrites?.length) lines.push(`Saved ${activity.agentWrites.length} AREM ${activity.agentWrites.length === 1 ? 'note' : 'notes'}`);
+  if (activity.workingCheckpoint === 'saved') lines.push('Working checkpoint saved');
+  if (activity.workingCheckpoint === 'unavailable') lines.push('Working checkpoint unavailable');
+  for (const line of lines) {
+    const item = document.createElement('li');
+    item.textContent = line;
+    list.append(item);
+  }
+  details.append(summary, list);
+  details.open = wasOpen;
+  showTurnSteps(turn);
+}
+
+function restoreWorkSteps(turn, steps, calls) {
+  const byId = new Map((calls || []).map((call) => [String(call.id), call]));
+  const rendered = new Set();
+  for (const step of steps || []) {
+    if (step.kind === 'commentary') renderWorkCommentary(turn, step.text);
+    else if (step.kind === 'tool' && byId.has(String(step.id))) {
+      renderWorkTool(turn, byId.get(String(step.id)));
+      rendered.add(String(step.id));
+    }
+  }
+  for (const call of calls || []) if (!rendered.has(String(call.id))) renderWorkTool(turn, call);
+}
+
+function legacyTurnError(text) {
+  return /^Previous attempt did not finish:\s*(\S[^\r\n]*)$/i.exec(String(text || '').trim())?.[1];
+}
+
+function renderTurnError(activeTurnEl, activeResponseBody, errMessage, onRetry) {
+  if (!activeResponseBody) return;
+  activeResponseBody.classList.remove('is-streaming');
+  if (activeTurnEl) activeTurnEl.dataset.agentState = 'idle';
+
+  let cleanMsg =
+    typeof errMessage === 'string'
+      ? errMessage
+      : errMessage?.message || 'The unified system encountered an unexpected error.';
+
+  if (cleanMsg === 'Failed to fetch' || cleanMsg.includes('ERR_CONNECTION_REFUSED')) {
+    cleanMsg =
+      'Supergence local engine is reconnecting. Ensure the server is active on port 3009 and click Retry Turn.';
+  }
+
+  const banner = document.createElement('div');
+  banner.className = 'sis-turn-error-banner';
+  banner.setAttribute('role', 'alert');
+  banner.innerHTML = `
+    <div class="sis-turn-error-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+    </div>
+    <div class="sis-turn-error-content">
+      <div class="sis-turn-error-title">Turn Interrupted</div>
+      <div class="sis-turn-error-desc">${escapeHtml(cleanMsg)}</div>
+    </div>
+    ${onRetry ? '<button type="button" class="sis-btn-error-retry">Retry Turn</button>' : ''}
+  `;
+
+  if (onRetry) {
+    banner.querySelector('.sis-btn-error-retry')?.addEventListener('click', onRetry);
+  }
+
+  if (activeTurnEl?.closest('#sgCardMessages')) {
+    activeTurnEl.dataset.responseError = 'true';
+    activeResponseBody.textContent = 'Error occurred';
+    activeTurnEl.querySelector('.sis-turn-error-banner')?.remove();
+    activeResponseBody.closest('.response-synthesis-card').after(banner);
+  } else {
+    activeResponseBody.replaceChildren(banner);
+  }
 }
 
 // ── Execute Turn in Workspace & Stream Work Tree Steps (Accumulating Multi-Turn) ──
@@ -537,10 +775,12 @@ async function executeTurnInWorkspace(
     return;
   }
   taskRunning = true;
+  const requestedAgentId = selectedAgentId || 'agent-supergence';
+  let agentTurnOutcome = 'error';
   document.body.dataset.agentWorking = 'true';
   window.dispatchEvent(
     new CustomEvent('workspace-turn-state', {
-      detail: { working: true, agentId: window.__workspaceAgentId || 'agent-supergence' },
+      detail: { working: true, agentId: requestedAgentId },
     }),
   );
   window.executeTurnInWorkspace = executeTurnInWorkspace;
@@ -607,7 +847,8 @@ async function executeTurnInWorkspace(
   const agentOption = [...(agentSelector?.options || [])].find(
     (option) => option.value === selectedAgentId,
   );
-  activeTurnEl.querySelector('.resp-agent-name').textContent = agentOption?.textContent || 'Supergence';
+  activeTurnEl.querySelector('.resp-agent-name').textContent =
+    agentOption?.textContent || 'Supergence';
 
   if (activeWorkTreeSection) {
     activeWorkTreeSection.style.display = 'none';
@@ -617,10 +858,6 @@ async function executeTurnInWorkspace(
     activeResponseBody.innerHTML = `<span class="chat-working" role="status">${typeof window.renderModernLoader === 'function' ? window.renderModernLoader('Thinking...') : 'Thinking...'}</span>`;
   if (activeWorkTreeBody) activeWorkTreeBody.innerHTML = '';
 
-  const chatScrollC = isVisibleConversation
-    ? activeTurnEl.closest('#sgCardMessages, #chatScrollContainer')
-    : null;
-  if (chatScrollC) chatScrollC.scrollTo({ top: chatScrollC.scrollHeight, behavior: 'smooth' });
 
   const mode = $('#currentModeName') ? $('#currentModeName').textContent.trim() : 'Finefast';
   const requestId = crypto.randomUUID();
@@ -629,6 +866,7 @@ async function executeTurnInWorkspace(
     conversationId: activeWorkspaceConvId,
     requestId,
   });
+  if (taskControl) activeResponseBody?.replaceChildren();
   if (isVisibleConversation)
     void window.SupergenceChatWorkspace?.start({
       conversationId: activeWorkspaceConvId,
@@ -673,7 +911,22 @@ async function executeTurnInWorkspace(
   }
 
   function renderCompletedTurn(data) {
+    agentTurnOutcome = ['cancelled', 'blocked'].includes(data.taskStatus)
+      ? data.taskStatus
+      : data.error || data.success === false || data.taskStatus === 'error'
+        ? 'error'
+        : 'completed';
+    const legacyError = legacyTurnError(data.response);
+    if (legacyError) {
+      data = { ...data, success: false, taskStatus: 'error', response: '', error: legacyError };
+    }
     taskControl?.finish(data.taskStatus || (data.success === false ? 'error' : 'completed'));
+    if (data.success !== false && data.response?.trim() && !data.replayed) {
+      window.SupergenceNotifications?.reply(
+        data.conversationId || activeWorkspaceConvId,
+        requestId,
+      );
+    }
     activeResponseBody?.classList.remove('is-streaming');
     activeTurnEl.dataset.agentState = 'idle';
     if (data.primaryAgent?.id) activeTurnEl.dataset.agentId = data.primaryAgent.id;
@@ -695,55 +948,31 @@ async function executeTurnInWorkspace(
       toolCalls: data.toolCalls || [],
       completionAudit: data.completionAudit || null,
       agent: data.primaryAgent || null,
+      arem: data.memory?.arem || null,
+      workSteps: data.workSteps || [],
     });
+    renderAremActivity(activeTurnEl, data.memory?.arem);
 
-    if (data.success && data.steps && Array.isArray(data.steps)) {
-      let stepsHtml = '';
-      data.steps.forEach((step) => {
-        const iconSvg = getStepIconSvg(step.icon, step.iconColor);
-        const subItems =
-          step.substeps && Array.isArray(step.substeps) && step.substeps.length > 0
-            ? step.substeps
-            : step.details && Array.isArray(step.details)
-              ? step.details
-              : [];
-        let substepsHtml = '';
-        if (subItems.length > 0) {
-          substepsHtml = `
-                <div class="work-tree-substeps">
-                  ${subItems.map((s) => `<span class="work-tree-substep-item">${escapeHtml(s)}</span>`).join('')}
-                </div>
-              `;
-        }
-        stepsHtml += `
-              <div class="work-tree-node">
-                <div class="work-tree-node-header">
-                  <div class="work-tree-icon" style="background: rgba(255,255,255,0.06);">
-                    ${iconSvg}
-                  </div>
-                  <span class="work-tree-title">${escapeHtml(step.title || '')}</span>
-                </div>
-                <div class="work-tree-line"></div>
-                ${substepsHtml}
-              </div>
-            `;
-      });
-      if (activeWorkTreeBody) activeWorkTreeBody.innerHTML = stepsHtml;
-
-      let cleanResp = sanitizeTurnResponse(data.response || '');
-      if (activeResponseBody)
-        activeResponseBody.innerHTML = formatMarkdown(
-          cleanResp || 'No response text was returned.',
-        );
-    } else if (data.response) {
-      let cleanResp = sanitizeTurnResponse(data.response || '');
-      if (activeResponseBody)
-        activeResponseBody.innerHTML = formatMarkdown(
-          cleanResp || 'No response text was returned.',
-        );
+    if (data.response) {
+      const cleanResp = sanitizeTurnResponse(removeLegacyToolProgress(data.response, data.toolCalls));
+      if (activeResponseBody) activeResponseBody.innerHTML = formatMarkdown(cleanResp || 'No response text was returned.');
     } else activeResponseBody?.replaceChildren();
+    for (const call of data.toolCalls || []) renderWorkTool(activeTurnEl, call);
 
     if (
+      activeResponseBody &&
+      activeTurnEl.closest('#sgCardMessages') &&
+      data.taskStatus !== 'cancelled' &&
+      (data.taskStatus === 'error' ||
+        data.error ||
+        (data.success === false && data.taskStatus !== 'blocked'))
+    ) {
+      renderTurnError(
+        activeTurnEl,
+        activeResponseBody,
+        data.error || 'This attempt did not finish. Your request remains saved.',
+      );
+    } else if (
       activeResponseBody &&
       (data.taskStatus === 'error' || data.success === false || data.error || !data.response)
     ) {
@@ -765,8 +994,8 @@ async function executeTurnInWorkspace(
 
     // Results belong to this turn, including interactive previews and real execution output.
     if (activeDeckSlot) {
-      const raw = data.interactiveUI?.artifacts || data.artifacts || [];
-      const artifacts = Array.isArray(raw) ? raw : Object.values(raw || {});
+      const artifacts =
+        window.ChatArtifacts?.collect(data.artifacts, data.interactiveUI?.artifacts) || [];
       window.ChatArtifacts?.render(activeDeckSlot, artifacts);
       window.SupergenceResultSummary?.render(activeDeckSlot, { ...data, artifacts });
     }
@@ -775,11 +1004,17 @@ async function executeTurnInWorkspace(
       trace.style.display = '';
       const count = activeWorkTreeBody.children.length;
       const titleEl = trace.querySelector('.work-tree-header .work-tree-title');
-      if (titleEl) titleEl.textContent = `Execution Trace · ${count} ${count === 1 ? 'step' : 'steps'}`;
+      if (titleEl)
+        titleEl.textContent = `Activity · ${count} ${count === 1 ? 'step' : 'steps'}`;
     }
     const card = activeTurnEl.querySelector('.response-synthesis-card');
-    const cleanText = sanitizeTurnResponse(data.response || '');
-    if (card && cleanText && !card.querySelector('.sg-turn-actions')) {
+    const cleanText = sanitizeTurnResponse(removeLegacyToolProgress(data.response || '', data.toolCalls));
+    if (
+      card &&
+      cleanText &&
+      !activeTurnEl.dataset.responseError &&
+      !activeTurnEl.querySelector('.sg-turn-actions')
+    ) {
       const bar = document.createElement('div');
       bar.className = 'sg-turn-actions';
       bar.innerHTML = `
@@ -796,15 +1031,13 @@ async function executeTurnInWorkspace(
             e.target.textContent = 'Copy';
           }, 1500);
         } else if (act === 'speak' && window.speechSynthesis) {
-          window.speechSynthesis.cancel();
-          const u = new SpeechSynthesisUtterance(cleanText.replace(/[*#_`]/g, ''));
-          u.rate = 1.04;
-          window.speechSynthesis.speak(u);
+          window.SupergenceLiquidGlass?.speakReply(cleanText, data.primaryAgent?.id || requestedAgentId);
         } else if (act === 'retry') {
           void executeTurnInWorkspace(q, null, selectedAgentId);
         }
       });
-      card.appendChild(bar);
+      if (card.closest('#sgCardMessages')) card.after(bar);
+      else card.appendChild(bar);
     }
   }
 
@@ -815,294 +1048,295 @@ async function executeTurnInWorkspace(
   let streamedFinalData = null;
   let streamedTokens = '';
 
+  const streamer = createSmoothTokenStreamer(
+    (currentText, isDone) => {
+      const cleanStream = sanitizeTurnResponse(currentText);
+      if (activeResponseBody && cleanStream) {
+        activeResponseBody.classList.add('is-streaming');
+        const cursor = isDone
+          ? ''
+          : '<span class="sis-streaming-cursor" aria-hidden="true"></span>';
+        activeResponseBody.innerHTML = formatStreamingMarkdown(cleanStream) + cursor;
+      }
+    },
+    (_finalText) => {
+      if (activeResponseBody) {
+        activeResponseBody.classList.remove('is-streaming');
+        const cursor = activeResponseBody.querySelector('.sis-streaming-cursor');
+        if (cursor) cursor.remove();
+      }
+    },
+  );
+
   try {
-    const streamHeaders = { 'Content-Type': 'application/json', Accept: 'text/event-stream' };
-    const savedToken =
-      localStorage.getItem('sis_session_token') || localStorage.getItem('sleek_token') || '';
-    if (savedToken) streamHeaders['Authorization'] = `Bearer ${savedToken}`;
+    try {
+      const streamHeaders = { 'Content-Type': 'application/json', Accept: 'text/event-stream' };
+      const savedToken =
+        localStorage.getItem('sis_session_token') || localStorage.getItem('sleek_token') || '';
+      if (savedToken) streamHeaders['Authorization'] = `Bearer ${savedToken}`;
 
-    const streamRes = await fetch('/api/sis/unified-turn-stream', {
-      method: 'POST',
-      credentials: 'include',
-      headers: streamHeaders,
-      body: JSON.stringify({
-        query: q,
-        mode,
-        conversationId: activeWorkspaceConvId,
-        requestId,
-        agentId: selectedAgentId || undefined,
-        history: historyForRequest,
-      }),
-    });
+      const streamRes = await fetch('/api/sis/unified-turn-stream', {
+        method: 'POST',
+        credentials: 'include',
+        headers: streamHeaders,
+        body: JSON.stringify({
+          query: q,
+          mode,
+          conversationId: activeWorkspaceConvId,
+          requestId,
+          agentId: selectedAgentId || undefined,
+          history: historyForRequest,
+        }),
+      });
 
-    if (streamRes.ok && streamRes.body) {
-      streamOpened = true;
-      const reader = streamRes.body.getReader();
-      const decoder = new TextDecoder('utf-8');
-      let buffer = '';
+      if (streamRes.ok && streamRes.body) {
+        streamOpened = true;
+        const reader = streamRes.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '';
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n\n');
-        buffer = lines.pop(); // keep remainder
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n\n');
+          buffer = lines.pop(); // keep remainder
 
-        for (const chunk of lines) {
-          if (!chunk.trim()) continue;
-          let eventType = 'message';
-          let eventData = '';
-          const chunkLines = chunk.split('\n');
-          for (const l of chunkLines) {
-            if (l.startsWith('event:')) eventType = l.slice(6).trim();
-            else if (l.startsWith('data:')) eventData = l.slice(5).trim();
-          }
-          if (!eventData) continue;
-          let parsedData = null;
-          try {
-            parsedData = JSON.parse(eventData);
-          } catch (_) {
-            parsedData = eventData;
-          }
-
-          if (eventType === 'token') {
-            activeTurnEl.dataset.agentState = 'replying';
-            streamSucceeded = true;
-            const fullText =
-              parsedData && parsedData.fullText
-                ? parsedData.fullText
-                : streamedTokens + ((parsedData && parsedData.token) || '');
-            streamedTokens = fullText;
-            let cleanStream = sanitizeTurnResponse(fullText);
-            if (activeResponseBody && cleanStream) {
-              activeResponseBody.classList.add('is-streaming');
-              activeResponseBody.innerHTML = formatMarkdown(cleanStream);
-              if (chatScrollC)
-                chatScrollC.scrollTo({ top: chatScrollC.scrollHeight, behavior: 'smooth' });
+          for (const chunk of lines) {
+            if (!chunk.trim()) continue;
+            let eventType = 'message';
+            let eventData = '';
+            const chunkLines = chunk.split('\n');
+            for (const l of chunkLines) {
+              if (l.startsWith('event:')) eventType = l.slice(6).trim();
+              else if (l.startsWith('data:')) eventData = l.slice(5).trim();
             }
-          } else if (eventType === 'tool-call') {
-            activeTurnEl.dataset.agentState = 'thinking';
-            if (parsedData?.tool && parsedData.tool.startsWith('superbox_')) {
-              window.Superbox?.open();
-              window.Superbox?.switchTab('superbox');
+            if (!eventData) continue;
+            let parsedData = null;
+            try {
+              parsedData = JSON.parse(eventData);
+            } catch (_) {
+              parsedData = eventData;
             }
-            window.dispatchEvent(
-              new CustomEvent('workspace-tool-activity', {
-                detail: { ...parsedData, phase: 'call' },
-              }),
-            );
-            if (activeWorkTreeBody && parsedData && parsedData.displayName) {
-              if (activeWorkTreeSection) {
-                activeWorkTreeSection.style.display = '';
-                activeWorkTreeSection.classList.remove('collapsed');
-                activeWorkTreeSection
-                  .querySelector('.work-tree-header')
-                  ?.setAttribute('aria-expanded', 'true');
+
+            if (eventType === 'work-step') {
+              if (parsedData?.kind === 'commentary') {
+                renderWorkCommentary(activeTurnEl, parsedData.text);
+                streamedTokens = '';
+                streamer.reset();
               }
-              if (!streamedTokens) activeResponseBody.replaceChildren();
-              const isSuperboxTool = Boolean(parsedData.tool && parsedData.tool.startsWith('superbox_'));
-              const node = document.createElement('div');
-              node.className = 'work-tree-node';
-              node.innerHTML = `
-                    <div class="work-tree-node-header">
-                      <div class="work-tree-icon" style="background: rgba(0, 240, 255, 0.15);">
-                        ${getStepIconSvg('openclaw', '#00F0FF')}
-                      </div>
-                      <span class="work-tree-title">${escapeHtml(parsedData.displayName)}</span>
-                      ${isSuperboxTool ? '<button type="button" class="sg-trace-superbox-btn">Open Superbox</button>' : ''}
-                    </div>
-                    <div class="work-tree-line"></div>
-                    <div class="work-tree-substeps">
-                      <span class="work-tree-substep-item" style="color:#38BDF8;">Running in workspace…</span>
-                    </div>
-                  `;
-              node.querySelector('.sg-trace-superbox-btn')?.addEventListener('click', () => {
+            } else if (eventType === 'arem-activity') {
+              renderAremActivity(activeTurnEl, parsedData);
+            } else if (eventType === 'token') {
+              if (activeTurnEl.dataset.agentState !== 'replying') {
+                taskControl?.update({ message: 'Writing a reply…' });
+              }
+              activeTurnEl.dataset.agentState = 'replying';
+              streamSucceeded = true;
+              const fullText =
+                parsedData && parsedData.fullText
+                  ? parsedData.fullText
+                  : streamedTokens + ((parsedData && parsedData.token) || '');
+              streamedTokens = fullText;
+              streamer.push(fullText);
+            } else if (eventType === 'tool-call') {
+              activeTurnEl.dataset.agentState = 'thinking';
+              taskControl?.update({ tool: parsedData?.tool });
+              if (parsedData?.tool && parsedData.tool.startsWith('superbox_')) {
                 window.Superbox?.open();
                 window.Superbox?.switchTab('superbox');
-              });
-              activeWorkTreeBody.appendChild(node);
-              const count = activeWorkTreeBody.children.length;
-              const titleEl = activeWorkTreeSection?.querySelector('.work-tree-header .work-tree-title');
-              if (titleEl) titleEl.textContent = `Execution Trace · ${count} running`;
-              if (chatScrollC)
-                chatScrollC.scrollTo({ top: chatScrollC.scrollHeight, behavior: 'smooth' });
-            }
-          } else if (eventType === 'tool-result') {
-            if (parsedData?.tool && parsedData.tool.startsWith('superbox_')) {
-              window.Superbox?.refreshFiles();
-            }
-            window.dispatchEvent(
-              new CustomEvent('workspace-tool-activity', {
-                detail: { ...parsedData, phase: 'result' },
-              }),
-            );
-            if (activeWorkTreeBody && parsedData && parsedData.output) {
-              const items = activeWorkTreeBody.querySelectorAll('.work-tree-substep-item');
-              if (items.length > 0) {
-                const last = items[items.length - 1];
-                last.textContent =
-                  parsedData.success === false
-                    ? 'Tool reported an error'
-                    : `Tool returned${Number.isFinite(parsedData.durationMs) ? ` · ${parsedData.durationMs} ms` : ''}`;
-                last.style.color = '#10B981';
               }
+              window.dispatchEvent(
+                new CustomEvent('workspace-tool-activity', {
+                  detail: { ...parsedData, agentId: requestedAgentId, phase: 'call' },
+                }),
+              );
+              if (streamedTokens) {
+                if (!isLegacyToolProgress(streamedTokens, parsedData?.tool)) renderWorkCommentary(activeTurnEl, streamedTokens);
+                streamedTokens = '';
+                streamer.reset();
+              }
+              renderWorkTool(activeTurnEl, parsedData);
+            } else if (eventType === 'tool-result') {
+              taskControl?.update({ message: 'Reviewing tool results…' });
+              if (parsedData?.tool && parsedData.tool.startsWith('superbox_')) {
+                window.Superbox?.refreshFiles();
+              }
+              window.dispatchEvent(
+                new CustomEvent('workspace-tool-activity', {
+                  detail: { ...parsedData, agentId: requestedAgentId, phase: 'result' },
+                }),
+              );
+              renderWorkTool(activeTurnEl, parsedData);
+            } else if (eventType === 'task-status') {
+              taskControl?.update(parsedData);
+            } else if (eventType === 'interactive-ui') {
+              if (parsedData?.type === 'tool-proposal') window.SupergenceNotifications?.refresh();
+              const raw = parsedData?.artifacts || [];
+              window.ChatArtifacts?.render(
+                activeDeckSlot,
+                Array.isArray(raw) ? raw : Object.values(raw),
+              );
+            } else if (eventType === 'error') {
+              streamer.stop();
+              if (parsedData?.partialResponse) streamedTokens = parsedData.partialResponse;
+              rememberAssistant(streamedTokens, { status: 'error', error: parsedData?.error });
+              throw new Error(parsedData?.error || 'The server could not complete this request.');
+            } else if (eventType === 'done') {
+              streamedFinalData = parsedData;
+              streamSucceeded = true;
+              streamer.finish(parsedData.response);
+              renderCompletedTurn(parsedData);
             }
-          } else if (eventType === 'task-status') {
-            taskControl?.update(parsedData);
-          } else if (eventType === 'interactive-ui') {
-            const raw = parsedData?.artifacts || [];
-            window.ChatArtifacts?.render(
-              activeDeckSlot,
-              Array.isArray(raw) ? raw : Object.values(raw),
-            );
-          } else if (eventType === 'error') {
-            if (parsedData?.partialResponse) streamedTokens = parsedData.partialResponse;
-            rememberAssistant(streamedTokens, { status: 'error', error: parsedData?.error });
-            throw new Error(parsedData?.error || 'The server could not complete this request.');
-          } else if (eventType === 'done') {
-            streamedFinalData = parsedData;
-            streamSucceeded = true;
-            renderCompletedTurn(parsedData);
           }
         }
       }
-    }
-  } catch (streamErr) {
-    streamFailure = streamErr;
-    console.warn('[Workspace stream interrupted]:', streamErr.message);
-  }
-
-  // Reconnect to the saved request rather than starting another execution.
-  if (streamOpened && !streamedFinalData && window.SupergenceTasks) {
-    const recovered = await window.SupergenceTasks.reconcile(
-      {
-        query: q,
-        mode,
-        conversationId: activeWorkspaceConvId,
-        requestId,
-        agentId: selectedAgentId || undefined,
-        history: historyForRequest,
-      },
-      (state) => taskControl?.update(state),
-    );
-    if (recovered.response || ['completed', 'blocked', 'cancelled'].includes(recovered.taskStatus)) {
-      streamedFinalData = recovered;
-      renderCompletedTurn(recovered);
-    } else streamFailure = new Error(recovered.error || 'Saved task progress is unavailable.');
-  }
-  if (streamOpened && !streamedFinalData) {
-    taskControl?.finish('error');
-    activeResponseBody?.classList.remove('is-streaming');
-    rememberAssistant(streamedTokens, {
-      status: 'error',
-      error: streamFailure?.message || 'The connection ended before completion.',
-    });
-    const notice = document.createElement('p');
-    notice.className = 'chat-stream-notice';
-    notice.setAttribute('role', 'status');
-    notice.textContent =
-      streamFailure?.message || 'The connection ended before the server confirmed completion.';
-    if (!streamedTokens) activeResponseBody.replaceChildren(notice);
-    else {
-      activeResponseBody.innerHTML = formatMarkdown(sanitizeTurnResponse(streamedTokens));
-      activeResponseBody.append(notice);
-    }
-  }
-
-  // Use the non-streaming route only when a stream could not be opened.
-  if (!streamOpened && (!streamSucceeded || !streamedFinalData)) {
-    let lastError = null;
-    for (let attempt = 1; attempt <= 2; attempt++) {
-      try {
-        const turnHeaders = { 'Content-Type': 'application/json' };
-        const savedToken =
-          localStorage.getItem('sis_session_token') || localStorage.getItem('sleek_token') || '';
-        if (savedToken) turnHeaders['Authorization'] = `Bearer ${savedToken}`;
-
-        const res = await fetch('/api/sis/unified-turn', {
-          method: 'POST',
-          credentials: 'include',
-          headers: turnHeaders,
-          body: JSON.stringify({
-            query: q,
-            mode,
-            conversationId: activeWorkspaceConvId,
-            requestId,
-            agentId: selectedAgentId || undefined,
-            history: historyForRequest,
-          }),
-        });
-
-        if (!res.ok) {
-          const errTxt = await res.text();
-          throw new Error(`HTTP ${res.status}: ${errTxt || res.statusText}`);
-        }
-
-        const data = await res.json();
-        renderCompletedTurn(data);
-        lastError = null;
-        break;
-      } catch (fetchErr) {
-        lastError = fetchErr;
-        console.warn(`[Workspace Turn Attempt ${attempt} failed]:`, fetchErr.message);
-        if (attempt < 2) {
-          await new Promise((r) => setTimeout(r, 1200)); // 1.2s graceful backoff
-        }
-      }
+    } catch (streamErr) {
+      streamFailure = streamErr;
+      console.warn('[Workspace stream interrupted]:', streamErr.message);
     }
 
-    if (lastError) {
+    // Reconnect to the saved request rather than starting another execution.
+    if (streamOpened && !streamedFinalData && window.SupergenceTasks) {
+      const recovered = await window.SupergenceTasks.reconcile(
+        {
+          query: q,
+          mode,
+          conversationId: activeWorkspaceConvId,
+          requestId,
+          agentId: selectedAgentId || undefined,
+          history: historyForRequest,
+        },
+        (state) => taskControl?.update(state),
+      );
+      if (
+        recovered &&
+        (recovered.response || ['completed', 'blocked', 'cancelled'].includes(recovered.taskStatus))
+      ) {
+        streamedFinalData = recovered;
+        streamer.finish(recovered.response);
+        renderCompletedTurn(recovered);
+      } else streamFailure = new Error(recovered?.error || 'Saved task progress is unavailable.');
+    }
+    if (streamOpened && !streamedFinalData) {
+      streamer.stop();
       taskControl?.finish('error');
       activeResponseBody?.classList.remove('is-streaming');
-      rememberAssistant(streamedTokens, { status: 'error', error: lastError.message });
-      console.error('[Workspace Turn Final Error]:', lastError);
-      if (activeResponseBody) {
-        const notice = document.createElement('p');
-        notice.className = 'chat-stream-notice';
-        notice.setAttribute('role', 'status');
-        notice.textContent = lastError.message;
-        activeResponseBody.replaceChildren(notice);
+      const errMsg =
+        streamFailure?.message || 'The connection ended before the server confirmed completion.';
+      rememberAssistant(streamedTokens, {
+        status: 'error',
+        error: errMsg,
+      });
+      renderTurnError(activeTurnEl, activeResponseBody, errMsg, () => {
+        void executeTurnInWorkspace(q, null, selectedAgentId);
+      });
+    }
+
+    // Use the non-streaming route only when a stream could not be opened.
+    if (!streamOpened && (!streamSucceeded || !streamedFinalData)) {
+      let lastError = null;
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          const turnHeaders = { 'Content-Type': 'application/json' };
+          const savedToken =
+            localStorage.getItem('sis_session_token') || localStorage.getItem('sleek_token') || '';
+          if (savedToken) turnHeaders['Authorization'] = `Bearer ${savedToken}`;
+
+          const res = await fetch('/api/sis/unified-turn', {
+            method: 'POST',
+            credentials: 'include',
+            headers: turnHeaders,
+            body: JSON.stringify({
+              query: q,
+              mode,
+              conversationId: activeWorkspaceConvId,
+              requestId,
+              agentId: selectedAgentId || undefined,
+              history: historyForRequest,
+            }),
+          });
+
+          if (!res.ok) {
+            const errTxt = await res.text();
+            throw new Error(`HTTP ${res.status}: ${errTxt || res.statusText}`);
+          }
+
+          const data = await res.json();
+          renderCompletedTurn(data);
+          lastError = null;
+          break;
+        } catch (fetchErr) {
+          lastError = fetchErr;
+          console.warn(`[Workspace Turn Attempt ${attempt} failed]:`, fetchErr.message);
+          if (attempt < 2) {
+            await new Promise((r) => setTimeout(r, 1200)); // 1.2s graceful backoff
+          }
+        }
       }
-      if (activeWorkTreeBody) {
-        activeWorkTreeBody.innerHTML = `
-              <div class="work-tree-node">
-                <div class="work-tree-node-header">
-                  <div class="work-tree-icon" style="background: rgba(239, 68, 68, 0.2);">
-                    ${getStepIconSvg('risk', '#EF4444')}
+
+      if (lastError) {
+        streamer.stop();
+        taskControl?.finish('error');
+        activeResponseBody?.classList.remove('is-streaming');
+        rememberAssistant(streamedTokens, { status: 'error', error: lastError.message });
+        console.error('[Workspace Turn Final Error]:', lastError);
+        renderTurnError(activeTurnEl, activeResponseBody, lastError.message, () => {
+          void executeTurnInWorkspace(q, null, selectedAgentId);
+        });
+        if (activeWorkTreeBody) {
+          activeWorkTreeBody.innerHTML = `
+                <div class="work-tree-node">
+                  <div class="work-tree-node-header">
+                    <div class="work-tree-icon" style="background: rgba(239, 68, 68, 0.2);">
+                      ${getStepIconSvg('risk', '#EF4444')}
+                    </div>
+                    <span class="work-tree-title" style="color:#EF4444;">Turn Interrupted & Safeguard Engaged</span>
                   </div>
-                  <span class="work-tree-title" style="color:#EF4444;">Turn Interrupted & Safeguard Engaged</span>
+                  <div class="work-tree-line"></div>
+                  <div class="work-tree-substeps">
+                    <span class="work-tree-substep-item" style="color:#FCA5A5;">${escapeHtml(lastError.message || 'Unknown network error')}</span>
+                  </div>
                 </div>
-                <div class="work-tree-line"></div>
-                <div class="work-tree-substeps">
-                  <span class="work-tree-substep-item" style="color:#FCA5A5;">${escapeHtml(lastError.message || 'Unknown network error')}</span>
-                </div>
-              </div>
-            `;
+              `;
+        }
       }
     }
+  } catch (turnErr) {
+    streamer.stop();
+    console.error('[Workspace Turn Unhandled Error]:', turnErr);
+    renderTurnError(activeTurnEl, activeResponseBody, turnErr.message, () => {
+      void executeTurnInWorkspace(q, null, selectedAgentId);
+    });
+  } finally {
+    taskRunning = false;
+    if (activeTurnEl) activeTurnEl.dataset.agentState = 'idle';
+    document.body.dataset.agentWorking = 'false';
+    window.dispatchEvent(new CustomEvent('workspace-turn-state', {
+      detail: { working: false, agentId: requestedAgentId, outcome: agentTurnOutcome },
+    }));
+    if (workspaceSendBtn) {
+      workspaceSendBtn.disabled = false;
+      workspaceSendBtn.style.opacity = '1';
+    }
+    if (sendBtn) {
+      sendBtn.disabled = false;
+      sendBtn.style.opacity = '1';
+    }
+    const cardSubmit = document.getElementById('sgCardSubmitBtn');
+    if (cardSubmit) {
+      cardSubmit.disabled = false;
+      cardSubmit.style.opacity = '1';
+    }
+      const nextMessage = pendingWorkspaceMessages.shift();
+    if (nextMessage)
+      void executeTurnInWorkspace(
+        nextMessage.query,
+        nextMessage.turn,
+        nextMessage.agentId,
+        nextMessage.context,
+      );
   }
-
-  taskRunning = false;
-  activeTurnEl.dataset.agentState = 'idle';
-  document.body.dataset.agentWorking = 'false';
-  window.dispatchEvent(new CustomEvent('workspace-turn-state', { detail: { working: false } }));
-  if (workspaceSendBtn) {
-    workspaceSendBtn.disabled = false;
-    workspaceSendBtn.style.opacity = '1';
-  }
-  if (sendBtn) {
-    sendBtn.disabled = false;
-    sendBtn.style.opacity = '1';
-  }
-  if (chatScrollC) chatScrollC.scrollTo({ top: chatScrollC.scrollHeight, behavior: 'smooth' });
-  const nextMessage = pendingWorkspaceMessages.shift();
-  if (nextMessage)
-    void executeTurnInWorkspace(
-      nextMessage.query,
-      nextMessage.turn,
-      nextMessage.agentId,
-      nextMessage.context,
-    );
 }
 window.executeTurnInWorkspace = executeTurnInWorkspace;
 
@@ -1141,6 +1375,7 @@ async function loadConversationsList() {
 
   try {
     const res = await fetch('/api/conversations');
+    if (!res.ok) throw new Error('Could not load conversations.');
     const data = await res.json();
     const convs = Array.isArray(data) ? data : data.conversations || [];
     window.savedConversationsList = convs;
@@ -1180,109 +1415,83 @@ window.deleteWorkspaceConversation = async function (convId, e) {
     e.stopPropagation();
     e.preventDefault();
   }
-  if (!confirm('Are you sure you want to delete this conversation?')) return;
+  if (!confirm('Are you sure you want to delete this conversation?')) return false;
   try {
-    const res = await fetch(`/api/conversations/${convId}`, { method: 'DELETE' });
+    const res = await fetch(`/api/conversations/${encodeURIComponent(convId)}`, { method: 'DELETE' });
     const data = await res.json();
-    if (data && data.success) {
-      if (window.__activeWorkspaceConvId === convId) {
-        localStorage.removeItem('sis_workspace_conv');
-        startNewWorkspaceThread();
-      }
-      await loadConversationsList();
+    if (!res.ok || !data.success) throw new Error('Could not delete the conversation.');
+    if (window.__activeWorkspaceConvId === convId) {
+      localStorage.removeItem('sis_workspace_conv');
+      startNewWorkspaceThread();
     }
+    await loadConversationsList();
+    return true;
   } catch (err) {
     console.warn('Failed to delete conversation:', err);
+    return false;
   }
 };
 
-function renderWorkspaceHistoryList(conversations = []) {
+function renderWorkspaceHistoryList(conversations = [], drawerQuery = '') {
   const activeId = window.__activeWorkspaceConvId;
   const visible = conversations.filter(
     (conversation) =>
       (conversation.messageCount ?? conversation.messages?.length ?? 0) > 0 ||
       conversation.id === activeId,
   );
-  for (const [listId, sidebar] of [['sidebarConvList', true], ['workspaceHistoryList', false]]) {
-    const list = document.getElementById(listId);
-    if (!list) continue;
-    list.replaceChildren();
-    if (!visible.length) {
-      const empty = document.createElement('p');
-      empty.className = 'workspace-history-empty';
-      empty.textContent = 'No saved conversations yet.';
-      list.append(empty);
-      continue;
-    }
+  window.SupergenceConversationSidebar?.render(visible, activeId);
 
-    for (const conversation of visible) {
-      const id = conversation.id;
-      const active = id === activeId;
-      const title =
-        (typeof conversation.title === 'string' ? conversation.title : conversation.title?.title) ||
-        'Untitled conversation';
-      const count = conversation.messageCount ?? conversation.messages?.length ?? 0;
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.title = title;
-      if (active) button.setAttribute('aria-current', 'true');
-      button.addEventListener('click', () => void window.loadWorkspaceConversation(id));
-      if (sidebar) {
-        const row = document.createElement('div');
-        row.className = active ? 'sidebar-conv-item active' : 'sidebar-conv-item';
-        row.dataset.conversationId = id;
-        button.className = 'shell-conv-select';
-        button.innerHTML = '<span class="shell-conv-content"><span class="conv-title"></span><span class="conv-meta"></span></span>';
-        button.querySelector('.conv-title').textContent = title;
-        button.querySelector('.conv-meta').textContent = `${count} ${count === 1 ? 'message' : 'messages'}`;
-        const remove = document.createElement('button');
-        remove.type = 'button';
-        remove.className = 'conv-delete-btn';
-        remove.setAttribute('aria-label', 'Delete conversation');
-        remove.title = 'Delete conversation';
-        remove.textContent = '×';
-        remove.addEventListener('click', (event) => void window.deleteWorkspaceConversation(id, event));
-        row.append(button, remove);
-        list.append(row);
-      } else {
-        button.className = active ? 'drawer-history-item active' : 'drawer-history-item';
-        button.textContent = title;
-        list.append(button);
-      }
+  const list = document.getElementById('workspaceHistoryList');
+  if (!list) return;
+  const query = drawerQuery.trim().toLowerCase();
+  const buttons = [];
+  for (const conversation of visible) {
+    const { id, title: rawTitle } = conversation;
+    const title = (typeof rawTitle === 'string' ? rawTitle : rawTitle?.title) ||
+      'Untitled conversation';
+    if (query && !title.toLowerCase().includes(query) && !id.toLowerCase().includes(query)) continue;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.title = title;
+    button.textContent = title;
+    button.className = 'drawer-history-item';
+    if (id === activeId) {
+      button.classList.add('active');
+      button.setAttribute('aria-current', 'true');
     }
+    button.addEventListener('click', () => void window.loadWorkspaceConversation(id));
+    buttons.push(button);
   }
+  if (!buttons.length) {
+    const empty = document.createElement('p');
+    empty.className = 'workspace-history-empty';
+    empty.textContent = query ? 'No matching conversations.' : 'No saved conversations yet.';
+    buttons.push(empty);
+  }
+  list.replaceChildren(...buttons);
 }
 
-window.filterSidebarConversations = function (query) {
-  if (!query || !query.trim()) {
-    renderWorkspaceHistoryList(savedConversationsList);
-    return;
-  }
-  const q = query.toLowerCase().trim();
-  const filtered = (savedConversationsList || []).filter((c) => {
-    const rawTitle = typeof c.title === 'string' ? c.title : c.title?.title || '';
-    const title = String(rawTitle).toLowerCase();
-    const id = String(c.id || '').toLowerCase();
-    return title.includes(q) || id.includes(q);
-  });
-  renderWorkspaceHistoryList(filtered);
-};
-
 window.filterWorkspaceHistoryList = function (query) {
-  window.filterSidebarConversations(query);
+  renderWorkspaceHistoryList(savedConversationsList, query);
 };
 
 let workspaceConversationLoad = 0;
 window.loadWorkspaceConversation = async function (convId) {
   if (!convId) return;
   const load = ++workspaceConversationLoad;
+  const messagesPane = document.getElementById('sgCardMessages');
+  const finish = window.showWorkspaceSkeleton(messagesPane, 'Loading conversation', 'conversation');
+  messagesPane?.querySelector(':scope > .sg-loading-error')?.remove();
   try {
-    const res = await fetch(`/api/conversations/${encodeURIComponent(convId)}`);
+    const res = await fetch(`/api/conversations/${encodeURIComponent(convId)}`, {
+      signal: AbortSignal.timeout(20000),
+    });
     if (!res.ok) throw new Error('Could not load this conversation.');
     const data = await res.json();
     if (!data || load !== workspaceConversationLoad) return;
 
     window.__activeWorkspaceConvId = convId;
+    window.SupergenceConversationSidebar?.setActive(convId);
     void window.SupergenceChatWorkspace?.selectChat(convId);
     try {
       localStorage.setItem('sis_workspace_conv', convId);
@@ -1351,7 +1560,7 @@ window.loadWorkspaceConversation = async function (convId) {
           curTurnEl.dataset.requestId = msg.requestId || '';
           const respBody = curTurnEl.querySelector('.response-body-markdown');
           if (respBody) {
-            let cleanResp = msg.content || '';
+            let cleanResp = removeLegacyToolProgress(msg.content || '', msg.toolCalls);
 
             const artifacts = Array.isArray(msg.artifacts) ? [...msg.artifacts] : [];
             for (const match of cleanResp.matchAll(/\]\((\/workspace\/[^)\s]+)\)/g)) {
@@ -1368,8 +1577,22 @@ window.loadWorkspaceConversation = async function (convId) {
               .replace(/\{\s*"(?:tool|action)"\s*:\s*"[^"]+"[\s\S]*$/gi, '')
               .trim();
 
+            const legacyError = legacyTurnError(cleanResp);
+            renderAremActivity(curTurnEl, msg.arem);
+            restoreWorkSteps(curTurnEl, msg.workSteps, msg.toolCalls);
             respBody.innerHTML = formatMarkdown(cleanResp);
-            if (msg.status === 'error' || msg.error) {
+            if (
+              (msg.status === 'error' || msg.error || legacyError) &&
+              curTurnEl.closest('#sgCardMessages')
+            ) {
+              renderTurnError(
+                curTurnEl,
+                respBody,
+                msg.error ||
+                  legacyError ||
+                  'This attempt did not finish. Your request remains saved.',
+              );
+            } else if (msg.status === 'error' || msg.error) {
               const notice = document.createElement('p');
               notice.className = 'chat-stream-notice';
               notice.setAttribute('role', 'status');
@@ -1418,18 +1641,29 @@ window.loadWorkspaceConversation = async function (convId) {
     window.__pendingWorkspaceArtifact = latestArtifactFound;
     // toggleWorkspaceSideBrowser(false);
     document.getElementById('workspaceConversationsSidebar')?.classList.remove('mobile-open');
-    window.SupergenceLiquidGlass?.toggleDrawer(false);
+    window.SupergenceLiquidGlass?.toggleDrawer(false, { onlyOverlay: true });
 
     toggleWorkspaceHistoryDrawer(false);
-    const scrollC = root.querySelector('#sgCardMessages') || document.getElementById('chatScrollContainer');
-    if (scrollC) scrollC.scrollTo({ top: scrollC.scrollHeight, behavior: 'smooth' });
     return true;
   } catch (err) {
+    if (load === workspaceConversationLoad && messagesPane?.isConnected) {
+      const notice = document.createElement('p');
+      notice.className = 'sg-loading-error';
+      notice.setAttribute('role', 'status');
+      notice.textContent = 'Could not load this conversation. Select it again to retry.';
+      messagesPane.prepend(notice);
+    }
     console.warn('Error loading conversation:', err);
+  } finally {
+    finish();
   }
 };
 
 function renderWorkspaceEmptyState(stream) {
+  if (window.SupergenceLiquidGlass?.mountActiveConversation) {
+    window.SupergenceLiquidGlass.mountActiveConversation(stream);
+    return;
+  }
   if (window.SupergenceLiquidGlass?.mountLandingHero) {
     window.SupergenceLiquidGlass.mountLandingHero(stream);
     return;
@@ -1467,12 +1701,9 @@ window.startNewWorkspaceThread = function () {
 
   window.__pendingWorkspaceArtifact = null;
   document.getElementById('activeWorkspaceTitleDisplay').textContent = 'New conversation';
-  document.querySelectorAll('.sidebar-conv-item.active').forEach((item) => {
-    item.classList.remove('active');
-    item.querySelector('.shell-conv-select')?.removeAttribute('aria-current');
-  });
+  window.SupergenceConversationSidebar?.setActive(newId);
   document.getElementById('workspaceConversationsSidebar')?.classList.remove('mobile-open');
-  window.SupergenceLiquidGlass?.toggleDrawer(false);
+  window.SupergenceLiquidGlass?.toggleDrawer(false, { onlyOverlay: true });
   // toggleWorkspaceSideBrowser(false);
 
   toggleWorkspaceHistoryDrawer(false);
@@ -2785,7 +3016,6 @@ window.sendToAgentColumn = async function (agentId) {
       ? window.renderModernLoader('Thinking...', { size: 'sm' })
       : '<em>Thinking...</em>';
   msgsEl.appendChild(aBubble);
-  msgsEl.scrollTop = msgsEl.scrollHeight;
 
   try {
     const res = await fetch('/api/agents/message', {
@@ -2796,21 +3026,23 @@ window.sendToAgentColumn = async function (agentId) {
     const data = await res.json();
     if (data.success && data.response) {
       aBubble.textContent = data.response;
+      window.SupergenceNotifications?.toast('Specialist responded');
     } else {
       aBubble.textContent = 'Error: ' + (data.error || 'Failed to get response');
     }
   } catch (err) {
     aBubble.textContent = 'Error: ' + err.message;
   }
-  msgsEl.scrollTop = msgsEl.scrollHeight;
 };
 
 // Cross-Agent Collaboration Trigger
-window.collaborateWithAnotherAgent = async function (sourceAgentId) {
+window.collaborateWithAnotherAgent = async function (sourceAgentId, targetAgentId = null) {
   const otherAgents = registeredAgents.filter((a) => a.id !== sourceAgentId);
   if (otherAgents.length === 0) return;
 
-  const targetAgent = otherAgents[Math.floor(Math.random() * otherAgents.length)];
+  const targetAgent = targetAgentId
+    ? otherAgents.find((a) => a.id === targetAgentId) || otherAgents[0]
+    : otherAgents[0];
   const sourceAgent = registeredAgents.find((a) => a.id === sourceAgentId);
   const msgsEl = document.getElementById('msgs-' + sourceAgentId);
   if (!msgsEl) return;
@@ -2819,7 +3051,6 @@ window.collaborateWithAnotherAgent = async function (sourceAgentId) {
   cBubble.className = 'side-agent-msg agent';
   cBubble.innerHTML = `⚡ <em>Collaborating with ${targetAgent.name}... Passing domain context and synthesizing findings.</em>`;
   msgsEl.appendChild(cBubble);
-  msgsEl.scrollTop = msgsEl.scrollHeight;
 
   try {
     const res = await fetch('/api/agents/message', {
@@ -2837,7 +3068,6 @@ window.collaborateWithAnotherAgent = async function (sourceAgentId) {
   } catch (e) {
     cBubble.textContent = 'Collaboration error: ' + e.message;
   }
-  msgsEl.scrollTop = msgsEl.scrollHeight;
 };
 
 // ── Create Agent Modal Handlers ──
@@ -2925,7 +3155,7 @@ window.toggleFuturisticHUDMode = function () {
 // Apply URL mode or stored preference
 try {
   const urlParams = new URLSearchParams(window.location.search);
-  const reqMode = urlParams.get('mode') || localStorage.getItem('sis_hud_style');
+  const reqMode = urlParams.get('mode');
   if (reqMode === 'futuristic') {
     document.body.classList.add('hud-futuristic-active');
     document.body.classList.remove('hud-liquid-glass-pure');
@@ -2934,7 +3164,9 @@ try {
     if (iconEl) iconEl.textContent = '💎';
     if (labelEl) labelEl.textContent = 'LIQUID GLASS MODE';
   } else {
+    document.body.classList.remove('hud-futuristic-active');
     document.body.classList.add('hud-liquid-glass-pure');
+    localStorage.setItem('sis_hud_style', 'liquid-glass');
   }
 } catch (_) {}
 
@@ -3047,7 +3279,6 @@ function initAgentBrowserWebSocketIndex() {
           if (feed) {
             feed.style.display = 'block';
             feed.innerHTML += `<div>› ${escapeHtml(data.thought || data.action || '')}</div>`;
-            feed.scrollTop = feed.scrollHeight;
           }
         } else if (
           data.type === 'agent-browser-task-complete' &&
@@ -3061,18 +3292,17 @@ function initAgentBrowserWebSocketIndex() {
           const feed = document.getElementById('agentMissionStatusFeedIndex');
           if (feed && data.summary) {
             feed.innerHTML += `<div style="color:#FFF; font-weight:700; margin-top:4px;">★ Synthesis: ${escapeHtml(data.summary)}</div>`;
-            feed.scrollTop = feed.scrollHeight;
           }
         } else if (
           (data.type === 'workspace-file-saved' || data.type === 'artifact') &&
           data.conversationId &&
           data.conversationId === window.__activeWorkspaceConvId
         ) {
-          if (typeof loadHeroArtifact === 'function') {
+          if (window.ChatArtifacts) {
             const url =
               data.src || data.url || (data.filename ? `/workspace/${data.filename}` : '');
             if (url) {
-              loadHeroArtifact({
+              window.ChatArtifacts.announce({
                 url,
                 name: data.filename || data.title,
                 title: data.title,
@@ -3123,8 +3353,7 @@ function initAgentBrowserWebSocketIndex() {
             bubble.style.borderLeft = `3px solid ${data.color || '#38BDF8'}`;
             bubble.innerHTML = `<strong>${escapeHtml(senderName)}:</strong> ${escapeHtml(text)}`;
             msgsEl.appendChild(bubble);
-            msgsEl.scrollTop = msgsEl.scrollHeight;
-          }
+                    }
         } else if (data.type === 'continuous-engine-tick') {
           window.SISContinuousDock?.updateTick(data);
         } else if (data.type === 'goal-created' || data.type === 'goal-complete') {
@@ -3135,8 +3364,7 @@ function initAgentBrowserWebSocketIndex() {
           data.type === 'ada-tool-rejected'
         ) {
           window.SISContinuousDock?.refreshAda();
-          window.Superbox?.switchTab('tools');
-          window.Superbox?.open();
+          window.SupergenceNotifications?.refresh();
         } else if (data.type === 'ui:theme-update') {
           window.applyAgentUITheme?.(data);
         } else if (data.type === 'ui:widget-injected') {
@@ -4940,9 +5168,8 @@ window.appTriggerSwarmExecution = async function () {
   const btn = document.getElementById('appBtnGenSwarm');
 
   btn.disabled = true;
-  status.textContent = 'Nova drafting + Aegis verifying in parallel...';
-  box.textContent =
-    '⚡ Speculative Dual-Path Swarm active...\n[NOVA] Speculating candidate AST branches...\n[AEGIS] Micro-sandbox invariant auditor spinning up...\n';
+  status.textContent = 'Preparing draft and checking syntax…';
+  box.textContent = '';
 
   try {
     const res = await fetch('/api/swarm/dual-path-execute', {
@@ -4952,26 +5179,18 @@ window.appTriggerSwarmExecution = async function () {
     });
     const data = await res.json();
     if (data.success) {
-      status.textContent = `Speedup: ${data.timing.speculativeSpeedup} | Aegis: ${data.aegis.status}`;
-      box.textContent = `══════════════════════════════════════════════════════════
-✨ SPECULATIVE DUAL-PATH SWARM REPORT
-══════════════════════════════════════════════════════════
-⏱️ Latency: ${data.timing.totalMs}ms (Nova: ${data.timing.novaMs}ms, Aegis: ${data.timing.aegisMs}ms)
-⚡ Speculative Speedup Ratio: ${data.timing.speculativeSpeedup}
+      const syntax = data.aegis.syntaxValid;
+      status.textContent = syntax === true ? 'Syntax passed' : syntax === false ? 'Syntax failed' : 'Syntax unavailable';
+      box.textContent = `Draft report
 
-[NOVA SPECULATIVE DRAFTER]
-- Hypothesis: ${data.nova.hypothesis}
-- Confidence: ${(data.nova.confidence * 100).toFixed(1)}%
-- Branches: ${data.nova.speculativeBranches}
+Elapsed time: ${data.timing.totalMs} ms
+Draft: ${data.nova.hypothesis}
 
-[AEGIS ADVERSARIAL VERIFIER]
-- Status: ${data.aegis.status}
-- AST Integrity Score: ${data.aegis.astIntegrityScore}%
-- Invariants Checked:
-${data.aegis.invariantChecks.map((c) => `  ✓ ${c.name}: [${c.status}]`).join('\n')}
-- Audit Notes: ${data.aegis.adversarialNotes}
+Static checks
+${data.aegis.invariantChecks.map((check) => `- ${check.name}: ${check.status}`).join('\n')}
+${data.aegis.adversarialNotes}
 
-[FINAL VERIFIED CODE]
+Draft code
 ${data.finalArtifact.code}
 `;
     } else {
@@ -5661,44 +5880,6 @@ window.refreshCurrentRightTab = function () {
   }
 };
 
-const knownFileSnippets = {
-  'README.md': `# Supergence (SIS 1.0)
-Unified Superintelligence System with real-time multi-agent orchestration.
-- Hermes (Cognitive orchestrator)
-- OpenClaw (Dynamic tools engine)
-- OpenDots (Multi-agent swarms)
-- OpenBot (Autonomous team lead)`,
-  'client/index.html': `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Supergence | SIS Workspace</title>
-  </head>
-  <body class="sis-workspace-ui">
-    <!-- Supergence Split Workspace -->
-  </body>
-</html>`,
-  'client/scripts/workspace-controller.js': `// Supergence Workspace Controller
-// Real-time agent collaboration & split-screen workstation
-console.log('Supergence active');`,
-  'client/styles/workspace-shell.css': `/* Supergence Theme Palette */
-:root {
-  --shell-page: #0e1015;
-  --shell-sidebar: #101117;
-  --shell-surface: #13141b;
-}`,
-  'server/index.js': `import express from 'express';
-import brain from './orchestrator/brain.js';
-console.log('Supergence server running');`,
-  'data/memory/knowledge-graph.json': `{
-  "stats": {
-    "nodes": 82967,
-    "edges": 188613,
-    "lastUpdated": "${new Date().toISOString()}"
-  }
-}`,
-};
-
 window.previewFileContent = async function (filename) {
   const titleEl = document.getElementById('filePreviewTitle');
   const codeEl = document.getElementById('codeStudioCode');
@@ -5710,17 +5891,21 @@ window.previewFileContent = async function (filename) {
     item.classList.toggle('is-selected', name === filename);
   });
 
-  let content = knownFileSnippets[filename];
-  if (!content) {
-    try {
-      const res = await fetch('/api/workspace/read?path=' + encodeURIComponent(filename));
-      if (res.ok) {
-        const data = await res.json();
-        content = data.content || data.text || '';
-      }
-    } catch (_) {}
+  let content;
+  try {
+    let res = await fetch('/api/workspace/file?path=' + encodeURIComponent(filename));
+    if (!res.ok) {
+      res = await fetch('/api/artifacts/content?file=' + encodeURIComponent(filename));
+    }
+    if (res.ok) {
+      const data = await res.json();
+      content = data.content ?? data.text ?? '';
+    } else {
+      content = `// File unavailable: ${filename}\n// Status: HTTP ${res.status}`;
+    }
+  } catch (err) {
+    content = `// Failed to read ${filename}\n// Error: ${err.message}`;
   }
-  if (!content) content = '// ' + filename + '\n// File ready in workspace';
 
   if (codeEl) codeEl.textContent = content;
   if (linesEl) {
@@ -5742,15 +5927,35 @@ window.copyFilePreviewCode = function () {
   }
 };
 
-window.runFilePreviewCode = function () {
+window.runFilePreviewCode = async function () {
   const btn = document.getElementById('codeStudioRunBtn');
+  const titleEl = document.getElementById('filePreviewTitle');
+  const filename = titleEl?.textContent?.trim();
+  if (!filename) return;
+
   if (btn) {
     const orig = btn.textContent;
     btn.textContent = 'Executing...';
+    try {
+      const res = await fetch('/api/workspace/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        btn.textContent = 'Executed ✓';
+      } else {
+        btn.textContent = 'Run Failed';
+        console.warn('Execution notice:', data.error || data.stderr);
+      }
+    } catch (err) {
+      btn.textContent = 'Error';
+      console.warn('Execution error:', err.message);
+    }
     setTimeout(() => {
-      btn.textContent = 'Executed ✓';
-      setTimeout(() => (btn.textContent = orig), 1500);
-    }, 600);
+      if (btn) btn.textContent = orig;
+    }, 2000);
   }
 };
 
@@ -5781,7 +5986,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .querySelectorAll('.workspace-conversations-sidebar .channel-item')
         .forEach((c) => c.classList.remove('is-active'));
       item.classList.add('is-active');
-      const agentName = item.querySelector('.channel-name')?.textContent?.trim() || 'Atlas';
+      const agentName = item.querySelector('.channel-name')?.textContent?.trim() || 'Supergence';
       const headerTitle = document.getElementById('workspaceHeaderTabPill');
       if (headerTitle) {
         const textNode = Array.from(headerTitle.childNodes).find(
@@ -5821,11 +6026,14 @@ window.switchMermaidTab = function (mode) {
 };
 
 window.copyMermaidCode = function () {
-  const code = `graph LR
-  Scout["Scout: market check"] --> Atlas["Atlas"]
-  Forge["Forge: launch banner"] --> Atlas
-  Pulse["Pulse: post and socials"] --> Atlas
-  Atlas --> Friday(("Friday 10:00"))`;
+  const code =
+    document.querySelector('#mermaidStageCode pre, #mermaidStageCode code')?.textContent ||
+    document.getElementById('mermaidStageCode')?.textContent?.trim() ||
+    '';
+  if (!code) {
+    console.warn('No Mermaid diagram code available to copy.');
+    return;
+  }
   if (navigator.clipboard) {
     navigator.clipboard.writeText(code);
     const btns = document.querySelectorAll('.mermaid-tab-btn');
@@ -5842,103 +6050,68 @@ window.expandMermaidDiagram = function () {
   window.switchRightPaneTab('document');
   const docArticle = document.getElementById('editorialDocumentArticle');
   const title = document.getElementById('activeRightDocTitle');
-  if (title) title.textContent = 'launch-workflow-diagram.mermaid';
+  if (title) title.textContent = 'Active Workflow Diagram';
   if (docArticle) {
-    docArticle.innerHTML = `
-      <h1 class="document-editorial-title">Friday Launch Workflow — Team Coordination</h1>
-      <p class="document-lead">Real-time multi-agent execution pipeline orchestrated by Atlas with Scout, Forge, and Pulse.</p>
-      <div style="background:#161823; border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:24px; margin:20px 0; display:flex; justify-content:center;">
-        <svg width="100%" height="240" viewBox="0 0 540 200" fill="none" class="mermaid-flowchart-svg">
-          <path d="M 180 40 C 220 40, 230 100, 260 100" stroke="#4b5563" stroke-width="1.5" fill="none" marker-end="url(#mermaid-arrow)" />
-          <path d="M 180 100 L 260 100" stroke="#4b5563" stroke-width="1.5" fill="none" marker-end="url(#mermaid-arrow)" />
-          <path d="M 180 160 C 220 160, 230 100, 260 100" stroke="#4b5563" stroke-width="1.5" fill="none" marker-end="url(#mermaid-arrow)" />
-          <path d="M 330 100 L 396 100" stroke="#9ca3af" stroke-width="1.5" fill="none" marker-end="url(#mermaid-arrow-light)" />
-          <rect x="20" y="20" width="160" height="40" rx="8" fill="#1b1d26" stroke="#2e3240" stroke-width="1" />
-          <text x="100" y="45" fill="#e5e7eb" font-size="12" font-family="system-ui, sans-serif" text-anchor="middle">Scout: market check</text>
-          <rect x="20" y="80" width="160" height="40" rx="8" fill="#1b1d26" stroke="#2e3240" stroke-width="1" />
-          <text x="100" y="105" fill="#e5e7eb" font-size="12" font-family="system-ui, sans-serif" text-anchor="middle">Forge: launch banner</text>
-          <rect x="20" y="140" width="160" height="40" rx="8" fill="#1b1d26" stroke="#2e3240" stroke-width="1" />
-          <text x="100" y="165" fill="#e5e7eb" font-size="12" font-family="system-ui, sans-serif" text-anchor="middle">Pulse: post and socials</text>
-          <rect x="260" y="80" width="70" height="40" rx="8" fill="#1f222e" stroke="#3b4054" stroke-width="1.2" />
-          <text x="295" y="105" fill="#f3f4f6" font-size="12" font-family="system-ui, sans-serif" font-weight="500" text-anchor="middle">Atlas</text>
-          <circle cx="435" cy="100" r="38" fill="#1b1d26" stroke="#3b4054" stroke-width="1.2" />
-          <text x="435" y="105" fill="#f3f4f6" font-size="12" font-family="system-ui, sans-serif" text-anchor="middle">Friday 10:00</text>
-        </svg>
-      </div>
-      <h2 class="document-section-heading">Execution Roles</h2>
-      <ul class="document-bullet-list">
-        <li><strong>Scout:</strong> Continues competitor pricing audits across primary targets.</li>
-        <li><strong>Forge:</strong> Completed PR #412 banner build; staging preview ready for review.</li>
-        <li><strong>Pulse:</strong> Monitoring live sentiment, developer mentions, and launch hashtags.</li>
-        <li><strong>Atlas:</strong> Final approval of launch banner assets and coordination check.</li>
-      </ul>`;
+    const stagePreview = document.getElementById('mermaidStagePreview');
+    const stageCode = document.getElementById('mermaidStageCode');
+    const svgEl = stagePreview?.querySelector('svg');
+    const codeText = stageCode?.textContent?.trim() || '';
+
+    if (svgEl) {
+      docArticle.innerHTML = `
+        <h1 class="document-editorial-title">Workflow Execution Diagram</h1>
+        <div style="background:#161823; border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:24px; margin:20px 0; display:flex; justify-content:center;">
+          ${svgEl.outerHTML}
+        </div>
+        ${codeText ? `<pre style="background:#0f1117; padding:16px; border-radius:8px; font-family:monospace; font-size:12px; color:#cbd5e1; overflow-x:auto;">${escapeHtml(codeText)}</pre>` : ''}
+      `;
+    } else if (codeText) {
+      docArticle.innerHTML = `
+        <h1 class="document-editorial-title">Workflow Diagram Source</h1>
+        <pre style="background:#0f1117; padding:16px; border-radius:8px; font-family:monospace; font-size:12px; color:#cbd5e1; overflow-x:auto;">${escapeHtml(codeText)}</pre>
+      `;
+    } else {
+      docArticle.innerHTML = `
+        <div class="document-empty-state">
+          <h2 class="document-section-heading">No Active Diagram</h2>
+          <p class="document-lead">Generate or load a workflow diagram to inspect and expand it here.</p>
+        </div>
+      `;
+    }
   }
 };
 
-const documentsLibrary = {
-  'launch-plan.md': `
-    <h1 class="document-editorial-title">Friday Launch Plan — Team Coordination Brief</h1>
-    <h2 class="document-section-heading">Milestone Objectives</h2>
-    <p class="document-lead">This document outlines the synchronized go-to-market sequence for Friday 10:00 AM EST across engineering, product marketing, and developer relations.</p>
-    
-    <ol class="document-ordered-list">
-      <li><strong>08:30 AM:</strong> Scout delivers updated pricing comparison across top competing platforms.</li>
-      <li><strong>09:15 AM:</strong> Forge deploys pricing-page PR #412 to production after Atlas sign-off.</li>
-      <li><strong>10:00 AM:</strong> Pulse publishes product announcement and social launch threads.</li>
-    </ol>
-
-    <h2 class="document-section-heading">Open Action Items</h2>
-    <ul class="document-bullet-list">
-      <li><strong>PR #418 Approval:</strong> Review and sign off on the launch banner assets before 09:00 AM.</li>
-      <li><strong>Staging Verification:</strong> Confirm mobile viewport parity across all tier checkout cards.</li>
-      <li><strong>Live Monitoring:</strong> Pulse signals monitor active for developer traction and inbound inquiries.</li>
-    </ul>`,
-
-  'social-drafts.md': `
-    <h1 class="document-editorial-title">Social Launch Announcement Drafts</h1>
-    <h2 class="document-section-heading">Primary Launch Post (Twitter / X & LinkedIn)</h2>
-    <div style="background:#161823; border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:16px; margin:14px 0; font-size:13px; line-height:1.6; color:#e2e5ef;">
-      Today we're launching the next evolution of Supergence: fully autonomous multi-agent swarms with split-workspace orchestration.<br><br>
-      • Real-time mid-task steering<br>
-      • Multi-agent consensus (Atlas, Forge, Scout, Pulse)<br>
-      • Local offline privacy & high-speed reasoning<br><br>
-      Experience the future of intelligent engineering at supergence.com 🚀
-    </div>
-    
-    <h2 class="document-section-heading">Community & Discord Thread</h2>
-    <p class="document-lead">Targeted discussion prompts for builders, researchers, and system designers.</p>`,
-
-  'top-5-ai-agent-startup-ideas-2026.md': `
-    <h1 class="document-editorial-title">Top 5 AI Agent Startup Ideas — 2026 Research Report</h1>
-    
-    <h2 class="document-section-heading">How this list was built</h2>
-    <p class="document-lead">Before picking ideas, I researched three questions that determine whether an "AI agent startup" actually has a high chance of success in 2026, versus just being a trendy pitch:</p>
-    
-    <ol class="document-ordered-list">
-      <li><strong>What's actually funded and working right now</strong> (YC W26/S26 batches, top-valued agent companies, market sizing)</li>
-      <li><strong>Why most AI agent startups fail</strong> — the "wrapper risk" problem</li>
-      <li><strong>What separates the survivors</strong> — the specific moats that hold up when OpenAI/Anthropic/Google ship a native competing feature</li>
-    </ol>
-
-    <h2 class="document-section-heading">Key findings from research</h2>
-    <ul class="document-bullet-list">
-      <li><strong>Market size:</strong> The AI agent market grew from ~$5.25B (2024) to ~$7.84B (2025), with projections toward $52.6B by 2030 (some estimates go as high as $183B by 2033 at a 49.6% CAGR). Gartner projects 33% of enterprise software will have agentic AI by 2028.</li>
-      <li><strong>Wrapper risk is real and already killing companies:</strong> Analysts estimate 60–90% of thin AI-wrapper startups will be effectively dead or stuck under $10K MRR by end of 2026. OpenAI's own feature releases (Operator, Tasks, Canvas, native file upload) have already cannibalized 200+ funded "wrapper" companies. The test that keeps recurring across VC/founder writing: if a technical user can paste your core prompt into ChatGPT/Claude and get 80% of your output, you're a wrapper, not a company.</li>
-      <li><strong>What actually creates defensibility, consistently cited:</strong> (1) a proprietary data flywheel that compounds with usage, (2) deep workflow/systems integration that creates real switching costs, (3) owned distribution, (4) regulatory/compliance moats in regulated industries, (5) genuine network effects. Founders who stack two or more of these survive; one alone is fragile.</li>
-      <li><strong>Vertical beats horizontal:</strong> YC's own W26 batch (largest in its history, 180+ companies, 80%+ AI-focused) shows the dominant shape is "AI-native operating system for X" — replacing a specific legacy vertical SaaS incumbent (legal, accounting, supply chain, insurance) rather than building a general-purpose agent. The unsexy verticals (legal tech, supply chain) grew fastest as a share of the batch.</li>
-      <li><strong>The "wrapper survives if it's not just a wrapper" exception:</strong> Manus AI hit $100M ARR in ~8 months with no proprietary model and got acquired by Meta for ~$2B — proof that orchestration, product design, and growth velocity can be a moat even without owned model weights, but this is the exception, not the rule, and it required exceptional execution.</li>
-    </ul>`,
-};
-
-window.openDocumentInRightPane = function (docName) {
+window.openDocumentInRightPane = async function (docName) {
   window.switchRightPaneTab('document');
   const title = document.getElementById('activeRightDocTitle');
   if (title) title.textContent = docName + ' · MD';
 
   const docArticle = document.getElementById('editorialDocumentArticle');
-  if (docArticle && documentsLibrary[docName]) {
-    docArticle.innerHTML = documentsLibrary[docName];
-    docArticle.scrollTop = 0;
+  if (!docArticle) return;
+  docArticle.innerHTML = '<p class="document-lead">Loading document...</p>';
+
+  try {
+    let res = await fetch('/api/workspace/file?path=' + encodeURIComponent(docName));
+    if (!res.ok) {
+      res = await fetch('/api/artifacts/content?file=' + encodeURIComponent(docName));
+    }
+    if (res.ok) {
+      const data = await res.json();
+      const content = data.content ?? data.text ?? '';
+      if (typeof window.renderMarkdownInElement === 'function') {
+        docArticle.innerHTML = '';
+        window.renderMarkdownInElement(docArticle, content);
+      } else if (typeof marked !== 'undefined') {
+        docArticle.innerHTML = marked.parse(content);
+      } else {
+        docArticle.innerHTML = `<pre style="white-space: pre-wrap; font-family: monospace;">${escapeHtml(content)}</pre>`;
+      }
+      docArticle.scrollTop = 0;
+      return;
+    }
+    docArticle.innerHTML = `<div class="document-empty-state"><p class="document-lead">Document not found or unavailable: <code>${escapeHtml(docName)}</code></p></div>`;
+  } catch (err) {
+    docArticle.innerHTML = `<div class="document-empty-state"><p class="document-lead">Unable to load document: ${escapeHtml(err.message)}</p></div>`;
   }
 };
 
@@ -5955,14 +6128,33 @@ window.copyActiveDocumentContent = function () {
   }
 };
 
-window.downloadArtifactFile = function (filename) {
-  const content = documentsLibrary[filename] || '# ' + filename;
-  const blob = new Blob([content], { type: 'text/markdown' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(a.href);
+window.downloadArtifactFile = async function (filename) {
+  try {
+    let res = await fetch('/api/workspace/file?path=' + encodeURIComponent(filename));
+    if (!res.ok) {
+      res = await fetch('/api/artifacts/content?file=' + encodeURIComponent(filename));
+    }
+    let content = '';
+    if (res.ok) {
+      const data = await res.json();
+      content = data.content ?? data.text ?? '';
+    } else {
+      const docArticle = document.getElementById('editorialDocumentArticle');
+      content = docArticle?.innerText || '';
+    }
+    if (!content) {
+      console.warn('No content available for artifact download:', filename);
+      return;
+    }
+    const blob = new Blob([content], { type: 'text/markdown' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  } catch (err) {
+    console.warn('Failed to download artifact file:', err.message);
+  }
 };
 
 window.toggleExpandDocument = function () {

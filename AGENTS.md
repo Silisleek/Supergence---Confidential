@@ -15,7 +15,7 @@ Supergence has two distinct surfaces in this repository:
 
 Whenever you build a UI feature, fix a bug, or add new capabilities, **always apply it to the main app**. Standalone demo pages are great for experimenting, but our users interact with the app in `client/index.html`.
 
-Before building a new control or UI component, check what's already there. The bottom deck already contains working `VOICE`, `DICTATE`, and `CHAT` modules wired through `app.js` and `stark-hud.css`. Extend and improve existing components rather than building redundant duplicate widgets.
+Before building a new control or UI component, check what's already there. The workspace contains working `VOICE`, `DICTATE`, and `CHAT` modules wired through `client/scripts/workspace-controller.js`, `client/scripts/voice-input.js`, and `client/styles/workspace.css`. Extend and improve existing components rather than building redundant duplicate widgets.
 
 ---
 

@@ -7,16 +7,24 @@ export const AREM_DEFAULT_KEY = process.env.AREM_API_KEY || '';
 export const AREM_DEFAULT_MODEL = process.env.AREM_MODEL || 'opus-4.6';
 
 export class AremClient {
-  constructor({
-    baseURL = AREM_DEFAULT_ENDPOINT,
-    apiKey = AREM_DEFAULT_KEY,
-    model = AREM_DEFAULT_MODEL,
-    timeoutMs = 60000,
-  } = {}) {
-    this.baseURL = baseURL.replace(/\/+$/, '');
-    this.apiKey = apiKey;
-    this.model = model;
+  constructor({ baseURL, apiKey, model, timeoutMs = 60000 } = {}) {
+    this.options = { baseURL, apiKey, model };
     this.timeoutMs = timeoutMs;
+  }
+
+  get baseURL() {
+    return (this.options.baseURL ?? (process.env.AREM_BASE_URL || AREM_DEFAULT_ENDPOINT)).replace(
+      /\/+$/,
+      '',
+    );
+  }
+
+  get apiKey() {
+    return this.options.apiKey ?? (process.env.AREM_API_KEY || AREM_DEFAULT_KEY);
+  }
+
+  get model() {
+    return this.options.model ?? (process.env.AREM_MODEL || AREM_DEFAULT_MODEL);
   }
 
   async complete({
@@ -26,6 +34,7 @@ export class AremClient {
     model = null,
     maxTokens = 2048,
     temperature = 0.3,
+    signal,
   } = {}) {
     const activeModel = model || this.model;
     const chatMessages = messages
@@ -34,6 +43,25 @@ export class AremClient {
           ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
           { role: 'user', content: prompt },
         ];
+
+    const useSelectedProvider =
+      this.options.baseURL === undefined && this.options.apiKey === undefined && this.options.model === undefined &&
+      !process.env.AREM_BASE_URL && !process.env.AREM_API_KEY && !process.env.AREM_MODEL;
+    if (useSelectedProvider) {
+      const { callAI } = await import('../api/provider.js');
+      const started = Date.now();
+      const response = await callAI({
+        ...(model ? { model } : {}),
+        messages: chatMessages,
+        maxTokens,
+        temperature,
+        signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(this.timeoutMs)]) : AbortSignal.timeout(this.timeoutMs),
+      });
+      const message = response.choices?.[0]?.message || {};
+      const content = (message.content || '').trim();
+      const reasoning = (message.reasoning_content || '').trim();
+      return { text: content || reasoning || '', content, reasoning, model: response.model || model || '', durationMs: Date.now() - started, usage: response.usage || null, raw: response };
+    }
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
@@ -52,7 +80,7 @@ export class AremClient {
           max_tokens: maxTokens,
           temperature,
         }),
-        signal: controller.signal,
+        signal: signal ? AbortSignal.any([signal, controller.signal]) : controller.signal,
       });
 
       if (!response.ok) {

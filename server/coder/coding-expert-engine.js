@@ -98,7 +98,7 @@ export class CodingExpertEngine {
           evaluation.diagnostics.push(`Execution error: ${errDetail}`);
 
           // 3. Self-healing loop: auto-heal if sandbox failed
-          if (draft.autoHeal !== false) {
+          if (draft.autoHeal !== false && sandboxRes.phase !== 'execution-unavailable') {
             try {
               console.log(
                 `[CodingExpert] Code execution error in ${filename}. Triggering autonomous Auto-Healer...`,

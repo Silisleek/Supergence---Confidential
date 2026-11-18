@@ -4,7 +4,8 @@ import path from 'node:path';
 
 const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 const localTemp = 'C:\\Users\\Akshan sharma\\AppData\\Local\\Temp';
-const brainDir = 'C:\\Users\\Akshan sharma\\.gemini\\antigravity\\brain\\cc78a903-c95c-43ff-b918-06eb784f9796';
+const brainDir =
+  'C:\\Users\\Akshan sharma\\.gemini\\antigravity\\brain\\cc78a903-c95c-43ff-b918-06eb784f9796';
 
 function captureScreen(url, filename) {
   const tmpProfile = fs.mkdtempSync(path.join(localTemp, 'chrome-fast-'));

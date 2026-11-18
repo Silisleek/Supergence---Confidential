@@ -1,5 +1,5 @@
 // SIS 1.0 — Advanced Methods & Autonomous Capabilities Engine
-// Encapsulates 52+ cutting-edge methods spanning:
+// Encapsulates specialized methods spanning:
 // 1. Autonomous Reasoning & Cognitive Search (10 methods)
 // 2. Software Engineering & Algorithmic Rigor (10 methods)
 // 3. 3D Graphics, WebGL & Shader Architecture (11 methods)
@@ -10,7 +10,6 @@ export class AdvancedMethodsEngine {
   constructor() {
     this.name = 'Advanced Methods & Autonomous Capabilities Engine';
     this.version = '4.0.0-PRO-MAX';
-    this.totalMethods = 52;
     this.categories = [
       'Autonomous Reasoning & Cognitive Search',
       'Software Engineering & Algorithmic Rigor',
@@ -19,79 +18,14 @@ export class AdvancedMethodsEngine {
       'Continuous Self-Improvement & Meta-Learning',
     ];
     this.methods = this._initializeMethods();
+    this.totalMethods = Object.keys(this.methods).length;
   }
 
   _initializeMethods() {
     return {
       // ══════════════════════════════════════════════════════════════════════
-      // CATEGORY 1: AUTONOMOUS REASONING & COGNITIVE SEARCH (10 Methods)
+      // CATEGORY 1: AUTONOMOUS REASONING & COGNITIVE SEARCH
       // ══════════════════════════════════════════════════════════════════════
-      method_tree_of_thoughts: {
-        id: 'method_tree_of_thoughts',
-        name: 'Tree of Thoughts (ToT) Heuristic Search',
-        category: 'Autonomous Reasoning & Cognitive Search',
-        description:
-          'Explores multiple branching conceptual reasoning paths using tree search with heuristic evaluation, pruning low-probability branches.',
-        execute: async (params = {}) => {
-          const depth = Number(params.depth) || 3;
-          const branches = Number(params.branches) || 3;
-          const topic = params.topic || params.query || 'Algorithmic Optimization';
-          const tree = [];
-          for (let d = 1; d <= depth; d++) {
-            const level = [];
-            for (let b = 1; b <= branches; b++) {
-              level.push({
-                nodeId: `L${d}-B${b}`,
-                hypothesis: `Decomposed sub-problem vector at depth ${d}, candidate ${b} for "${topic}"`,
-                heuristicScore: +(0.75 + b * 0.08 - d * 0.02).toFixed(3),
-                status: b === 1 ? 'EXPLORED_PRIMARY' : b === 2 ? 'EXPLORED_ALTERNATIVE' : 'PRUNED',
-              });
-            }
-            tree.push({ depth: d, nodes: level });
-          }
-          return {
-            method: 'method_tree_of_thoughts',
-            topic,
-            depth,
-            branchesPerNode: branches,
-            exploredNodesCount: depth * branches,
-            optimalPath: tree.map((l) => l.nodes[0].nodeId),
-            confidence: 0.942,
-            tree,
-          };
-        },
-      },
-
-      method_mcts_planner: {
-        id: 'method_mcts_planner',
-        name: 'Monte Carlo Tree Search (MCTS) Action Planner',
-        category: 'Autonomous Reasoning & Cognitive Search',
-        description:
-          'Performs selection, expansion, simulation (rollout), and backpropagation to discover optimal multi-step tool execution policies.',
-        execute: async (params = {}) => {
-          const rollouts = Number(params.rollouts) || 100;
-          const actionSpace = params.actionSpace || [
-            'inspect_ast',
-            'compile_shader',
-            'verify_physics',
-            'synthesize_unit_test',
-          ];
-          const policy = actionSpace.map((action, idx) => ({
-            action,
-            visits: Math.floor(rollouts * (0.4 - idx * 0.08)),
-            qValue: +(0.88 - idx * 0.05).toFixed(3),
-            ucbScore: +(0.92 - idx * 0.04).toFixed(3),
-          }));
-          return {
-            method: 'method_mcts_planner',
-            rollouts,
-            bestAction: policy[0].action,
-            expectedUtility: policy[0].qValue,
-            policy,
-          };
-        },
-      },
-
       method_react_feedback_loop: {
         id: 'method_react_feedback_loop',
         name: 'ReAct (Reason + Act + Observe) Triad Loop',
@@ -1071,7 +1005,7 @@ export class AdvancedMethodsEngine {
   }
 
   /**
-   * Execute any of the 52 methods by ID
+   * Execute a method by ID
    */
   async executeMethod(methodId, params = {}) {
     const m = this.methods[methodId];
@@ -1105,7 +1039,7 @@ export class AdvancedMethodsEngine {
   }
 
   /**
-   * List all 52 methods with metadata
+   * List methods with metadata
    */
   listAllMethods() {
     return {

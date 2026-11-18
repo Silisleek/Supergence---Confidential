@@ -1,4 +1,5 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,6 +11,43 @@ const ignored = (value) =>
     .split(/[\\/]/)
     .some((part) => ['node_modules', '.git', '.cache', '__pycache__'].includes(part));
 export const currentWorkspace = () => context.getStore();
+export const workspaceOutputRoot = (fallback) => {
+  const scope = currentWorkspace();
+  return scope?.projectRoot || scope?.root || fallback;
+};
+
+export function selectWorkspaceProject(query, { continuation = false } = {}) {
+  const scope = currentWorkspace();
+  if (!scope) return;
+  if (scope.lockedProjectDirectory) {
+    scope.projectDirectory = scope.lockedProjectDirectory;
+    scope.projectRoot = containedPath(scope.root, scope.projectDirectory);
+    return;
+  }
+  const label = String(query || '').split(/[\r\n]/, 1)[0];
+  const separatesWork =
+    !continuation &&
+    /^(?:please\s+)?(?:start|create|build|make|develop|generate)\b[^.!?\r\n]{0,90}\b(?:new|separate|another)\s+(?:project|app|application|website|game|simulation|scene|tool)\b/i.test(
+      label,
+    );
+  const slug =
+    label
+      .toLowerCase()
+      .replace(
+        /^(?:please\s+)?(?:start|create|build|make|develop|generate|write|save|design)\s+/,
+        '',
+      )
+      .replace(/^(?:(?:an?|the|new|separate|another)\s+)+/, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .slice(0, 42)
+      .replace(/^-+|-+$/g, '') || 'work';
+  const key = createHash('sha256').update(scope.requestId).digest('hex').slice(0, 12);
+  const directory = `projects/${slug}-${key}`;
+  scope.projectDirectory =
+    !separatesWork && scope.record.activeProject ? scope.record.activeProject : directory;
+  scope.freshProject = separatesWork;
+  scope.projectRoot = containedPath(scope.root, scope.projectDirectory);
+}
 
 export function containedPath(root, relative = '') {
   const target = path.resolve(root, relative);
@@ -47,6 +85,7 @@ export class ConversationWorkspaces {
     fs.mkdirSync(root, { recursive: true });
     fs.mkdirSync(this.directory, { recursive: true });
     const journal = path.join(this.directory, `${conversationId}.jsonl`);
+    const projectState = path.join(this.directory, `${conversationId}.project`);
     let events = [];
     try {
       events = fs
@@ -59,11 +98,24 @@ export class ConversationWorkspaces {
     } catch (error) {
       if (error.code !== 'ENOENT') throw error;
     }
+    let activeProject;
+    try {
+      const saved = fs.readFileSync(projectState, 'utf8');
+      if (
+        /^projects\/[a-z0-9-]+$/.test(saved) &&
+        fs.statSync(containedPath(root, saved)).isDirectory()
+      )
+        activeProject = saved;
+    } catch {
+      // A missing or stale project pointer leaves the chat workspace available.
+    }
     const record = {
       conversationId,
       root,
       baseRoot,
       journal,
+      projectState,
+      activeProject,
       events,
       sequence: events.at(-1)?.sequence || 0,
       listeners: new Set(),
@@ -151,13 +203,29 @@ export class ConversationWorkspaces {
     const scope = currentWorkspace();
     if (scope) return scope.service.record(scope.record, event);
   }
-  async run({ baseRoot, conversationId, requestId }, work) {
+  async run({ baseRoot, conversationId, requestId, lockedProjectDirectory }, work) {
     const record = this.ensure(baseRoot, conversationId);
+    if (lockedProjectDirectory) containedPath(record.root, lockedProjectDirectory);
+    const previousRequestId = record.requestId;
     record.requestId = requestId;
-    return context.run(
-      { service: this, record, root: record.root, baseRoot, conversationId, requestId },
-      work,
-    );
+    const scope = { service: this, record, root: record.root, baseRoot, conversationId, requestId, lockedProjectDirectory };
+    try {
+      return await context.run(scope, work);
+    } finally {
+      if (record.requestId === requestId) record.requestId = previousRequestId;
+      if (
+        scope.projectDirectory &&
+        scope.projectDirectory !== record.activeProject &&
+        fs.existsSync(scope.projectRoot)
+      ) {
+        record.activeProject = scope.projectDirectory;
+        try {
+          fs.writeFileSync(record.projectState, scope.projectDirectory);
+        } catch (error) {
+          record.journalError = error.message;
+        }
+      }
+    }
   }
   snapshot(record) {
     return {

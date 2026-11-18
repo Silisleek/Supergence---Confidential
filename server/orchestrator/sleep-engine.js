@@ -36,6 +36,7 @@ class SleepEngine {
 
     // Check every 30 seconds if we should run consolidation
     this._interval = setInterval(() => this._tick(), 30000);
+    this._interval?.unref?.();
   }
 
   stop() {

@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const identityOrigin = process.env.SILISLEEK_ORIGIN || 'https://silisleek.com';
-const sessionLifetime = 8 * 60 * 60 * 1000;
+const sessionLifetime = 8 * 60 * 60 * 1000; // 8 hours for remote Sleek claims
 const pendingLifetime = 5 * 60 * 1000;
 
 export function createSleekIdentity({
@@ -28,8 +28,7 @@ export function createSleekIdentity({
   const sessions = new Map();
   const pending = new Map();
 
-  const filePath =
-    sessionFile || path.resolve(process.cwd(), '.freebuff/sleek-sessions.json');
+  const filePath = sessionFile || path.resolve(process.cwd(), '.freebuff/sleek-sessions.json');
 
   function saveSessions() {
     if (!persist) return;
@@ -203,6 +202,27 @@ export function createSleekIdentity({
   function logout(req) {
     revoke(token(req), 'Signed out. No further task actions will be started.');
   }
-  return { begin, complete, claim, getSession, getSignal, remainingMs, logout };
+  function createLocalSession(userOverrides = {}, lifetime = 24 * 60 * 60 * 1000) {
+    const key = randomBytes(32).toString('hex');
+    const controller = new AbortController();
+    const user = {
+      id: userOverrides.id || 'local-developer',
+      sleekId: userOverrides.sleekId || 'local-developer',
+      name: userOverrides.name || 'Local Developer',
+      supergenceActivated: true,
+      isLocal: true,
+    };
+    // Keep timeout safe under Node 32-bit signed int limit (2147483647 ms ~24.8 days)
+    const safeLifetime = Math.min(lifetime, 2147483647);
+    const timer = setTimeout(
+      () => revoke(key, 'Local session expired. Reconnect before continuing work.'),
+      safeLifetime,
+    );
+    timer.unref();
+    sessions.set(key, { user, expires: now() + safeLifetime, controller, timer });
+    saveSessions();
+    return { key, user, status: 'complete' };
+  }
+  return { begin, complete, claim, getSession, getSignal, remainingMs, logout, createLocalSession };
 }
 export const sleekIdentity = createSleekIdentity({ persist: true });

@@ -29,6 +29,7 @@ const DATA_DIR = process.env.SIS_DATA_DIR
   ? path.resolve(process.env.SIS_DATA_DIR)
   : path.join(ROOT_DIR, 'data');
 const TOOLS_STORE_FILE = path.join(DATA_DIR, 'ada-forged-tools.json');
+const PROPOSALS_FILE = path.join(DATA_DIR, 'ada-tool-proposals.json');
 
 // Retained only to detect and purge tools written by the previous version,
 // which installed unverified placeholders without bound.
@@ -58,6 +59,27 @@ export class AdaToolForger {
     this.registry = null;
     this._ensureStore();
     this._loadSavedTools();
+    if (fs.existsSync(PROPOSALS_FILE)) {
+      try {
+        for (const tool of JSON.parse(fs.readFileSync(PROPOSALS_FILE, 'utf8'))) {
+          if (
+            tool?.status === 'PENDING_APPROVAL' &&
+            tool.verified &&
+            tool.integrity === hashTool(tool.code) &&
+            !this.installedTools.has(tool.id)
+          )
+            this.proposals.set(tool.id, tool);
+        }
+      } catch (error) {
+        console.warn('[AdaToolForger] Could not restore pending proposals:', error.message);
+      }
+    }
+  }
+
+  _saveProposals() {
+    const temporary = PROPOSALS_FILE + '.tmp';
+    fs.writeFileSync(temporary, JSON.stringify([...this.proposals.values()]), { mode: 0o600 });
+    fs.renameSync(temporary, PROPOSALS_FILE);
   }
 
   setRegistry(reg) {
@@ -165,6 +187,7 @@ export class AdaToolForger {
         tool.capabilities = verdict.classification.capabilities;
         tool.privileged = verdict.classification.privileged;
         tool.integrity = hashTool(tool.code);
+        this._registerIntoLiveRegistry(tool, false);
         promoted++;
       } else {
         this.installedTools.delete(tool.id);
@@ -212,7 +235,7 @@ export class AdaToolForger {
     }
 
     const existing = Array.from(this.installedTools.values()).find((t) => t.name === cleanName);
-    if (existing) {
+    if (existing || this.getRegistry()?.get(cleanName)) {
       return {
         accepted: false,
         reason: `A tool named "${cleanName}" is already installed.`,
@@ -222,6 +245,11 @@ export class AdaToolForger {
 
     const sampleParams = sampleParamsFromSpec(parameters, required);
     const verdict = await verifyTool(code, sampleParams);
+    if (this.proposals.has('ada-tool-' + cleanName))
+      return {
+        accepted: false,
+        reason: 'A proposal with this name is already awaiting review in Notifications.',
+      };
 
     this.forgingHistory.push({
       action: verdict.verified ? 'VERIFIED' : 'REJECTED_UNVERIFIED',
@@ -265,6 +293,12 @@ export class AdaToolForger {
     if (tool.privileged) {
       tool.status = 'PENDING_APPROVAL';
       this.proposals.set(tool.id, tool);
+      try {
+        this._saveProposals();
+      } catch (error) {
+        this.proposals.delete(tool.id);
+        throw error;
+      }
       broadcastAdaEvent('ada-tool-proposed', {
         tool,
         message:
@@ -419,18 +453,34 @@ Return ONLY valid JSON, no markdown fences:
     const tool =
       this.installedTools.get(toolIdOrName) ||
       Array.from(this.installedTools.values()).find((t) => t.name === toolIdOrName);
-    if (!tool) throw new Error(`Installed tool not found: ${toolIdOrName}`);
+    if (!tool || !tool.verified || tool.integrity !== hashTool(tool.code))
+      throw new Error(`Verified installed tool not found: ${toolIdOrName}`);
 
     const output = await this.runTool(tool, params);
     return { success: output.success !== false, toolName: tool.name, params, result: output };
   }
 
   /** Approve a queued privileged tool and bring it live. */
-  approveTool(toolId) {
+  approveTool(toolId, integrity) {
     const proposal =
       this.proposals.get(toolId) ||
       Array.from(this.proposals.values()).find((t) => t.name === toolId);
     if (!proposal) return { success: false, error: `No pending proposal: ${toolId}` };
+    if (
+      !proposal.verified ||
+      proposal.integrity !== hashTool(proposal.code) ||
+      (integrity !== undefined && integrity !== proposal.integrity)
+    )
+      return {
+        success: false,
+        error:
+          'This proposal changed or lacks verification. Refresh Notifications to review it again.',
+      };
+    if (!this.getRegistry() || this.getRegistry().get(proposal.name))
+      return {
+        success: false,
+        error: 'The tool registry is unavailable or this name is already in use.',
+      };
 
     proposal.status = 'APPROVED';
     proposal.approvedAt = new Date().toISOString();
@@ -439,6 +489,7 @@ Return ONLY valid JSON, no markdown fences:
     this.installedTools.set(proposal.id, proposal);
     this.proposals.delete(proposal.id);
     this._saveTools();
+    this._saveProposals();
 
     this.forgingHistory.push({
       action: 'APPROVED',
@@ -456,13 +507,19 @@ Return ONLY valid JSON, no markdown fences:
   }
 
   /** Decline a queued proposal. */
-  rejectTool(toolId, reason = 'Rejected by user') {
+  rejectTool(toolId, reason = 'Rejected by user', integrity) {
     const proposal =
       this.proposals.get(toolId) ||
       Array.from(this.proposals.values()).find((t) => t.name === toolId);
-    if (!proposal) return false;
+    if (!proposal || (integrity !== undefined && integrity !== proposal.integrity)) return false;
 
     this.proposals.delete(proposal.id);
+    try {
+      this._saveProposals();
+    } catch (error) {
+      this.proposals.set(proposal.id, proposal);
+      throw error;
+    }
     this.forgingHistory.push({
       action: 'REJECTED',
       toolId: proposal.id,
@@ -478,7 +535,7 @@ Return ONLY valid JSON, no markdown fences:
   /** Register a verified tool into the live registry, executing at its isolation level. */
   _registerIntoLiveRegistry(tool, verbose = true) {
     const reg = this.getRegistry();
-    if (!reg) return;
+    if (!reg || !tool.verified || tool.integrity !== hashTool(tool.code)) return;
     try {
       reg.register({
         name: tool.name,

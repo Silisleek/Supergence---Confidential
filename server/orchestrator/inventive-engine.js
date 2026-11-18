@@ -65,6 +65,7 @@ class HumanInventiveEngine extends EventEmitter {
   start() {
     if (this._interval) clearInterval(this._interval);
     this._interval = setInterval(() => this._considerAutonomousInvention(), this._cadenceMs);
+    this._interval?.unref?.();
     console.log(
       '[InventiveEngine] 💡 Human Inventive Instinct active (Zero Hardcoding: Dynamic AI Reasoning & Code Synthesis)',
     );

@@ -1,15 +1,14 @@
 // SIS 1.0 — Coder Sandbox Runner
-// Executes automated syntax validation, linting, and test execution with timeouts
+// Parses draft sources without running them.
 
 import fs from 'fs';
 import path from 'path';
+import os from 'node:os';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 import { fileURLToPath } from 'url';
-import vm from 'vm';
-import { ContainerRunner } from '../sandbox/container-runner.js';
 import { resolveWithinRoot } from '../utils/path-confinement.js';
-import { childEnvironment } from '../security/child-environment.js';
+import { sandboxEnvironment } from '../security/child-environment.js';
 
 const execFileAsync = promisify(execFile);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -24,169 +23,83 @@ function runDirectory(base, runId) {
   return resolveWithinRoot(base, runId);
 }
 
-if (!fs.existsSync(SANDBOX_BASE)) {
-  fs.mkdirSync(SANDBOX_BASE, { recursive: true });
-}
-
 export class SandboxRunner {
-  constructor(baseDir = SANDBOX_BASE, options = {}) {
+  constructor(baseDir = SANDBOX_BASE) {
     this.baseDir = baseDir;
-    this.containerRunner = new ContainerRunner({
-      workspaceDir: baseDir,
-      useDocker: options.useDocker || false,
-      dockerImage: options.dockerImage || 'node:20-slim',
-    });
   }
 
-  /**
-   * Execute command via isolated container runner
-   */
-  async exec(command, args = [], options = {}) {
-    return this.containerRunner.exec(command, args, {
-      cwd: options.cwd || this.baseDir,
-      ...options,
-    });
-  }
-
-  /**
-   * Automatically dispatch test file via container runner
-   */
-  async executeTest(testFilePath, options = {}) {
-    return this.containerRunner.executeTest(testFilePath, options);
-  }
-
-  /**
-   * Run automated tests and validation on generated code
-   * @param {Object} draft - Structured output from coder model
-   * @param {string} draft.targetFile - Name of target file
-   * @param {string} draft.language - Language identifier
-   * @param {string} draft.code - Complete source code
-   * @param {string} [draft.testCode] - Optional test script
-   * @param {string} [draft.runCommand] - Optional execution command
-   * @param {string} runId - Unique ID for sandbox session
-   * @returns {Promise<Object>} Verification results { success, stdout, stderr, exitCode, error }
-   */
-  async execute(draft, runId = `run_${Date.now()}`) {
-    const sandboxDir = runDirectory(this.baseDir, runId);
-    if (!fs.existsSync(sandboxDir)) fs.mkdirSync(sandboxDir, { recursive: true });
-
-    const targetFile = draft.targetFile || 'main.js';
-    const filePath = resolveWithinRoot(sandboxDir, targetFile);
-
-    // Ensure parent dir of file exists
-    const fileParent = path.dirname(filePath);
-    if (!fs.existsSync(fileParent)) fs.mkdirSync(fileParent, { recursive: true });
-
-    // Write source code
-    fs.writeFileSync(filePath, draft.code || '', 'utf8');
-
-    // Stage imported or closely matching sibling files (e.g. target is foo.test.ts -> copy foo.ts)
-    // Avoid copying entire 6,000+ files from workspace root
-    const workspaceRoot = WORKSPACE_ROOT;
-    try {
-      const codeSample = `${draft.code || ''} ${draft.testCode || ''}`;
-      const importMatches = [
-        ...codeSample.matchAll(/(?:from\s+['"]|import\(['"])\.\/([^'"]+)['"]/g),
-      ];
-      const importedNames = new Set(
-        importMatches.map((m) => m[1].replace(/\.(?:ts|js|mjs|cjs)$/, '')),
-      );
-      const baseStem = path.basename(targetFile).split('.')[0];
-      if (baseStem) importedNames.add(baseStem);
-
-      for (const name of importedNames) {
-        for (const ext of ['.ts', '.js', '.mjs', '.cjs', '.json', '']) {
-          const candidate = name + ext;
-          const srcPath = resolveWithinRoot(workspaceRoot, candidate);
-          const destPath = resolveWithinRoot(sandboxDir, candidate);
-          if (fs.existsSync(srcPath) && fs.statSync(srcPath).isFile() && !fs.existsSync(destPath)) {
-            fs.copyFileSync(srcPath, destPath);
-          }
-        }
-      }
-    } catch (_) {}
-
-    // Auto-detect ES Modules vs CommonJS and set sandbox package.json
-    // Only create package.json for JS-family targets; HTML/CSS/JSON don't need it
-    // and "type": "module" causes node --check to fail with ERR_UNKNOWN_FILE_EXTENSION
-    // on non-.js files.
-    const targetExt = path.extname(targetFile).toLowerCase();
-    const isJsTarget = ['.js', '.mjs', '.cjs', '.ts', ''].includes(targetExt);
-    if (isJsTarget) {
-      const codeSample = `${draft.code || ''} ${draft.testCode || ''}`;
-      const isESM = codeSample.includes('import ') || codeSample.includes('export ');
-      try {
-        fs.writeFileSync(
-          path.join(sandboxDir, 'package.json'),
-          JSON.stringify({ name: 'sandbox-env', type: isESM ? 'module' : 'commonjs' }, null, 2),
-          'utf8',
-        );
-      } catch {}
-    }
-
-    // Derive language from file extension first (authoritative), then draft.language as fallback.
-    // This prevents running `node --check` on .html/.css/.json files when draft.language
-    // is incorrectly set to 'javascript'.
-    const extLang = path.extname(targetFile).slice(1).toLowerCase();
-    const lang = extLang || (draft.language || 'javascript').toLowerCase();
-
-    // 1. Language-Specific Syntax Validation
-    const syntaxResult = await this._checkSyntax(filePath, lang, sandboxDir);
-    if (!syntaxResult.success) {
-      return {
-        success: false,
-        phase: 'syntax',
-        stdout: syntaxResult.stdout || '',
-        stderr: syntaxResult.stderr || syntaxResult.error || 'Syntax error',
-        exitCode: 1,
-        error: syntaxResult.error || 'Syntax validation failed',
-      };
-    }
-
-    // 2. Test Execution / Runner Script
-    if (draft.testCode && draft.testCode.trim().length > 0) {
-      const testFile = path.join(sandboxDir, `test_${path.basename(targetFile)}`);
-      fs.writeFileSync(testFile, draft.testCode, 'utf8');
-
-      let cmd = `node "${testFile}"`;
-      if (lang === 'python' || lang === 'py') cmd = `python "${testFile}"`;
-      else if (lang === 'typescript' || lang === 'ts') cmd = `node --import tsx "${testFile}"`;
-
-      return await this._runCommand(cmd, sandboxDir);
-    }
-
-    // 3. User or Coder Run Command
-    if (draft.runCommand && draft.runCommand.trim().length > 0) {
-      return await this._runCommand(draft.runCommand, sandboxDir);
-    }
-
-    // If syntax check passed and no active test script was required
+  async exec() {
     return {
-      success: true,
-      phase: 'syntax',
-      stdout: `Syntax validation passed for ${targetFile}`,
-      stderr: '',
-      exitCode: 0,
-      error: null,
+      exitCode: null,
+      stdout: '',
+      stderr: 'Runtime execution requires a host-isolated executor.',
+      timedOut: false,
+      executed: false,
+      durationMs: 0,
     };
   }
 
+  async executeTest() {
+    return this.exec();
+  }
+
+  async execute(draft, runId = `run_${Date.now()}`) {
+    const runRoot = runDirectory(this.baseDir, runId);
+    const targetFile = draft.targetFile || 'main.js';
+    const targetPath = resolveWithinRoot(runRoot, targetFile);
+    if (targetPath === runRoot) throw new Error('Target must name a file.');
+    const targetExt = path.extname(targetFile).toLowerCase();
+    const lang = targetExt.slice(1) || (draft.language || 'javascript').toLowerCase();
+    const sandboxDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'sis-syntax-'));
+
+    try {
+      const filePath = path.join(
+        sandboxDir,
+        `source${['.js', '.mjs', '.cjs', '.ts', '.mts', '.cts', '.py', '.json', '.html'].includes(targetExt) ? targetExt : ''}`,
+      );
+      await fs.promises.writeFile(filePath, draft.code || '', { flag: 'wx' });
+
+      const syntaxResult = await this._checkSyntax(filePath, lang, sandboxDir);
+      const runtimeRequested = Boolean(
+        draft.execute || draft.testCode?.trim() || draft.runCommand?.trim(),
+      );
+      const executionUnavailable = syntaxResult.success && runtimeRequested;
+      const error = executionUnavailable
+        ? (await this.exec()).stderr
+        : (syntaxResult.error ?? null);
+
+      return {
+        success: syntaxResult.success && !syntaxResult.skipped && !runtimeRequested,
+        syntaxValid: syntaxResult.success && !syntaxResult.skipped,
+        phase: executionUnavailable ? 'execution-unavailable' : 'syntax',
+        executed: false,
+        stdout: executionUnavailable ? '' : syntaxResult.stdout || '',
+        stderr: error || syntaxResult.stderr || '',
+        exitCode:
+          executionUnavailable || syntaxResult.skipped ? null : syntaxResult.success ? 0 : 1,
+        error,
+      };
+    } finally {
+      await fs.promises.rm(sandboxDir, { recursive: true, force: true });
+    }
+  }
+
   async _checkSyntax(filePath, lang, cwd) {
-    if (lang === 'javascript' || lang === 'js' || lang === 'mjs') {
-      // Extra guard: never run node --check on a non-JS file extension.
-      // This prevents ERR_UNKNOWN_FILE_EXTENSION when draft.language is
-      // misdetected as 'javascript' but the actual file is .html/.css/etc.
-      const fileExt = path.extname(filePath).toLowerCase();
-      if (fileExt && fileExt !== '.js' && fileExt !== '.mjs' && fileExt !== '.cjs') {
-        return { success: true, stdout: `Skipped node --check for ${fileExt} file` };
-      }
+    if (['javascript', 'js', 'mjs', 'cjs', 'typescript', 'ts', 'mts', 'cts'].includes(lang)) {
       try {
-        const { stdout, stderr } = await execFileAsync(process.execPath, ['--check', filePath], {
-          cwd,
-          timeout: 8000,
-          env: childEnvironment(),
-        });
-        return { success: !stderr, stdout, stderr };
+        const args = ['--permission', `--allow-fs-read=${cwd}`];
+        if (['typescript', 'ts', 'mts', 'cts'].includes(lang))
+          args.push('--experimental-strip-types');
+        const { stdout, stderr } = await execFileAsync(
+          process.execPath,
+          [...args, '--check', filePath],
+          {
+            cwd,
+            timeout: 8000,
+            env: sandboxEnvironment(),
+          },
+        );
+        return { success: true, stdout, stderr };
       } catch (err) {
         return {
           success: false,
@@ -199,18 +112,29 @@ export class SandboxRunner {
 
     if (lang === 'python' || lang === 'py') {
       try {
-        const { stdout, stderr } = await execFileAsync('python', ['-m', 'py_compile', filePath], {
-          cwd,
-          timeout: 8000,
-          env: childEnvironment(),
-        });
+        const { stdout, stderr } = await execFileAsync(
+          'python',
+          [
+            '-I',
+            '-S',
+            '-c',
+            'import ast, pathlib, sys; ast.parse(pathlib.Path(sys.argv[1]).read_bytes())',
+            filePath,
+          ],
+          {
+            cwd,
+            timeout: 8000,
+            env: sandboxEnvironment({ includePath: true }),
+          },
+        );
         return { success: true, stdout, stderr };
       } catch (err) {
-        // If Python is not installed locally, perform heuristic check
-        if (err.message.includes('not recognized') || err.message.includes('not found')) {
+        // Python may be absent from the host.
+        if (err.code === 'ENOENT') {
           return {
             success: true,
-            stdout: 'Python runtime not detected; syntax verified heuristically.',
+            skipped: true,
+            stdout: 'Python syntax check unavailable.',
           };
         }
         return {
@@ -300,67 +224,11 @@ export class SandboxRunner {
       };
     }
 
-    // Default: pass
-    return { success: true };
+    return { success: true, skipped: true, stdout: 'Syntax check unavailable for this file type.' };
   }
 
-  async _runCommand(cmd, cwd) {
-    try {
-      const result = await this.containerRunner.exec(cmd, [], { cwd, timeoutMs: 15000 });
-      const { stdout, stderr, exitCode } = result;
-
-      if (exitCode !== 0) {
-        return {
-          success: false,
-          phase: 'runtime',
-          stdout: stdout || '',
-          stderr: stderr || 'Execution failed',
-          exitCode: exitCode || 1,
-          error: stderr ? stderr.split('\n')[0] : 'Process exited with non-zero exit code',
-        };
-      }
-
-      // If stderr exists and contains unhandled exception keywords
-      if (
-        stderr &&
-        (stderr.includes('Error:') || stderr.includes('Exception:') || stderr.includes('Traceback'))
-      ) {
-        return {
-          success: false,
-          phase: 'runtime',
-          stdout: stdout || '',
-          stderr,
-          exitCode: 1,
-          error: stderr.split('\n')[0],
-        };
-      }
-
-      return {
-        success: true,
-        phase: 'runtime',
-        stdout: stdout || 'Process completed with exit code 0',
-        stderr: stderr || '',
-        exitCode: 0,
-        error: null,
-      };
-    } catch (err) {
-      return {
-        success: false,
-        phase: 'runtime',
-        stdout: '',
-        stderr: err.message,
-        exitCode: 1,
-        error: err.message,
-      };
-    }
-  }
-
-  cleanup(runId) {
-    try {
-      const dir = runDirectory(this.baseDir, runId);
-      if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true, force: true });
-    } catch {}
-  }
+  // Validation now removes its private temporary directory before returning.
+  cleanup() {}
 }
 
 const sandbox = new SandboxRunner();

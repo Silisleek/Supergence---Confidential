@@ -223,8 +223,9 @@ export const learningTools = {
     required: ['url'],
     execute: async ({ url }) => {
       const target = browserURL(url);
-      await browser.navigate('agent-supergence', target);
-      browser.broadcast('workspace-browser-open', { agentId: 'agent-supergence', url: target });
+      const navigation = await browser.navigate('agent-supergence', target);
+      if (!navigation.success) return navigation;
+      browser.broadcast('workspace-browser-open', { agentId: 'agent-supergence' });
       const state = browser.getSessionState('agent-supergence');
       return { success: true, url: state.currentUrl, title: state.pageTitle, tabs: state.tabs };
     },

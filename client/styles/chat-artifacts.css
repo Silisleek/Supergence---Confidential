@@ -73,7 +73,6 @@
 }
 .chat-artifact-editor-wrap {
   background: var(--shell-panel);
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 .chat-artifact-editor-bar {
   display: flex;
@@ -82,7 +81,6 @@
   gap: 12px;
   padding: 10px 22px;
   background: var(--shell-sidebar);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 .chat-artifact-editor-label {
   font: 11px var(--font-ui);
@@ -401,4 +399,214 @@ img.chat-artifact-preview {
   border-radius: 6px;
   background: var(--shell-code);
   font-size: 12px;
+}
+
+.chat-artifact {
+  margin: 7px 0;
+  border-radius: 10px;
+  background: #1a1a1c;
+  color: #f1eff2;
+}
+.chat-artifact.is-open {
+  background: #151517;
+}
+.chat-artifact .chat-artifact-header {
+  justify-content: stretch;
+  padding: 4px 8px 4px 4px;
+  gap: 4px;
+  cursor: default;
+}
+.chat-artifact .chat-artifact-view-btn {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 10px;
+  min-width: 0;
+  min-height: 48px;
+  padding: 5px 8px;
+  text-align: left;
+  background: transparent !important;
+  color: #f1eff2 !important;
+}
+.chat-artifact .chat-artifact-view-btn:hover {
+  background: #262629 !important;
+}
+.chat-artifact-identity {
+  display: grid;
+  gap: 3px;
+}
+.chat-artifact-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  font-weight: 600;
+}
+.chat-artifact-kind {
+  font-size: 11px;
+  color: #b9b7bd;
+  font-weight: 400;
+  letter-spacing: normal;
+}
+.chat-file-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 6px;
+  background: #302219;
+  color: #edbd9b;
+}
+.chat-file-icon svg {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.chat-artifact .chat-artifact-download {
+  padding: 0;
+}
+
+.chat-artifact .chat-artifact-open-workspace {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: var(--shell-surface);
+  color: var(--shell-text);
+}
+
+.chat-artifact .chat-artifact-open-workspace:hover {
+  background: var(--shell-selected);
+}
+
+.chat-artifact-open-workspace svg {
+  width: 16px;
+  height: 16px;
+}
+.chat-artifact-download .chat-file-icon {
+  background: #242426;
+  color: #eee9e6;
+}
+.chat-artifact-download:hover .chat-file-icon {
+  background: #503629;
+}
+.chat-artifact-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px 6px;
+  min-height: 34px;
+  padding: 3px 8px;
+  background: var(--shell-hover);
+}
+.chat-artifact-toolbar > :is(.chat-artifact-tabs, .chat-artifact-actions) {
+  padding: 0;
+  gap: 2px;
+}
+.chat-artifact-toolbar > .chat-artifact-actions {
+  margin-inline-start: auto;
+}
+.chat-artifact-toolbar :is(button, a) {
+  padding-inline: 6px;
+}
+.chat-artifact:not(.is-open)
+  > :is(.chat-artifact-toolbar, .chat-artifact-body, .chat-artifact-status) {
+  display: none;
+}
+.chat-artifact :is(.chat-artifact-view-btn, .chat-artifact-download):focus-visible,
+.chat-file-download-all:focus-visible {
+  outline: 2px solid #edbd9b;
+  outline-offset: -2px;
+}
+.chat-artifact button:disabled,
+.chat-file-download-all:disabled {
+  background: #252527;
+  color: #a9a6a7;
+  cursor: default;
+}
+.chat-file-download-all {
+  min-height: 28px;
+  margin-top: 3px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: #432c20;
+  color: #fff4e9;
+  font: 600 12px var(--font-ui, Manrope, system-ui);
+  cursor: pointer;
+}
+.chat-file-download-all:hover:not(:disabled) {
+  background: #543829;
+}
+.chat-artifact-media {
+  width: 100%;
+  max-height: min(440px, 60vh);
+}
+.workspace-file-markdown {
+  box-sizing: border-box;
+  max-width: 76ch;
+  padding: 18px 20px;
+  color: #f1eff2;
+  font: 14px/1.65 var(--font-ui, Manrope, system-ui);
+  overflow-wrap: anywhere;
+}
+.chat-artifact .workspace-file-markdown {
+  max-height: 420px;
+  overflow: auto;
+}
+.chat-artifact.is-expanded .workspace-file-markdown {
+  max-height: 76vh;
+}
+.workspace-file-markdown > :first-child {
+  margin-top: 0;
+}
+.workspace-file-markdown a {
+  color: #edbd9b;
+}
+.workspace-file-markdown :is(pre, table) {
+  max-width: 100%;
+  overflow: auto;
+}
+
+.chat-artifact[data-view='code'] :is(.chat-artifact-preview-notice, .chat-artifact-open-preview),
+.chat-artifact.is-editing :is(.chat-artifact-preview-notice, .chat-artifact-open-preview) {
+  display: none;
+}
+
+.sis-workspace-ui .workspace-deck-slot:has(.chat-artifact) {
+  background: transparent;
+}
+.sis-workspace-ui .workspace-deck-slot .chat-artifact {
+  background: #1a1a1c;
+}
+.sis-workspace-ui .workspace-deck-slot .chat-artifact.is-open,
+.sis-workspace-ui .workspace-deck-slot .chat-artifact-source,
+.sis-workspace-ui .workspace-deck-slot img.chat-artifact-preview {
+  background: #151517;
+}
+.sis-workspace-ui .workspace-deck-slot .chat-artifact-tabs [aria-pressed='true'] {
+  background: #533829;
+}
+.sis-workspace-ui .workspace-deck-slot .chat-file-download-all {
+  font: 600 12px var(--font-ui, Manrope, system-ui);
+}
+.sis-workspace-ui .workspace-deck-slot .workspace-result-summary {
+  padding: 6px 0;
+  margin: 8px 0 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+.workspace-result-summary > summary {
+  color: #b9b7bd;
+  font-size: 12px;
+  cursor: pointer;
 }

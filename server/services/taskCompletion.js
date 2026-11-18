@@ -18,10 +18,10 @@ export function toolFailed(call) {
 }
 export function resumableTaskError(error) {
   if (
-    error?.name === 'AbortError' ||
     ['TASK_CANCELLED', 'TASK_RECOVERY_LIMIT'].includes(error?.code)
   )
     return false;
+  if (error?.name === 'AbortError' || error?.name === 'APIUserAbortError') return true;
   const text = String(error?.message || error);
   if (
     /declined|approval expired|access.*disabled|invalid.*(?:ID|path)|API key|unauthorized|forbidden|quota|billing|\b40[13]\b|did not produce a valid tool action after retry/i.test(
@@ -30,7 +30,7 @@ export function resumableTaskError(error) {
   )
     return false;
   return (
-    /timeout|timed out|network|fetch failed|connection|socket|ECONN|interrupted|provider.*(?:response|return|tool)|stream|tool-step budget|completion review|without the requested tool action|stopped between|unfinished|\b50[234]\b/i.test(
+    /abort(?:ed)?|timeout|timed out|network|fetch failed|connection|socket|ECONN|interrupted|provider.*(?:response|return|tool)|stream|tool-step budget|completion review|without the requested tool action|stopped between|unfinished|\b50[234]\b/i.test(
       text,
     ) || error?.code === 'TASK_BATCH_LIMIT'
   );

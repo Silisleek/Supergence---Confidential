@@ -2,7 +2,8 @@ import { chromium } from 'playwright-core';
 import path from 'node:path';
 
 const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-const brainDir = 'C:\\Users\\Akshan sharma\\.gemini\\antigravity\\brain\\cc78a903-c95c-43ff-b918-06eb784f9796';
+const brainDir =
+  'C:\\Users\\Akshan sharma\\.gemini\\antigravity\\brain\\cc78a903-c95c-43ff-b918-06eb784f9796';
 
 async function main() {
   console.log('Testing Add Agent flow with Playwright...');

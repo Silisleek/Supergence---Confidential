@@ -108,18 +108,32 @@ export function operationPolicy(name, args = {}) {
 export class RuntimeAccess {
   constructor({
     directory = process.env.SIS_DATA_DIR || path.join(root, 'data'),
-    timeoutMs = 240000,
+    timeoutMs = null,
   } = {}) {
     this.file = path.join(directory, 'runtime-access.json');
+    this.reviewFile = path.join(directory, 'runtime-pending-reviews.json');
     this.timeoutMs = timeoutMs;
     this.context = new AsyncLocalStorage();
     this.pending = new Map();
+    this.reviews = new Map();
     this.listeners = new Set();
     this.audit = [];
     this.settings = { ...defaults };
     try {
       this.settings = this.validate(JSON.parse(fs.readFileSync(this.file, 'utf8')), defaults);
     } catch {}
+    try {
+      for (const item of JSON.parse(fs.readFileSync(this.reviewFile, 'utf8'))) {
+        if (item?.id && item.tool) this.reviews.set(item.id, { ...item, inactive: 'restarted' });
+      }
+    } catch {}
+  }
+  saveReviews() {
+    fs.mkdirSync(path.dirname(this.reviewFile), { recursive: true });
+    fs.writeFileSync(this.reviewFile + '.tmp', JSON.stringify([...this.reviews.values()]), {
+      mode: 0o600,
+    });
+    fs.renameSync(this.reviewFile + '.tmp', this.reviewFile);
   }
   validate(patch, original = this.settings) {
     if (!patch || typeof patch !== 'object') throw new Error('Access settings required.');
@@ -144,13 +158,17 @@ export class RuntimeAccess {
     this.settings = next;
     for (const listener of this.listeners) listener(next, previous);
     // A capability revoked while an action awaits approval cancels that action.
+    // Switching to full-access resolves waiting source-only reviews.
     for (const [id, entry] of this.pending) {
-      if (entry.capabilities.some((cap) => next[cap] === false)) this.resolve(id, false);
-      else if (
+      if (entry.capabilities.some((cap) => next[cap] === false)) {
+        this.resolve(id, false, 'disabled');
+      } else if (
         next.mode === 'full-access' &&
+        entry.findings.length > 0 &&
         entry.findings.every((finding) => sourceReviewFindings.has(finding))
-      )
-        this.resolve(id, true, 'full-access');
+      ) {
+        this.resolve(id, true, 'allowed');
+      }
     }
     return this.snapshot();
   }
@@ -172,12 +190,22 @@ export class RuntimeAccess {
   snapshot() {
     return {
       settings: { ...this.settings },
-      pending: [...this.pending.values()].map(
-        ({ resolve: _resolve, timer: _timer, signal: _signal, onAbort: _onAbort, ...entry }) => ({
-          ...entry,
-          args: publicToolArguments(entry.tool, entry.args),
-        }),
-      ),
+      pending: [...this.reviews.values()]
+        .filter((item) => !this.pending.has(item.id))
+        .concat(
+          [...this.pending.values()].map(
+            ({
+              resolve: _resolve,
+              timer: _timer,
+              signal: _signal,
+              onAbort: _onAbort,
+              ...entry
+            }) => ({
+              ...entry,
+              args: publicToolArguments(entry.tool, entry.args),
+            }),
+          ),
+        ),
       audit: this.audit.slice(-40),
     };
   }
@@ -224,7 +252,22 @@ export class RuntimeAccess {
         createdAt: new Date().toISOString(),
         resolve,
       };
-      entry.timer = setTimeout(() => this.resolve(id, false, 'expired'), this.timeoutMs);
+      const review = {
+        id,
+        tool,
+        agentId: entry.agentId,
+        conversationId: entry.conversationId,
+        createdAt: entry.createdAt,
+      };
+      this.reviews.set(id, review);
+      try {
+        this.saveReviews();
+      } catch (error) {
+        this.reviews.delete(id);
+        throw error;
+      }
+      if (this.timeoutMs !== null)
+        entry.timer = setTimeout(() => this.resolve(id, false, 'expired'), this.timeoutMs);
       this.pending.set(id, entry);
       if (context.signal) {
         entry.onAbort = () => {
@@ -244,7 +287,20 @@ export class RuntimeAccess {
   }
   resolve(id, allow, reason = allow ? 'allowed' : 'declined') {
     const entry = this.pending.get(id);
-    if (!entry) throw new Error('Approval is no longer pending.');
+    const review = this.reviews.get(id);
+    if (!entry && !review) throw new Error('Approval is no longer pending.');
+    const decided = reason === 'allowed' || reason === 'declined';
+    if (decided && review) {
+      this.reviews.delete(id);
+      try {
+        this.saveReviews();
+      } catch (error) {
+        this.reviews.set(id, review);
+        throw error;
+      }
+    }
+    if (!entry) return { id, decision: reason, inactive: true };
+    if (!decided && review) review.inactive = reason;
     this.pending.delete(id);
     clearTimeout(entry.timer);
     entry.signal?.removeEventListener('abort', entry.onAbort);

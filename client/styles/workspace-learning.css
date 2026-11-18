@@ -122,6 +122,35 @@
 .learning-note {
   overflow-wrap: anywhere;
 }
+.arem-sleep-review {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.arem-sleep-review .learning-note {
+  color: var(--shell-text-secondary);
+}
+.arem-sleep-review .learning-source-actions {
+  margin: 2px 0 0;
+}
+.arem-sleep-review .learning-source-actions button:not(:disabled) {
+  color: var(--shell-text);
+  cursor: pointer;
+}
+.arem-sleep-review details {
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}
+.arem-sleep-review summary {
+  cursor: pointer;
+}
+.arem-sleep-review blockquote {
+  margin: 4px 0;
+  color: var(--shell-text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
 .learning-source-actions {
   margin-bottom: 0;
 }

@@ -58,6 +58,27 @@ test('transient disconnect resumes confirmed results without repeating the side 
   assert.equal(turns.status('recover', 'request').status, 'completed');
   assert.equal(conversations.get('recover').messages.length, 2);
 });
+test('provider abort resumes the same task and reconciles an unconfirmed write', async (t) => {
+  const { turns } = fixture(t);
+  let attempts = 0;
+  const result = await turns.run(
+    { conversationId: 'provider-abort', requestId: 'request', query: 'Create a report.' },
+    {},
+    async (next, events) => {
+      attempts++;
+      if (attempts === 1) {
+        events.onToolCall({ id: 'write', tool: 'write_file', status: 'RUNNING' });
+        throw Object.assign(new Error('Request was aborted.'), { name: 'APIUserAbortError' });
+      }
+      assert.equal(next.requireReconciliation, true);
+      assert.equal(next.history.at(-1).toolCalls[0].status, 'UNCONFIRMED');
+      return { response: 'Checked the report.', toolCalls: [] };
+    },
+  );
+  assert.equal(attempts, 2);
+  assert.equal(result.taskStatus, 'completed');
+});
+
 test('restart reconciles an action whose outcome was never recorded', async (t) => {
   const { turns } = fixture(t);
   const params = { conversationId: 'restart', requestId: 'request', query: 'Create the report.' };

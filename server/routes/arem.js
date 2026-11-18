@@ -3,6 +3,12 @@
 
 import aremEngine from '../arem/arem-engine.js';
 import aremStore from '../arem/arem-memory-store.js';
+import { aremWorkingMemory } from '../arem/arem-working-memory.js';
+import { aremAgentMemory } from '../arem/arem-agent-memory.js';
+import { aremCatalog } from '../arem/arem-catalog.js';
+import learningLibrary from '../services/learningLibrary.js';
+import { runtimeAccess } from '../services/runtimeAccess.js';
+import conversations from '../conversations.js';
 
 export function registerAremRoutes(app) {
   const route = (method, path, handler) =>
@@ -21,12 +27,77 @@ export function registerAremRoutes(app) {
 
   // System Status & Metrics
   route('get', '/api/arem/status', async () => aremEngine.getStatus());
+  route('get', '/api/arem/catalog', async () => ({
+    prompts: aremCatalog.list('prompt'),
+    tools: aremCatalog.list('tool'),
+    skills: aremCatalog.list('skill'),
+  }));
+  route('get', '/api/arem/nodes', async (req) => ({
+    nodes: aremAgentMemory.search({
+      chat: String(req.query.conversationId || ''),
+      query: String(req.query.q || ''),
+      limit: req.query.limit,
+    }),
+  }));
+  route('get', '/api/arem/graph', async (req) => {
+    const conversationId = String(req.query.conversationId || '').slice(0, 500);
+    const result = aremAgentMemory.graph({ chat: conversationId });
+    const nodes = result.nodes.map((node) => ({ ...node, kind: 'memory' }));
+    const present = new Set(nodes.map(({ id }) => id));
+    const edges = nodes.filter(({ parent }) => parent && present.has(parent))
+      .map(({ id, parent }) => ({ source: parent, target: id, kind: 'parent' }));
+    edges.push(...result.links.map((link) => ({ ...link, kind: 'association' })));
+    const pages = aremStore.listWikiPages().slice(0, 100);
+    const pageIds = new Set(pages.map(({ slug }) => slug));
+    for (const page of pages) {
+      nodes.push({ id: `wiki:${page.slug}`, kind: 'wiki', scope: 'permanent', title: page.title,
+        note: (aremStore.readWikiPage(page.slug)?.content || '').slice(0, 6000),
+        evidence: `AREM wiki / ${page.filename}`, updated: page.updatedAt });
+      for (const link of page.links) {
+        if (pageIds.has(link)) edges.push({ source: `wiki:${page.slug}`, target: `wiki:${link}`, kind: 'wiki-link' });
+      }
+    }
+    const sleep = conversationId ? aremEngine.getSleepStatus(conversationId) : null;
+    for (const note of sleep?.notes || []) {
+      nodes.push({ id: `sleep:${note.id}`, kind: 'consolidated', scope: 'chat',
+        title: note.title, note: note.note, evidence: note.sourceId });
+    }
+    const lastTurn = conversationId ? conversations.get(conversationId)?.messages?.findLast((message) => message.role === 'assistant' && message.arem?.system === 'AREM') : null;
+    const trace = lastTurn?.arem;
+    const activity = trace ? { at: lastTurn.timestamp, agentNodes: trace.agentNodes?.length || 0,
+      linkedNodes: trace.linkedNodes?.length || 0, sleepNotes: trace.sleepNotes || 0, wikiPages: trace.wikiPages?.length || 0,
+      retainedSources: trace.retainedSources?.length || 0, agentWrites: trace.agentWrites?.length || 0,
+      workingCheckpoint: trace.workingCheckpoint || 'unknown', agentMemoryUnavailable: Boolean(trace.agentMemoryUnavailable) } : null;
+    return { nodes, edges, activity, totalMemoryNodes: result.total, truncated: result.truncated,
+      automaticSleep: aremEngine.isRunning,
+      sleep: sleep ? { phase: sleep.phase, pending: sleep.pending, organized: sleep.organized, lastOutcome: sleep.lastOutcome } : null };
+  });
+  route('get', '/api/arem/rules', async (req) => ({
+    rules: aremWorkingMemory.rules(String(req.query.conversationId || '')),
+  }));
+  route('post', '/api/arem/rules', async (req) => {
+    const { scope, text, conversationId } = req.body || {};
+    return { rule: aremWorkingMemory.saveRule({ scope, text, chat: conversationId }) };
+  });
+  route('delete', '/api/arem/rules/:id', async (req) => ({
+    removed: aremWorkingMemory.removeRule(req.params.id),
+  }));
 
-  // Trigger Dream Consolidation Cycle (Can be simultaneous/concurrent)
+  route('get', '/api/arem/sleep/:conversationId', async (req, res) => {
+    const sleep = aremEngine.getSleepStatus(req.params.conversationId);
+    if (!sleep) return res.status(404).json({ success: false, error: 'Conversation not found.' });
+    return { sleep };
+  });
+
   route('post', '/api/arem/dream', async (req) => {
-    const simultaneous = req.body?.simultaneous !== false;
-    const manualTrigger = true;
-    return aremEngine.runDreamCycle({ simultaneous, manualTrigger });
+    const { conversationId } = req.body || {};
+    if (typeof conversationId !== 'string' || !conversationId)
+      throw new Error('Choose a saved conversation to review.');
+    return aremEngine.runDreamCycle({
+      conversationId,
+      manualTrigger: true,
+      signal: runtimeAccess.currentContext().signal,
+    });
   });
 
   // Top-Layer Index (Bounded Context)
@@ -76,9 +147,11 @@ export function registerAremRoutes(app) {
 
   // Wiki Search
   route('get', '/api/arem/search', async (req) => {
-    const query = req.query.q || req.query.query || '';
-    const results = aremStore.searchWiki(query, Number(req.query.limit || 5));
-    return { query, results };
+    const query = String(req.query.q || req.query.query || '').slice(0, 4000);
+    const limit = Math.max(1, Math.min(12, Number(req.query.limit) || 5));
+    const results = aremStore.searchWiki(query, limit);
+    const sources = query ? learningLibrary.search(query, { limit }) : null;
+    return { query, results, sources };
   });
 
   // Bottom-Layer Raw Transcripts

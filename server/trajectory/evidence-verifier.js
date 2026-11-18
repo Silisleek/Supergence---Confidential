@@ -705,14 +705,8 @@ export class SkillVerifier {
     const parsed = SkillVerifier.parseTestOutput(sandboxResult.stdout);
     const oracle = effectiveTestCode && parsed ? ORACLE.EXPECTED_OUTPUT : ORACLE.NONE;
 
-    // `phase === 'syntax'` is the sandbox's syntax-only return: it never ran
-    // the artifact. Do not let a parse check reach the OBSERVED branch.
-    const executed =
-      sandboxResult.phase !== 'syntax' || Boolean(effectiveTestCode) || Boolean(runCommand);
-
-    // A non-zero exit from the syntax phase is a parse failure, not a
-    // behavioural one — the artifact's claims were never exercised.
-    const syntaxFailed = sandboxResult.phase === 'syntax' && sandboxResult.exitCode !== 0;
+    const executed = sandboxResult.executed === true;
+    const syntaxFailed = sandboxResult.phase === 'syntax' && sandboxResult.exitCode === 1;
 
     const evidence = SkillVerifier.adjudicate({
       question,

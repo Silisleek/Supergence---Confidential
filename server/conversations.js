@@ -139,6 +139,39 @@ export function getConversation(id) {
   }
 }
 
+export async function countUserMessagesByDay(timeZone = 'UTC') {
+  const formatDay = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  const cutoff = Date.now() - 372 * 86_400_000;
+  const dailyCounts = {};
+
+  for (const { id, updatedAt, createdAt } of listConversations()) {
+    if ((updatedAt || createdAt) < cutoff) continue;
+    let conversation;
+    try {
+      conversation = JSON.parse(await fs.promises.readFile(conversationFile(id), 'utf8'));
+    } catch (error) {
+      if (error.code === 'ENOENT') continue;
+      throw error;
+    }
+
+    for (const message of conversation.messages || []) {
+      if (message.role !== 'user' || message.timestamp == null) continue;
+      const date = new Date(message.timestamp);
+      if (!Number.isFinite(date.getTime()) || date.getTime() < cutoff) continue;
+      const parts = formatDay.formatToParts(date);
+      const day = ['year', 'month', 'day'].map((type) => parts.find((part) => part.type === type).value).join('-');
+      dailyCounts[day] = (dailyCounts[day] || 0) + 1;
+    }
+  }
+
+  return dailyCounts;
+}
+
 /**
  * Create a new empty conversation. Returns the full conversation object.
  */
@@ -357,6 +390,7 @@ export function deleteConversation(id) {
 }
 
 export default {
+  countUserMessagesByDay,
   list: listConversations,
   get: getConversation,
   create: createConversation,

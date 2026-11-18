@@ -328,6 +328,8 @@ console.log(JSON.stringify(output));
       codePresent: true,
       sandboxExitCode: sandboxResult.exitCode,
       sandboxStderr: sandboxResult.stderr,
+      executed: sandboxResult.executed === true,
+      syntaxFailed: sandboxResult.phase === 'syntax' && sandboxResult.exitCode === 1,
       parsed,
       oracle,
       runId,
@@ -371,6 +373,7 @@ console.log(JSON.stringify(output));
     try {
       const makeStep = (label, code, latNs, metrics, evidence, evalResult) =>
         this.logger.logStep({
+          runId,
           state: { prompt: String(question || '').slice(0, 400), candidate: label },
           action: { type: 'code_execution', code: code ? code.slice(0, 1000) : '' },
           observation: {
@@ -433,7 +436,7 @@ console.log(JSON.stringify(output));
     }
 
     return {
-      executed: true,
+      executed: sandboxResult.executed === true,
       sandboxExitCode: sandboxResult.exitCode ?? null,
       parsed,
       verification,

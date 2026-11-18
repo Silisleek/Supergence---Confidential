@@ -1,4 +1,4 @@
-import { currentWorkspace } from '../services/conversationWorkspaces.js';
+import { workspaceOutputRoot } from '../services/conversationWorkspaces.js';
 // SIS 1.0 — Omni-Visual Code-to-Video & Canvas Animation Engine
 // Generates mathematically precise, 60 FPS programmatic video components from code
 // Inspired by NUS Code2Video (ICML 2026), 3Blue1Brown Manim, and Remotion
@@ -12,7 +12,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const sharedWorkspaceRoot = process.env.SIS_WORKSPACE_DIR
   ? path.resolve(process.env.SIS_WORKSPACE_DIR)
   : path.resolve(__dirname, '../../workspace');
-const workspaceRoot = () => currentWorkspace()?.root || sharedWorkspaceRoot;
+const workspaceRoot = () => workspaceOutputRoot(sharedWorkspaceRoot);
 
 export class CodeToVideoEngine {
   constructor() {

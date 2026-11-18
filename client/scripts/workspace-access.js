@@ -55,7 +55,9 @@
   save.type = 'button';
   const status = make('p', '', 'access-note');
   status.setAttribute('role', 'status');
-  dialog.append(header, description, mode, switches, save, status);
+  const controls = make('div', '', 'workspace-access-controls');
+  controls.append(description, mode, switches, save, status);
+  dialog.append(header, controls);
   document.body.append(dialog);
   const trigger = make('button', 'Access', 'access-trigger');
   trigger.type = 'button';
@@ -84,7 +86,7 @@
     snapshot = data;
     trigger.textContent = modes[data.settings.mode];
     trigger.dataset.mode = data.settings.mode;
-    if (!dialog.open) {
+    if (!dialog.open && !controls.closest('.sw-pane:not([hidden])')?.closest('dialog[open]')) {
       mode.value = data.settings.mode;
       for (const [key, input] of Object.entries(inputs)) input.checked = data.settings[key];
     }
@@ -135,12 +137,17 @@
     }
   }
   async function open() {
+    dialog.append(controls);
+    await loadControls();
+    if (!dialog.open) dialog.showModal();
+  }
+
+  async function loadControls() {
     await refresh();
     if (snapshot) {
       mode.value = snapshot.settings.mode;
       for (const [key, input] of Object.entries(inputs)) input.checked = snapshot.settings[key];
     }
-    dialog.showModal();
   }
   trigger.onclick = open;
   save.onclick = async () => {
@@ -162,6 +169,10 @@
   window.SupergenceAccess = {
     open,
     refresh,
+    mount(container) {
+      container.append(controls);
+      void loadControls();
+    },
     get settings() {
       return snapshot?.settings;
     },

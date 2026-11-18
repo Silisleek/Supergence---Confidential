@@ -44,6 +44,7 @@ class Homeostasis {
 
     // Heartbeat every 30s — check brain health, accumulate sleep pressure
     this._heartbeatInterval = setInterval(() => this._heartbeat(), 30000);
+    this._heartbeatInterval?.unref?.();
   }
 
   stop() {

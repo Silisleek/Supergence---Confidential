@@ -196,7 +196,7 @@ export async function generateBrowserApp({ brief, filename, oneShot = false }) {
   if (typeof filename !== 'string' || !filename.endsWith('.html'))
     throw new Error('Supply a workspace-relative .html filename.');
   const fullPath = await studioPath(filename);
-  filename = path.relative(workspace.root, fullPath).split(path.sep).join('/');
+  filename = workspace._toRelative(fullPath);
   const briefPath = filename.replace(/\.html$/, '.brief.json');
   workspace.createFile(briefPath, JSON.stringify({ brief, model: DEFAULT_MODEL }, null, 2));
   const system =

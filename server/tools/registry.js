@@ -9,6 +9,9 @@ import { actionMonitor } from '../security/action-monitor.js';
 import { localAccessTools } from './local-access-tools.js';
 import { runtimeAccess } from '../services/runtimeAccess.js';
 import { agentMessageTools } from './agent-message-tools.js';
+import { domainSystemTools } from './domain-system-tools.js';
+import { roboticsTools } from './robotics-tools.js';
+import { chipDesignTools } from './chip-design-tools.js';
 // SIS 1.0 — Tool Registry
 // Manages all tools available to AI parts
 
@@ -26,11 +29,14 @@ import { safeEvaluateMath } from '../utils/safe-math.js';
 import { assertSafeExternalUrl } from '../security/ssrf-guard.js';
 import { fetchPublicSource } from '../services/publicSource.js';
 import shortTermMemory from '../memory/short-term.js';
+import { aremAgentMemory } from '../arem/arem-agent-memory.js';
+import { aremCatalog } from '../arem/arem-catalog.js';
 import longTermMemory from '../memory/long-term.js';
 import generator3D from '../3d/generator.js';
 import { validateSceneHTML } from '../3d/validator.js';
 import blenderEngine from '../3d/blender.js';
 import workspace from '../workspace/manager.js';
+import { currentWorkspace } from '../services/conversationWorkspaces.js';
 import githubManager from '../github/manager.js';
 import possap from '../possap/index.js';
 import knowledgeGraph from '../memory/knowledge-graph.js';
@@ -102,7 +108,9 @@ function resolveWorkspaceHtmlFile(filepath) {
   const clean = String(filepath)
     .trim()
     .replace(/^workspace[\\\/]/i, '');
-  const candidate = resolveWithinRoot(root, clean);
+  const candidate = workspace._resolve(clean);
+  const inside = path.relative(workspace.baseRoot, candidate);
+  if (inside === '..' || inside.startsWith('..' + path.sep) || path.isAbsolute(inside)) return null;
   if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) return candidate;
   return null;
 }
@@ -173,10 +181,13 @@ const TOOLS = {
   ...evolutionTools,
   ...learningTools,
   ...toolSynthesisTools,
+  ...domainSystemTools,
   ...uiTools,
   ...superboxTools,
   ...localAccessTools,
   ...agentMessageTools,
+  ...roboticsTools,
+  ...chipDesignTools,
   create_tool: {
     name: 'create_tool',
     description:
@@ -202,7 +213,10 @@ const TOOLS = {
         return { error: 'AI failed to generate 3D scene code' };
       }
       const fullPath = path.join(workspaceRoot(), fn);
+      fs.mkdirSync(path.dirname(fullPath), { recursive: true });
       fs.writeFileSync(fullPath, code, 'utf8');
+      const url = workspace.urlFor(fullPath);
+      const conversationId = currentWorkspace()?.conversationId;
 
       // Quality-gate telemetry
       const quality = validateSceneHTML(code, {
@@ -215,8 +229,10 @@ const TOOLS = {
         const { default: b } = await import('../orchestrator/brain.js');
         b.broadcast('workspace-file-saved', {
           filename: fn,
-          filepath: fn,
+          filepath: workspace.publicPath(fullPath),
           path: fullPath,
+          url,
+          conversationId,
           isInteractiveHtml: true,
           autoPreview: true,
           action: '3d-scene-generated',
@@ -226,7 +242,8 @@ const TOOLS = {
           filename: fn,
           title: desc,
           path: fullPath,
-          url: `/workspace/${fn}`,
+          url,
+          conversationId,
         });
       } catch (_) {}
 
@@ -234,7 +251,7 @@ const TOOLS = {
         success: !hasFatalSyntaxError,
         filename: fn,
         path: fullPath,
-        url: `/workspace/${fn}`,
+        url,
         size: code.length,
         meshCount: quality.stats.meshCount,
         qualityScore: quality.score,
@@ -681,14 +698,19 @@ const TOOLS = {
 </body>
 </html>`;
 
+      fs.mkdirSync(path.dirname(filepath), { recursive: true });
       fs.writeFileSync(filepath, html, 'utf8');
+      const url = workspace.urlFor(filepath);
+      const conversationId = currentWorkspace()?.conversationId;
 
       try {
         const { default: b } = await import('../orchestrator/brain.js');
         b.broadcast('workspace-file-saved', {
           filename: fn,
-          filepath: fn,
+          filepath: workspace.publicPath(filepath),
           path: filepath,
+          url,
+          conversationId,
           isInteractiveHtml: true,
           autoPreview: true,
           action: 'terrain-generated',
@@ -698,7 +720,8 @@ const TOOLS = {
           filename: fn,
           title: 'Procedural fBM 3D Terrain',
           path: filepath,
-          url: `/workspace/${fn}`,
+          url,
+          conversationId,
         });
       } catch (_) {}
 
@@ -706,7 +729,7 @@ const TOOLS = {
         success: true,
         filename: fn,
         filepath,
-        url: `/workspace/${fn}`,
+        url,
         octaves,
         persistence,
         verticesCount: 81 * 81,
@@ -941,13 +964,13 @@ function playProceduralSound(ctx) {
   run_advanced_method: {
     name: 'run_advanced_method',
     description:
-      'Execute any of the 52 specialized methods from the Advanced Methods Engine by method ID (e.g. method_tree_of_thoughts, method_spatial_partitioning_bvh, method_concurrency_race_detector, method_fixed_timestep_accumulator).',
+      'Execute a specialized method from the Advanced Methods Engine by method ID (e.g. method_spatial_partitioning_bvh, method_concurrency_race_detector, method_fixed_timestep_accumulator).',
     parameters: { method_id: 'string', params: 'string' },
     execute: async (args = {}) => {
       const methodId = args.method_id || args.method;
       if (!methodId)
         return {
-          error: 'method_id is required. Use list_advanced_methods to view all 52 methods.',
+          error: 'method_id is required. Use list_advanced_methods to view available methods.',
         };
 
       let parsedParams = {};
@@ -968,7 +991,7 @@ function playProceduralSound(ctx) {
   list_advanced_methods: {
     name: 'list_advanced_methods',
     description:
-      'List, search, and inspect all 52 methods in the Advanced Methods Engine categorized across Reasoning, Algorithmic Rigor, 3D Graphics, Game Simulation, and Meta-Learning.',
+      'List, search, and inspect available methods in the Advanced Methods Engine categorized across Reasoning, Algorithmic Rigor, 3D Graphics, Game Simulation, and Meta-Learning.',
     parameters: { category: 'string', query: 'string' },
     execute: async (args = {}) => {
       if (args.query) {
@@ -1664,6 +1687,120 @@ function playProceduralSound(ctx) {
   },
 
   // ─── Memory Tools ───
+  search_arem_memory: {
+    name: 'search_arem_memory',
+    description:
+      'Search Supergence-authored notes in AREM for this chat and across chats. Use an empty query to see recent nodes and their parent IDs.',
+    parameters: { query: 'string' },
+    execute: async ({ query }) => ({
+      nodes: aremAgentMemory.search({ query, chat: runtimeAccess.currentContext().conversationId })
+        .map(({ note, ...node }) => ({ ...node, notePreview: note.slice(0, 500), noteLength: note.length, previewTruncated: note.length > 500 })),
+    }),
+  },
+  read_arem_memory: {
+    name: 'read_arem_memory',
+    description: 'Read the complete saved AREM note for an exact ID returned by search_arem_memory. Read before editing; a search preview is not the entire note.',
+    parameters: { type: 'object', properties: { id: { type: 'string', description: 'Complete node ID returned by search.' } }, required: ['id'] },
+    execute: async ({ id }) => {
+      const node = aremAgentMemory.read(id, runtimeAccess.currentContext().conversationId);
+      if (!node) return { error: 'Node not available in this scope. Search again and use the full returned ID.' };
+      return { node };
+    },
+  },
+  create_arem_memory: {
+    name: 'create_arem_memory',
+    description: 'Create a new AREM note with a system-generated ID. Use this for new memories; do not supply an ID.',
+    parameters: {
+      type: 'object',
+      properties: {
+        scope: { type: 'string', enum: ['working', 'chat', 'permanent'], description: 'Memory scope; defaults to chat.' },
+        parent: { type: 'string', description: 'Optional existing parent ID in the same scope.' },
+        title: { type: 'string', description: 'Short memory title.' },
+        note: { type: 'string', description: 'Specific information to retain.' },
+        evidence: { type: 'string', description: 'Source or user turn reference.' },
+      },
+      required: ['title', 'note', 'evidence'],
+    },
+    execute: async ({ scope, parent, title, note, evidence }) => ({
+      node: aremAgentMemory.save({ scope, parent, title, note, evidence, chat: runtimeAccess.currentContext().conversationId }),
+    }),
+  },
+  store_arem_memory: {
+    name: 'store_arem_memory',
+    description:
+      'Create or edit an AREM note. To CREATE, omit id; the system generates it. To EDIT, provide an actual id returned by search_arem_memory. Never invent an id or retry an unknown id. Choose a scope and provide source evidence; do not save secrets.',
+    parameters: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: 'Optional: existing node id from search. Omit entirely when creating a new memory.' },
+        scope: { type: 'string', enum: ['working', 'chat', 'permanent'], description: 'Scope for a new note; defaults to chat.' },
+        parent: { type: 'string', description: 'Optional existing parent id in the same scope; omit for a new root.' },
+        title: { type: 'string', description: 'Short title for the memory.' },
+        note: { type: 'string', description: 'The specific memory to retain.' },
+        evidence: { type: 'string', description: 'A real source or user turn reference.' },
+      },
+      required: ['title', 'note', 'evidence'],
+    },
+    execute: async (params) => ({
+      node: aremAgentMemory.save({ ...params, chat: runtimeAccess.currentContext().conversationId }),
+    }),
+  },
+  link_arem_memory: {
+    name: 'link_arem_memory',
+    description: 'Connect two existing accessible AREM memory nodes using their real IDs and a specific source for the relationship. Related links are symmetric; supports, contradicts and depends_on run from source to target. Chat-scoped links stay in this chat.',
+    parameters: {
+      type: 'object',
+      properties: {
+        source: { type: 'string', description: 'Existing source node ID.' },
+        target: { type: 'string', description: 'Existing target node ID.' },
+        relation: { type: 'string', enum: ['related', 'supports', 'contradicts', 'depends_on'] },
+        evidence: { type: 'string', description: 'Source or observation supporting this connection.' },
+      },
+      required: ['source', 'target', 'relation', 'evidence'],
+    },
+    execute: async (params) => ({ link: aremAgentMemory.link({ ...params, chat: runtimeAccess.currentContext().conversationId }) }),
+  },
+  read_arem_connections: {
+    name: 'read_arem_connections',
+    description: 'Read actual stored connections for an accessible AREM node by its ID.',
+    parameters: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] },
+    execute: async ({ id }) => ({ links: aremAgentMemory.connections({ id, chat: runtimeAccess.currentContext().conversationId }) }),
+  },
+  unlink_arem_memory: {
+    name: 'unlink_arem_memory',
+    description: 'Remove a specific stored AREM connection by its source, target and relation; does not delete either node.',
+    parameters: {
+      type: 'object',
+      properties: { source: { type: 'string' }, target: { type: 'string' }, relation: { type: 'string', enum: ['related', 'supports', 'contradicts', 'depends_on'] } },
+      required: ['source', 'target', 'relation'],
+    },
+    execute: async (params) => aremAgentMemory.unlink({ ...params, chat: runtimeAccess.currentContext().conversationId }),
+  },
+  archive_arem_memory: {
+    name: 'archive_arem_memory',
+    description:
+      'Archive an obsolete Supergence-authored AREM note by its ID. Children move to its parent and remain available.',
+    parameters: { id: 'string' },
+    execute: async ({ id }) =>
+      aremAgentMemory.archive(id, runtimeAccess.currentContext().conversationId),
+  },
+  read_arem_catalog: {
+    name: 'read_arem_catalog',
+    description:
+      'Inspect AREM reference copies of installed tool definitions and skills. With no name, list entries. Archived references do not grant access or execute anything.',
+    parameters: { kind: 'string', name: 'string' },
+    execute: async ({ kind, name }) => {
+      if (!['skill', 'tool'].includes(kind)) return { error: 'Choose tool or skill.' };
+      if (!name) return { entries: aremCatalog.list(kind) };
+      const entry = aremCatalog.read(kind, name);
+      if (!entry) return { error: 'AREM catalog entry not found.' };
+      return {
+        ...entry,
+        content: entry.content.slice(0, 15000),
+        truncated: entry.content.length > 15000,
+      };
+    },
+  },
   memory_search: {
     name: 'memory_search',
     description: 'Search both short-term and long-term memory',
@@ -4158,23 +4295,28 @@ function playProceduralSound(ctx) {
       } else {
         html = supergenceDesignEngine.generateUltraPremiumLandingPage(args);
       }
+      fs.mkdirSync(path.dirname(targetPath), { recursive: true });
       fs.writeFileSync(targetPath, html, 'utf8');
+      const url = workspace.urlFor(targetPath);
+      const conversationId = currentWorkspace()?.conversationId;
       try {
         const { default: brain } = await import('../orchestrator/brain.js');
         brain.broadcast('workspace-file-saved', {
           filename: fn,
-          filepath: fn,
-          url: `/workspace/${fn}`,
+          filepath: workspace.publicPath(targetPath),
+          url,
+          conversationId,
           title: args.name || fn,
         });
         brain.broadcast('artifact', {
           type: 'simulation',
           filename: fn,
           title: args.name || fn,
-          url: `/workspace/${fn}`,
+          url,
+          conversationId,
         });
       } catch (_) {}
-      return { success: true, filename: fn, path: targetPath, url: `/workspace/${fn}` };
+      return { success: true, filename: fn, path: targetPath, url };
     },
   },
 
@@ -4282,6 +4424,7 @@ class ToolRegistry {
       name: toolName,
       skillId: skill.id,
       isDynamicSkill: true,
+      verified: true,
       domain: skill.domain || 'general',
       description: `[AUTONOMOUS RSI SKILL] ${skill.name || 'Skill blueprint'}. Domain: ${skill.domain}. ${scoreLabel}. Speedup: ${skill.speedupGain || 'unmeasured'}. Call to obtain or apply this recipe.`,
       parameters: {

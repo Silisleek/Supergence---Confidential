@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url';
 import { resolveWithinRoot } from '../utils/path-confinement.js';
 import { unzipSync } from 'fflate';
 import { randomUUID } from 'node:crypto';
-import { currentWorkspace, conversationWorkspaces } from '../services/conversationWorkspaces.js';
+import { currentWorkspace, conversationWorkspaces, workspaceOutputRoot } from '../services/conversationWorkspaces.js';
 import { childEnvironment } from '../security/child-environment.js';
 import { runtimeAccess } from '../services/runtimeAccess.js';
 
@@ -31,7 +31,7 @@ class WorkspaceManager {
     this.activeProcesses = new Map();
     this.broadcastFn = null;
   }
-  get root() { return currentWorkspace()?.root || this.baseRoot; }
+  get root() { return workspaceOutputRoot(this.baseRoot); }
   set root(value) { this.baseRoot = value; }
   publicPath(value) {
     const absolute = path.isAbsolute(value) ? value : this._resolve(value);
@@ -44,8 +44,8 @@ class WorkspaceManager {
     if (typeof value === 'string' && (key === 'response' || /^(?:url|src|href|previewUrl|artifactUrl)$/i.test(key || ''))) return value.replace(/\/workspace\/([^\s)"'`<>]+)/g, (url, relative) => {
       try {
         const clean = decodeURIComponent(relative.split(/[?#]/)[0]);
-        const target = path.resolve(this.root, clean);
-        const inside = path.relative(this.root, target);
+        const target = this._resolve(clean);
+        const inside = path.relative(currentWorkspace().root, target);
         if (!inside.startsWith('..') && !path.isAbsolute(inside) && fs.existsSync(target)) return this.urlFor(target) + (relative.match(/[?#].*$/)?.[0] || '');
       } catch {}
       return url;
@@ -59,13 +59,21 @@ class WorkspaceManager {
     this.broadcastFn = fn;
   }
 
+  _publishFileChange(fullPath, event) {
+    const scope = currentWorkspace();
+    if (!scope) return;
+    const relative = path.relative(scope.root, fullPath);
+    if (!relative.startsWith('..' + path.sep) && relative !== '..' && !path.isAbsolute(relative))
+      conversationWorkspaces.publish({ kind: 'file-change', path: relative.replaceAll('\\', '/') || '.', ...event });
+  }
+
   _notifyFileSaved(relPath, fullPath, stat, linesCount = 0, linesAdded = 0, linesDeleted = 0) {
     try {
       const fn = path.basename(relPath);
       const url = this.urlFor(fullPath);
       const scope = currentWorkspace();
       const publicPath = this.publicPath(fullPath);
-      conversationWorkspaces.publish({ kind: 'file-change', path: path.relative(this.root, fullPath).replaceAll('\\','/'), exists: true, type:'file', bytes:stat?.size || 0 });
+      this._publishFileChange(fullPath, { exists: true, type: 'file', bytes: stat?.size || 0 });
       if (!this.broadcastFn) return;
       const isHtml = fn.toLowerCase().endsWith('.html');
       this.broadcastFn('workspace-file-saved', {
@@ -204,8 +212,21 @@ class WorkspaceManager {
     }
 
     let clean = raw.replace(/^[\\\/]+/, '');
-    if (currentWorkspace()) {
-      clean = clean.replace(/^workspace[\\\/]+/, '');
+    const scope = currentWorkspace();
+    if (scope) {
+      clean = clean.replace(/^(?:\.[\\\/]+)?workspace[\\\/]+/i, '');
+      if (scope.projectRoot) {
+        if (!clean || clean === '.') return this.root;
+        if (/^chats[\\\/]/i.test(clean)) return resolveWithinRoot(this.baseRoot, clean);
+        if (/^(?:projects|attachments)[\\\/]|^(?:projects|attachments)$/i.test(clean))
+          return resolveWithinRoot(scope.root, clean);
+        const inProject = resolveWithinRoot(this.root, clean);
+        if (fs.existsSync(inProject)) return inProject;
+        if (scope.freshProject) return inProject;
+        const legacy = resolveWithinRoot(scope.root, clean);
+        if (fs.existsSync(legacy)) return legacy;
+        return inProject;
+      }
       if (/^(?:chats|projects|supergence)[\\\/]/.test(clean)) return resolveWithinRoot(this.baseRoot, clean);
       const inChatWs = resolveWithinRoot(this.root, clean);
       if (fs.existsSync(inChatWs)) return inChatWs;
@@ -238,7 +259,8 @@ class WorkspaceManager {
   _toRelative(fullPath) {
     if (!fullPath) return '';
     try {
-      const relWs = path.relative(this.root, fullPath);
+      const scope = currentWorkspace();
+      const relWs = path.relative(scope?.root || this.root, fullPath);
       if (!relWs.startsWith('..') && !path.isAbsolute(relWs)) {
         return relWs.replace(/\\/g, '/');
       }
@@ -571,7 +593,7 @@ class WorkspaceManager {
     }
     fs.unlinkSync(fullPath);
     const rel = path.relative(this.root, fullPath).replaceAll('\\', '/');
-    conversationWorkspaces.publish({ kind: 'file-change', path: rel, exists: false, type: 'file' });
+    this._publishFileChange(fullPath, { exists: false, type: 'file' });
     if (this.broadcastFn) {
       this.broadcastFn('workspace-update', { action: 'file-deleted', path: this.publicPath(fullPath), conversationId: currentWorkspace()?.conversationId });
     }
@@ -642,8 +664,7 @@ class WorkspaceManager {
       throw new Error(`Safety Protection: Cannot create directory at protected system path "${dirpath}"`);
     }
     fs.mkdirSync(fullPath, { recursive: true });
-    const rel = path.relative(this.root, fullPath).replaceAll('\\', '/');
-    conversationWorkspaces.publish({ kind: 'file-change', path: rel || '.', exists: true, type: 'directory' });
+    this._publishFileChange(fullPath, { exists: true, type: 'directory' });
     if (this.broadcastFn) {
       this.broadcastFn('workspace-update', { action: 'folder-created', path: this.publicPath(fullPath), conversationId: currentWorkspace()?.conversationId });
     }
@@ -665,8 +686,7 @@ class WorkspaceManager {
       return { success: false, error: 'Folder does not exist' };
     }
     fs.rmSync(fullPath, { recursive: Boolean(recursive), force: true });
-    const rel = path.relative(this.root, fullPath).replaceAll('\\', '/');
-    conversationWorkspaces.publish({ kind: 'file-change', path: rel || '.', exists: false, type: 'directory' });
+    this._publishFileChange(fullPath, { exists: false, type: 'directory' });
     if (this.broadcastFn) {
       this.broadcastFn('workspace-update', { action: 'folder-deleted', path: this.publicPath(fullPath), conversationId: currentWorkspace()?.conversationId });
     }
@@ -1076,11 +1096,15 @@ class WorkspaceManager {
         durationMs: 0
       };
     }
+    const scope = currentWorkspace();
     let workDir = this._resolve(cwd);
-    if (!cwd && /\bprojects[\\\/]/i.test(command)) {
+    if (!scope?.projectRoot && !cwd && /\bprojects[\\\/]/i.test(command)) {
       workDir = this.baseRoot;
     } else if (!fs.existsSync(workDir) || !fs.statSync(workDir).isDirectory()) {
+      if (scope?.projectRoot && cwd && workDir !== this.root)
+        return { error: 'Command working directory does not exist.', exitCode: 1, cwd };
       workDir = this.root;
+      if (scope?.projectRoot) fs.mkdirSync(workDir, { recursive: true });
     }
     let effectiveCommand = command;
     if (process.platform === 'win32') {
@@ -1095,7 +1119,6 @@ class WorkspaceManager {
     }
     const start = Date.now();
     const commandId = randomUUID();
-    const scope = currentWorkspace();
     const publish = event => conversationWorkspaces.publish({ commandId, ...event });
     publish({ kind: 'command-start', command, cwd: workDir });
     return await new Promise(resolve => {

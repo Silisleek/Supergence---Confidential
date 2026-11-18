@@ -74,6 +74,33 @@ test('execution waits for an explicit decision and a declined action never runs'
   }
 });
 
+test('pending reviews survive a stopped turn and restart without replaying the action', async () => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'sis-review-'));
+  try {
+    const access = new RuntimeAccess({ directory });
+    access.update({ mode: 'ask-before-executing' });
+    const stop = new AbortController();
+    const waiting = access.run({ signal: stop.signal }, () =>
+      access.authorize('unknown_test_action', { privateValue: 'do not persist' }),
+    );
+    const [{ id }] = access.snapshot().pending;
+    access.update({ mode: 'full-access' });
+    assert.equal(access.snapshot().pending[0].id, id);
+    stop.abort(new Error('Stopped'));
+    await assert.rejects(waiting, /Stopped/);
+    assert.equal(access.snapshot().pending[0].inactive, 'cancelled');
+    const restarted = new RuntimeAccess({ directory });
+    const [item] = restarted.snapshot().pending;
+    assert.equal(item.id, id);
+    assert.equal(item.inactive, 'restarted');
+    assert.equal(item.args, undefined);
+    assert.equal(restarted.resolve(id, true).inactive, true);
+    assert.equal(new RuntimeAccess({ directory }).snapshot().pending.length, 0);
+  } finally {
+    await fs.rm(directory, { recursive: true, force: true });
+  }
+});
+
 test('approve-for-me allows bounded routine work while terminal and unknown tools wait', async () => {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'sis-access-'));
   try {

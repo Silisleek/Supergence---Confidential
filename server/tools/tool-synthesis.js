@@ -86,13 +86,17 @@ export const toolSynthesisTools = {
     parameters: {},
     execute: () => {
       const status = adaToolForger.getStatus();
+      const installed = status.installedTools.filter((tool) => tool.verified);
       return {
-        totalInstalled: status.totalInstalled,
+        totalInstalled: installed.length,
         totalPending: status.totalPending,
-        installedTools: status.installedTools.map((t) => ({
+        installedTools: installed.map((t) => ({
           name: t.name,
           displayName: t.displayName,
           category: t.category,
+          description: t.description,
+          parameters: t.parameters,
+          required: t.required,
           capabilities: t.capabilities,
           privileged: t.privileged,
           status: t.status,

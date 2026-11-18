@@ -341,36 +341,26 @@ ${
       generatedFiles.find((f) => f.role === 'implementation') || generatedFiles[0];
     const testFile = generatedFiles.find((f) => f.role === 'benchmark' || f.role === 'tests');
 
-    let executionResult = {
-      success: true,
+    const executionResult = {
+      success: false,
       stdout: '',
-      stderr: '',
+      stderr: 'Runtime tests did not run.',
       throughputOpsPerSec: null,
       durationMs: 0,
     };
 
     if (primaryImpl && testFile) {
       try {
-        const sandRes = await sandbox.execute({
+        const result = await sandbox.execute({
           targetFile: testFile.filename,
           language: plan.language,
           code: testFile.code,
-          runCommand: plan.language === 'python' ? `python "${testFile.filename}"` : null,
+          execute: true,
         });
-
-        executionResult = {
-          success: sandRes.success,
-          stdout:
-            sandRes.stdout ||
-            `Verified AST structure and compilation passes across ${generatedFiles.length} files.`,
-          stderr: sandRes.stderr || '',
-          durationMs: Date.now() - startTime,
-        };
-      } catch (runErr) {
-        executionResult.stdout = `AST and structure verified across ${generatedFiles.length} files. Sandbox runtime active.`;
+        executionResult.stderr = result.stderr || executionResult.stderr;
+      } catch (error) {
+        executionResult.stderr = error.message;
       }
-    } else {
-      executionResult.stdout = `Verified ${generatedFiles.length} modular components with 0 syntax flaws.`;
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -430,7 +420,7 @@ ${
     onProgress({
       stage: 'COMPLETE',
       progress: 100,
-      message: 'Software engineering deliverable synthesized & verified.',
+      message: 'Software engineering deliverable assembled.',
     });
     console.log(
       `[Split-Code-Method] ✓ Successfully synthesized ${generatedFiles.length} files (${totalLines} lines, ${totalKb} KB) in ${manifest.durationMs}ms`,
@@ -494,7 +484,7 @@ ${files.map((f) => `| [\`${f.canonicalName}\`](/workspace/${f.filename}) | \`${f
 
 #### 🧪 Verification & Empirical Execution Output
 \`\`\`
-${execution.stdout || 'AST syntax validation passed. 0 compiler warnings. All assertions verified.'}
+${execution.stderr || execution.stdout || 'Runtime tests did not run.'}
 \`\`\`
 
 ---

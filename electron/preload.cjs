@@ -21,4 +21,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('show-notification', { title, body, ...options }),
   toggleDevTools: () => ipcRenderer.send('toggle-devtools'),
   captureScreenshot: () => ipcRenderer.invoke('capture-screenshot'),
+  getAutostartStatus: () => ipcRenderer.invoke('get-autostart-status'),
+  setAutostartStatus: (enabled) => ipcRenderer.invoke('set-autostart-status', enabled),
 });

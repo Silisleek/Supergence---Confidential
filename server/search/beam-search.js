@@ -73,7 +73,7 @@ export class BeamSearch {
             evalResult = {
               exitCode: 1,
               error: err.message,
-              testSummary: { total: 1, failed: 1, passed: 0 },
+              testSummary: null,
             };
           }
 
@@ -132,10 +132,13 @@ export class BeamSearch {
     // Determine winning candidate
     const bestNode = winningNode || currentBeam[0] || null;
     const losingNodes = allEvaluated.filter((n) => n !== bestNode);
+    const uniqueWinner = bestNode && losingNodes.every((node) => node.reward < bestNode.reward);
 
     // Export DPO preference pair if logger is attached and we have both winning and losing nodes
-    if (this.logger && bestNode && losingNodes.length > 0) {
-      const losingNode = losingNodes[losingNodes.length - 1]; // worst performer
+    if (this.logger && uniqueWinner && bestNode.reward > 0 && losingNodes.length > 0) {
+      const losingNode = losingNodes.reduce((worst, node) =>
+        node.reward < worst.reward ? node : worst,
+      );
       if (bestNode.trajectory.length > 0 && losingNode.trajectory.length > 0) {
         try {
           this.logger.exportPreferencePair(bestNode.trajectory, losingNode.trajectory);

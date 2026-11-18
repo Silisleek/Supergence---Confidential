@@ -106,11 +106,11 @@ export class AutoHealer {
     let currentCode = originalCode;
     let rootCause = 'Identified and repaired runtime defect.';
     let attempts = 0;
-    let verified = false;
+    let syntaxValid = false;
     let lastErrorTrace = options.error || 'Unknown runtime defect';
     const runId = `heal_${Date.now()}`;
 
-    while (attempts < this.maxAttempts && !verified) {
+    while (attempts < this.maxAttempts && !syntaxValid) {
       attempts++;
       console.log(
         `[AutoHealer] Attempt ${attempts}/${this.maxAttempts} — synthesizing surgical repair...`,
@@ -315,9 +315,9 @@ Never truncate, never use "// rest of code here", never leave fences unclosed.`;
         `${runId}_att${attempts}`,
       );
 
-      if (testResult.success) {
-        verified = true;
-        console.log(`[AutoHealer] ✓ Verification passed on attempt ${attempts}!`);
+      if (testResult.syntaxValid) {
+        syntaxValid = true;
+        console.log(`[AutoHealer] ✓ Syntax check passed on attempt ${attempts}!`);
         break;
       } else {
         lastErrorTrace =
@@ -331,24 +331,24 @@ Never truncate, never use "// rest of code here", never leave fences unclosed.`;
       }
     }
 
-    // Persist ONLY verified repaired code to workspace (do not overwrite with broken sandbox code)
-    if (verified) {
+    if (syntaxValid) {
       fs.writeFileSync(fullPath, currentCode, 'utf8');
     }
 
     const diff = this.computeDiff(originalCode, currentCode);
 
-    console.log(`[AutoHealer] 🚀 Repaired "${filename}" — ${diff.summary}. Verified: ${verified}`);
+    console.log(`[AutoHealer] 🚀 Repaired "${filename}" — ${diff.summary}. Syntax valid: ${syntaxValid}`);
 
     return {
-      success: true,
+      success: syntaxValid,
       filename,
       filepath: fullPath,
       language,
       code: currentCode,
       rootCause,
       diff,
-      verified,
+      verified: false,
+      syntaxValid,
       attempts,
     };
   }

@@ -16,13 +16,16 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import { execSync } from 'child_process';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { childEnvironment } from '../security/child-environment.js';
 import { fileURLToPath } from 'url';
 import brain from './brain.js';
 import dynamicArtifactSynthesizer from './dynamic-artifact-synthesizer.js';
 import enterpriseVault from '../security/vault.js';
 import enterpriseAuditTrail from '../security/audit-trail.js';
 
+const execFileAsync = promisify(execFile);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, '../../');
 const DATA_DIR = process.env.SIS_DATA_DIR
@@ -351,43 +354,30 @@ export class SupergenceEngine {
     const rawUser = os.userInfo().username || 'Akshan Sharma';
     const formattedName = rawUser.toLowerCase().includes('akshan') ? 'Akshan Sharma' : rawUser;
 
-    let gitBranch = 'main';
-    try {
-      gitBranch = execSync('git rev-parse --abbrev-ref HEAD', {
-        cwd: ROOT_DIR,
-        encoding: 'utf8',
-      }).trim();
-    } catch (_) {}
-
-    let gitCommits;
-    try {
-      const gitLogRaw = execSync('git log -n 4 --pretty=format:"%h|%an|%s|%cd" --date=relative', {
-        cwd: ROOT_DIR,
-        encoding: 'utf8',
-      });
-      gitCommits = gitLogRaw
-        .split('\n')
-        .filter(Boolean)
-        .map((line) => {
-          const [hash, author, subject, date] = line.split('|');
-          return { hash, author: author || formattedName, subject, date };
-        });
-    } catch (e) {
-      gitCommits = [
-        {
-          hash: 'mk10a1',
-          author: formattedName,
-          subject: 'Supergence borderless HUD & liquid glass integration',
-          date: 'recently',
-        },
-        {
-          hash: 'mk10a0',
-          author: formattedName,
-          subject: 'SIS 1.0 Superintelligence multi-agent orchestrator initialization',
-          date: 'recently',
-        },
-      ];
-    }
+    const gitOptions = {
+      cwd: ROOT_DIR,
+      encoding: 'utf8',
+      env: childEnvironment(),
+      timeout: 5000,
+      windowsHide: true,
+    };
+    const [branchResult, logResult] = await Promise.allSettled([
+      execFileAsync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], gitOptions),
+      execFileAsync(
+        'git',
+        ['log', '-n', '4', '--pretty=format:%h%x00%an%x00%s%x00%cd', '--date=relative'],
+        gitOptions,
+      ),
+    ]);
+    const gitBranch = branchResult.status === 'fulfilled'
+      ? branchResult.value.stdout.trim()
+      : 'Unavailable';
+    const gitCommits = logResult.status === 'fulfilled'
+      ? logResult.value.stdout.split('\n').filter(Boolean).map((line) => {
+          const [hash, author, subject, date] = line.split('\0');
+          return { hash, author, subject, date };
+        })
+      : [];
 
     let workspaceFiles = [];
     try {
@@ -405,7 +395,7 @@ export class SupergenceEngine {
 
     const commitListMarkdown = gitCommits
       .map((c) => `  - \`${c.hash}\` (${c.date}): ${c.subject}`)
-      .join('\n');
+      .join('\n') || 'Unavailable';
 
     // ─── TURN 3: SYNAPSE-AI REPORTS USER & WORKSPACE CONTEXT ───
     await this.emitTeamChat(

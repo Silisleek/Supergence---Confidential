@@ -126,45 +126,19 @@
   function render(slot, data) {
     if (!slot) return;
     slot.querySelector('.workspace-result-summary')?.remove();
-    const artifacts = Array.isArray(data.artifacts) ? data.artifacts : [];
     const calls = Array.isArray(data.toolCalls) ? data.toolCalls : [];
     const state = data.taskStatus || data.status || (data.success === false ? 'error' : undefined);
-    const hasEvidence = artifacts.length || calls.length || data.completionAudit;
-    if (!hasEvidence && !['blocked', 'error', 'cancelled'].includes(state)) return;
-    const summary = node('section', 'workspace-result-summary');
-    summary.setAttribute('aria-label', 'Task result summary');
-    summary.append(node('h3', '', 'Task result'));
-    const label =
-      {
-        completed: 'Finished',
-        blocked: 'Needs attention',
-        error: 'Stopped with an error',
-        cancelled: 'Stopped',
-      }[state] || 'Status unavailable';
-    summary.append(node('p', 'workspace-result-state', label));
-    if (!hasEvidence) {
-      slot.prepend(summary);
-      return;
-    }
-    summary.append(
-      node(
-        'p',
-        '',
-        artifacts.length
-          ? `${artifacts.length} file or preview ${artifacts.length === 1 ? 'attached' : 'attachments'} below.`
-          : 'No files or previews attached.',
-      ),
-    );
+    const needsAttention = ['blocked', 'error', 'cancelled'].includes(state);
+    const summary = node('details', 'workspace-result-summary');
+    summary.setAttribute('aria-label', 'Task details');
     appendSources(summary, calls);
     const checks = calls.filter((call) =>
       /^(run_command|verify_and_execute_code|verify_.*|test_.*|browser_.*(?:test|inspect|verify))$/i.test(
         String(call.tool || ''),
       ),
     );
-    summary.append(node('h4', '', 'Recorded checks and commands'));
-    if (!checks.length) {
-      summary.append(node('p', '', 'No checks or commands recorded for this task.'));
-    } else {
+    if (checks.length) {
+      summary.append(node('h4', '', 'Recorded checks and commands'));
       const list = node('ul', 'workspace-result-checks');
       for (const call of checks.slice(-8)) {
         const item = node('li', '', `${String(call.tool)}: ${resultLabel(call)}`);
@@ -174,19 +148,8 @@
       summary.append(list);
       if (checks.length > 8)
         summary.append(
-          node(
-            'p',
-            'workspace-result-note',
-            `Showing the last 8 of ${checks.length} recorded checks and commands.`,
-          ),
+          node('p', 'workspace-result-note', `Showing the last 8 of ${checks.length} recorded checks.`),
         );
-      summary.append(
-        node(
-          'p',
-          'workspace-result-note',
-          'A returned command or tool is not by itself proof that the result meets your requirements.',
-        ),
-      );
     }
     const remaining = data.completionAudit?.remaining;
     if (Array.isArray(remaining) && remaining.length) {
@@ -195,7 +158,15 @@
       remaining.slice(0, 12).forEach((item) => list.append(node('li', '', String(item))));
       summary.append(list);
     }
-    slot.prepend(summary);
+    if (!summary.childElementCount && !needsAttention) return;
+    const label = {
+      blocked: 'Needs attention',
+      error: 'Stopped with an error',
+      cancelled: 'Stopped',
+    }[state] || 'Task details';
+    summary.prepend(node('summary', needsAttention ? 'workspace-result-state' : '', label));
+    summary.open = needsAttention || (Array.isArray(remaining) && remaining.length > 0);
+    slot.append(summary);
   }
   window.SupergenceResultSummary = { render };
 })();

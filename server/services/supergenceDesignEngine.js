@@ -1,4 +1,4 @@
-import { currentWorkspace } from './conversationWorkspaces.js';
+import { workspaceOutputRoot } from './conversationWorkspaces.js';
 // SIS 1.0 — Supergence Premium Design Engine
 // Powered by Open Design systems (Linear, Glassmorphism, Bento, Apple, Modern SaaS) & FigCraft vector layouts
 // Generates state-of-the-art, high-converting, aesthetic, responsive production designs.
@@ -21,7 +21,7 @@ const FIGCRAFT_DIR = path.join(ROOT_DIR, 'integrations', 'figcraft');
 const FIGCRAFT_CLI = path.join(FIGCRAFT_DIR, 'bin', 'figcraft-cli.exe');
 const figcraftExecutable = () =>
   process.env.SIS_FIGCRAFT_CLI ? path.resolve(process.env.SIS_FIGCRAFT_CLI) : FIGCRAFT_CLI;
-const workspaceRoot = () => currentWorkspace()?.root || workspace.baseRoot;
+const workspaceRoot = () => workspaceOutputRoot(workspace.baseRoot);
 const workspacePath = (candidate) => resolveWithinRoot(workspaceRoot(), candidate);
 
 export class SupergenceDesignEngine {

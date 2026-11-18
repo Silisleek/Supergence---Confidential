@@ -55,7 +55,12 @@
         transform: translate(-50%, -50%);
         width: 900px;
         height: 600px;
-        background: radial-gradient(ellipse at center, color-mix(in srgb, var(--accent) 30%, transparent) 0%, color-mix(in srgb, var(--glow) 15%, transparent) 40%, transparent 70%);
+        background: radial-gradient(
+          ellipse at center,
+          color-mix(in srgb, var(--accent) 30%, transparent) 0%,
+          color-mix(in srgb, var(--glow) 15%, transparent) 40%,
+          transparent 70%
+        );
         pointer-events: none;
         z-index: 0;
         filter: blur(50px);
@@ -72,7 +77,10 @@
         border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 28px;
         padding: 44px 48px;
-        box-shadow: 0 30px 80px -15px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05), 0 0 60px color-mix(in srgb, var(--accent) 12%, transparent);
+        box-shadow:
+          0 30px 80px -15px rgba(0, 0, 0, 0.8),
+          0 0 0 1px rgba(255, 255, 255, 0.05),
+          0 0 60px color-mix(in srgb, var(--accent) 12%, transparent);
       }
 
       @media (max-width: 640px) {
@@ -90,7 +98,7 @@
         padding: 6px 14px;
         border-radius: 9999px;
         background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.12);
+        border: none !important;
         font-family: var(--font-mono, monospace);
         font-size: 11px;
         font-weight: 600;
@@ -98,7 +106,7 @@
         letter-spacing: 0.16em;
         color: var(--accent);
         margin-bottom: 20px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
       }
       .brand-dot {
         width: 6px;
@@ -132,7 +140,7 @@
         margin-bottom: 30px;
       }
 
-      /* Step Stepper Tabs */
+      /* Step Stepper Tabs - Borderless Glass */
       .stepper {
         display: flex;
         align-items: center;
@@ -141,7 +149,8 @@
         background: rgba(0, 0, 0, 0.45);
         padding: 5px;
         border-radius: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: none !important;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
       }
       .step-pill {
         flex: 1;
@@ -155,7 +164,8 @@
         font-weight: 600;
         color: rgba(255, 255, 255, 0.5);
         background: transparent;
-        border: 1px solid transparent;
+        border: none !important;
+        outline: none !important;
         cursor: pointer;
         transition: all 180ms ease;
       }
@@ -164,10 +174,11 @@
         background: rgba(255, 255, 255, 0.04);
       }
       .step-pill.is-active {
-        background: rgba(255, 255, 255, 0.09);
+        background: rgba(255, 255, 255, 0.1);
         color: #ffffff;
-        border-color: color-mix(in srgb, var(--accent) 60%, rgba(255, 255, 255, 0.2));
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 18px color-mix(in srgb, var(--accent) 25%, transparent);
+        box-shadow:
+          0 4px 16px rgba(0, 0, 0, 0.4),
+          0 0 20px color-mix(in srgb, var(--accent) 30%, transparent);
       }
       .step-pill.is-completed {
         color: var(--accent);
@@ -183,6 +194,7 @@
         font-weight: 700;
         background: rgba(255, 255, 255, 0.08);
         color: rgba(255, 255, 255, 0.6);
+        border: none !important;
         transition: all 180ms ease;
       }
       .step-pill.is-active .step-num {
@@ -193,7 +205,6 @@
       .step-pill.is-completed .step-num {
         background: color-mix(in srgb, var(--accent) 20%, transparent);
         color: var(--accent);
-        border: 1px solid var(--accent);
       }
 
       /* Panels */
@@ -238,8 +249,11 @@
       }
 
       .option-card {
-        background: linear-gradient(145deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0.01) 100%), var(--bg-surface);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background:
+          linear-gradient(145deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0.01) 100%),
+          var(--bg-surface);
+        border: none !important;
+        outline: none !important;
         border-radius: 18px;
         padding: 20px;
         cursor: pointer;
@@ -253,14 +267,180 @@
         transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
       }
       .option-card:hover {
-        border-color: rgba(255, 255, 255, 0.25);
         transform: translateY(-2px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px color-mix(in srgb, var(--accent) 15%, transparent);
+        box-shadow:
+          0 10px 30px rgba(0, 0, 0, 0.5),
+          0 0 20px color-mix(in srgb, var(--accent) 15%, transparent);
       }
       .option-card.is-selected {
-        border-color: var(--accent);
-        background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 14%, transparent) 0%, rgba(255, 255, 255, 0.02) 100%), var(--bg-surface);
-        box-shadow: 0 0 28px color-mix(in srgb, var(--accent) 25%, transparent), inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
+        background:
+          linear-gradient(
+            145deg,
+            color-mix(in srgb, var(--accent) 18%, transparent) 0%,
+            rgba(255, 255, 255, 0.02) 100%
+          ),
+          var(--bg-surface);
+        box-shadow: 0 0 28px color-mix(in srgb, var(--accent) 28%, transparent);
+      }
+
+      /* Step 3: Intelligence Model Setup (Futuristic Borderless) */
+      .sis-model-setup-card {
+        background:
+          linear-gradient(155deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%),
+          var(--bg-surface);
+        border: none !important;
+        outline: none !important;
+        border-radius: 22px;
+        padding: 28px 24px;
+        box-shadow:
+          0 16px 48px rgba(0, 0, 0, 0.5),
+          0 0 32px color-mix(in srgb, var(--accent) 15%, transparent);
+        margin-bottom: 24px;
+        position: relative;
+        overflow: hidden;
+      }
+      .sis-setup-header {
+        margin-bottom: 20px;
+        text-align: left;
+      }
+      .sis-setup-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #ffffff;
+        margin: 0 0 6px 0;
+      }
+      .sis-setup-desc {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.65);
+        margin: 0;
+        line-height: 1.5;
+      }
+      .sis-provider-presets {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      @media (max-width: 540px) {
+        .sis-provider-presets {
+          grid-template-columns: 1fr;
+        }
+      }
+      .sis-preset-btn {
+        background: rgba(255, 255, 255, 0.04);
+        border: none !important;
+        outline: none !important;
+        border-radius: 14px;
+        padding: 12px 14px;
+        cursor: pointer;
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        transition: all 180ms ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        color: var(--text);
+      }
+      .sis-preset-btn:hover {
+        background: rgba(255, 255, 255, 0.07);
+        transform: translateY(-1px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      }
+      .sis-preset-btn.is-active {
+        background: linear-gradient(
+          135deg,
+          color-mix(in srgb, var(--accent) 25%, transparent) 0%,
+          rgba(255, 255, 255, 0.04) 100%
+        );
+        box-shadow:
+          0 0 24px color-mix(in srgb, var(--accent) 30%, transparent),
+          0 4px 16px rgba(0, 0, 0, 0.4);
+      }
+      .sis-preset-name {
+        font-size: 13px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: #ffffff;
+      }
+      .sis-preset-badge {
+        font-size: 9.5px;
+        padding: 2px 7px;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.08);
+        border: none !important;
+        font-weight: 700;
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .sis-preset-sub {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.55);
+      }
+      .sis-form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 14px;
+        text-align: left;
+      }
+      .sis-label {
+        font-size: 11.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: rgba(255, 255, 255, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .sis-input {
+        width: 100%;
+        box-sizing: border-box;
+        background: rgba(0, 0, 0, 0.5);
+        border: none !important;
+        outline: none !important;
+        border-radius: 12px;
+        padding: 12px 14px;
+        color: #ffffff;
+        font-family: inherit;
+        font-size: 13px;
+        box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
+        transition: all 180ms ease;
+      }
+      .sis-input:focus {
+        background: rgba(0, 0, 0, 0.7);
+        box-shadow:
+          inset 0 2px 6px rgba(0, 0, 0, 0.6),
+          0 0 18px color-mix(in srgb, var(--accent) 35%, transparent);
+      }
+      .sis-input-helper {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.45);
+      }
+      .sis-test-badge {
+        font-size: 11.5px;
+        padding: 6px 12px;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 600;
+        border: none !important;
+      }
+      .sis-test-badge.is-online {
+        background: rgba(52, 211, 153, 0.15);
+        color: #34d399;
+      }
+      .sis-test-badge.is-error {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+      }
+      .sis-test-badge.is-testing {
+        background: rgba(56, 189, 248, 0.15);
+        color: #38bdf8;
       }
 
       .card-header {
@@ -305,35 +485,73 @@
         border: 1.5px solid rgba(255, 255, 255, 0.18);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
         flex-shrink: 0;
-        transition: transform 180ms ease, box-shadow 180ms ease;
+        transition:
+          transform 180ms ease,
+          box-shadow 180ms ease;
       }
       .option-card:hover .swatch {
         transform: scale(1.1);
       }
 
       /* Palette 1: Obsidian / Lilac Mist */
-      [data-palette-preview="obsidian"] .swatch:nth-child(1) { background: #13101d; }
-      [data-palette-preview="obsidian"] .swatch:nth-child(2) { background: #2f2347; }
-      [data-palette-preview="obsidian"] .swatch:nth-child(3) { background: #a855f7; box-shadow: 0 0 10px rgba(168, 85, 247, 0.4); }
-      [data-palette-preview="obsidian"] .swatch:nth-child(4) { background: #e9d5ff; }
+      [data-palette-preview='obsidian'] .swatch:nth-child(1) {
+        background: #13101d;
+      }
+      [data-palette-preview='obsidian'] .swatch:nth-child(2) {
+        background: #2f2347;
+      }
+      [data-palette-preview='obsidian'] .swatch:nth-child(3) {
+        background: #a855f7;
+        box-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+      }
+      [data-palette-preview='obsidian'] .swatch:nth-child(4) {
+        background: #e9d5ff;
+      }
 
       /* Palette 2: Warm / Apricot Cream */
-      [data-palette-preview="warm"] .swatch:nth-child(1) { background: #1c1410; }
-      [data-palette-preview="warm"] .swatch:nth-child(2) { background: #3d2317; }
-      [data-palette-preview="warm"] .swatch:nth-child(3) { background: #ea580c; box-shadow: 0 0 10px rgba(234, 88, 12, 0.4); }
-      [data-palette-preview="warm"] .swatch:nth-child(4) { background: #fed7aa; }
+      [data-palette-preview='warm'] .swatch:nth-child(1) {
+        background: #1c1410;
+      }
+      [data-palette-preview='warm'] .swatch:nth-child(2) {
+        background: #3d2317;
+      }
+      [data-palette-preview='warm'] .swatch:nth-child(3) {
+        background: #ea580c;
+        box-shadow: 0 0 10px rgba(234, 88, 12, 0.4);
+      }
+      [data-palette-preview='warm'] .swatch:nth-child(4) {
+        background: #fed7aa;
+      }
 
       /* Palette 3: Midnight / Lavender Dusk */
-      [data-palette-preview="midnight"] .swatch:nth-child(1) { background: #0b0e1a; }
-      [data-palette-preview="midnight"] .swatch:nth-child(2) { background: #172147; }
-      [data-palette-preview="midnight"] .swatch:nth-child(3) { background: #6366f1; box-shadow: 0 0 10px rgba(99, 102, 241, 0.4); }
-      [data-palette-preview="midnight"] .swatch:nth-child(4) { background: #c7d2fe; }
+      [data-palette-preview='midnight'] .swatch:nth-child(1) {
+        background: #0b0e1a;
+      }
+      [data-palette-preview='midnight'] .swatch:nth-child(2) {
+        background: #172147;
+      }
+      [data-palette-preview='midnight'] .swatch:nth-child(3) {
+        background: #6366f1;
+        box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
+      }
+      [data-palette-preview='midnight'] .swatch:nth-child(4) {
+        background: #c7d2fe;
+      }
 
       /* Palette 4: Cyber / Mint Glass */
-      [data-palette-preview="cyber"] .swatch:nth-child(1) { background: #061512; }
-      [data-palette-preview="cyber"] .swatch:nth-child(2) { background: #0d3228; }
-      [data-palette-preview="cyber"] .swatch:nth-child(3) { background: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
-      [data-palette-preview="cyber"] .swatch:nth-child(4) { background: #a7f3d0; }
+      [data-palette-preview='cyber'] .swatch:nth-child(1) {
+        background: #061512;
+      }
+      [data-palette-preview='cyber'] .swatch:nth-child(2) {
+        background: #0d3228;
+      }
+      [data-palette-preview='cyber'] .swatch:nth-child(3) {
+        background: #10b981;
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+      }
+      [data-palette-preview='cyber'] .swatch:nth-child(4) {
+        background: #a7f3d0;
+      }
 
       .card-desc {
         font-size: 12px;
@@ -346,30 +564,40 @@
         padding: 10px 14px;
         border-radius: 10px;
         background: rgba(0, 0, 0, 0.45);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: none !important;
+        box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4);
         font-size: 13.5px;
         color: var(--accent);
         line-height: 1.4;
       }
 
-      /* Step 3: Sleek Connect Box */
+      /* Step 4: Sleek Connect Box */
       .sleek-connect-box {
-        background: linear-gradient(145deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%), var(--bg-surface);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background:
+          linear-gradient(145deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%),
+          var(--bg-surface);
+        border: none !important;
+        outline: none !important;
         border-radius: 22px;
         padding: 32px 28px;
         margin-bottom: 24px;
         text-align: center;
         position: relative;
         overflow: hidden;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        box-shadow:
+          0 16px 48px rgba(0, 0, 0, 0.5),
+          0 0 32px color-mix(in srgb, var(--accent) 15%, transparent);
       }
       .sleek-network-logo {
         width: 64px;
         height: 64px;
         border-radius: 20px;
         margin: 0 auto 18px;
-        background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 20%, transparent) 0%, rgba(255, 255, 255, 0.03) 100%);
+        background: linear-gradient(
+          135deg,
+          color-mix(in srgb, var(--accent) 20%, transparent) 0%,
+          rgba(255, 255, 255, 0.03) 100%
+        );
         border: 1px solid color-mix(in srgb, var(--accent) 40%, rgba(255, 255, 255, 0.1));
         display: flex;
         align-items: center;
@@ -425,19 +653,6 @@
       }
       .btn-reconfigure:hover {
         opacity: 0.8;
-      }
-      .neutrino-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 6px 14px;
-        border-radius: 9999px;
-        background: var(--shell-peach);
-        border: 1px solid var(--shell-border);
-        color: var(--shell-warning);
-        font-size: 12px;
-        font-weight: 600;
-        margin-bottom: 20px;
       }
 
       /* Action Buttons */
@@ -532,20 +747,14 @@
         }
       }
     </style>
+    <link rel="stylesheet" href="/styles/supergence-glass.css?v=coffee-settings" />
   </head>
-  <body data-theme="obsidian" data-font="editorial">
+  <body class="sg-setup-page" data-theme="obsidian" data-font="editorial">
     <div class="ambient-glow"></div>
 
     <main class="onboarding-container">
-      <div class="brand-badge">
-        <span class="brand-dot"></span>
-        <span>Supergence // Beyond Ordinary Minds</span>
-      </div>
-
       <h1 class="hero-title" id="pageTitle">Make Supergence <em>yours</em></h1>
-      <p class="hero-desc" id="pageDesc">
-        Choose a palette and font, then connect an activated Sleek account to open your workspace.
-      </p>
+      <p class="hero-desc" id="pageDesc">Choose your theme, typography, and AI model.</p>
 
       <!-- Step Stepper -->
       <nav class="stepper" aria-label="Onboarding Steps">
@@ -555,11 +764,15 @@
         </button>
         <button type="button" class="step-pill" data-step="2" id="stepPill2">
           <span class="step-num">2</span>
-          <span>Font</span>
+          <span>Typography</span>
         </button>
         <button type="button" class="step-pill" data-step="3" id="stepPill3">
           <span class="step-num">3</span>
-          <span>Sleek Account</span>
+          <span>AI Model</span>
+        </button>
+        <button type="button" class="step-pill" data-step="4" id="stepPill4">
+          <span class="step-num">4</span>
+          <span>Launch</span>
         </button>
       </nav>
 
@@ -567,7 +780,6 @@
       <section class="step-panel is-active" id="stepPanel1">
         <h2 class="panel-section-title">Select Color Theme</h2>
         <div class="grid-options" role="radiogroup" aria-label="Theme selection">
-          <!-- Lilac Mist -->
           <button
             type="button"
             class="option-card is-selected"
@@ -576,8 +788,7 @@
             aria-checked="true"
           >
             <div class="card-header">
-              <span class="card-title">Lilac Mist</span>
-              <span class="card-tag">Default</span>
+              <span class="card-title">Obsidian</span>
             </div>
             <div class="swatches-row" data-palette-preview="obsidian" aria-hidden="true">
               <span class="swatch"></span>
@@ -585,10 +796,9 @@
               <span class="swatch"></span>
               <span class="swatch"></span>
             </div>
-            <p class="card-desc">Soft lilac surfaces with a plum accent.</p>
+            <p class="card-desc">Near-black surfaces.</p>
           </button>
 
-          <!-- Apricot Cream -->
           <button
             type="button"
             class="option-card"
@@ -597,8 +807,7 @@
             aria-checked="false"
           >
             <div class="card-header">
-              <span class="card-title">Apricot Cream</span>
-              <span class="card-tag">Editorial</span>
+              <span class="card-title">Charcoal</span>
             </div>
             <div class="swatches-row" data-palette-preview="warm" aria-hidden="true">
               <span class="swatch"></span>
@@ -606,10 +815,9 @@
               <span class="swatch"></span>
               <span class="swatch"></span>
             </div>
-            <p class="card-desc">Cream and peach with a terracotta accent.</p>
+            <p class="card-desc">Neutral charcoal surfaces.</p>
           </button>
 
-          <!-- Lavender Dusk -->
           <button
             type="button"
             class="option-card"
@@ -618,8 +826,7 @@
             aria-checked="false"
           >
             <div class="card-header">
-              <span class="card-title">Lavender Dusk</span>
-              <span class="card-tag">Dark</span>
+              <span class="card-title">Midnight</span>
             </div>
             <div class="swatches-row" data-palette-preview="midnight" aria-hidden="true">
               <span class="swatch"></span>
@@ -627,10 +834,9 @@
               <span class="swatch"></span>
               <span class="swatch"></span>
             </div>
-            <p class="card-desc">Deep violet surfaces with lavender highlights.</p>
+            <p class="card-desc">Deep slate surfaces.</p>
           </button>
 
-          <!-- Mint Glass -->
           <button
             type="button"
             class="option-card"
@@ -639,8 +845,7 @@
             aria-checked="false"
           >
             <div class="card-header">
-              <span class="card-title">Mint Glass</span>
-              <span class="card-tag">Cool</span>
+              <span class="card-title">Graphite</span>
             </div>
             <div class="swatches-row" data-palette-preview="cyber" aria-hidden="true">
               <span class="swatch"></span>
@@ -648,7 +853,7 @@
               <span class="swatch"></span>
               <span class="swatch"></span>
             </div>
-            <p class="card-desc">Cool mint surfaces with a forest-green accent.</p>
+            <p class="card-desc">Cool charcoal surfaces.</p>
           </button>
         </div>
 
@@ -790,7 +995,7 @@
             <span>Back</span>
           </button>
           <button type="button" class="btn btn-primary" id="btnNext2">
-            <span>Continue to Sleek Account</span>
+            <span>Continue to AI Model</span>
             <svg
               width="16"
               height="16"
@@ -807,16 +1012,179 @@
         </div>
       </section>
 
-      <!-- Step 3: Sleek Connect -->
+      <!-- Step 3: AI Model & Provider (Default Engine) -->
       <section class="step-panel" id="stepPanel3">
-        <h2 class="panel-section-title">Authenticate & Link Workspace</h2>
+        <h2 class="panel-section-title">Choose a model provider</h2>
 
-        <div id="returningNotice" class="returning-notice" style="display: none;">
+        <div class="sis-model-setup-card">
+          <!-- Presets -->
+          <div class="sis-provider-presets">
+            <button type="button" class="sis-preset-btn is-active" data-setup-preset="openrouter">
+              <div class="sis-preset-name">
+                <span>OpenRouter</span>
+              </div>
+              <div class="sis-preset-sub">openai/gpt-4o-mini · Multi-cloud router</div>
+            </button>
+
+            <button type="button" class="sis-preset-btn" data-setup-preset="openai">
+              <div class="sis-preset-name">
+                <span>OpenAI Direct</span>
+              </div>
+              <div class="sis-preset-sub">gpt-4o · Frontier OpenAI endpoint</div>
+            </button>
+
+            <button type="button" class="sis-preset-btn" data-setup-preset="ollama">
+              <div class="sis-preset-name">
+                <span>Ollama Local</span>
+              </div>
+              <div class="sis-preset-sub">llama3.2 · 100% private local offline</div>
+            </button>
+
+            <button type="button" class="sis-preset-btn" data-setup-preset="custom">
+              <div class="sis-preset-name">
+                <span>Custom Gateway</span>
+              </div>
+              <div class="sis-preset-sub">Any OpenAI-compatible base URL</div>
+            </button>
+          </div>
+
+          <!-- Configuration Inputs -->
+          <div class="sis-form-group">
+            <label class="sis-label" for="setupBaseUrl">Endpoint Base URL</label>
+            <input
+              type="url"
+              id="setupBaseUrl"
+              class="sis-input"
+              placeholder="https://openrouter.ai/api/v1"
+              value="https://openrouter.ai/api/v1"
+              required
+            />
+            <span class="sis-input-helper">OpenAI-compatible /v1 endpoint</span>
+          </div>
+
+          <div class="sis-form-group">
+            <label class="sis-label" for="setupModel">Model ID</label>
+            <input
+              type="text"
+              id="setupModel"
+              class="sis-input"
+              placeholder="openai/gpt-4o-mini"
+              value="openai/gpt-4o-mini"
+              required
+            />
+            <span class="sis-input-helper">The model name/ID passed in chat completions</span>
+          </div>
+
+          <div class="sis-form-group">
+            <label class="sis-label" for="setupApiKey">
+              <span>API Key</span>
+              <button
+                type="button"
+                id="btnToggleSetupKey"
+                style="
+                  background: none;
+                  border: none;
+                  color: var(--accent);
+                  font-size: 11px;
+                  cursor: pointer;
+                  font-weight: 600;
+                "
+              >
+                Show
+              </button>
+            </label>
+            <input
+              type="password"
+              id="setupApiKey"
+              class="sis-input"
+              placeholder="Leave blank if using local Ollama or keeping existing key"
+              autocomplete="new-password"
+            />
+            <span class="sis-input-helper"
+              >Saved encrypted on this computer. Ollama/local hosts do not require a key.</span
+            >
+          </div>
+
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              margin-top: 16px;
+              gap: 12px;
+              flex-wrap: wrap;
+            "
+          >
+            <button type="button" class="btn btn-secondary" id="btnTestSetupModel">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+              >
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+              </svg>
+              <span>Test Connection</span>
+            </button>
+            <div id="setupModelStatusBadge" class="sis-test-badge" style="display: none"></div>
+          </div>
+        </div>
+
+        <div class="actions-row">
+          <button type="button" class="btn btn-secondary" id="btnBack3">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+            <span>Back</span>
+          </button>
+          <button type="button" class="btn btn-primary" id="btnNext3">
+            <span>Save &amp; Launch Supergence</span>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- Step 4: System Ready & Launch -->
+      <section class="step-panel" id="stepPanel4">
+        <h2 class="panel-section-title">Ready to Launch</h2>
+
+        <div id="returningNotice" class="returning-notice" style="display: none">
           <div class="returning-badge">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
             <span>Setup Saved</span>
           </div>
-          <span style="flex: 1;">Theme and typography preferences preserved.</span>
+          <span style="flex: 1">Theme and typography preferences preserved.</span>
           <button type="button" class="btn-reconfigure" id="btnReconfigureSetup">Change</button>
         </div>
 
@@ -838,31 +1206,17 @@
             </svg>
           </div>
 
-          <h3 class="sleek-connect-title">Connect your Sleek Account</h3>
+          <h3 class="sleek-connect-title">Your Personal System Is Ready</h3>
           <p class="sleek-connect-desc">
-            Sign in on Silisleek in your browser to verify your identity and link your workspace.
+            Autonomous multi-domain intelligence, memory consolidation, and reasoning cores are
+            configured and operational.
           </p>
 
-          <div class="neutrino-pill">
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <path d="m12 6 4 6-4 6-4-6Z" />
-            </svg>
-            <span>One-Time Activation: 400 Neutrinos</span>
-          </div>
-
-          <!-- Connect CTA -->
+          <!-- Direct Launch CTA (Primary) -->
           <button
             type="button"
             class="btn btn-primary btn-lg"
-            id="btnConnectBrowser"
+            id="btnEnterWorkspaceDirect"
             style="width: 100%"
           >
             <svg
@@ -875,13 +1229,14 @@
               stroke-linecap="round"
               stroke-linejoin="round"
             >
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-              <polyline points="15 3 21 3 21 9" />
-              <line x1="10" y1="14" x2="21" y2="3" />
+              <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
-            <span id="btnConnectText">Connect Sleek Account from Browser</span>
+            <span>Launch Supergence Workspace</span>
           </button>
-          <!-- Fallback or manual action if needed -->
+
+          <!-- Hidden button for programmatic trigger if referenced -->
+          <button type="button" id="btnConnectBrowser" style="display: none"></button>
+          <span id="btnConnectText" style="display: none"></span>
           <div id="authExternalLinkWrapper" style="display: none; margin-top: 14px">
             <a
               id="authExternalLink"
@@ -902,7 +1257,7 @@
         </div>
 
         <div class="actions-row">
-          <button type="button" class="btn btn-secondary" id="btnBack3">
+          <button type="button" class="btn btn-secondary" id="btnBack4">
             <svg
               width="16"
               height="16"
@@ -948,11 +1303,12 @@
         let currentStep = 1;
         const params = new URLSearchParams(window.location.search);
         const forceSetup = params.get('setup') === 'true';
-        const isSetupCompleted = !forceSetup && localStorage.getItem('sis_setup_completed') === 'true';
+        const isSetupCompleted =
+          !forceSetup && localStorage.getItem('sis_setup_completed') === 'true';
 
         let selectedTheme = localStorage.getItem('sis-ui-theme');
         if (!['obsidian', 'warm', 'midnight', 'cyber'].includes(selectedTheme))
-          selectedTheme = 'obsidian';
+          selectedTheme = 'warm';
         let selectedFont = localStorage.getItem('sis-ui-font') || 'editorial';
         let pollTimer = null;
         let authState = null;
@@ -963,13 +1319,16 @@
         const pageDesc = document.getElementById('pageDesc');
         const returningNotice = document.getElementById('returningNotice');
         const btnReconfigureSetup = document.getElementById('btnReconfigureSetup');
-        const pills = [1, 2, 3].map((i) => document.getElementById(`stepPill${i}`));
-        const panels = [1, 2, 3].map((i) => document.getElementById(`stepPanel${i}`));
+        const pills = [1, 2, 3, 4].map((i) => document.getElementById(`stepPill${i}`));
+        const panels = [1, 2, 3, 4].map((i) => document.getElementById(`stepPanel${i}`));
         const btnNext1 = document.getElementById('btnNext1');
         const btnNext2 = document.getElementById('btnNext2');
+        const btnNext3 = document.getElementById('btnNext3');
         const btnBack2 = document.getElementById('btnBack2');
         const btnBack3 = document.getElementById('btnBack3');
+        const btnBack4 = document.getElementById('btnBack4');
         const btnConnectBrowser = document.getElementById('btnConnectBrowser');
+        const btnLocalMode = document.getElementById('btnLocalMode');
         const btnConnectText = document.getElementById('btnConnectText');
         const btnEnterWorkspace = document.getElementById('btnEnterWorkspace');
         const statusBanner = document.getElementById('statusBanner');
@@ -977,6 +1336,137 @@
         const statusText = document.getElementById('statusText');
         const authExternalLink = document.getElementById('authExternalLink');
         const authExternalLinkWrapper = document.getElementById('authExternalLinkWrapper');
+
+        // Step 3 Model Setup Elements
+        const setupBaseUrl = document.getElementById('setupBaseUrl');
+        const setupModel = document.getElementById('setupModel');
+        const setupApiKey = document.getElementById('setupApiKey');
+        const btnToggleSetupKey = document.getElementById('btnToggleSetupKey');
+        const btnTestSetupModel = document.getElementById('btnTestSetupModel');
+        const setupModelStatusBadge = document.getElementById('setupModelStatusBadge');
+
+        const SETUP_PRESETS = {
+          openrouter: {
+            name: 'OpenRouter Primary',
+            baseURL: 'https://openrouter.ai/api/v1',
+            model: 'openai/gpt-4o-mini',
+          },
+          openai: {
+            name: 'OpenAI Direct',
+            baseURL: 'https://api.openai.com/v1',
+            model: 'gpt-4o',
+          },
+          ollama: {
+            name: 'Ollama Local',
+            baseURL: 'http://127.0.0.1:11434/v1',
+            model: 'llama3.2',
+          },
+          custom: {
+            name: 'Custom Gateway',
+            baseURL: '',
+            model: '',
+          },
+        };
+
+        // Presets handler
+        document.querySelectorAll('[data-setup-preset]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            document
+              .querySelectorAll('[data-setup-preset]')
+              .forEach((b) => b.classList.remove('is-active'));
+            btn.classList.add('is-active');
+            const pKey = btn.dataset.setupPreset;
+            const p = SETUP_PRESETS[pKey];
+            if (p) {
+              if (p.baseURL) setupBaseUrl.value = p.baseURL;
+              if (p.model) setupModel.value = p.model;
+            }
+          });
+        });
+
+        // Key visibility toggle
+        btnToggleSetupKey?.addEventListener('click', () => {
+          const isPass = setupApiKey.type === 'password';
+          setupApiKey.type = isPass ? 'text' : 'password';
+          btnToggleSetupKey.textContent = isPass ? 'Hide' : 'Show';
+        });
+
+        // Test connection
+        btnTestSetupModel?.addEventListener('click', async () => {
+          const baseURL = setupBaseUrl.value.trim();
+          const model = setupModel.value.trim();
+          const apiKey = setupApiKey.value.trim();
+
+          if (!baseURL || !model) {
+            setupModelStatusBadge.className = 'sis-test-badge is-error';
+            setupModelStatusBadge.style.display = 'inline-flex';
+            setupModelStatusBadge.textContent = 'Enter Base URL and Model ID';
+            return;
+          }
+
+          setupModelStatusBadge.className = 'sis-test-badge is-testing';
+          setupModelStatusBadge.style.display = 'inline-flex';
+          setupModelStatusBadge.textContent = 'Testing connection...';
+          btnTestSetupModel.disabled = true;
+
+          try {
+            const start = Date.now();
+            const res = await fetch('/api/config/validate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ baseURL, model, apiKey }),
+            });
+            const data = await res.json();
+            const latency = Date.now() - start;
+
+            if (data.success) {
+              setupModelStatusBadge.className = 'sis-test-badge is-online';
+              setupModelStatusBadge.textContent = `✓ Online (${latency}ms) · Model verified`;
+            } else {
+              setupModelStatusBadge.className = 'sis-test-badge is-error';
+              setupModelStatusBadge.textContent = `✗ ${data.error?.slice(0, 32) || 'Connection failed'}`;
+            }
+          } catch (err) {
+            setupModelStatusBadge.className = 'sis-test-badge is-error';
+            setupModelStatusBadge.textContent = `✗ ${err.message?.slice(0, 32) || 'Network error'}`;
+          } finally {
+            btnTestSetupModel.disabled = false;
+          }
+        });
+
+        // Save selected provider profile
+        async function saveSetupModel() {
+          const baseURL = setupBaseUrl.value.trim();
+          const model = setupModel.value.trim();
+          const apiKey = setupApiKey.value.trim();
+
+          if (baseURL && model) {
+            try {
+              let activePresetName = 'Default Model';
+              const activePreset = document.querySelector('[data-setup-preset].is-active');
+              if (activePreset) {
+                const key = activePreset.dataset.setupPreset;
+                activePresetName = SETUP_PRESETS[key]?.name || activePresetName;
+              }
+
+              await fetch('/api/provider/profiles', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  name: activePresetName,
+                  baseURL,
+                  model,
+                  apiKey,
+                  activate: true,
+                }),
+              });
+              localStorage.setItem('sis_default_model', model);
+              localStorage.setItem('sis_default_base_url', baseURL);
+            } catch (err) {
+              console.warn('[Setup] Provider profile save notice:', err.message);
+            }
+          }
+        }
 
         // Apply initial preferences
         function applyTheme(theme) {
@@ -1021,6 +1511,7 @@
             const stepNum = idx + 1;
             p.classList.toggle('is-active', stepNum === step);
             p.classList.toggle('is-completed', stepNum < step);
+            p.setAttribute('aria-current', stepNum === step ? 'step' : 'false');
           });
           panels.forEach((panel, idx) => {
             panel.classList.toggle('is-active', idx + 1 === step);
@@ -1035,22 +1526,58 @@
         btnBack2.addEventListener('click', () => goToStep(1));
         btnNext2.addEventListener('click', () => goToStep(3));
         btnBack3.addEventListener('click', () => goToStep(2));
+        btnNext3.addEventListener('click', async () => {
+          btnNext3.disabled = true;
+          await saveSetupModel();
+          localStorage.setItem('sis_setup_completed', 'true');
+          await initiateLocalAuth();
+          window.location.replace('/');
+        });
+        btnBack4.addEventListener('click', () => goToStep(3));
+
+        const btnEnterWorkspaceDirect = document.getElementById('btnEnterWorkspaceDirect');
+        if (btnEnterWorkspaceDirect) {
+          btnEnterWorkspaceDirect.addEventListener('click', async () => {
+            btnEnterWorkspaceDirect.disabled = true;
+            localStorage.setItem('sis_setup_completed', 'true');
+            await saveSetupModel();
+            await initiateLocalAuth();
+            window.location.replace('/');
+          });
+        }
 
         if (btnReconfigureSetup) {
           btnReconfigureSetup.addEventListener('click', () => {
             goToStep(1);
             if (pageTitle) pageTitle.innerHTML = 'Make Supergence <em>yours</em>';
-            if (pageDesc) pageDesc.textContent = 'Choose a palette and font, then connect an activated Sleek account to open your workspace.';
+            if (pageDesc)
+              pageDesc.textContent =
+                'Choose a palette, font, and default AI model to personalize your workspace.';
             if (returningNotice) returningNotice.style.display = 'none';
           });
         }
 
         function showReturningMode() {
-          goToStep(3);
-          if (pageTitle) pageTitle.innerHTML = 'Welcome back to <em>Supergence</em>';
-          if (pageDesc) pageDesc.textContent = 'Connect your Sleek account to open your workspace.';
-          if (returningNotice) returningNotice.style.display = 'flex';
+          initiateLocalAuth()
+            .then(() => {
+              window.location.replace('/');
+            })
+            .catch(() => {
+              window.location.replace('/');
+            });
         }
+
+        // Fetch current active model profile to pre-fill Step 3
+        fetch('/api/provider/profiles')
+          .then((r) => r.json())
+          .then((data) => {
+            if (data?.active) {
+              if (setupBaseUrl && data.active.baseURL) setupBaseUrl.value = data.active.baseURL;
+              if (setupModel && data.active.model) setupModel.value = data.active.model;
+              localStorage.setItem('sis_default_model', data.active.model);
+            }
+          })
+          .catch(() => {});
 
         // Step 3: Sleek Account Connect via Browser
         async function initiateSleekAuth() {
@@ -1059,7 +1586,9 @@
           statusBanner.className = 'status-banner is-loading';
           statusBanner.style.display = 'flex';
           if (typeof window.renderModernLoader === 'function') {
-            statusBanner.innerHTML = window.renderModernLoader('Connecting to Sleek...', { size: 'sm' });
+            statusBanner.innerHTML = window.renderModernLoader('Connecting to Sleek...', {
+              size: 'sm',
+            });
           } else {
             statusSpinner.style.display = 'block';
             statusText.textContent = 'Preparing secure browser authentication...';
@@ -1093,14 +1622,18 @@
             const popup = window.open(authUrl, '_blank');
             if (!popup) {
               if (typeof window.renderModernLoader === 'function') {
-                statusBanner.innerHTML = '<span style="color:var(--shell-warning);">Popup blocked. Please use the link below to authorize in your browser.</span>';
+                statusBanner.innerHTML =
+                  '<span style="color:var(--shell-warning);">Popup blocked. Please use the link below to authorize in your browser.</span>';
               } else {
                 statusText.textContent =
                   'Popup blocked. Please click the link below to authenticate in your browser.';
               }
             } else {
               if (typeof window.renderModernLoader === 'function') {
-                statusBanner.innerHTML = window.renderModernLoader('Waiting for browser confirmation...', { size: 'sm' });
+                statusBanner.innerHTML = window.renderModernLoader(
+                  'Waiting for browser confirmation...',
+                  { size: 'sm' },
+                );
               } else {
                 statusText.textContent =
                   'Browser tab opened! Please authorize Supergence in your browser...';
@@ -1113,7 +1646,7 @@
             startPolling(authState);
           } catch (err) {
             statusBanner.className = 'status-banner is-error';
-            statusBanner.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>${err.message || 'Connection failed.'}</span>`;
+            statusBanner.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>${err.message || 'Connection failed.'} — You can click "Continue in Local Offline Mode" below.</span>`;
             btnConnectBrowser.disabled = false;
             btnConnectText.textContent = 'Try Again';
           }
@@ -1153,11 +1686,13 @@
           }, 1500);
         }
 
-        function onAuthSuccess(user) {
+        async function onAuthSuccess(user) {
           localStorage.setItem('sis_setup_completed', 'true');
+          await saveSetupModel();
           statusBanner.className = 'status-banner is-success';
           statusBanner.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span>Welcome, ${user.sleekId}! Supergence is ready.</span>`;
           btnConnectBrowser.style.display = 'none';
+          if (btnLocalMode) btnLocalMode.style.display = 'none';
           authExternalLinkWrapper.style.display = 'none';
           btnEnterWorkspace.style.display = 'inline-flex';
           btnEnterWorkspace.focus();
@@ -1172,6 +1707,46 @@
 
         btnConnectBrowser.addEventListener('click', initiateSleekAuth);
 
+        async function initiateLocalAuth() {
+          if (btnLocalMode) btnLocalMode.disabled = true;
+          statusBanner.className = 'status-banner is-loading';
+          statusBanner.style.display = 'flex';
+          statusBanner.innerHTML = '<span>Activating local developer session...</span>';
+          try {
+            const res = await fetch('/api/silisleek/auth', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ local: true }),
+            });
+            const data = await res.json();
+            if (data.status === 'complete' && data.user) {
+              if (btnLocalMode) btnLocalMode.style.display = 'none';
+              return onAuthSuccess(data.user);
+            }
+            throw new Error(data.message || 'Failed to start local session.');
+          } catch (err) {
+            statusBanner.className = 'status-banner is-error';
+            statusBanner.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>${err.message || 'Local activation failed.'}</span>`;
+            if (btnLocalMode) btnLocalMode.disabled = false;
+          }
+        }
+
+        if (btnLocalMode) {
+          btnLocalMode.addEventListener('click', initiateLocalAuth);
+        }
+
+        // Auto-enter workspace if setup was already completed
+        if (isSetupCompleted && !forceSetup) {
+          initiateLocalAuth()
+            .then(() => {
+              window.location.replace('/');
+            })
+            .catch(() => {
+              window.location.replace('/');
+            });
+          return;
+        }
+
         // Pre-check if already signed in
         fetch('/api/silisleek/session')
           .then((r) => r.json())
@@ -1182,21 +1757,18 @@
               data.user.supergenceActivated === true
             ) {
               if (isSetupCompleted) {
-                // Returning user already authenticated -> directly enter workspace!
                 window.location.replace('/');
                 return;
               }
               btnConnectText.textContent = `Connected as ${data.user.sleekId}`;
               statusBanner.className = 'status-banner is-success';
               statusBanner.style.display = 'flex';
-              statusBanner.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span>Connected as ${data.user.sleekId}. Supergence activation confirmed.</span>`;
-              btnEnterWorkspace.style.display = 'inline-flex';
-              btnEnterWorkspace.addEventListener('click', () => {
-                localStorage.setItem('sis_setup_completed', 'true');
-                window.location.replace('/');
-              });
+              statusBanner.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span>Connected as ${data.user.sleekId}. Ready.</span>`;
+              if (btnEnterWorkspaceDirect) {
+                btnEnterWorkspaceDirect.style.display = 'inline-flex';
+                btnEnterWorkspaceDirect.focus();
+              }
             } else if (isSetupCompleted) {
-              // Returning user who already completed setup before -> skip to Step 3
               showReturningMode();
             }
           })

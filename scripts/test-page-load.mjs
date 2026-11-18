@@ -10,8 +10,8 @@ async function test() {
       '--disable-extensions',
       '--no-proxy-server',
       '--disable-background-networking',
-      '--disable-default-apps'
-    ]
+      '--disable-default-apps',
+    ],
   });
 
   console.log('Creating context...');
@@ -32,7 +32,7 @@ async function test() {
   console.log('Done!');
 }
 
-test().catch(e => {
+test().catch((e) => {
   console.error('Test error:', e);
   process.exit(1);
 });

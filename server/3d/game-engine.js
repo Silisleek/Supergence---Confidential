@@ -1,4 +1,4 @@
-import { currentWorkspace } from '../services/conversationWorkspaces.js';
+import { workspaceOutputRoot } from '../services/conversationWorkspaces.js';
 // SIS 1.0 — Studio 3D Game Engine & Autonomous Game Architect
 // Generates task-specific Three.js HTML and reports observed runtime checks.
 // Equipped with player controllers (WASD/arrows/pointer/touch), physics, enemy AI,
@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename);
 const sharedWorkspaceRoot = process.env.SIS_WORKSPACE_DIR
   ? path.resolve(process.env.SIS_WORKSPACE_DIR)
   : path.resolve(__dirname, '../../workspace');
-const workspaceRoot = () => currentWorkspace()?.root || sharedWorkspaceRoot;
+const workspaceRoot = () => workspaceOutputRoot(sharedWorkspaceRoot);
 
 export class Studio3DGameEngine {
   constructor() {

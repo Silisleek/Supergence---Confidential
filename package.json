@@ -9,6 +9,9 @@
   },
   "scripts": {
     "start": "node bin/supergence.mjs",
+    "autostart:status": "node bin/supergence.mjs --status-autostart",
+    "autostart:enable": "node bin/supergence.mjs --install-autostart",
+    "autostart:disable": "node bin/supergence.mjs --uninstall-autostart",
     "dev": "node scripts/dev.mjs",
     "server": "node server/index.js",
     "client": "vite --host 127.0.0.1",
@@ -49,6 +52,8 @@
     "test:quality": "node scripts/benchmarks/creative-quality.mjs"
   },
   "dependencies": {
+    "@vscode/tree-sitter-wasm": "0.3.1",
+    "ace-builds": "1.45.2",
     "acorn": "8.19.0",
     "cheerio": "^1.0.0",
     "chokidar": "^4.0.0",

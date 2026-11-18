@@ -1,9 +1,11 @@
 import workspace from './manager.js';
 import { workspaceEnvironment } from './environment.js';
+import { currentWorkspace } from '../services/conversationWorkspaces.js';
 
 export function creationWorkflow() {
   return `LOCAL CREATION WORKFLOW
-Active chat workspace: ${workspace.root}. This chat has its own persistent directory. Relative file paths and omitted command cwd use this directory; create all new deliverables here unless the user explicitly supplies another destination. Read existing projects outside it using their actual absolute paths; do not restart or relocate existing work. For substantial new work, create_workspace_project supplies source, assets, renders and reports folders. Respect explicit delivery paths.
+Chat workspace: ${currentWorkspace()?.root || workspace.root}.
+Active project: ${workspace.root}. Keep a deliverable together. Use project-relative paths and meaningful folders such as src/, assets/, tests/, outputs/ and reports/ when the work needs them. Keep entry points, manifests and related files at the locations required by their runtime. Use projects/<name>/ from the chat workspace for an independent named project, and set command cwd to that directory when working on it. Keep editing existing files at their actual paths. Respect delivery paths supplied by the user.
 Observed execution environment: ${JSON.stringify(workspaceEnvironment(workspace.root))}
 Reuse these observed dependency paths instead of repeatedly searching for node_modules or probing versions. On Windows run_command uses cmd.exe, not PowerShell or bash: ls/head and semicolon command chains are not supported. Use the tool cwd argument and one focused command; invoke PowerShell explicitly only when needed. New projects can resolve the existing parent dependencies.
 render_graphic saves original SVG and PNG. generate_texture saves local procedural albedo/normal/roughness maps (64–2048px); use actual returned URLs. These are vector/procedural capabilities, not photographic generation. Match the requested subject.

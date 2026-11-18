@@ -312,8 +312,7 @@
     if (tool) {
       ensureSuperboxPane();
       renderToolProposalCard(tool);
-      toggleSuperbox(true);
-      switchTab('tools');
+      window.SupergenceNotifications?.refresh();
     }
   });
 
@@ -322,8 +321,7 @@
     if (tool) {
       ensureSuperboxPane();
       renderToolProposalCard(tool);
-      toggleSuperbox(true);
-      switchTab('tools');
+      window.SupergenceNotifications?.refresh();
     }
   });
 
@@ -444,8 +442,14 @@
     const widgetsListEl = superboxPane.querySelector('#superboxActiveWidgetsList');
 
     if (typeof window.renderModernLoader === 'function') {
-      if (toolsListEl) toolsListEl.innerHTML = window.renderModernLoader('Checking registered tools...', { size: 'sm' });
-      if (widgetsListEl) widgetsListEl.innerHTML = window.renderModernLoader('Checking active widgets...', { size: 'sm' });
+      if (toolsListEl)
+        toolsListEl.innerHTML = window.renderModernLoader('Checking registered tools...', {
+          size: 'sm',
+        });
+      if (widgetsListEl)
+        widgetsListEl.innerHTML = window.renderModernLoader('Checking active widgets...', {
+          size: 'sm',
+        });
     }
 
     // Load dynamic tools from Ada-SI

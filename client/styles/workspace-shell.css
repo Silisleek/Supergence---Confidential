@@ -292,6 +292,17 @@ body.sis-workspace-ui {
   background: var(--shell-panel);
   min-height: 0;
 }
+.sis-workspace-ui .workspace-sidebar {
+  position: absolute;
+  inset: 0 0 0 auto;
+  z-index: 30;
+  width: min(290px, 100%);
+  overflow-y: auto;
+  background: var(--shell-panel);
+}
+.sis-workspace-ui .workspace-sidebar.collapsed {
+  display: none;
+}
 .sis-workspace-ui .workspace-conversations-sidebar {
   width: var(--shell-history);
   min-width: var(--shell-history);
@@ -477,6 +488,7 @@ body.sis-workspace-ui {
   min-width: 0;
 }
 .sis-workspace-ui .sidebar-conv-item .conv-title {
+  display: block;
   font-size: 13px;
   font-weight: 550;
   line-height: 1.35;
@@ -1180,7 +1192,7 @@ body.sis-workspace-ui {
   height: 18px;
   border: 0;
   border-radius: 12px;
-  background: var(--shell-selected);
+  background: #414146;
   flex-shrink: 0;
   cursor: pointer;
 }
@@ -1207,18 +1219,38 @@ body.sis-workspace-ui {
 /* Retain the existing artifact and inspection views while matching the shell. */
 .sis-workspace-ui
   :is(.create-agent-modal-overlay, .workspace-tree-modal-overlay, .agent-browsers-modal-overlay) {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: none;
+  place-items: center;
+  overflow: auto;
+  padding: 16px;
   background: var(--shell-backdrop);
+}
+
+.sis-workspace-ui
+  :is(.create-agent-modal-overlay, .workspace-tree-modal-overlay, .agent-browsers-modal-overlay).active {
+  display: grid;
 }
 
 .sis-workspace-ui .create-agent-modal-card,
 .sis-workspace-ui .agent-browsers-modal-card,
 .sis-workspace-ui .workspace-tree-modal-card,
 .sis-workspace-ui .fifty-modal-card {
+  box-sizing: border-box;
+  width: min(100%, 64rem);
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  padding: 20px;
   background: var(--shell-panel);
   color: var(--shell-text);
   border: 0;
   border-radius: 20px;
   box-shadow: var(--shell-shadow);
+}
+.sis-workspace-ui .create-agent-modal-card {
+  max-width: 34rem;
 }
 .sis-workspace-ui
   :is(.modal-subtitle, .modal-close-btn, .tree-tab-btn, .fifty-card-desc, .fifty-status-banner) {
@@ -1314,7 +1346,22 @@ body.sis-workspace-ui {
   background: var(--shell-surface);
   border-color: var(--shell-border);
 }
+.sis-workspace-ui .drawer-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgb(0 0 0 / 60%);
+}
+.sis-workspace-ui .drawer-overlay.active {
+  display: block;
+}
 .sis-workspace-ui .workspace-history-drawer {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 10001;
+  width: min(390px, 90vw);
+  overflow-y: auto;
   background: var(--shell-panel);
   border-color: var(--shell-border);
   box-shadow: var(--shell-shadow);
@@ -2366,7 +2413,9 @@ body.sis-workspace-ui {
   border-radius: 20px !important;
   background: #141419 !important;
   border: 1px solid rgba(212, 175, 55, 0.28) !important;
-  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.55), 0 0 1px rgba(212, 175, 55, 0.15) !important;
+  box-shadow:
+    0 10px 36px rgba(0, 0, 0, 0.55),
+    0 0 1px rgba(212, 175, 55, 0.15) !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: space-between !important;
@@ -2374,12 +2423,16 @@ body.sis-workspace-ui {
   gap: 8px !important;
   position: relative !important;
   box-sizing: border-box !important;
-  transition: border-color 180ms ease, box-shadow 180ms ease !important;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease !important;
 }
 
 .sis-workspace-ui .workspace-composer-inner:focus-within {
   border-color: rgba(212, 175, 55, 0.5) !important;
-  box-shadow: 0 12px 42px rgba(0, 0, 0, 0.65), 0 0 12px rgba(212, 175, 55, 0.2) !important;
+  box-shadow:
+    0 12px 42px rgba(0, 0, 0, 0.65),
+    0 0 12px rgba(212, 175, 55, 0.2) !important;
 }
 
 .sis-workspace-ui .workspace-textarea {
@@ -2429,7 +2482,9 @@ body.sis-workspace-ui {
   justify-content: center !important;
   cursor: pointer !important;
   padding: 0 !important;
-  transition: color 140ms ease, transform 140ms ease !important;
+  transition:
+    color 140ms ease,
+    transform 140ms ease !important;
 }
 
 .sis-workspace-ui #composerToolsButton:hover {
@@ -2500,7 +2555,9 @@ body.sis-workspace-ui {
   justify-content: center !important;
   cursor: pointer !important;
   padding: 0 !important;
-  transition: color 140ms ease, transform 140ms ease !important;
+  transition:
+    color 140ms ease,
+    transform 140ms ease !important;
 }
 
 .sis-workspace-ui #sbt-btn-dictate:hover {
@@ -2525,7 +2582,10 @@ body.sis-workspace-ui {
   justify-content: center !important;
   cursor: pointer !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
-  transition: transform 140ms ease, background 140ms ease, color 140ms ease !important;
+  transition:
+    transform 140ms ease,
+    background 140ms ease,
+    color 140ms ease !important;
 }
 
 .sis-workspace-ui .workspace-send-btn:hover {

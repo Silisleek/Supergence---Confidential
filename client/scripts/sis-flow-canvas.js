@@ -23,76 +23,15 @@ class SisFlowCanvas {
     this.dragOffsetX = 0;
     this.dragOffsetY = 0;
 
-    // Nodes state
-    this.nodes = [
-      {
-        id: 'node-market-research',
-        type: 'agent',
-        title: 'Market Research Agent',
-        subtitle: 'Market & Industry Research',
-        status: 'analyzing',
-        statusText: 'Analyzing',
-        isActiveSapphire: true,
-        x: 80,
-        y: 180,
-        chips: ['✔ Analyzing market trends', '✻ 124 data points processed'],
-        progress: 75,
-        tokenUsage: '12.4K',
-        model: 'GPT-4o ▾',
-      },
-      {
-        id: 'node-marketing',
-        type: 'agent',
-        title: 'Marketing Agent',
-        subtitle: 'GTM & Campaign Launch',
-        status: 'active',
-        statusText: 'Active',
-        isActiveSapphire: false,
-        x: 960,
-        y: 150,
-        chips: ['✔ Channel mix modeling'],
-        confidence: '97%',
-        tokenUsage: '6.1K',
-        model: 'GPT-4o ▾',
-      },
-      {
-        id: 'node-legal',
-        type: 'agent',
-        title: 'Legal Compliance Agent',
-        subtitle: 'EU AI Act & Data Sovereignty',
-        status: 'progress',
-        statusText: 'In progress',
-        isActiveSapphire: false,
-        x: 950,
-        y: 490,
-        chips: ['✔ European AI Act alignment', '✻ Regulatory risk scan'],
-        progress: 45,
-        tokenUsage: '8.2K',
-        model: 'Opus 4.6 ▾',
-      },
-      {
-        id: 'node-product',
-        type: 'agent',
-        title: 'Product Strategy Agent',
-        subtitle: 'Localization & Architecture',
-        status: 'progress',
-        statusText: 'In progress',
-        isActiveSapphire: false,
-        x: 90,
-        y: 560,
-        chips: ['✔ Multi-lingual pipeline', '✻ Latency benchmark'],
-        milestones: '3 of 5 active',
-        tokenUsage: '9.8K',
-        model: 'Opus 4.6 ▾',
-      },
-    ];
+    // Nodes state - dynamically populated from live team roster
+    this.nodes = [];
 
     this.coordinator = {
       x: 430,
       y: 310,
-      text: 'Plan the successful launch of our AI product in the European market. Develop a complete strategy for our AI platform across Europe',
-      status: 'Dessn is thinking...',
-      activeCount: '6 active agent',
+      text: 'Supergence Autonomous Swarm: Enter task objective...',
+      status: 'Connecting...',
+      activeCount: '0 agents',
     };
   }
 
@@ -108,6 +47,98 @@ class SisFlowCanvas {
     setTimeout(() => {
       this.centerView();
     }, 100);
+
+    // Hydrate live swarm roster
+    this.loadLiveAgents();
+  }
+
+  async loadLiveAgents() {
+    try {
+      const res = await fetch('/api/agents/team');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data && Array.isArray(data.agents) && data.agents.length > 0) {
+        this.populateFromAgents(data.agents);
+        return;
+      }
+    } catch (err) {
+      console.warn('[SisFlowCanvas] Live agent roster notice:', err.message);
+    }
+    this.coordinator.status = 'Ready';
+    this.coordinator.activeCount = '0 active agents';
+    this.updateCoordinatorView();
+  }
+
+  populateFromAgents(agents) {
+    const slotOffsets = [
+      { x: 80, y: 180 },
+      { x: 960, y: 150 },
+      { x: 950, y: 490 },
+      { x: 90, y: 560 },
+      { x: 500, y: 80 },
+      { x: 500, y: 640 },
+    ];
+
+    this.nodes = agents.map((agent, idx) => {
+      const offset = slotOffsets[idx % slotOffsets.length];
+      const slotNum = Math.floor(idx / slotOffsets.length);
+      const posX = offset.x + slotNum * 30;
+      const posY = offset.y + slotNum * 30;
+
+      const chips = [];
+      if (agent.skills && Array.isArray(agent.skills)) {
+        agent.skills.slice(0, 2).forEach((s) => chips.push(`✔ ${s}`));
+      } else if (agent.capabilities && Array.isArray(agent.capabilities)) {
+        agent.capabilities.slice(0, 2).forEach((c) => chips.push(`✔ ${c}`));
+      }
+
+      return {
+        id: `node-${agent.id || idx}`,
+        type: 'agent',
+        title: agent.name || 'Agent',
+        subtitle: agent.role || agent.description || 'Specialized Agent',
+        status: agent.status || 'active',
+        statusText: agent.statusText || (agent.status === 'active' ? 'Active' : 'Idle'),
+        isActiveSapphire: idx === 0,
+        x: posX,
+        y: posY,
+        chips,
+        progress: typeof agent.progress === 'number' ? agent.progress : undefined,
+        tokenUsage: agent.tokenUsage ? String(agent.tokenUsage) : undefined,
+        model: agent.model ? `${agent.model} ▾` : 'Auto ▾',
+      };
+    });
+
+    this.coordinator.status = 'Active Swarm';
+    this.coordinator.activeCount = `${agents.length} active agent${agents.length === 1 ? '' : 's'}`;
+    this.updateCoordinatorView();
+    this.refreshNodesHtml();
+  }
+
+  updateCoordinatorView() {
+    const badge = this.container?.querySelector('.sis-flow-active-badge');
+    const label = document.getElementById('sisFlowThinkingLabel');
+    if (badge) badge.textContent = this.coordinator.activeCount;
+    if (label) label.textContent = this.coordinator.status;
+  }
+
+  refreshNodesHtml() {
+    if (!this.nodesLayer) return;
+    const existingSatelliteNodes = this.nodesLayer.querySelectorAll(
+      '.sis-flow-node-item:not(#sisFlowCoordinatorNode)',
+    );
+    existingSatelliteNodes.forEach((n) => n.remove());
+
+    this.nodes.forEach((node) => {
+      const div = document.createElement('div');
+      div.innerHTML = this.renderAgentCardHtml(node);
+      const child = div.firstElementChild;
+      if (child) {
+        this.nodesLayer.appendChild(child);
+        this.setupNodeEvents(child);
+      }
+    });
+    this.drawWires();
   }
 
   renderSurface() {
@@ -487,6 +518,10 @@ class SisFlowCanvas {
     const btnOpenSettings = document.getElementById('btnFlowOpenSettings');
     if (btnOpenSettings) {
       btnOpenSettings.addEventListener('click', () => {
+        if (window.openStylesWindow) {
+          window.openStylesWindow();
+          return;
+        }
         const modal = document.getElementById('sisSettingsModal');
         if (modal) {
           modal.classList.add('is-open');
@@ -640,19 +675,7 @@ class SisFlowCanvas {
     const text = promptEl ? promptEl.innerText.trim() : this.coordinator.text;
 
     if (thinkingEl) {
-      thinkingEl.textContent = 'Supergence AREM Swarm synthesizing...';
-    }
-
-    // Animate market research node
-    const marketNode = this.nodes.find((n) => n.id === 'node-market-research');
-    if (marketNode) {
-      marketNode.progress = Math.min(100, marketNode.progress + 15);
-      marketNode.chips.push(`⚡ Synchronized invariant with Opus 4.6`);
-      const cardEl = document.getElementById(marketNode.id);
-      if (cardEl) {
-        cardEl.outerHTML = this.renderAgentCardHtml(marketNode);
-        this.setupNodeEvents(document.getElementById(marketNode.id));
-      }
+      thinkingEl.textContent = 'Supergence Swarm synthesizing...';
     }
 
     this.drawWires();
@@ -664,9 +687,9 @@ class SisFlowCanvas {
 
     setTimeout(() => {
       if (thinkingEl) {
-        thinkingEl.textContent = 'Complete. 4 agents synchronized.';
+        thinkingEl.textContent = `Swarm engaged (${this.nodes.length} agent${this.nodes.length === 1 ? '' : 's'})`;
       }
-    }, 2000);
+    }, 1500);
   }
 
   addCustomNode() {
@@ -674,17 +697,15 @@ class SisFlowCanvas {
     const newNode = {
       id,
       type: 'agent',
-      title: 'Neural Synthesizer',
-      subtitle: 'Cognitive Swarm Worker',
+      title: 'Custom Agent',
+      subtitle: 'Dynamic Swarm Specialist',
       status: 'active',
       statusText: 'Active',
       isActiveSapphire: false,
       x: this.coordinator.x + 100,
       y: this.coordinator.y + 320,
-      chips: ['✔ Task allocated', '✻ AREM Memory active'],
-      progress: 60,
-      tokenUsage: '4.2K',
-      model: 'Opus 4.6 ▾',
+      chips: ['✔ Live node initialized'],
+      model: 'Auto ▾',
     };
 
     this.nodes.push(newNode);
@@ -693,6 +714,8 @@ class SisFlowCanvas {
     const newChild = nodeEl.firstElementChild;
     this.nodesLayer.appendChild(newChild);
     this.setupNodeEvents(newChild);
+    this.coordinator.activeCount = `${this.nodes.length} active agent${this.nodes.length === 1 ? '' : 's'}`;
+    this.updateCoordinatorView();
     this.drawWires();
   }
 

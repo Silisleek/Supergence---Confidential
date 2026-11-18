@@ -53,6 +53,7 @@ class BrainLifecycle extends EventEmitter {
 
     // Heartbeat every 3 seconds to manage waking transitions and sleep cycles
     this._heartbeatInterval = setInterval(() => this._evaluateTransition(), 3000);
+    this._heartbeatInterval?.unref?.();
 
     this.emit('state-change', {
       from: null,

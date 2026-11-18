@@ -14,7 +14,7 @@ Download the standalone executable for your operating system:
 - **macOS**: Download `Supergence-1.0.0.dmg`. Drag to Applications and open.
 - **Linux**: Download `Supergence-1.0.0.AppImage` (`chmod +x && ./Supergence-1.0.0.AppImage`) or `.deb`.
 
-Once opened, click **"Connect with Sleek"** to authorize in your browser and pick any model (local Ollama, OpenRouter, OpenAI, or Gemini) to begin.
+Once opened, select **"Continue in Local Offline Mode"** to start immediately without any external accounts, or optionally choose **"Connect with Sleek"** to link your Sleek ID. Pick any model provider (local Ollama, OpenRouter, OpenAI, or Gemini) to begin.
 
 ---
 
@@ -54,9 +54,9 @@ npm run server
 npm run client
 ```
 
-Open the backend's printed session link before using the frontend, then select **Continue with Sleek**. The desktop app establishes the local connection automatically. Sign in on Silisleek in your browser and approve the connection; Supergence does not receive your password. A connection to Silisleek is required to sign in.
+Open the backend's printed session link before using the frontend, then select **Continue in Local Offline Mode** (recommended for standalone and local development) or **Continue with Sleek**. The desktop app establishes the local connection automatically. Local mode operates 100% offline without external services.
 
-The local connection and Sleek sign-in are both required. The identity session expires after eight hours or on sign-out. Treat session links and identity cookies as private credentials.
+The identity session expires after eight hours or on sign-out. Treat session links and identity cookies as private credentials.
 
 ---
 
@@ -78,6 +78,14 @@ PORT=3001
 - **`FALLBACK_MODEL`**: Optional secondary model ID to fallback to if the primary model is busy or unavailable.
 - **`PORT`**: Port for the Express server (defaults to 3001; automatically shifts if the port is busy).
 - **`SIS_FIGCRAFT_CLI`**: Optional absolute path to a separately installed FigCraft CLI executable. The CLI is not included in this repository or the packaged app; FigCraft tools are unavailable unless this path is configured or a CLI is installed at `integrations/figcraft/bin/figcraft-cli.exe`.
+
+### Arem sleep
+
+In a saved chat, open **Add files and context → Conversation memory → Review memory**. Arem sends bounded excerpts of completed turns from that chat to its configured model gateway. It checks proposed quotes against the source, rehearses when they would apply, and saves accepted notes for retrieval in that conversation. A new chat turn interrupts a review, and the pending batch can be retried.
+
+AREM sleep reviews saved conversations during idle time by default, using the selected chat provider. Set `ENABLE_AREM_SLEEP=false` to disable automatic review. To use a separate AREM gateway, configure `AREM_BASE_URL`, `AREM_MODEL`, and, if required, `AREM_API_KEY`.
+
+Arem adapts Google's consolidation and rehearsal stages to Anthropic's transcript-grounded agent memory. It stores accepted notes in SQLite and uses the gateway for inference. [Google Sleep paper](https://arxiv.org/abs/2606.03979) · [Anthropic agent memory](https://www.anthropic.com/research/components-of-agent-memory)
 
 Vault data and its installation key are stored in the selected data directory under `security/`.
 Back up that key together with encrypted records: losing it makes those records unreadable. The

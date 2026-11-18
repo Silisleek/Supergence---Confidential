@@ -25,6 +25,10 @@ export class TddHarness {
 
     // Step 1: Verify reproduction test fails first (assert Red)
     const initialRun = await this.sandbox.executeTest(testFilePath);
+    if (initialRun.executed === false || initialRun.timedOut || initialRun.exitCode == null) {
+      return { success: false, phase: 'RED_EXECUTION_UNAVAILABLE', error: initialRun.stderr };
+    }
+
     if (this.logger) {
       this.logger.logStep({
         state: { prompt, testFilePath, phase: 'RED_VERIFICATION' },
@@ -37,6 +41,18 @@ export class TddHarness {
         reward: initialRun.exitCode !== 0 ? 1.0 : 0.0,
         metadata: { phase: 'RED_PHASE', expectedFailure: true },
       });
+    }
+
+    if (
+      initialRun.testSummary &&
+      initialRun.testSummary.failed === 0 &&
+      initialRun.testSummary.passed === 0
+    ) {
+      return {
+        success: false,
+        phase: 'RED_NO_ASSERTIONS',
+        error: 'The reproduction suite ran no active tests.',
+      };
     }
 
     if (initialRun.exitCode === 0) {
@@ -65,6 +81,14 @@ export class TddHarness {
 
     // Step 3: Verify reproduction test passes (assert Green)
     const postPatchRun = await this.sandbox.executeTest(testFilePath);
+    if (postPatchRun.executed === false || postPatchRun.timedOut || postPatchRun.exitCode == null) {
+      return {
+        success: false,
+        phase: 'GREEN_EXECUTION_UNAVAILABLE',
+        error: postPatchRun.stderr,
+        runs: { initialRun, postPatchRun },
+      };
+    }
     if (this.logger) {
       this.logger.logStep({
         state: { prompt, testFilePath, phase: 'GREEN_VERIFICATION' },
@@ -79,7 +103,7 @@ export class TddHarness {
       });
     }
 
-    if (postPatchRun.exitCode !== 0) {
+    if (postPatchRun.exitCode !== 0 || postPatchRun.testSummary?.passed === 0) {
       return {
         success: false,
         phase: 'GREEN_PHASE_FAILED',

@@ -25,7 +25,7 @@ export async function readWorkspaceBrowserPage(agentId = 'agent-supergence') {
       // Deliberately never read input values, especially password fields.
       controls: Array.from(
         document.querySelectorAll(
-          'input:not([type="hidden"]), textarea, select, button, [role="button"]',
+          'input:not([type="hidden"]), textarea, select, button, [role="button"], [role="textbox"], [contenteditable="true"], [contenteditable="plaintext-only"]',
         ),
       )
         .filter(visible)
@@ -39,7 +39,8 @@ export async function readWorkspaceBrowserPage(agentId = 'agent-supergence') {
             Array.from(element.labels || [])
               .map((label) => label.innerText)
               .join(' ') ||
-            element.innerText ||
+            element.getAttribute('data-placeholder') ||
+            (element.isContentEditable ? '' : element.innerText) ||
             element.getAttribute('placeholder') ||
             element.getAttribute('name') ||
             ''

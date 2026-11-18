@@ -166,10 +166,11 @@
     const mascot = MASCOTS_ROSTER[currentMascotIndex];
     const mascotEl = container.closest('.shell-empty-mascot') || container;
 
-    const img = mascotEl.querySelector('.shell-empty-mascot-figure img');
-    if (img) {
-      img.src = mascot.src;
-      img.alt = mascot.name;
+    const figure = mascotEl.querySelector('.shell-empty-mascot-figure');
+    const existingMascot = figure?.querySelector('.sg-fluid-mascot');
+    if (existingMascot && window.renderFluidMascot) {
+      existingMascot.outerHTML = window.renderFluidMascot(mascot);
+      figure.setAttribute('aria-label', mascot.name);
     }
     mascotEl.style.setProperty('--mascot-color', mascot.color);
 
@@ -200,7 +201,7 @@
         </div>
         <div class="shell-empty-mascot-figure" title="Click me to dance!">
           <div class="sg-mascot-particles"></div>
-          <img src="${mascot.src}" alt="${mascot.name}" draggable="false" />
+          ${window.renderFluidMascot?.(mascot) || ''}
         </div>
         <div class="sg-mascot-dock">
           <div class="sg-mascot-action-pills">
@@ -288,7 +289,9 @@
       });
       const partyBtn = studioDialog.querySelector('#sgStudioPartyBtn');
       if (partyBtn) {
-        partyBtn.innerHTML = isDancing ? '<span>🎉</span> Party Dance All!' : '<span>🕺</span> Pause Groove';
+        partyBtn.innerHTML = isDancing
+          ? '<span>🎉</span> Party Dance All!'
+          : '<span>🕺</span> Pause Groove';
       }
     });
 
@@ -310,7 +313,7 @@
 
       card.innerHTML = `
         <div class="sg-specialist-avatar-wrap" title="Click to dance!">
-          <img src="${agent.src}" alt="${agent.name}" draggable="false" />
+          ${window.renderFluidMascot?.(agent) || ''}
         </div>
         <div class="sg-specialist-name">${agent.name}</div>
         <div class="sg-specialist-role">${agent.specialty}</div>
@@ -333,7 +336,9 @@
           e.stopPropagation();
           const act = btn.dataset.action;
           card.dataset.mascotState = act;
-          card.querySelectorAll('.sg-action-btn').forEach((b) => b.classList.toggle('active', b === btn));
+          card
+            .querySelectorAll('.sg-action-btn')
+            .forEach((b) => b.classList.toggle('active', b === btn));
         });
       });
 
@@ -348,9 +353,15 @@
 
       // Select for chat
       card.querySelector('.sg-specialist-select-btn')?.addEventListener('click', () => {
-        const select = document.getElementById('composerAgentSelect') || document.getElementById('workspaceAgentSelect');
+        const select =
+          document.getElementById('composerAgentSelect') ||
+          document.getElementById('workspaceAgentSelect');
         if (select) {
-          const match = [...select.options].find((opt) => opt.value.toLowerCase().includes(agent.id.replace('super', '')) || opt.value.toLowerCase().includes(agent.id));
+          const match = [...select.options].find(
+            (opt) =>
+              opt.value.toLowerCase().includes(agent.id.replace('super', '')) ||
+              opt.value.toLowerCase().includes(agent.id),
+          );
           if (match) select.value = match.value;
         }
         studioDialog.close();
@@ -405,7 +416,8 @@
       // When response body finishes streaming, do a brief celebration
       document.querySelectorAll('.chat-turn-item:not([data-cheered])').forEach((turn) => {
         const cursor = turn.querySelector('.streaming-cursor, .workspace-thinking, .ws-thinking');
-        const hasContent = turn.querySelector('.response-body-markdown')?.textContent?.trim()?.length > 10;
+        const hasContent =
+          turn.querySelector('.response-body-markdown')?.textContent?.trim()?.length > 10;
         if (!cursor && hasContent) {
           turn.dataset.cheered = 'true';
           const mascot = turn.querySelector('.sg-mascot');

@@ -136,7 +136,10 @@
       waiting.append(portrait(thread.replyingAgentId));
       if (typeof window.renderModernLoader === 'function') {
         const loaderContainer = make('div', 'sidechat-loader-inline');
-        loaderContainer.innerHTML = window.renderModernLoader(`${agent?.name || 'Agent'} is thinking...`, { size: 'sm' });
+        loaderContainer.innerHTML = window.renderModernLoader(
+          `${agent?.name || 'Agent'} is thinking...`,
+          { size: 'sm' },
+        );
         waiting.append(loaderContainer);
       } else {
         waiting.append(make('span', '', `${agent?.name || 'Agent'} is working`));

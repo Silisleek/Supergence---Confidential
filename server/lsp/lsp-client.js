@@ -70,9 +70,7 @@ export class LspClient {
     }
 
     const content = fs.readFileSync(resolvedPath, 'utf8');
-    const ext = path.extname(resolvedPath).slice(1);
-    const lang = ext === 'py' ? 'python' : ext === 'ts' ? 'typescript' : 'javascript';
-    return AstParser.extractSymbols(content, lang);
+    return AstParser.extractSymbols(content, path.extname(resolvedPath).slice(1));
   }
 
   /**

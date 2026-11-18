@@ -1,4 +1,4 @@
-import { currentWorkspace } from '../services/conversationWorkspaces.js';
+import { currentWorkspace, workspaceOutputRoot } from '../services/conversationWorkspaces.js';
 // SIS 1.0 — Blender Automation & 3D Generator Engine
 // Direct programmatic control over Blender 5.x / 4.x via bpy, live Blender MCP socket (port 9876), and desktop launch
 
@@ -15,16 +15,24 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const sharedWorkspaceRoot = process.env.SIS_WORKSPACE_DIR
   ? path.resolve(process.env.SIS_WORKSPACE_DIR)
   : path.join(__dirname, '../../workspace');
-const workspaceRoot = () => currentWorkspace()?.root || sharedWorkspaceRoot;
+const workspaceRoot = () => {
+  const root = workspaceOutputRoot(sharedWorkspaceRoot);
+  if (!fs.existsSync(root)) fs.mkdirSync(root, { recursive: true });
+  return root;
+};
 const workspaceUrl = (filename) =>
   '/workspace/' +
   (currentWorkspace()
-    ? ['chats', currentWorkspace().conversationId, ...filename.replaceAll('\\', '/').split('/')]
+    ? [
+        'chats',
+        currentWorkspace().conversationId,
+        ...(currentWorkspace().projectDirectory?.split('/') || []),
+        ...filename.replaceAll('\\', '/').split('/'),
+      ]
     : filename.replaceAll('\\', '/').split('/')
   )
     .map(encodeURIComponent)
     .join('/');
-if (!fs.existsSync(workspaceRoot())) fs.mkdirSync(workspaceRoot(), { recursive: true });
 
 function fileOrAliasExists(p) {
   if (!p) return false;

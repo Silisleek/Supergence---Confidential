@@ -129,9 +129,7 @@ try {
       artifacts: [{ name: 'index.html' }],
     });
   });
-  assert.equal(await page.locator('#result-summary-test .workspace-result-summary').count(), 1);
-  assert.match(await summary.innerText(), /No checks or commands recorded/);
-  assert.equal(await summary.locator('li').count(), 0);
+  assert.equal(await summary.count(), 0);
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
   for (const [status, label] of [
     ['cancelled', 'Stopped'],
@@ -173,6 +171,7 @@ try {
   await turnSummary.waitFor();
   const closeBrowser = page.getByRole('button', { name: 'Close workspace browser' });
   if (await closeBrowser.isVisible()) await closeBrowser.click();
+  await turnSummary.locator(':scope > summary').click();
   await turnSummary.locator('.workspace-result-details > summary').click();
   assert.match(await turnSummary.innerText(), /2 tests passed/);
   assert.equal(await turnSummary.locator('.workspace-result-sources').count(), 1);
@@ -197,6 +196,7 @@ try {
   await page.evaluate(() => window.loadWorkspaceConversation('result-summary-fixture'));
   const restored = page.locator('.chat-turn-item .workspace-result-summary').first();
   if (await closeBrowser.isVisible()) await closeBrowser.click();
+  await restored.locator(':scope > summary').click();
   await restored.locator('.workspace-result-details > summary').click();
   assert.match(await restored.innerText(), /2 tests passed/);
   await restored.locator('.workspace-result-sources > summary').click();

@@ -28,11 +28,14 @@ console.log('Target URL:', appUrl);
   const evalConvId = 'conv-eval-' + Date.now();
 
   // Set fresh isolated conversation and dismiss onboarding
-  await context.addInitScript(({ convId }) => {
-    localStorage.setItem('sis_setup_completed', 'true');
-    localStorage.setItem('sis_model_setup_seen', 'true');
-    localStorage.setItem('sis_workspace_conv', convId);
-  }, { convId: evalConvId });
+  await context.addInitScript(
+    ({ convId }) => {
+      localStorage.setItem('sis_setup_completed', 'true');
+      localStorage.setItem('sis_model_setup_seen', 'true');
+      localStorage.setItem('sis_workspace_conv', convId);
+    },
+    { convId: evalConvId },
+  );
 
   const page = await context.newPage();
 
@@ -87,7 +90,8 @@ console.log('Target URL:', appUrl);
   const sendBtn = await page.$('#workspaceSendBtn');
 
   if (workspaceInp && sendBtn) {
-    const prompt1 = 'State the three foundational architecture pillars of Supergence SIS 1.0 in concise bullet points.';
+    const prompt1 =
+      'State the three foundational architecture pillars of Supergence SIS 1.0 in concise bullet points.';
     console.log('Sending Prompt:', prompt1);
     await workspaceInp.fill(prompt1);
     await sendBtn.click({ force: true });
@@ -110,7 +114,9 @@ console.log('Target URL:', appUrl);
         !finalTurnResponse.includes('Welcome to Supergence') &&
         finalTurnResponse.length > 25
       ) {
-        console.log(`Streamed tokens received after ~${i + 1}s! Length: ${finalTurnResponse.length} chars`);
+        console.log(
+          `Streamed tokens received after ~${i + 1}s! Length: ${finalTurnResponse.length} chars`,
+        );
         break;
       }
     }
@@ -156,7 +162,12 @@ console.log('Target URL:', appUrl);
     });
     return await r.json();
   });
-  console.log('Widget injection success:', widgetInjectRes.success, '| Widget ID:', widgetInjectRes.widget?.id);
+  console.log(
+    'Widget injection success:',
+    widgetInjectRes.success,
+    '| Widget ID:',
+    widgetInjectRes.widget?.id,
+  );
 
   await page.waitForTimeout(1500);
   const screenshot3 = path.join(screenshotDir, '03-cyber-theme-injected-widget.png');
@@ -178,7 +189,7 @@ console.log('Target URL:', appUrl);
         category: 'Mathematics',
         description: 'Computes sum, average, min, and max for an array of numbers',
         parameters: {
-          numbers: { type: 'array', items: { type: 'number' }, description: 'Array of numbers' }
+          numbers: { type: 'array', items: { type: 'number' }, description: 'Array of numbers' },
         },
         required: ['numbers'],
         code: `
@@ -193,14 +204,21 @@ console.log('Target URL:', appUrl);
             max: nums.length ? Math.max(...nums) : 0,
             count: nums.length
           };
-        `
+        `,
       }),
     });
     return await r.json();
   });
 
   console.log('Tool Forge Result:', forgeRes.success ? 'ACCEPTED & VERIFIED' : forgeRes.reason);
-  console.log('Tool Status:', forgeRes.tool?.status, '| Privileged:', forgeRes.tool?.privileged, '| Capabilities:', forgeRes.tool?.capabilities);
+  console.log(
+    'Tool Status:',
+    forgeRes.tool?.status,
+    '| Privileged:',
+    forgeRes.tool?.privileged,
+    '| Capabilities:',
+    forgeRes.tool?.capabilities,
+  );
 
   // ── TEST 5: Custom Tool Execution in Live Registry ──
   console.log('\n--- TEST 5: Custom Synthesized Tool Execution ---');
@@ -238,7 +256,11 @@ console.log('Target URL:', appUrl);
     const r = await fetch('/api/hermes/search?query=telemetry');
     return await r.json();
   });
-  console.log('Knowledge Search Query ("telemetry"):', searchRes.facets?.length, 'facet(s) recalled:');
+  console.log(
+    'Knowledge Search Query ("telemetry"):',
+    searchRes.facets?.length,
+    'facet(s) recalled:',
+  );
   console.log('Recalled Fact:', searchRes.facets?.[0]?.fact);
 
   console.log('\n======================================================');

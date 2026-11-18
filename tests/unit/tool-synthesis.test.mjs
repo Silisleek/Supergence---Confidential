@@ -1,7 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import adaToolForger from '../../server/services/adaToolForger.js';
-import { toolSynthesisTools } from '../../server/tools/tool-synthesis.js';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+const testData = fs.mkdtempSync(path.join(os.tmpdir(), 'supergence-forger-test-'));
+process.env.SIS_DATA_DIR = testData;
+const { default: adaToolForger } = await import('../../server/services/adaToolForger.js');
+const { toolSynthesisTools } = await import('../../server/tools/tool-synthesis.js');
+
+test.after(() => fs.rmSync(testData, { recursive: true, force: true }));
 
 test('Tool Genesis: agent can synthesize, sandbox-verify, register, and execute dynamic tools', async () => {
   // 1. Synthesize a pure mathematical computation tool live
@@ -31,6 +39,10 @@ test('Tool Genesis: agent can synthesize, sandbox-verify, register, and execute 
   assert.ok(installedTool, 'Tool must be registered in adaToolForger installedTools');
   assert.equal(installedTool.name, toolName);
 
+  const discovered = toolSynthesisTools.list_dynamic_tools.execute().installedTools.find((t) => t.name === toolName);
+  assert.equal(discovered.description, 'Calculates the first N Fibonacci numbers');
+  assert.deepEqual(discovered.required, ['n']);
+
   // 3. Verify execution via execute_dynamic_tool
   const directExec = await toolSynthesisTools.execute_dynamic_tool.execute({
     toolName,
@@ -40,6 +52,14 @@ test('Tool Genesis: agent can synthesize, sandbox-verify, register, and execute 
   assert.equal(directExec.result.count, 7);
   assert.deepEqual(directExec.result.sequence, [0, 1, 1, 2, 3, 5, 8]);
   assert.equal(directExec.result.last, 8);
+
+  const originalCode = installedTool.code;
+  installedTool.code = 'return { changed: true };';
+  await assert.rejects(
+    toolSynthesisTools.execute_dynamic_tool.execute({ toolName }),
+    /Verified installed tool not found/,
+  );
+  installedTool.code = originalCode;
 
   // 4. Verify test_dynamic_tool execution
   const testExec = await toolSynthesisTools.test_dynamic_tool.execute({

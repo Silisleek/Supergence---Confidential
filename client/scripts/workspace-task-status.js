@@ -3,7 +3,7 @@
     completed: 'Task finished',
     blocked: 'Needs attention',
     cancelled: 'Task stopped',
-    error: 'Task failed',
+    error: 'Could not finish',
     interrupted: 'Task interrupted. Reopen this conversation to check for recovery.',
     unavailable: 'Saved task progress is unavailable.',
   };
@@ -21,6 +21,7 @@
     text.className = 'tasks-running-label';
     const timer = document.createElement('span');
     timer.className = 'tasks-running-timer';
+    timer.setAttribute('aria-hidden', 'true');
     label.append(dot, text, timer);
     function show(message, state = '') {
       dot.className = ['tasks-running-dot', state].filter(Boolean).join(' ');
@@ -32,7 +33,7 @@
     const timerHandle = setInterval(() => {
       if (!finished) timer.textContent = formatElapsed();
     }, 200);
-    show('- Tasks running: Initializing…');
+    show('Thinking…');
 
     const stop = document.createElement('button');
     stop.type = 'button';
@@ -85,10 +86,21 @@
     return {
       update(event) {
         if (finished || stopping || !event) return;
-        const raw = String(event.tool || event.message || '').trim();
+        if (event.tool) {
+          const tool = String(event.tool);
+          const labels = {
+            run_command: 'Running a command…',
+            superbox_run_command: 'Running a workspace command…',
+            read_file: 'Reading a file…',
+            write_file: 'Writing a file…',
+            web_search: 'Searching the web…',
+          };
+          show(Object.hasOwn(labels, tool) ? labels[tool] : `Using ${tool.replaceAll('_', ' ')}…`);
+          return;
+        }
+        const raw = String(event.message || event.taskMessage || '').trim();
         const clean = raw.replace(/^- Tasks running:\s*/i, '').trim();
-        const display = clean ? `- Tasks running: ${clean}` : '- Tasks running';
-        show(display);
+        if (clean) show(clean);
       },
       finish,
     };
@@ -104,7 +116,11 @@
           { signal: AbortSignal.timeout(15000) },
         );
         if ([401, 403].includes(response.status))
-          return { taskStatus: 'error', monitoringFailed: true, error: 'Sign in to view task progress.' };
+          return {
+            taskStatus: 'error',
+            monitoringFailed: true,
+            error: 'Sign in to view task progress.',
+          };
         if (!response.ok) throw new Error('Progress is temporarily unavailable.');
         const state = await response.json();
         if (!isCurrent()) return null;

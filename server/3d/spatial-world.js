@@ -1,4 +1,4 @@
-import { currentWorkspace } from '../services/conversationWorkspaces.js';
+import { workspaceOutputRoot } from '../services/conversationWorkspaces.js';
 // SIS 1.0 — Procedural 3D Worlds & Gaussian Spatial Splat Engine
 // Inspired by World Labs' Atlas (Fei-Fei Li), 3D Gaussian Splatting (3DGS), and Three.js WebGL
 // Generates persistent, interactive 3D spatial environments from procedural code
@@ -12,7 +12,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const sharedWorkspaceRoot = process.env.SIS_WORKSPACE_DIR
   ? path.resolve(process.env.SIS_WORKSPACE_DIR)
   : path.resolve(__dirname, '../../workspace');
-const workspaceRoot = () => currentWorkspace()?.root || sharedWorkspaceRoot;
+const workspaceRoot = () => workspaceOutputRoot(sharedWorkspaceRoot);
 
 export class SpatialWorldEngine {
   constructor() {

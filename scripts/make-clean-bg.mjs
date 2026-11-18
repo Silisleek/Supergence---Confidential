@@ -109,9 +109,7 @@ async function generateCleanCosmicBackground() {
   </svg>
   `;
 
-  await sharp(Buffer.from(svg))
-    .png()
-    .toFile('client/images/cosmic-hyperspace.png');
+  await sharp(Buffer.from(svg)).png().toFile('client/images/cosmic-hyperspace.png');
 
   console.log('✓ Clean procedural cosmic hyperspace background generated successfully!');
 }

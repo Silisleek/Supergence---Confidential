@@ -41,7 +41,9 @@ export function resolveConversationIntent(query, history = []) {
   const latestRequest = [...prior]
     .reverse()
     .find((m) => m.role === 'user' && !isContinuation(m.content));
-  const assistant = [...prior].reverse().find((m) => m.role === 'assistant');
+  const assistant = [...prior]
+    .reverse()
+    .find((m) => m.role === 'assistant' && m.content.trim() && !isLegacyFailureReply(m.content));
   const continuation = isContinuation(query) && Boolean(latestRequest);
   const pendingOffer =
     continuation &&
@@ -58,10 +60,14 @@ export function resolveConversationIntent(query, history = []) {
   };
 }
 
+// Older versions injected empty-turn errors as if the assistant had said them.
+export const isLegacyFailureReply = (text) =>
+  /^Previous attempt did not finish:\s*\S[^\r\n]*$/i.test(String(text || '').trim());
+
 export function conversationMessages(
   history,
   query,
-  { budget = 30000, messageLimit = 8000, projectExecution = false } = {},
+  { budget = 30000, messageLimit = 8000, projectExecution = false, onOverflow } = {},
 ) {
   const prior = history.filter(conversational);
   const recent = [];
@@ -72,16 +78,51 @@ export function conversationMessages(
   for (let i = prior.length - 1; i >= 0; i--) {
     const m = prior[i];
     if (m === first) continue;
+    if (m.role === 'assistant' && isLegacyFailureReply(m.content)) continue;
     const isRejectedProposal = m.content && /^Rejected proposal:/i.test(m.content.trim());
-    const originalContent =
-      projectExecution && m.role === 'assistant' && (m.toolCalls?.length || isRejectedProposal)
-        ? `Saved project attempt: ${m.status || 'unknown'}. ${m.error || ''} Actual tool actions: ${JSON.stringify((m.toolCalls || []).map((call) => ({ tool: call.tool, status: call.status, filepath: call.args?.filepath || call.args?.path, error: call.output?.error, exitCode: call.output?.exitCode })))}. The source and execution checkpoint supplies the saved file interfaces. Earlier planning and rejected proposals remain in durable history; continue from actual files and results.`
-        : m.content || `Previous attempt did not finish: ${m.error || 'interrupted'}`;
+    const hasProjectEvidence =
+      projectExecution && m.role === 'assistant' && (m.toolCalls?.length || isRejectedProposal);
+    if (!m.content.trim() && !hasProjectEvidence) continue;
+    const originalContent = hasProjectEvidence
+      ? `Saved project attempt: ${m.status || 'unknown'}. ${m.error || ''} Actual tool actions: ${JSON.stringify((m.toolCalls || []).map((call) => ({ tool: call.tool, status: call.status, filepath: call.args?.filepath || call.args?.path, error: call.output?.error, exitCode: call.output?.exitCode })))}. The source and execution checkpoint supplies the saved file interfaces. Earlier planning and rejected proposals remain in durable history; continue from actual files and results.`
+      : m.content;
     const content =
       originalContent.length > messageLimit
         ? `${originalContent.slice(0, messageLimit)}\n[Message excerpt; full text is retained in conversation storage.]`
         : originalContent;
-    if (content.length > remaining) break;
+    if (content.length > remaining) {
+      const omitted = prior
+        .slice(0, i + 1)
+        .filter(
+          (item) =>
+            item !== first &&
+            item.content.trim() &&
+            (item.role === 'user' ||
+              (item.status !== 'error' && !isLegacyFailureReply(item.content))),
+        );
+      if (omitted.length) {
+        const words = new Set(query.toLowerCase().match(/[\p{L}\p{N}_-]{4,}/gu) || []);
+        const selected = omitted
+          .map((item, index) => ({
+            item,
+            index,
+            relevance: [
+              ...new Set(item.content.toLowerCase().match(/[\p{L}\p{N}_-]{4,}/gu) || []),
+            ].filter((word) => words.has(word)).length,
+          }))
+          .sort((a, b) => b.relevance - a.relevance || b.index - a.index)
+          .slice(0, 4)
+          .sort((a, b) => a.index - b.index);
+        onOverflow?.({
+          omitted: omitted.length,
+          excerpts: selected.map(({ item }) => ({
+            role: item.role,
+            text: item.content.trim().replace(/\s+/g, ' ').slice(0, 280),
+          })),
+        });
+      }
+      break;
+    }
     recent.unshift({ role: m.role, content });
     remaining -= content.length;
   }

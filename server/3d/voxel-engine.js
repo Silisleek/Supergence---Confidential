@@ -1,4 +1,4 @@
-import { currentWorkspace } from '../services/conversationWorkspaces.js';
+import { workspaceOutputRoot } from '../services/conversationWorkspaces.js';
 // SIS 1.0 — High-Performance Procedural 3D Voxel & Minecraft Engine
 // 100% Autonomous Generative Synthesis — Standalone Single-File HTML5 + Three.js WebGL + Web Audio API
 // Features: Procedural terrain, 9 block types, Canvas pixel textures, first-person pointer lock physics,
@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename);
 const sharedWorkspaceRoot = process.env.SIS_WORKSPACE_DIR
   ? path.resolve(process.env.SIS_WORKSPACE_DIR)
   : path.resolve(__dirname, '../../workspace');
-const workspaceRoot = () => currentWorkspace()?.root || sharedWorkspaceRoot;
+const workspaceRoot = () => workspaceOutputRoot(sharedWorkspaceRoot);
 
 let _brainCache = null;
 async function getBrain() {

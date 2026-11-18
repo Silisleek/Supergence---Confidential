@@ -1,6 +1,8 @@
 // SIS 1.0 — Orchestrated Coder Part (4-Step Self-Correcting Execution Loop)
 // Implements: Structured Output -> Local RAG -> Sandbox Testing -> Self-Correction Loop
 
+import { createHash, randomUUID } from 'node:crypto';
+import { resolveWithinRoot } from '../utils/path-confinement.js';
 import { BasePart } from '../parts/base-part.js';
 import { callAI, PREMIUM_MODEL } from '../api/openrouter.js';
 import contextScanner from './context-scanner.js';
@@ -12,7 +14,6 @@ import { fileURLToPath } from 'url';
 import { DiffPatcher } from './diff-patcher.js';
 import { TddHarness } from './tdd-harness.js';
 import { TrajectoryLogger } from '../trajectory/trajectory-logger.js';
-import { RewardVerifier } from '../trajectory/reward-verifier.js';
 
 import { isExplicitBuildOrSaveIntent } from '../orchestrator/intent.js';
 import { perfectionistCoderEngine } from './perfectionist-coder-engine.js';
@@ -69,7 +70,8 @@ export class CoderPart extends BasePart {
     this.isActive = true;
     this.lastRun = Date.now();
     this.runCount++;
-    const runId = `coder_${Date.now()}`;
+    const runId = `coder_${randomUUID()}`;
+    const draftModel = PREMIUM_MODEL || this.model;
 
     try {
       // ─── CONVERSATIONAL / ADVISORY PATH: If user didn't ask to build or save a file ───
@@ -91,7 +93,7 @@ export class CoderPart extends BasePart {
           code: '',
           targetFile: null,
           language: 'markdown',
-          verified: true,
+          verified: false,
           attempts: 1,
           confidence: 0.95,
           timestamp: Date.now(),
@@ -179,12 +181,14 @@ ${this._buildContext(userMessage)}`;
       );
       let testResult = await sandbox.execute(currentDraft, runId);
       let attempts = 1;
-      // Best-effort retention: never end with LESS than the longest code seen.
-      let bestDraft = currentDraft.code && currentDraft.code.trim() ? currentDraft : null;
       let emptyStreak = currentDraft.code && currentDraft.code.trim() ? 0 : 1;
 
       // ─── STEP 4: Self-Correction Error Feedback Loop ───
-      while (!testResult.success && attempts < this.maxCorrectionAttempts) {
+      while (
+        !testResult.syntaxValid &&
+        testResult.exitCode === 1 &&
+        attempts < this.maxCorrectionAttempts
+      ) {
         // Stop burning calls when the model twice returns nothing parseable —
         // a third identical attempt will not fix a truncation-shaped failure.
         if (emptyStreak >= 2) {
@@ -250,88 +254,61 @@ Diagnose the root cause of this failure, fix the issue completely, and respond w
           currentDraft.language,
         );
         if (parsed) {
-          if (parsed.code && parsed.code.trim().length > (bestDraft?.code || '').length)
-            bestDraft = parsed;
           if (!parsed.code || !parsed.code.trim()) {
             emptyStreak++;
           } else {
             emptyStreak = 0;
           }
-          currentDraft = parsed.code && parsed.code.trim() ? parsed : currentDraft;
+          if (parsed.code && parsed.code.trim()) {
+            currentDraft = parsed;
+          }
           testResult = await sandbox.execute(currentDraft, `${runId}_retry${attempts}`);
         } else {
           break;
         }
       }
 
-      // If the loop ends without passing but a longer draft exists, keep it.
-      if (
-        !testResult.success &&
-        bestDraft &&
-        (bestDraft.code || '').length > (currentDraft.code || '').length
-      ) {
-        currentDraft = bestDraft;
-      }
-
-      // Cleanup temporary sandbox dirs (base + every retry dir — retries leaked before)
-      sandbox.cleanup(runId);
-      for (let a = 2; a <= attempts; a++) sandbox.cleanup(`${runId}_retry${a}`);
-
-      // ─── Trajectory Logging & Verifiable Reward Recording ───
       try {
-        const finalEval = RewardVerifier.evaluate({
-          exitCode: testResult.exitCode ?? (testResult.success ? 0 : 1),
-          testSummary: {
-            total: 1,
-            passed: testResult.success ? 1 : 0,
-            failed: testResult.success ? 0 : 1,
-          },
-        });
         this.trajectoryLogger.logStep({
-          state: { prompt: userMessage, targetFile: currentDraft.targetFile, attempts },
+          runId,
+          model: draftModel,
+          promptHash: createHash('sha256').update(userMessage).digest('hex'),
+          codeHash: createHash('sha256')
+            .update(currentDraft.code || '')
+            .digest('hex'),
+          state: { targetFile: currentDraft.targetFile, attempts },
           action: { type: 'code_synthesis', codeLength: (currentDraft.code || '').length },
           observation: {
-            success: testResult.success,
+            syntaxValid: testResult.syntaxValid,
+            executed: testResult.executed,
             exitCode: testResult.exitCode,
             phase: testResult.phase,
           },
-          reward: finalEval.reward,
-          metadata: { scoreBreakdown: finalEval.scoreBreakdown },
+          reward: null,
         });
       } catch (logErr) {
         console.warn('[Coder] Trajectory log notice:', logErr.message);
       }
 
-      // ─── Workspace Promotion (Only if verified and valid) ───
       const safeFilename = path.basename(currentDraft.targetFile || 'solution.js');
-      if (testResult.success && currentDraft.code && currentDraft.code.trim().length > 10) {
-        const promotedPath = path.join(WORKSPACE_DIR, safeFilename);
-        fs.writeFileSync(promotedPath, currentDraft.code, 'utf8');
-        console.log(
-          `[Coder] Verified code promoted to workspace: ${safeFilename} (Passed: true, Attempts: ${attempts})`,
-        );
-      } else {
-        console.warn(
-          `[Coder] Code did not pass validation; not promoting to workspace (Passed: ${testResult.success})`,
-        );
+      const canSave =
+        testResult.syntaxValid || (testResult.phase === 'syntax' && testResult.exitCode === null);
+      if (canSave && currentDraft.code?.trim().length > 10) {
+        const promotedPath = resolveWithinRoot(WORKSPACE_DIR, safeFilename);
+        await fs.promises.writeFile(promotedPath, currentDraft.code, 'utf8');
       }
 
       // Store in memory
       shortTermMemory.store(
         ['coder', 'executions'],
         {
-          content: `Generated ${safeFilename}: ${currentDraft.explanation} (Verified: ${testResult.success})`,
+          content: `Generated ${safeFilename}: ${currentDraft.explanation} (Syntax check passed: ${testResult.syntaxValid})`,
           type: 'code-artifact',
-          tags: [
-            'coder',
-            currentDraft.language,
-            safeFilename,
-            testResult.success ? 'verified' : 'unverified',
-          ],
+          tags: ['coder', currentDraft.language, safeFilename, 'unverified'],
           metadata: {
             file: safeFilename,
             attempts,
-            passed: testResult.success,
+            syntaxValid: testResult.syntaxValid,
             stdout: testResult.stdout?.slice(0, 200),
           },
         },
@@ -347,9 +324,9 @@ Diagnose the root cause of this failure, fix the issue completely, and respond w
         code: currentDraft.code,
         targetFile: safeFilename,
         language: currentDraft.language,
-        verified: testResult.success,
+        verified: false,
         attempts,
-        confidence: testResult.success ? 0.98 : 0.75,
+        syntaxValid: testResult.syntaxValid,
         timestamp: Date.now(),
       };
     } catch (err) {
@@ -674,9 +651,11 @@ Diagnose the root cause of this failure, fix the issue completely, and respond w
   }
 
   _formatFinalOutput(draft, testResult, attempts) {
-    const statusTag = testResult.success
-      ? `[STATUS: VERIFIED // PASSED SANDBOX TESTS (Attempts: ${attempts})]`
-      : `[STATUS: PARTIAL // FAILED VALIDATION (Attempts: ${attempts})]`;
+    const syntaxStatus = testResult.syntaxValid
+      ? 'Passed'
+      : testResult.exitCode === 1
+        ? 'Failed'
+        : 'Unavailable';
     // Cap embedded code: the full file lives in workspace; the specialist-context
     // pipe truncates at 1500 chars anyway, so send a useful head + pointer.
     const codeHead = (draft.code || '').slice(0, 1500);
@@ -685,17 +664,17 @@ Diagnose the root cause of this failure, fix the issue completely, and respond w
         ? `\n... [${(draft.code || '').length - 1500} more chars in workspace file ${draft.targetFile}]`
         : '';
 
-    return `### ${draft.targetFile} ${statusTag}
-**Architecture & Design:** ${draft.explanation}
+    return `### ${draft.targetFile} **Architecture & Design:** ${draft.explanation}
 
 \`\`\`${draft.language}
 ${codeHead}${codeCut}
 \`\`\`
 
-**Sandbox Validation Telemetry:**
-- Tests Executed: ${draft.testCode ? 'Unit Test Suite' : 'Syntax Check'}
-- Exit Code: ${testResult.exitCode}
-- Output: ${testResult.stdout || testResult.stderr || 'All assertions passed cleanly.'}`;
+**Validation**
+- Syntax check: ${syntaxStatus}
+- Runtime tests: Not run
+- Attempts: ${attempts}
+- Output: ${testResult.stderr || testResult.stdout || 'No diagnostics.'}`;
   }
 }
 

@@ -1,4 +1,4 @@
-import { currentWorkspace } from '../services/conversationWorkspaces.js';
+import { workspaceOutputRoot } from '../services/conversationWorkspaces.js';
 // SIS 1.0 — Live GLSL Shader Raymarching Studio
 // Generates and renders real-time GPU fragment shaders & Signed Distance Field (SDF) raymarchers
 // 100% hardware-accelerated WebGL with dynamic uniforms (iTime, iResolution, iMouse, iFrame)
@@ -12,7 +12,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const sharedWorkspaceRoot = process.env.SIS_WORKSPACE_DIR
   ? path.resolve(process.env.SIS_WORKSPACE_DIR)
   : path.resolve(__dirname, '../../workspace');
-const workspaceRoot = () => currentWorkspace()?.root || sharedWorkspaceRoot;
+const workspaceRoot = () => workspaceOutputRoot(sharedWorkspaceRoot);
 
 export class ShaderSynthesizer {
   constructor() {

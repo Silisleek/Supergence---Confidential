@@ -22,7 +22,9 @@
   width: 120px !important;
   height: 120px !important;
   cursor: pointer !important;
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.25s ease !important;
+  transition:
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    filter 0.25s ease !important;
 }
 
 .sis-workspace-ui .shell-empty-mascot-figure:hover {
@@ -50,7 +52,9 @@
   background: rgba(20, 22, 28, 0.94) !important;
   border: 1px solid rgba(255, 180, 0, 0.28) !important;
   border-radius: 14px !important;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55), 0 0 16px rgba(255, 140, 0, 0.12) !important;
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.55),
+    0 0 16px rgba(255, 140, 0, 0.12) !important;
   backdrop-filter: blur(12px) !important;
   color: #f1f5f9 !important;
   font-size: 12px !important;
@@ -192,7 +196,8 @@
 .shell-empty-mascot[data-action='dancing'] .shell-empty-mascot-figure img,
 .sg-mascot[data-mascot-state='dancing'] img {
   animation: sg-mascot-dance-groove 0.7s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
-  filter: drop-shadow(0 0 20px color-mix(in srgb, var(--mascot-color, #ffaa00) 80%, transparent)) drop-shadow(0 12px 28px rgba(255, 120, 0, 0.5)) !important;
+  filter: drop-shadow(0 0 20px color-mix(in srgb, var(--mascot-color, #ffaa00) 80%, transparent))
+    drop-shadow(0 12px 28px rgba(255, 120, 0, 0.5)) !important;
 }
 
 @keyframes sg-mascot-dance-groove {
@@ -257,7 +262,8 @@
 }
 
 @keyframes sg-mascot-code {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0) scale(1) rotate(-2deg);
   }
   25% {
@@ -280,7 +286,8 @@
 }
 
 @keyframes sg-mascot-think-deep {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0) rotate(-8deg) scale(0.95);
     opacity: 0.85;
   }
@@ -299,7 +306,8 @@
 }
 
 @keyframes sg-mascot-wave-hi {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0) rotate(0deg) scale(1);
   }
   25% {
@@ -322,7 +330,8 @@
 }
 
 @keyframes sg-mascot-sleep-soft {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0) scale(0.94, 0.92) rotate(-3deg);
   }
   50% {
@@ -342,7 +351,9 @@
   color: #f1f5f9 !important;
   border: 1px solid rgba(212, 175, 55, 0.28) !important;
   border-radius: 24px !important;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8), 0 0 32px rgba(212, 175, 55, 0.12) !important;
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.8),
+    0 0 32px rgba(212, 175, 55, 0.12) !important;
 }
 
 .sis-workspace-ui .sg-studio-header {

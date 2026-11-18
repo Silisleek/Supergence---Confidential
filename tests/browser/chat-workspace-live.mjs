@@ -67,7 +67,8 @@ try {
   await page.locator('.cw-file[data-path="build"]').click();
   await page.locator('.cw-file[data-path="build/report.txt"]').click();
   await page.waitForFunction(
-    (marker) => document.querySelector('.cw-source')?.textContent === marker + '-ALPHA',
+    (marker) =>
+      document.querySelector('.cw-code-editor .ace_line')?.textContent === marker + '-ALPHA',
     marker,
   );
   await page.screenshot({ path: path.join(output, 'file-preview.png') });

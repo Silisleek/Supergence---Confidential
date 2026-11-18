@@ -40,6 +40,7 @@ class DMNDaemon {
 
     // Check every 5 minutes if we should run DMN activities
     this._interval = setInterval(() => this._tick(), 300000);
+    this._interval?.unref?.();
   }
 
   stop() {

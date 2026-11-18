@@ -449,6 +449,21 @@ function createTray() {
           if (mainWindow) mainWindow.webContents.toggleDevTools();
         },
       },
+      {
+        label: 'Start on System Boot',
+        type: 'checkbox',
+        checked: app.getLoginItemSettings ? app.getLoginItemSettings().openAtLogin : false,
+        click: async (item) => {
+          if (app.setLoginItemSettings) {
+            app.setLoginItemSettings({ openAtLogin: item.checked, args: ['--boot'] });
+          }
+          const mgr = await getAutostartManager();
+          if (mgr) {
+            if (item.checked) mgr.enable();
+            else mgr.disable();
+          }
+        },
+      },
       { type: 'separator' },
       {
         label: 'Quit Supergence',
@@ -620,6 +635,57 @@ trustedIpcHandle('capture-screenshot', async () => {
   }
 });
 
+// Autostart helper for Electron desktop
+async function getAutostartManager() {
+  try {
+    const mod = await import('../server/services/autostartManager.js');
+    return mod.default || mod.AutostartManager;
+  } catch (err) {
+    console.warn('[Desktop] Could not load autostart manager:', err.message);
+    return null;
+  }
+}
+
+trustedIpcHandle('get-autostart-status', async () => {
+  try {
+    const mgr = await getAutostartManager();
+    if (mgr) {
+      const status = mgr.getStatus();
+      const loginSettings = app.getLoginItemSettings ? app.getLoginItemSettings() : null;
+      return {
+        ...status,
+        electronOpenAtLogin: loginSettings?.openAtLogin ?? false,
+      };
+    }
+  } catch (_) {}
+  const settings = app.getLoginItemSettings ? app.getLoginItemSettings() : { openAtLogin: false };
+  return {
+    eligible: ['win32', 'darwin', 'linux'].includes(process.platform),
+    platform: process.platform,
+    platformLabel:
+      process.platform === 'win32' ? 'Windows' : process.platform === 'darwin' ? 'macOS' : 'Linux',
+    enabled: settings.openAtLogin,
+  };
+});
+
+trustedIpcHandle('set-autostart-status', async (_event, enabled) => {
+  try {
+    if (app.setLoginItemSettings) {
+      app.setLoginItemSettings({
+        openAtLogin: Boolean(enabled),
+        args: ['--boot'],
+      });
+    }
+    const mgr = await getAutostartManager();
+    if (mgr) {
+      return enabled ? mgr.enable() : mgr.disable();
+    }
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
 // Single instance lock
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
@@ -650,6 +716,12 @@ if (!gotTheLock) {
     createMainWindow();
     if (startupWindow && !startupWindow.isDestroyed()) startupWindow.close();
     createTray();
+
+    getAutostartManager()
+      .then((mgr) => {
+        if (mgr) mgr.autoEnrollIfEligible();
+      })
+      .catch(() => {});
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) {

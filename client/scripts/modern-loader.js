@@ -11,7 +11,12 @@
     const size = options.size || '';
     const align = options.align || 'left';
     const extraClass = options.className || '';
-    const wrapperClass = ['loader-wrapper', size ? `loader-${size}` : '', align ? `loader-${align}` : '', extraClass]
+    const wrapperClass = [
+      'loader-wrapper',
+      size ? `loader-${size}` : '',
+      align ? `loader-${align}` : '',
+      extraClass,
+    ]
       .filter(Boolean)
       .join(' ');
 
@@ -36,4 +41,28 @@
 
   window.renderModernLoader = renderModernLoader;
   window.createModernLoader = createModernLoader;
+
+  window.showWorkspaceSkeleton = (container, text, variant = 'rows') => {
+    if (!container) return () => {};
+    container.querySelector(':scope > .sg-skeleton')?.remove();
+    const placeholder = document.createElement('div');
+    placeholder.className = `sg-skeleton sg-skeleton-${variant}`;
+    placeholder.setAttribute('role', 'status');
+    const label = document.createElement('span');
+    label.className = 'sg-skeleton-label';
+    label.textContent = text;
+    placeholder.append(label);
+    const shapes = document.createElement('div');
+    shapes.className = 'sg-skeleton-shapes';
+    shapes.setAttribute('aria-hidden', 'true');
+    for (let i = 0; i < 4; i++) shapes.append(document.createElement('span'));
+    placeholder.append(shapes);
+    container.setAttribute('aria-busy', 'true');
+    container.prepend(placeholder);
+    return () => {
+      if (placeholder.parentElement !== container) return;
+      placeholder.remove();
+      container.removeAttribute('aria-busy');
+    };
+  };
 })();

@@ -1,0 +1,646 @@
+/* SIS 1.0 — Futuristic Borderless Model & Multi-Provider Switcher */
+
+/* Top bar trigger pill */
+.sis-borderless-model-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border: none !important;
+  outline: none !important;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+  transition: all 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.sis-borderless-model-pill:hover {
+  background: rgba(255, 255, 255, 0.09);
+  box-shadow:
+    0 6px 24px rgba(0, 0, 0, 0.45),
+    0 0 20px color-mix(in srgb, var(--accent, #a855f7) 35%, transparent);
+  transform: translateY(-1px);
+}
+
+.sis-borderless-model-pill:active {
+  transform: translateY(0);
+}
+
+.sis-model-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow:
+    0 0 10px #34d399,
+    0 0 18px rgba(52, 211, 153, 0.45);
+  flex-shrink: 0;
+  animation: sisPulseGlow 2.4s infinite ease-in-out;
+}
+
+.sis-model-pulse-dot.is-offline {
+  background: #f87171;
+  box-shadow: 0 0 10px #f87171;
+}
+
+@keyframes sisPulseGlow {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(0.9);
+  }
+}
+
+.sis-model-label {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sis-provider-sub {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent, #a855f7);
+  font-weight: 700;
+}
+
+.sis-model-main {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sis-model-chevron {
+  opacity: 0.6;
+  transition: transform 200ms ease;
+  flex-shrink: 0;
+}
+
+.sis-borderless-model-pill[aria-expanded='true'] .sis-model-chevron {
+  transform: rotate(180deg);
+}
+
+/* Modal Overlay */
+.sis-model-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(3, 6, 12, 0.72);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sis-model-modal-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sis-model-modal-overlay:not(.is-open):not(.is-embedded) {
+  visibility: hidden;
+}
+
+.sis-model-modal-overlay.is-embedded {
+  position: static;
+  display: block;
+  margin-bottom: 16px;
+  padding: 0;
+  background: none;
+  backdrop-filter: none;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sis-model-modal-overlay.is-embedded .sis-model-modal {
+  max-width: none;
+  max-height: none;
+  width: auto;
+  padding: 16px;
+  overflow: visible;
+  transform: none;
+}
+
+.sis-model-modal-overlay.is-embedded :is(.sis-modal-close, .sis-modal-ambient) {
+  display: none;
+}
+
+/* Modal Window - Completely Borderless */
+.sis-model-modal {
+  width: 100%;
+  max-width: 620px;
+  max-height: 88vh;
+  overflow-y: auto;
+  border: none !important;
+  outline: none !important;
+  border-radius: 26px;
+  background: var(--sg-material-pane, #151517);
+  backdrop-filter: blur(36px) saturate(180%);
+  -webkit-backdrop-filter: blur(36px) saturate(180%);
+  box-shadow: none;
+  padding: 30px;
+  color: #ffffff;
+  position: relative;
+  transform: translateY(12px) scale(0.98);
+  transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sis-model-modal-overlay.is-open .sis-model-modal {
+  transform: translateY(0) scale(1);
+}
+
+.sis-modal-ambient {
+  position: absolute;
+  top: -80px;
+  right: -80px;
+  width: 280px;
+  height: 280px;
+  display: none;
+  pointer-events: none;
+}
+
+/* Modal Header */
+.sis-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 22px;
+  position: relative;
+  z-index: 1;
+}
+
+.sis-modal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--accent, #a855f7);
+  margin-bottom: 8px;
+}
+
+.sis-modal-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 4px 0;
+  color: #ffffff;
+}
+
+.sis-modal-desc {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.sis-modal-close {
+  background: rgba(255, 255, 255, 0.05);
+  border: none !important;
+  outline: none !important;
+  color: rgba(255, 255, 255, 0.7);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 180ms ease;
+}
+
+.sis-modal-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  transform: scale(1.05);
+}
+
+/* Active Core Card */
+.sis-active-core-card {
+  border: none !important;
+  outline: none !important;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+  padding: 18px 20px;
+  margin-bottom: 24px;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.4),
+    0 0 24px color-mix(in srgb, var(--accent, #a855f7) 16%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.sis-active-core-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sis-active-core-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sis-active-tag {
+  font-size: 9.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  background: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+}
+
+.sis-active-provider-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.sis-active-model-name {
+  font-family: var(--font-mono, monospace);
+  font-size: 12.5px;
+  color: var(--accent, #a855f7);
+  font-weight: 600;
+}
+
+.sis-active-url {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.sis-btn-ping {
+  background: rgba(255, 255, 255, 0.06);
+  border: none !important;
+  outline: none !important;
+  color: rgba(255, 255, 255, 0.9);
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 180ms ease;
+  white-space: nowrap;
+}
+
+.sis-btn-ping:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+/* Section Headings */
+.sis-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.sis-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* Profiles List */
+.sis-profiles-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 26px;
+}
+
+.sis-profile-tile {
+  border: none !important;
+  outline: none !important;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.035);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all 180ms ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.sis-profile-tile:hover {
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.sis-profile-tile.is-active-tile {
+  background: var(--sg-glass-selected, rgb(206 137 85 / 29%));
+  box-shadow: none;
+}
+
+.sis-profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sis-profile-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.sis-profile-sub {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.55);
+  font-family: var(--font-mono, monospace);
+}
+
+.sis-profile-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sis-btn-switch {
+  background: var(--accent, #a855f7);
+  border: none !important;
+  outline: none !important;
+  color: #ffffff;
+  padding: 7px 16px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 180ms ease;
+  box-shadow: 0 3px 12px color-mix(in srgb, var(--accent, #a855f7) 35%, transparent);
+}
+
+.sis-btn-switch:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+  box-shadow: 0 5px 18px color-mix(in srgb, var(--accent, #a855f7) 50%, transparent);
+}
+
+.sis-active-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #34d399;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: rgba(52, 211, 153, 0.12);
+}
+
+.sis-btn-del {
+  background: transparent;
+  border: none !important;
+  outline: none !important;
+  color: rgba(255, 255, 255, 0.4);
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 160ms ease;
+}
+
+.sis-btn-del:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+/* Add Provider Drawer */
+.sis-add-provider-card {
+  border: none !important;
+  outline: none !important;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 20px;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+
+.sis-drawer-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: transparent;
+  border: none !important;
+  outline: none !important;
+  color: var(--accent, #a855f7);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.sis-drawer-content {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sis-drawer-content[hidden] {
+  display: none;
+}
+
+/* Preset Quick-Buttons */
+.sis-quick-presets {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+@media (max-width: 520px) {
+  .sis-quick-presets {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.sis-quick-preset-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: none !important;
+  outline: none !important;
+  border-radius: 10px;
+  padding: 8px 10px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  transition: all 180ms ease;
+}
+
+.sis-quick-preset-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.sis-quick-preset-btn.is-selected {
+  background: color-mix(in srgb, var(--accent, #a855f7) 25%, transparent);
+  color: var(--accent, #a855f7);
+}
+
+/* Form Fields - Completely Borderless */
+.sis-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 520px) {
+  .sis-form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sis-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sis-field label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.sis-field input {
+  border: none !important;
+  outline: none !important;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 10px 14px;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 12.5px;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+  transition: all 180ms ease;
+}
+
+.sis-field input:focus {
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.5),
+    0 0 16px color-mix(in srgb, var(--accent, #a855f7) 30%, transparent);
+}
+
+.sis-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.sis-btn-secondary {
+  background: rgba(255, 255, 255, 0.06);
+  border: none !important;
+  outline: none !important;
+  color: rgba(255, 255, 255, 0.85);
+  padding: 9px 16px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 180ms ease;
+}
+
+.sis-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.sis-btn-primary {
+  background: var(--accent, #a855f7);
+  border: none !important;
+  outline: none !important;
+  color: #ffffff;
+  padding: 9px 18px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 180ms ease;
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent, #a855f7) 35%, transparent);
+}
+
+.sis-btn-primary:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--accent, #a855f7) 50%, transparent);
+}
+
+.sis-status-toast {
+  font-size: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  margin-top: 10px;
+  display: none;
+  align-items: center;
+  gap: 8px;
+  border: none !important;
+}
+
+.sis-status-toast.is-success {
+  display: flex;
+  background: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+}
+
+.sis-status-toast.is-error {
+  display: flex;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.sis-status-toast.is-loading {
+  display: flex;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+}

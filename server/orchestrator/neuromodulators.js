@@ -47,6 +47,7 @@ class NeuromodulatorySystem extends EventEmitter {
 
     // Pulse reuptake every 1 second
     this._interval = setInterval(() => this._reuptakeStep(), 1000);
+    this._interval?.unref?.();
   }
 
   stop() {

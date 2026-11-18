@@ -738,6 +738,18 @@ export async function outerReview(fullResponse, userMessage, conversationHistory
     1.0,
     Math.max(0.7, 0.7 + (wordCount > 30 ? 0.2 : 0) + (hasCode ? 0.1 : 0)),
   );
+  if (process.env.ENABLE_BACKGROUND_LLM_LOOPS !== 'true') {
+    const result = {
+      overallScore: fallbackScore,
+      corrections: [],
+      shouldFollowUp: false,
+      followUpMessage: '',
+      satisfactionPrediction: fallbackScore,
+      memoryUpdates: [],
+    };
+    shortTermMemory.store(['outer-review', 'metrics'], result);
+    return result;
+  }
   try {
     const judge = await quickAI(
       PROMPTS.outerReviewer,

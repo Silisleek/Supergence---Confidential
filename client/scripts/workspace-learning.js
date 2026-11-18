@@ -266,6 +266,98 @@
   conversationView.dataset.learningView = 'conversation';
   conversationView.hidden = true;
   dialog.append(conversationView);
+  function mountSleepReview(id) {
+    const section = node('section', 'arem-sleep-review');
+    section.setAttribute('aria-labelledby', 'aremSleepHeading');
+    const heading = node('h3', '', 'Arem sleep');
+    heading.id = 'aremSleepHeading';
+    section.append(
+      heading,
+      node(
+        'p',
+        'learning-note',
+        'Arem reviews saved turns with its configured model and keeps source quotes for later turns in this chat.',
+      ),
+    );
+    const state = node('p', 'learning-note', 'Loading sleep status…');
+    state.setAttribute('role', 'status');
+    const actions = node('div', 'learning-source-actions');
+    const notes = node('div');
+    let requested = false;
+    let timer;
+    let requestVersion = 0;
+    let noteIds = null;
+    const outcome = {
+      busy: 'Arem can review memory once the active chat turn finishes.',
+      already_running: 'Arem is already reviewing memory. Try again when it finishes.',
+      interrupted: 'Review was interrupted. Pending turns are available to retry.',
+      error: 'Review could not finish. Check the Arem model connection and retry.',
+      missing: 'This conversation is no longer saved.',
+      empty: 'No completed turns are waiting for review.',
+    };
+    const review = button('Review memory', async () => {
+      requested = true;
+      review.disabled = true;
+      state.textContent = 'Starting memory review…';
+      let message;
+      try {
+        const run = api('/api/arem/dream', { conversationId: id });
+        void refresh();
+        const result = await run;
+        message = outcome[result.status];
+      } catch (error) {
+        message = error.message;
+      } finally {
+        requested = false;
+        await refresh(message);
+      }
+    });
+    review.disabled = true;
+    actions.append(review);
+    section.append(state, actions, notes);
+    conversationView.prepend(section);
+    async function refresh(message) {
+      clearTimeout(timer);
+      if (!state.isConnected || !dialog.open || conversationView.hidden) return;
+      const version = ++requestVersion;
+      try {
+        const { sleep } = await api(`/api/arem/sleep/${encodeURIComponent(id)}`);
+        if (!state.isConnected || version !== requestVersion) return;
+        const running = sleep.phase !== 'awake';
+        const pending = `${sleep.pending} completed ${sleep.pending === 1 ? 'turn' : 'turns'} waiting for review.`;
+        const report = sleep.report;
+        const last = report
+          ? ` Last review retained ${report.retained} ${report.retained === 1 ? 'note' : 'notes'} from ${report.reviewed} ${report.reviewed === 1 ? 'turn' : 'turns'}.${sleep.organized === 'unavailable' ? ' The organized notes file is unavailable.' : ''}`
+          : '';
+        const label =
+          sleep.phase === 'rehearsing' ? 'Checking proposed notes…' : 'Reviewing saved turns…';
+        const text =
+          running || requested ? label : message || outcome[sleep.lastOutcome] || pending + last;
+        if (state.textContent !== text) state.textContent = text;
+        review.disabled = requested || running || !sleep.pending;
+        const ids = sleep.notes.map(({ id }) => id).join(',');
+        if (ids !== noteIds)
+          notes.replaceChildren(
+            ...sleep.notes.map(({ title, note, sourceId }) => {
+              const entry = node('details');
+              entry.append(
+                node('summary', '', title),
+                node('blockquote', '', note),
+                node('p', 'learning-note', `Source turn ${sourceId}`),
+              );
+              return entry;
+            }),
+          );
+        noteIds = ids;
+        if (running || requested) timer = setTimeout(refresh, 700);
+      } catch {
+        if (!state.isConnected || version !== requestVersion) return;
+        state.textContent = message || 'Sleep status unavailable.';
+        review.disabled = requested;
+      }
+    }
+    void refresh();
+  }
   conversationTab.addEventListener('click', async () => {
     conversationView.replaceChildren(
       node('p', 'learning-note', 'Loading saved conversation context…'),
@@ -303,6 +395,7 @@
         conversationView.append(
           node('p', 'learning-note', 'No explicit personal notes saved yet.'),
         );
+      mountSleepReview(id);
     } catch (error) {
       conversationView.replaceChildren(node('p', 'learning-note', error.message));
     }
@@ -534,8 +627,9 @@
     renderSources();
   }
   window.LearningPanel = {
-    show: async () => {
+    show: async (tab) => {
       if (!dialog.open) dialog.showModal();
+      if (tab === 'conversation') conversationTab.click();
       try {
         await refresh();
       } catch (error) {

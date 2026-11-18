@@ -662,6 +662,12 @@ Output ONLY valid JSON:
 
     if (resolvedTestFile && fs.existsSync(resolvedTestFile)) {
       const redRun = await sandbox.executeTest(resolvedTestFile);
+      if (redRun.executed === false || redRun.timedOut || redRun.exitCode == null) {
+        result.phases.redPhase = { passed: false, error: redRun.stderr };
+        result.rewardStatus = 'RED_EXECUTION_UNAVAILABLE';
+        result.durationMs = Date.now() - startTime;
+        return result;
+      }
       if (redRun.exitCode === 0) {
         // HARD GATE: Reproduction test passed pre-patch! Misdiagnosis detected!
         result.phases.redPhase = {
@@ -684,9 +690,12 @@ Output ONLY valid JSON:
       }
     } else {
       result.phases.redPhase = {
-        passed: true,
-        note: 'Reproduction test provided inline or pre-evaluated',
+        passed: false,
+        error: 'A reproduction test file is required for verified patching.',
       };
+      result.rewardStatus = 'REPRODUCTION_TEST_MISSING';
+      result.durationMs = Date.now() - startTime;
+      return result;
     }
 
     // Step 4: Surgical Patch Generation & Diff Budget Check

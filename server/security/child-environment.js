@@ -31,3 +31,11 @@ export function childEnvironment(overrides = {}) {
     }),
   );
 }
+
+export function sandboxEnvironment({ includePath = false } = {}) {
+  const allowed = new Set(['SYSTEMROOT', 'WINDIR', 'LANG', 'LC_ALL']);
+  if (includePath) allowed.add('PATH');
+  return Object.fromEntries(
+    Object.entries(process.env).filter(([key]) => allowed.has(key.toUpperCase())),
+  );
+}

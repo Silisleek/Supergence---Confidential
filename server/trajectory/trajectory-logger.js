@@ -18,9 +18,28 @@ export class TrajectoryLogger {
     this.stepIndex = 0;
   }
 
-  logStep({ state, action, observation, reward, metadata = {} }) {
+  logStep({
+    state,
+    action,
+    observation,
+    reward,
+    metadata = {},
+    taskId = null,
+    runId = null,
+    model = null,
+    promptHash = null,
+    codeHash = null,
+    seed = null,
+  }) {
     const entry = {
       sessionId: this.sessionId,
+      taskId,
+      runId,
+      model,
+      promptHash,
+      codeHash,
+      seed,
+      nodeVersion: process.version,
       step: this.stepIndex++,
       timestamp: new Date().toISOString(),
       state, // e.g., prompt, target file context, error messages
@@ -37,6 +56,21 @@ export class TrajectoryLogger {
     const dpoFile = path.join(TRAJECTORY_DIR, 'dpo_pairs.jsonl');
     const winningList = Array.isArray(winningTrajectory) ? winningTrajectory : [winningTrajectory];
     const losingList = Array.isArray(losingTrajectory) ? losingTrajectory : [losingTrajectory];
+    const winner = winningList.at(-1);
+    const loser = losingList.at(-1);
+    if (
+      !winner ||
+      !loser ||
+      winner.observation?.grade !== 'OBSERVED' ||
+      loser.observation?.grade !== 'OBSERVED' ||
+      !winner.runId ||
+      winner.runId !== loser.runId ||
+      !Number.isFinite(winner.reward) ||
+      !Number.isFinite(loser.reward) ||
+      winner.reward <= loser.reward
+    )
+      return null;
+
     const pair = {
       prompt:
         winningList[0]?.state?.prompt || losingList[0]?.state?.prompt || 'Autonomous coding task',

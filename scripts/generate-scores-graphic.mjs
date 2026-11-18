@@ -824,12 +824,12 @@ console.log('Saved antislop HTML to:', htmlPath);
 async function renderScreenshot() {
   const browser = await playwright.chromium.launch({
     executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-    headless: true
+    headless: true,
   });
 
   const page = await browser.newPage({
     viewport: { width: 2100, height: 1200 },
-    deviceScaleFactor: 2 // 2x Retina quality for crisp presentation
+    deviceScaleFactor: 2, // 2x Retina quality for crisp presentation
   });
 
   await page.setContent(htmlContent, { waitUntil: 'networkidle' });
@@ -838,14 +838,14 @@ async function renderScreenshot() {
   const outputPath = path.join(rootDir, 'images', 'supergence-benchmark-scores.png');
   await page.screenshot({
     path: outputPath,
-    fullPage: true
+    fullPage: true,
   });
 
   console.log('Saved antislop high-res benchmark image to:', outputPath);
   await browser.close();
 }
 
-renderScreenshot().catch(err => {
+renderScreenshot().catch((err) => {
   console.error('Error generating screenshot:', err);
   process.exit(1);
 });

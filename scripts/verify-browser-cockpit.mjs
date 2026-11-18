@@ -73,7 +73,10 @@ try {
   assert.equal(topIsland, true, 'Top Dynamic Island must be visible');
   assert.equal(agentDock, true, 'Right Floating Agent Dock must be visible');
 
-  const artifactDir = path.resolve(__dirname, '../../../../.gemini/antigravity/brain/cc78a903-c95c-43ff-b918-06eb784f9796');
+  const artifactDir = path.resolve(
+    __dirname,
+    '../../../../.gemini/antigravity/brain/cc78a903-c95c-43ff-b918-06eb784f9796',
+  );
 
   // 3. Mount Landing Hero and capture screenshot
   console.log('Mounting Landing Hero...');
@@ -98,10 +101,16 @@ try {
   console.log('Mounting Active Conversation Card...');
   await page.evaluate(() => {
     const stream = document.getElementById('chatTurnsStream');
-    window.SupergenceLiquidGlass.renderConversation([
-      { role: 'user', content: 'Hey Supergence, What are you doing?' },
-      { role: 'assistant', content: 'I am doing well and I am ready to help you. Ready to dive in?' }
-    ], stream);
+    window.SupergenceLiquidGlass.renderConversation(
+      [
+        { role: 'user', content: 'Hey Supergence, What are you doing?' },
+        {
+          role: 'assistant',
+          content: 'I am doing well and I am ready to help you. Ready to dive in?',
+        },
+      ],
+      stream,
+    );
   });
   await page.waitForTimeout(500);
 
@@ -135,7 +144,9 @@ try {
   // Close via backdrop click
   await page.click('#workspaceDrawerBackdrop');
   await page.waitForTimeout(400);
-  const drawerClosed = await page.locator('.workspace-conversations-sidebar.drawer-open').isVisible();
+  const drawerClosed = await page
+    .locator('.workspace-conversations-sidebar.drawer-open')
+    .isVisible();
   console.log('- Drawer closed state:', !drawerClosed);
   assert.equal(drawerClosed, false);
 
@@ -147,5 +158,7 @@ try {
   process.exitCode = 1;
 } finally {
   await context.close();
-  try { fs.rmSync(testProfileDir, { recursive: true, force: true }); } catch (_) {}
+  try {
+    fs.rmSync(testProfileDir, { recursive: true, force: true });
+  } catch (_) {}
 }

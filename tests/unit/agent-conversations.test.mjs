@@ -105,3 +105,32 @@ test('configured user chat streams actual callback text and keeps tool activity 
     fs.rmSync(directory, { recursive: true, force: true });
   }
 });
+
+test('project team chat records real delegation and isolates other projects', async () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'sis-team-chat-'));
+  try {
+    const received = [];
+    configureAgentConversationRuntime({ reply: async (context) => {
+      received.push({ projectId: context.projectId, provenance: context.provenance, agent: context.agent.id });
+      context.onToolCall({ id: 'work-1', tool: 'read_file', status: 'RUNNING' });
+      context.onToolResult({ id: 'work-1', tool: 'read_file', status: 'RESOLVED', output: { bytes: 12 } });
+      return 'Actual agent response';
+    } });
+    const store = new AgentConversations({ directory, roster });
+    const first = await store.sendTeam('project-a', { content: 'Inspect the file', targetAgentId: 'alpha' });
+    assert.deepEqual(first.messages.map(({ senderId }) => senderId), ['user', 'alpha']);
+    assert.equal(first.activity[0].status, 'RESOLVED');
+    const second = await store.messageAgent({ projectId: 'project-a', senderAgentId: 'alpha', targetAgentId: 'beta', content: 'Please review the findings.' });
+    assert.equal(second.id, first.id);
+    assert.deepEqual(second.messages.slice(-2).map(({ senderId }) => senderId), ['alpha', 'beta']);
+    assert.deepEqual(received.map(({ projectId, provenance }) => [projectId, provenance]), [['project-a', 'user'], ['project-a', 'agent-tool']]);
+    assert.equal(store.team('project-b'), null);
+    await assert.rejects(store.messageAgent({ projectId: 'project-b', threadId: first.id, senderAgentId: 'supergence', targetAgentId: 'alpha', content: 'Wrong project' }), /another project/);
+    assert.throws(() => store.team('../outside'), /Invalid|valid/);
+    const restored = new AgentConversations({ directory, roster });
+    assert.equal(restored.team('project-a').messages.length, 4);
+    assert.equal(restored.team('project-a').messages[2].content, 'Please review the findings.');
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});

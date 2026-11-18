@@ -14,6 +14,23 @@ import { contextualInference } from '../../server/services/contextualInference.j
 import { extractToolCall, nativeToolChoice } from '../../server/services/assistantStream.js';
 import { LearningLibrary } from '../../server/services/learningLibrary.js';
 
+test('provider failures and legacy failure echoes do not become assistant replies in context', () => {
+  const history = [
+    { role: 'user', content: 'Hello' },
+    { role: 'assistant', content: '', status: 'error', error: '401 Missing Authentication header' },
+    {
+      role: 'assistant',
+      content: 'Previous attempt did not finish: 401 Missing Authentication header',
+      status: 'completed',
+    },
+  ];
+  assert.deepEqual(conversationMessages(history, 'Are you there?'), [
+    { role: 'user', content: 'Hello' },
+    { role: 'user', content: 'Are you there?' },
+  ]);
+  assert.equal(resolveConversationIntent('Are you there?', history).previousAssistant, null);
+});
+
 test('project resumes use actual action outcomes rather than replaying unfinished planning', () => {
   const history = [
     {

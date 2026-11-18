@@ -103,6 +103,8 @@ export function globalInputValidator(req, res, next) {
       /^\/api\/sis\/unified-turn(?:-stream)?\/?$/i.test(req.path) ||
       /^\/api\/(?:chat|tools\/execute)\/?$/i.test(req.path) ||
       /^\/api\/agent-conversations\/[^/]+\/messages\/?$/i.test(req.path) ||
+      (req.method === 'PUT' &&
+        /^\/api\/conversations\/[^/]+\/workspace\/file\/?$/i.test(req.path)) ||
       /^\/api\/learning\/(?:sources(?:\/[^/]+(?:\/check)?)?|upload|search|studies(?:\/[^/]+\/experience)?)\/?$/i.test(
         req.path,
       );

@@ -54,11 +54,12 @@ try {
     await page.waitForFunction(() => !!document.querySelector('.sidebar-conv-item.active'));
     await page.screenshot({ path: path.join(output, 'conversation.png') });
     const title = await page.locator('.sidebar-conv-item.active .conv-title').innerText();
+    await page.locator('#sgHistorySearch').click();
     await page.locator('#sidebarConvSearch').fill(title.slice(0, 20));
     assert.ok((await page.locator('.sidebar-conv-item').count()) > 0);
     await page.locator('#sidebarConvSearch').fill('no-conversation-matches-this-search');
     assert.equal(await page.locator('.sidebar-conv-item').count(), 0);
-    await page.locator('#sidebarConvSearch').fill('');
+    await page.keyboard.press('Escape');
     checks.push('real conversation restore and history search');
   }
 

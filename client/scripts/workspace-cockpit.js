@@ -87,7 +87,7 @@
     }
   });
   retainPage.id = 'workspaceRetainPage';
-  browser.mount().querySelector('.wb-footer').append(retainPage);
+  browser.mount()?.querySelector('.wb-footer')?.append(retainPage);
 
   browser.registerSection('files', async (container) => {
     if (window.SupergenceChatWorkspace) {
@@ -95,7 +95,7 @@
     }
     const sharedSection = make('section', 'cockpit-shared-files');
     sharedSection.append(
-      make('h2', '', 'Workspace files'),
+      make('h2', '', 'Shared workspace files'),
       make(
         'p',
         'cockpit-note',
@@ -108,7 +108,7 @@
     search.setAttribute('aria-label', 'Search workspace files');
     const results = make('div', 'cockpit-list');
     sharedSection.append(search, results);
-    const targetParent = container.querySelector('.cw-files') || container;
+    const targetParent = container.querySelector('.cw-shared') || container;
     for (const previous of targetParent.querySelectorAll(':scope > .cockpit-shared-files'))
       previous.remove();
     targetParent.append(sharedSection);

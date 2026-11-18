@@ -34,6 +34,7 @@ class GlymphaticDaemon {
 
     // Check every 45s if deep sleep maintenance should execute
     this._interval = setInterval(() => this._tick(), 45000);
+    this._interval?.unref?.();
   }
 
   stop() {

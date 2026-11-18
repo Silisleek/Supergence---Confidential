@@ -36,6 +36,7 @@ class NeuralOscillations extends EventEmitter {
     );
 
     this._interval = setInterval(() => this._oscillateStep(), 1500);
+    this._interval?.unref?.();
   }
 
   stop() {

@@ -26,7 +26,8 @@
     mastery: () => window.toggleMasteryModal(true),
     features: () => window.toggleFiftyFeaturesModal(true),
     learning: () => (window.LearningPanel ? window.LearningPanel.show() : null),
-    preferences: () => preferences.showModal(),
+    suggestions: () => document.querySelector('.proactive-open')?.click(),
+    preferences: () => window.openStylesWindow ? window.openStylesWindow('general') : preferences.showModal(),
     styles: () =>
       window.openStylesWindow ? window.openStylesWindow('styles') : preferences.showModal(),
     help: () => shortcuts.showModal(),
@@ -57,13 +58,14 @@
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
       event.preventDefault();
       if (window.SupergenceLiquidGlass) {
-        window.SupergenceLiquidGlass.toggleDrawer(true, { focus: true });
+        window.SupergenceLiquidGlass.toggleDrawer(true);
+        window.SupergenceConversationSidebar?.focusSearch();
         return;
       }
       const sidebar = document.getElementById('workspaceConversationsSidebar');
       sidebar.classList.remove('collapsed');
       if (window.matchMedia('(max-width: 800px)').matches) sidebar.classList.add('mobile-open');
-      document.getElementById('sidebarConvSearch').focus();
+      window.SupergenceConversationSidebar?.focusSearch();
     }
     if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === 'o') {
       event.preventDefault();
@@ -75,7 +77,7 @@
   const theme = document.getElementById('shellThemePreference');
   const storedTheme = localStorage.getItem('sis-ui-theme');
   const validThemes = ['obsidian', 'warm', 'midnight', 'cyber'];
-  const activeTheme = validThemes.includes(storedTheme) ? storedTheme : 'midnight';
+  const activeTheme = validThemes.includes(storedTheme) ? storedTheme : 'warm';
   if (theme) theme.value = activeTheme;
   document.body.dataset.theme = activeTheme;
   if (theme) {
@@ -100,6 +102,47 @@
     document.body.dataset.compact = String(compact.checked);
     localStorage.setItem('sis-ui-compact', String(compact.checked));
   });
+
+  const autostart = document.getElementById('shellAutostartPreference');
+  const autostartSubtitle = document.getElementById('shellAutostartSubtitle');
+
+  async function updateAutostartUi() {
+    if (!autostart) return;
+    try {
+      let status;
+      if (window.electronAPI?.getAutostartStatus) {
+        status = await window.electronAPI.getAutostartStatus();
+      } else {
+        const res = await fetch('/api/autostart/status', { credentials: 'include' });
+        if (res.ok) status = await res.json();
+      }
+      if (status) {
+        autostart.checked = Boolean(status.enabled);
+        if (autostartSubtitle && status.details) {
+          autostartSubtitle.textContent = status.details;
+        }
+      }
+    } catch (_) {}
+  }
+
+  if (autostart) {
+    updateAutostartUi();
+    autostart.addEventListener('change', async () => {
+      const willEnable = autostart.checked;
+      try {
+        if (window.electronAPI?.setAutostartStatus) {
+          await window.electronAPI.setAutostartStatus(willEnable);
+        } else {
+          await fetch(willEnable ? '/api/autostart/enable' : '/api/autostart/disable', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+          });
+        }
+      } catch (_) {}
+      await updateAutostartUi();
+    });
+  }
 
   for (const dialog of [preferences, shortcuts]) {
     dialog.addEventListener('click', (event) => {

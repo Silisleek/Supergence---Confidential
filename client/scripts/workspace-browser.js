@@ -39,11 +39,16 @@
   const renderers = new Map();
   const documentTitles = new Map();
   const $ = (selector) => panel?.querySelector(selector);
-  const visible = () => !!panel && !panel.hidden;
+  const visible = () =>
+    !!panel &&
+    !panel.hidden &&
+    (!panel.hasAttribute('data-docked') || !!panel.closest('.sg-space-panel.active'));
 
   function setStatus(message, error = false, phase = 'ready') {
-    if (!$('.wb-status')) return;
-    $('.wb-status').textContent = message;
+    const status = $('.wb-status');
+    if (!status) return;
+    status.textContent = message;
+    status.title = message;
     panel.dataset.state = error ? 'error' : phase;
     panel.setAttribute('aria-busy', String(!error && phase === 'loading'));
   }
@@ -170,6 +175,14 @@
 
   function applyState(state) {
     if (!state) return;
+    if (typeof state.isOpen === 'boolean') {
+      for (const button of panel.querySelectorAll('.wb-toolbar [data-nav]'))
+        button.disabled = !state.isOpen;
+      if (!state.isOpen) {
+        $('.wb-frame').hidden = true;
+        $('.wb-empty').hidden = false;
+      }
+    }
     updateAddress(state.currentUrl || state.url);
     if (state.tabs) updateTabs(state.tabs, state.activeTabId);
     updateTitle(state.pageTitle || state.title, state.currentUrl || state.url);
@@ -252,36 +265,26 @@
   }
 
   async function navigate(value) {
-    mount();
-    panel.hidden = false;
-    document.body.classList.add('has-workspace-browser');
-    selectSection('browser');
-    try {
-      const url = resolveAddress(value);
-      $('.wb-address').value = url;
-      setStatus('Loading page…', false, 'loading');
-      const result = await request('navigate', { url });
-      updateAddress(result.url);
-      await refreshState();
-      return result;
-    } catch (error) {
-      setStatus(error.message, true);
-      return { success: false, error: error.message };
-    }
+    return show({ url: value });
   }
 
   async function ensureSession(url) {
     if (openPromise) {
       await openPromise;
-      return url ? navigate(url) : refreshState();
+      return url ? ensureSession(url) : refreshState();
     }
     $('.wb-agent-select').disabled = true;
     openPromise = (async () => {
-      setStatus('Connecting to Chrome…');
+      setStatus('Connecting to Chrome…', false, 'loading');
       const data = await request('state', undefined, 'GET');
-      if (!data.state?.isOpen) await request('open', {});
-      if (url || !data.state?.currentUrl || data.state.currentUrl === 'about:blank') {
-        return navigate(url || HOME);
+      if (url || !data.state?.isOpen || data.state.currentUrl === 'about:blank') {
+        const destination = resolveAddress(url || HOME);
+        setStatus('Loading page…', false, 'loading');
+        const result = await request('navigate', { url: destination });
+        updateAddress(result.url);
+        const updated = await request('state', undefined, 'GET');
+        applyState(updated.state);
+        return result;
       }
       applyState(data.state);
       return data;
@@ -375,12 +378,18 @@
   }
 
   function mount() {
-    if (panel) return panel;
-    const viewport = document.querySelector('.workspace-columns-viewport');
+    const dock = document.querySelector('#sgBrowserDock');
+    const viewport = dock || document.querySelector('.workspace-columns-viewport');
     if (!viewport) return null;
+    if (panel) {
+      if (panel.parentElement !== viewport) viewport.append(panel);
+      panel.toggleAttribute('data-docked', !!dock);
+      return panel;
+    }
     panel = document.createElement('aside');
     panel.id = 'workspaceBrowserPanel';
     panel.className = 'workspace-browser-panel';
+    panel.toggleAttribute('data-docked', !!dock);
     panel.setAttribute('aria-label', 'Workspace browser');
     panel.hidden = true;
     panel.innerHTML = `
@@ -401,7 +410,7 @@
         <div class="wb-session-row"><label for="workspaceBrowserAgent">Shared session</label><select id="workspaceBrowserAgent" class="wb-agent-select" aria-label="Browser agent"><option value="agent-supergence">Supergence</option></select></div>
         <div class="wb-tabs" aria-label="Browser tabs"></div>
         <form class="wb-toolbar" aria-label="Navigate browser"><button type="button" class="wb-icon" data-nav="back" aria-label="Browser back">${svg('back')}</button><button type="button" class="wb-icon" data-nav="forward" aria-label="Browser forward">${svg('forward')}</button><button type="button" class="wb-icon" data-nav="reload" aria-label="Reload browser">${svg('reload')}</button><div class="wb-address-wrap">${svg('link')}<input class="wb-address" type="text" aria-label="Browser address or search" spellcheck="false" autocomplete="off" value="${HOME}"></div><button type="submit" class="wb-icon wb-go" aria-label="Go to address">${svg('forward')}</button><a class="wb-icon wb-external" href="${HOME}" target="_blank" rel="noopener noreferrer" aria-label="Open current page in a new tab">${svg('external')}</a></form>
-        <div class="wb-stage" tabindex="0" role="group" aria-label="Interactive browser. Click the page, then type. Paste is supported."><img class="wb-frame" hidden alt="Live view of the shared Chrome browser" draggable="false"><div class="wb-empty">${svg('browser')}<h2>Your browser, alongside your thinking.</h2><p>Open a local page or explore the web with Supergence.</p><button type="button" class="wb-section-action wb-connect">Open Google</button></div></div>
+        <div class="wb-stage" tabindex="0" role="group" aria-label="Interactive browser. Click the page, then type. Paste is supported."><img class="wb-frame" hidden alt="Live view of the shared Chrome browser" draggable="false"><div class="wb-empty">${svg('browser')}<p>Enter an address or search the web.</p><button type="button" class="wb-section-action wb-connect">Open Google</button></div></div>
         <footer class="wb-footer"><span class="wb-status" role="status">Browser is closed.</span><button type="button" class="wb-icon" data-nav="home" aria-label="Open Google home">${svg('home')}</button></footer>
         <p class="wb-input-hint">Click the page to control it. Type, scroll, or paste into the focused field.</p>
       </div><div class="wb-section-content" hidden></div>`;
@@ -409,7 +418,7 @@
     resizeObserver = new ResizeObserver(scheduleViewport);
     resizeObserver.observe($('.wb-stage'));
     $('.wb-close').addEventListener('click', hide);
-    $('.wb-connect').addEventListener('click', () => ensureSession(HOME));
+    $('.wb-connect').addEventListener('click', () => navigate(HOME));
     $('.wb-toolbar').addEventListener('submit', (event) => {
       event.preventDefault();
       navigate($('.wb-address').value);
@@ -509,13 +518,24 @@
 
   async function show(options = {}) {
     if (!mount()) return { success: false, error: 'Workspace layout unavailable.' };
+    if (
+      options.section === 'files' &&
+      panel.hasAttribute('data-docked') &&
+      window.SupergenceChatWorkspace
+    ) {
+      panel.parentElement.dispatchEvent(new Event('sis:show-chat-files'));
+      return { success: true, section: 'files' };
+    }
     if (options.agentId && options.agentId !== agentId) {
       agentId = options.agentId;
       $('.wb-agent-select').value = agentId;
     }
     panel.hidden = false;
-    document.body.classList.add('has-workspace-browser');
-    document.body.classList.add('split-workspace-active');
+    if (panel.hasAttribute('data-docked')) {
+      panel.parentElement.dispatchEvent(new Event('sis:show-browser-dock'));
+    } else {
+      document.body.classList.add('has-workspace-browser', 'split-workspace-active');
+    }
     const button = document.getElementById('workspaceBtnSideBrowser');
     button?.setAttribute('aria-expanded', 'true');
     selectSection(options.section || 'browser');
@@ -528,6 +548,8 @@
   function hide() {
     if (!panel) return;
     panel.hidden = true;
+    if (panel.hasAttribute('data-docked'))
+      panel.parentElement.dispatchEvent(new Event('sis:hide-browser-dock'));
     document.body.classList.remove('has-workspace-browser');
     if (!document.body.classList.contains('superbox-open')) {
       document.body.classList.remove('split-workspace-active');
@@ -548,6 +570,7 @@
       renderers.set(id, renderer);
       if (visible() && activeSection === id) selectSection(id);
     },
+    renderRegisteredSection: (id, container) => renderers.get(id)?.(container, { agentId }),
     get agentId() {
       return agentId;
     },

@@ -17,6 +17,96 @@
 .workspace-browser-panel [hidden] {
   display: none !important;
 }
+
+.sg-space-content:has(> #sgPanelBrowser.active) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden !important;
+  padding: 8px clamp(12px, 2vw, 24px) 18px !important;
+}
+
+#sgPanelBrowser.active {
+  display: flex !important;
+}
+
+#sgPanelBrowser.active,
+#sgBrowserDock {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+#sgBrowserDock {
+  display: flex;
+}
+
+#sgBrowserDock > .workspace-browser-panel[data-docked] {
+  --shell-text: #f5ebee;
+  --shell-text-secondary: #ded0dc;
+  --shell-muted: #cdbfce;
+  --shell-subtle: #b9a9bd;
+  --shell-surface: rgba(236, 206, 235, 0.09);
+  --shell-hover: rgba(236, 206, 235, 0.055);
+  --shell-border: rgba(240, 218, 238, 0.13);
+  --shell-accent: #edd2e8;
+  --shell-code: #12101a;
+  position: relative !important;
+  inset: auto;
+  width: 100% !important;
+  height: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  animation: none !important;
+  z-index: auto !important;
+}
+
+#sgBrowserDock .wb-header {
+  min-height: 0;
+  padding: 0 0 4px;
+  border: 0;
+  background: transparent;
+}
+
+#sgBrowserDock .workspace-browser-panel[data-section='browser'] .wb-sections {
+  display: none;
+}
+
+#sgBrowserDock .workspace-browser-panel[data-section='browser'] .wb-header {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  z-index: 1;
+}
+
+#sgBrowserDock .wb-session-row {
+  padding-right: 38px;
+}
+
+#sgBrowserDock .wb-stage {
+  min-height: 0;
+}
+
+#sgBrowserDock .wb-toolbar button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+#sgBrowserDock .wb-address:focus-visible {
+  outline: none !important;
+}
+
+#sgBrowserDock .wb-address-wrap:focus-within {
+  background: var(--shell-raised);
+  box-shadow: none;
+}
+
+#sgBrowserDock .wb-address-wrap svg {
+  color: var(--shell-subtle);
+}
 .wb-header {
   display: flex;
   align-items: center;
@@ -100,7 +190,7 @@
   padding: 5px 9px;
   color: var(--shell-text);
   background: var(--shell-surface);
-  border: 1px solid var(--shell-border);
+  border: 0;
   border-radius: 8px;
   font: 11px var(--font-ui);
   font-weight: 500;
@@ -123,13 +213,11 @@
   max-width: 180px;
   border-radius: 8px;
   background: var(--shell-hover);
-  border: 1px solid transparent;
   flex-shrink: 0;
   transition: all 140ms ease;
 }
 .wb-tab[data-active='true'] {
-  background: var(--shell-surface);
-  border-color: var(--shell-border);
+  background: var(--shell-selected);
 }
 .wb-tab .wb-tab-select {
   display: block;
@@ -168,11 +256,8 @@
   padding: 0 12px;
   border-radius: 10px;
   background: var(--shell-surface);
-  border: 1px solid var(--shell-border);
   color: var(--shell-subtle);
-  transition:
-    border-color 150ms ease,
-    box-shadow 150ms ease;
+  transition: background-color 150ms ease;
 }
 .wb-address-wrap svg {
   width: 13px;
@@ -191,8 +276,7 @@
   outline: none;
 }
 .wb-address-wrap:focus-within {
-  border-color: color-mix(in srgb, var(--shell-accent) 45%, var(--shell-border));
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--shell-accent) 22%, transparent);
+  background: var(--shell-raised);
 }
 .wb-stage {
   position: relative;
@@ -204,7 +288,6 @@
   background: var(--shell-code);
   border-radius: 12px;
   margin: 0 10px 6px;
-  border: 1px solid var(--shell-border);
   outline: none;
 }
 .wb-stage:focus-visible {
@@ -264,6 +347,29 @@
 .workspace-browser-panel[data-state='error'] .wb-status {
   color: var(--shell-error);
   white-space: normal;
+}
+
+.workspace-browser-panel[data-state='loading'] .wb-status::before {
+  content: '';
+  display: inline-block;
+  width: 0.8em;
+  height: 0.8em;
+  margin-inline-end: 0.6em;
+  border: 1px solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: 50%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .workspace-browser-panel[data-state='loading'] .wb-status::before {
+    animation: wb-loading-spin 650ms linear infinite;
+  }
+}
+
+@keyframes wb-loading-spin {
+  to {
+    transform: rotate(1turn);
+  }
 }
 .wb-input-hint {
   font: 9px/1.6 var(--font-ui);

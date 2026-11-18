@@ -10,6 +10,9 @@
   WriteRegStr HKCU "Software\Classes\Applications\Supergence.exe" "ApplicationCompany" "Supergence"
   WriteRegStr HKCU "Software\Classes\Applications\Supergence.exe\DefaultIcon" "" "$INSTDIR\Supergence.exe,0"
 
+  ; Register in Windows Run for automatic startup on boot
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "Supergence" '"$INSTDIR\Supergence.exe" --boot'
+
   ; Initialize AppData structure for persistent user cognitive data
   CreateDirectory "$APPDATA\Supergence"
   CreateDirectory "$APPDATA\Supergence\data"
@@ -29,5 +32,9 @@
 !macro customUnInstall
   DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\App Paths\Supergence.exe"
   DeleteRegKey HKCU "Software\Classes\Applications\Supergence.exe"
+  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "Supergence"
+  Delete "$SMSTARTUP\Supergence.lnk"
+  Delete "$SMSTARTUP\Supergence-Autostart.vbs"
+  Delete "$SMSTARTUP\Supergence-Autostart.bat"
   System::Call 'shell32.dll::SHChangeNotify(i 0x08000000, i 0, i 0, i 0)'
 !macroend

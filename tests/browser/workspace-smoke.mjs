@@ -120,7 +120,7 @@ try {
   await page.getByRole('button', { name: 'Memory', exact: true }).click();
   await page.locator('#treePaneMemory .memory-kpi-grid').waitFor({ timeout: 30000 });
   assert.match(await page.locator('#inspectNodeConfidence').innerText(), /Unavailable/);
-  const graph = await (await page.request.get(`${baseURL}/api/memory/graph`)).json();
+  const graph = await (await page.request.get(new URL('/api/memory/graph', baseURL).href)).json();
   if (Array.isArray(graph.nodes) && graph.nodes.length)
     assert.ok((await page.locator('#memoryGraphSvg g').count()) > 0);
   else

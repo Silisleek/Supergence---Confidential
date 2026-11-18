@@ -6,6 +6,7 @@ import workspace from '../workspace/manager.js';
 import { workspaceEnvironment } from '../workspace/environment.js';
 import { inspectSceneGeometry } from './sceneGeometryInspection.js';
 import { sessionAuth } from '../security/session-auth.js';
+import { containedPath, currentWorkspace } from './conversationWorkspaces.js';
 
 export const materialKinds = [
   'wood',
@@ -29,6 +30,14 @@ const dimension = (value, fallback = 512) => {
 // Check every existing ancestor, including junctions. The studio follows the
 // active workspace instead of caching a repository-relative output directory.
 export async function studioPath(relative = '') {
+  const scope = currentWorkspace();
+  if (scope?.projectRoot) {
+    const target = workspace._resolve(relative);
+    const scoped = containedPath(scope.root, target);
+    if (!path.relative(workspace.root, scoped).startsWith('..'))
+      await fs.mkdir(workspace.root, { recursive: true });
+    return scoped;
+  }
   await fs.mkdir(workspace.root, { recursive: true });
   const root = await fs.realpath(workspace.root);
   const target = path.resolve(root, relative);
@@ -67,7 +76,8 @@ export async function createStudioProject({ name, brief = '' } = {}) {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
       .slice(0, 60) || 'project';
-  const directory = `supergence/projects/${slug}-${randomUUID().slice(0, 8)}`;
+  const projects = currentWorkspace()?.projectRoot ? 'projects' : 'supergence/projects';
+  const directory = `${projects}/${slug}-${randomUUID().slice(0, 8)}`;
   const full = await studioPath(directory);
   await fs.mkdir(full, { recursive: true });
   for (const folder of ['src', 'assets', 'renders', 'reports'])
@@ -83,20 +93,26 @@ export async function createStudioProject({ name, brief = '' } = {}) {
     `${directory}/README.md`,
     `# ${project.name}\n\n${project.brief}\n\nKeep source in src/, reusable graphics and textures in assets/, browser captures in renders/, and observed checks in reports/.\n\nBuild, run, inspect the rendered result, repair failures, then deliver links. A successful render does not prove artistic quality or task completion.\n`,
   );
+  const scope = currentWorkspace();
+  if (scope?.projectRoot) {
+    scope.projectDirectory = directory;
+    scope.projectRoot = full;
+  }
   return { ...project, path: full, success: true };
 }
 
 export async function studioStatus() {
-  const root = await studioPath('supergence/projects');
+  const projectsRoot = currentWorkspace()?.projectRoot ? 'projects' : 'supergence/projects';
+  const root = await studioPath(projectsRoot);
   await fs.mkdir(root, { recursive: true });
   const projects = [];
   for (const entry of (await fs.readdir(root, { withFileTypes: true }))
     .filter((e) => e.isDirectory())
     .slice(-100)) {
     try {
-      const file = await studioPath(`supergence/projects/${entry.name}/project.json`);
+      const file = await studioPath(`${projectsRoot}/${entry.name}/project.json`);
       const manifest = JSON.parse(await fs.readFile(file, 'utf8'));
-      const directory = `supergence/projects/${entry.name}`;
+      const directory = `${projectsRoot}/${entry.name}`;
       const assetsDirectory = await studioPath(`${directory}/assets`);
       const assets = (await fs.readdir(assetsDirectory, { withFileTypes: true }))
         .filter((asset) => asset.isFile() && /\.(png|svg|jpe?g|webp)$/i.test(asset.name))

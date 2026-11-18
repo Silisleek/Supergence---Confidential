@@ -5,7 +5,7 @@
  * Works across Windows, macOS, and Linux.
  * 
  * Auto-detects dependencies, initializes environment, launches the backend & frontend,
- * and automatically opens the user's browser to loopback.
+ * manages automated boot initialization, and opens the user's browser.
  */
 
 import { spawn, execSync } from 'node:child_process';
@@ -13,10 +13,57 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import http from 'node:http';
+import dotenv from 'dotenv';
+import autostartManager from '../server/services/autostartManager.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT_DIR = path.resolve(__dirname, '..');
+
+// Load environment configuration
+dotenv.config({ path: path.join(ROOT_DIR, '.env') });
+
+// Handle CLI Autostart Management Flags
+if (process.argv.includes('--status-autostart')) {
+  const status = autostartManager.getStatus();
+  console.log('\n[Supergence Autostart Status]');
+  console.log(`  Eligible:     ${status.eligible}`);
+  console.log(`  Platform:     ${status.platformLabel} (${status.platform})`);
+  console.log(`  Method:       ${status.method}`);
+  console.log(`  Enabled:      ${status.enabled ? 'YES' : 'NO'}`);
+  console.log(`  Details:      ${status.details}`);
+  if (status.registeredPaths?.length) {
+    console.log('  Registered:');
+    status.registeredPaths.forEach((p) => console.log(`    - ${p}`));
+  }
+  console.log('');
+  process.exit(0);
+}
+
+if (process.argv.includes('--install-autostart') || process.argv.includes('--enable-autostart')) {
+  const result = autostartManager.enable();
+  if (result.success) {
+    console.log(`\x1b[32m[AutoBoot] ${result.message}\x1b[0m`);
+    if (result.paths?.length) {
+      result.paths.forEach((p) => console.log(`  - ${p}`));
+    }
+    process.exit(0);
+  } else {
+    console.error(`\x1b[31m[AutoBoot ERROR] ${result.error}\x1b[0m`);
+    process.exit(1);
+  }
+}
+
+if (process.argv.includes('--uninstall-autostart') || process.argv.includes('--disable-autostart')) {
+  const result = autostartManager.disable();
+  if (result.success) {
+    console.log(`\x1b[36m[AutoBoot] ${result.message}\x1b[0m`);
+    process.exit(0);
+  } else {
+    console.error(`\x1b[31m[AutoBoot ERROR] ${result.error}\x1b[0m`);
+    process.exit(1);
+  }
+}
 
 // Print Banner
 console.log(`
@@ -29,6 +76,10 @@ console.log(`
 \x1b[36m             Beyond Ordinary Minds · SIS 1.0\x1b[0m
 `);
 
+const isBootLaunch = process.argv.includes('--boot');
+if (isBootLaunch) {
+  console.log('\x1b[36m[AutoBoot] Supergence launched via system boot sequence.\x1b[0m');
+}
 console.log(`[Supergence] Initializing on ${process.platform} (${process.arch})...`);
 
 // 1. Verify Node.js version
@@ -36,7 +87,7 @@ const nodeVersion = process.versions.node;
 const majorVersion = parseInt(nodeVersion.split('.')[0], 10);
 if (majorVersion < 20) {
   console.error(`\x1b[31m[ERROR] Node.js version ${nodeVersion} detected. Supergence requires Node.js 20 or higher.\x1b[0m`);
-  console.error(`Please update Node.js from https://nodejs.org\n`);
+  console.error('Please update Node.js from https://nodejs.org\n');
   process.exit(1);
 }
 
@@ -67,7 +118,7 @@ if (!fs.existsSync(distPath)) {
   console.log('[Supergence] Preparing client assets...');
   try {
     execSync('npm run build', { cwd: ROOT_DIR, stdio: 'inherit' });
-  } catch (err) {
+  } catch (_) {
     console.warn('[Supergence] Production build notice, falling back to live assets.');
   }
 }
@@ -77,81 +128,56 @@ function openBrowser(url) {
   const startCommands = {
     darwin: `open "${url}"`,
     win32: `start "" "${url}"`,
-    linux: `xdg-open "${url}"`
+    linux: `xdg-open "${url}"`,
   };
   const cmd = startCommands[process.platform] || `xdg-open "${url}"`;
   try {
     execSync(cmd, { stdio: 'ignore' });
   } catch (_) {
-    // If auto-open fails, the user will still see the link printed in terminal
+    // Non-blocking fallback
   }
 }
 
-// 5B. Cross-Platform Auto-Start on System Boot
-function configureAutoBootOnFirstRun() {
-  try {
-    if (process.platform === 'win32') {
-      const startupFolder = path.join(process.env.APPDATA || '', 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup');
-      if (fs.existsSync(startupFolder)) {
-        const batPath = path.join(startupFolder, 'Supergence-Autostart.bat');
-        if (!fs.existsSync(batPath)) {
-          const content = `@echo off\r\ncd /d "${ROOT_DIR}"\r\nstart /b "" node "${path.join(ROOT_DIR, 'bin', 'supergence.mjs')}" --background\r\n`;
-          fs.writeFileSync(batPath, content, 'utf8');
-          console.log('\x1b[36m[AutoBoot] Registered Supergence to start automatically on Windows boot.\x1b[0m');
-        }
-      }
-    } else if (process.platform === 'darwin') {
-      const home = process.env.HOME || '';
-      const launchAgentsDir = path.join(home, 'Library', 'LaunchAgents');
-      const plistPath = path.join(launchAgentsDir, 'com.supergence.autostart.plist');
-      if (fs.existsSync(launchAgentsDir) && !fs.existsSync(plistPath)) {
-        const plist = `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>Label</key>
-  <string>com.supergence.autostart</string>
-  <key>ProgramArguments</key>
-  <array>
-    <string>${process.execPath}</string>
-    <string>${path.join(ROOT_DIR, 'bin', 'supergence.mjs')}</string>
-    <string>--background</string>
-  </array>
-  <key>RunAtLoad</key>
-  <true/>
-  <key>WorkingDirectory</key>
-  <string>${ROOT_DIR}</string>
-</dict>
-</plist>`;
-        fs.writeFileSync(plistPath, plist, 'utf8');
-        console.log('\x1b[36m[AutoBoot] Registered Supergence to start automatically on macOS boot.\x1b[0m');
-      }
-    } else if (process.platform === 'linux') {
-      const home = process.env.HOME || '';
-      const autostartDir = path.join(home, '.config', 'autostart');
-      if (!fs.existsSync(autostartDir)) fs.mkdirSync(autostartDir, { recursive: true });
-      const desktopFilePath = path.join(autostartDir, 'supergence.desktop');
-      if (!fs.existsSync(desktopFilePath)) {
-        const desktopFile = `[Desktop Entry]
-Type=Application
-Exec=${process.execPath} ${path.join(ROOT_DIR, 'bin', 'supergence.mjs')} --background
-Hidden=false
-NoDisplay=false
-X-GNOME-Autostart-enabled=true
-Name=Supergence
-Comment=Supergence Local Loopback Autonomous Superintelligence
-`;
-        fs.writeFileSync(desktopFilePath, desktopFile, 'utf8');
-        console.log('\x1b[36m[AutoBoot] Registered Supergence to start automatically on Linux boot.\x1b[0m');
-      }
-    }
-  } catch (_) {
-    // Non-blocking
+// 6. Verify and maintain automatic startup on boot
+const autoEnrollResult = autostartManager.autoEnrollIfEligible();
+if (autoEnrollResult?.success) {
+  console.log('\x1b[36m[AutoBoot] Supergence is registered to start automatically on system boot.\x1b[0m');
+}
+
+// 7. Check if an active instance is already running
+async function checkExistingInstance(port) {
+  return new Promise((resolve) => {
+    const req = http.get(`http://127.0.0.1:${port}/api/health`, { timeout: 1200 }, (res) => {
+      resolve(res.statusCode === 200);
+    });
+    req.on('error', () => resolve(false));
+    req.on('timeout', () => {
+      req.destroy();
+      resolve(false);
+    });
+  });
+}
+
+const configuredPort = parseInt(process.env.PORT, 10) || 3009;
+const candidatePorts = [configuredPort, 3009, 3008].filter((p, i, a) => a.indexOf(p) === i);
+
+let activeRunningPort = null;
+for (const p of candidatePorts) {
+  if (await checkExistingInstance(p)) {
+    activeRunningPort = p;
+    break;
   }
 }
-configureAutoBootOnFirstRun();
 
-// 6. Launch Backend & Frontend
+if (activeRunningPort) {
+  console.log(`\x1b[32m[Supergence] An active instance of Supergence is already online on port ${activeRunningPort}.\x1b[0m`);
+  if (!process.argv.includes('--no-open') && !process.argv.includes('--headless')) {
+    openBrowser(`http://127.0.0.1:${activeRunningPort}`);
+  }
+  process.exit(0);
+}
+
+// 8. Launch Backend & Frontend
 console.log('\x1b[32m[Supergence] Starting local engine...\x1b[0m');
 
 const serverScript = path.join(ROOT_DIR, 'server', 'index.js');
@@ -161,8 +187,8 @@ const serverProcess = spawn(process.execPath, [serverScript], {
   env: {
     ...process.env,
     SIS_ALLOW_VITE_ORIGIN: '1',
-    SIS_DESKTOP_SESSION: '0'
-  }
+    SIS_DESKTOP_SESSION: '0',
+  },
 });
 
 let browserOpened = false;
@@ -171,21 +197,22 @@ serverProcess.stdout.on('data', (chunk) => {
   const text = chunk.toString();
   process.stdout.write(chunk);
 
-  // Detect listening port or private session link
   const match = text.match(/http:\/\/localhost:(\d+)/) || text.match(/http:\/\/127\.0\.0\.1:(\d+)/);
   const sessionMatch = text.match(/http:\/\/127\.0\.0\.1:\d+\/__session\?token=[^\s]+/);
 
   if ((match || sessionMatch) && !browserOpened) {
     browserOpened = true;
     const targetUrl = sessionMatch ? sessionMatch[0] : `http://127.0.0.1:${match[1]}`;
-    
+
     console.log('\n\x1b[32m===============================================================\x1b[0m');
-    console.log(`\x1b[32m  ✓ Supergence is live and ready!\x1b[0m`);
+    console.log('  ✓ Supergence is live and ready!');
     console.log(`\x1b[36m  Local URL:\x1b[0m ${targetUrl}`);
-    console.log(`\x1b[33m  Press Ctrl+C at any time to shut down.\x1b[0m`);
+    console.log('\x1b[33m  Press Ctrl+C at any time to shut down.\x1b[0m');
     console.log('\x1b[32m===============================================================\n\x1b[0m');
 
-    setTimeout(() => openBrowser(targetUrl), 800);
+    if (!process.argv.includes('--no-open') && !process.argv.includes('--headless')) {
+      setTimeout(() => openBrowser(targetUrl), 800);
+    }
   }
 });
 

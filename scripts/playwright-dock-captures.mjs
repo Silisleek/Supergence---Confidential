@@ -2,7 +2,8 @@ import { chromium } from 'playwright-core';
 import path from 'node:path';
 
 const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-const brainDir = 'C:\\Users\\Akshan sharma\\.gemini\\antigravity\\brain\\cc78a903-c95c-43ff-b918-06eb784f9796';
+const brainDir =
+  'C:\\Users\\Akshan sharma\\.gemini\\antigravity\\brain\\cc78a903-c95c-43ff-b918-06eb784f9796';
 
 async function main() {
   console.log('Launching Playwright with Chrome executable...');
@@ -47,7 +48,7 @@ async function main() {
 
   console.log('2. Clicking Supermull in dock...');
   const supermullOrb = page.locator('.sg-dock-orb-item[data-agent="supermull"]');
-  if (await supermullOrb.count() > 0) {
+  if ((await supermullOrb.count()) > 0) {
     await supermullOrb.click();
     await page.waitForTimeout(800);
     const mullOut = path.join(brainDir, 'agent-selected-render.png');
@@ -57,7 +58,7 @@ async function main() {
 
   console.log('3. Clicking + button to open Add Agent Modal...');
   const addBtn = page.locator('#sgDockAddBtn');
-  if (await addBtn.count() > 0) {
+  if ((await addBtn.count()) > 0) {
     await addBtn.click();
     await page.waitForTimeout(600);
     const modalOut = path.join(brainDir, 'add-agent-modal-render.png');

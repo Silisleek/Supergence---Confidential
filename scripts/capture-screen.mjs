@@ -29,7 +29,9 @@ async function capture() {
     await page.waitForTimeout(2000);
 
     // 1. Capture Chat Landing Hero
-    const landingOut = path.resolve('C:/Users/Akshan sharma/.gemini/antigravity/brain/cc78a903-c95c-43ff-b918-06eb784f9796/actual-chat-landing.png');
+    const landingOut = path.resolve(
+      'C:/Users/Akshan sharma/.gemini/antigravity/brain/cc78a903-c95c-43ff-b918-06eb784f9796/actual-chat-landing.png',
+    );
     console.log('[4/6] Capturing Chat Landing Hero to:', landingOut);
     await page.screenshot({ path: landingOut, fullPage: true });
 
@@ -42,7 +44,9 @@ async function capture() {
     });
     await page.waitForTimeout(1500);
 
-    const voiceOut = path.resolve('C:/Users/Akshan sharma/.gemini/antigravity/brain/cc78a903-c95c-43ff-b918-06eb784f9796/actual-voice-cockpit.png');
+    const voiceOut = path.resolve(
+      'C:/Users/Akshan sharma/.gemini/antigravity/brain/cc78a903-c95c-43ff-b918-06eb784f9796/actual-voice-cockpit.png',
+    );
     console.log('[5/6] Capturing Voice Cockpit to:', voiceOut);
     await page.screenshot({ path: voiceOut, fullPage: true });
 
@@ -55,13 +59,18 @@ async function capture() {
       if (window.SupergenceLiquidGlass?.renderConversation) {
         window.SupergenceLiquidGlass.renderConversation([
           { role: 'user', content: 'Hey Supergence, What are you doing?' },
-          { role: 'assistant', content: 'I am doing well and I am ready to help you. Ready to dive in?' }
+          {
+            role: 'assistant',
+            content: 'I am doing well and I am ready to help you. Ready to dive in?',
+          },
         ]);
       }
     });
     await page.waitForTimeout(1000);
 
-    const activeCardOut = path.resolve('C:/Users/Akshan sharma/.gemini/antigravity/brain/cc78a903-c95c-43ff-b918-06eb784f9796/actual-chat-active-card.png');
+    const activeCardOut = path.resolve(
+      'C:/Users/Akshan sharma/.gemini/antigravity/brain/cc78a903-c95c-43ff-b918-06eb784f9796/actual-chat-active-card.png',
+    );
     console.log('[6/6] Capturing Active Conversation Card to:', activeCardOut);
     await page.screenshot({ path: activeCardOut, fullPage: true });
 

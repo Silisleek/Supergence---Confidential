@@ -13,13 +13,13 @@ async function main() {
       '--disable-default-apps',
       '--disable-sync',
       '--use-fake-device-for-media-stream',
-      '--use-fake-ui-for-media-stream'
-    ]
+      '--use-fake-ui-for-media-stream',
+    ],
   });
 
   const context = await browser.newContext({
     viewport: { width: 1400, height: 900 },
-    deviceScaleFactor: 1
+    deviceScaleFactor: 1,
   });
 
   await context.addInitScript(() => {
@@ -32,14 +32,17 @@ async function main() {
   const page = await context.newPage();
 
   // Read current session token from server log or use token directly
-  const sessionUrl = 'http://127.0.0.1:3009/__session?token=9b703f8045495b7d05864d15fd4e0f39cec2e2df4af091786f7a97a818494050';
+  const sessionUrl =
+    'http://127.0.0.1:3009/__session?token=9b703f8045495b7d05864d15fd4e0f39cec2e2df4af091786f7a97a818494050';
   console.log('Authenticating via', sessionUrl);
   await page.goto(sessionUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
 
   await page.waitForTimeout(1500);
 
   // 1. Capture Chat Landing Hero (Matching left panel of user spec media_1794296648507_75f2c431.png)
-  const landingPath = path.resolve('c:/Users/Akshan sharma/.gemini/antigravity/brain/cc78a903-c95c-43ff-b918-06eb784f9796/chat-landing-render.png');
+  const landingPath = path.resolve(
+    'c:/Users/Akshan sharma/.gemini/antigravity/brain/cc78a903-c95c-43ff-b918-06eb784f9796/chat-landing-render.png',
+  );
   await page.screenshot({ path: landingPath, fullPage: true });
   console.log('Saved chat landing render to:', landingPath);
 
@@ -48,7 +51,9 @@ async function main() {
   await page.click('#sgModeVoiceBtn');
   await page.waitForTimeout(1500);
 
-  const voicePath = path.resolve('c:/Users/Akshan sharma/.gemini/antigravity/brain/cc78a903-c95c-43ff-b918-06eb784f9796/voice-mode-render.png');
+  const voicePath = path.resolve(
+    'c:/Users/Akshan sharma/.gemini/antigravity/brain/cc78a903-c95c-43ff-b918-06eb784f9796/voice-mode-render.png',
+  );
   await page.screenshot({ path: voicePath, fullPage: true });
   console.log('Saved voice mode render to:', voicePath);
 
@@ -65,7 +70,9 @@ async function main() {
   console.log('Waiting for response...');
   await page.waitForTimeout(3000);
 
-  const activeCardPath = path.resolve('c:/Users/Akshan sharma/.gemini/antigravity/brain/cc78a903-c95c-43ff-b918-06eb784f9796/chat-active-card-render.png');
+  const activeCardPath = path.resolve(
+    'c:/Users/Akshan sharma/.gemini/antigravity/brain/cc78a903-c95c-43ff-b918-06eb784f9796/chat-active-card-render.png',
+  );
   await page.screenshot({ path: activeCardPath, fullPage: true });
   console.log('Saved active card render to:', activeCardPath);
 
@@ -73,7 +80,7 @@ async function main() {
   console.log('Verification finished successfully!');
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error('Verification error:', err);
   process.exit(1);
 });

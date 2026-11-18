@@ -1,304 +1,364 @@
-// SIS 1.0 — AREM Autonomous Memory Dream Engine
-// Inspired by human sleep-dependent memory consolidation & Anthropic's Long-Term Agent Memory
-// Orchestrates the Supergence AREM Team to find mistakes, self-repair, prune, and cross-link memories
-// Scheduled every 2-3 hours and runs simultaneously/continuously in the background
-
+import { createHash, randomUUID } from 'node:crypto';
+import { EventEmitter } from 'node:events';
+import path from 'node:path';
+import fs from 'node:fs';
+import { DatabaseSync } from 'node:sqlite';
+import conversations from '../conversations.js';
+import { cosine, sparseVector } from '../memory/knowledge-index.js';
+import { isLegacyFailureReply } from '../services/conversationContext.js';
 import aremStore from './arem-memory-store.js';
 import aremAgents, { AREM_TEAM_MEMBERS } from './arem-agents.js';
-import { EventEmitter } from 'node:events';
 
 export const aremEvents = new EventEmitter();
+export const DEFAULT_CADENCE_MS = 2 * 60 * 60 * 1000;
+export const MAX_CADENCE_MS = 3 * 60 * 60 * 1000;
 
-export const DEFAULT_CADENCE_MS = 2 * 60 * 60 * 1000; // 2 hours
-export const MAX_CADENCE_MS = 3 * 60 * 60 * 1000; // 3 hours
+const IDLE_MS = 60_000;
+const BATCH_SIZE = 8;
+const MAX_NOTES = 256;
+const SECRET =
+  /-----BEGIN .*PRIVATE KEY-----|\bBearer\s+\S+|\b(?:api[_ -]?key|password|access[_ -]?token|client[_ -]?secret)\s*[:=]\s*\S+|\b(?:sk-[\w-]{16,}|gh[pousr]_[\w]{20,})/i;
+
+function digest(value) {
+  return createHash('sha256').update(JSON.stringify(value)).digest('hex');
+}
+
+function episodes(conversation) {
+  const users = new Map();
+  const turns = [];
+  const messages = conversation.messages || [];
+  for (const [index, message] of messages.entries()) {
+    if (typeof message?.content !== 'string' || !message.content.trim()) continue;
+    const { requestId, status, role, content } = message;
+    if (role === 'user' && requestId) users.set(requestId, message);
+    if (role !== 'assistant' || (status && status !== 'completed') || isLegacyFailureReply(content))
+      continue;
+    const source = requestId ? users.get(requestId) : messages[index - 1];
+    if (source?.role !== 'user' || typeof source.content !== 'string') continue;
+    if (!requestId && source.requestId) continue;
+    if (requestId && status !== 'completed') continue;
+    users.delete(requestId);
+    turns.push({
+      id: requestId || `legacy:${index}`,
+      user: source.content,
+      assistant: content,
+    });
+  }
+  return turns;
+}
+
+function replayFingerprint(conversation, turns) {
+  return digest([
+    conversation.createdAt,
+    turns.map(({ id, user, assistant }) => [id, user, assistant]),
+  ]);
+}
+
+function ground(proposals, batch, existing, turns) {
+  const notes = [];
+  const quotes = new Set(existing.map(({ note }) => note));
+  const order = new Map(turns.map(({ id }, index) => [id, index]));
+  for (const proposal of proposals.slice(0, BATCH_SIZE)) {
+    const { sourceId, title, quote, supersedes } = proposal || {};
+    const source = batch.find(({ id }) => id === sourceId);
+    const previous = existing.find(({ id }) => id === supersedes);
+    if (
+      !source ||
+      typeof title !== 'string' ||
+      !title.trim() ||
+      title.length > 100 ||
+      typeof quote !== 'string' ||
+      quote.length < 12 ||
+      quote.length > 420 ||
+      quote !== quote.trim() ||
+      !source.user.includes(quote) ||
+      SECRET.test(title + '\n' + quote) ||
+      quotes.has(quote) ||
+      (supersedes != null && (!previous || order.get(previous.sourceId) >= order.get(sourceId)))
+    )
+      continue;
+    quotes.add(quote);
+    notes.push({
+      id: randomUUID(),
+      title: title.trim(),
+      note: quote,
+      sourceId,
+      supersedes: supersedes ?? null,
+    });
+  }
+  return notes;
+}
 
 export class AremEngine {
-  constructor({ store = aremStore, agents = aremAgents, cadenceMs = DEFAULT_CADENCE_MS } = {}) {
+  constructor({
+    store = aremStore,
+    agents = aremAgents,
+    history = conversations,
+    cadenceMs = DEFAULT_CADENCE_MS,
+    now = Date.now,
+  } = {}) {
     this.store = store;
     this.agents = agents;
+    this.history = history;
     this.cadenceMs = cadenceMs;
-
-    this.isDreaming = false;
-    this.dreamProgress = 'idle';
-    this.activePulse = null;
+    this.now = now;
+    this.active = null;
+    this.lastAttempt = null;
+    this.foreground = 0;
+    this.idleSince = now();
     this.timer = null;
     this.isRunning = false;
-
-    this.stats = {
-      totalDreamCycles: 0,
-      lastDreamTimestamp: null,
-      mistakesDiscovered: 0,
-      invariantsSynthesized: 0,
-      notesPruned: 0,
-      wikiPagesCount: 0,
-      indexLines: 0,
-      recentDreamLogs: [],
-    };
-
-    this._restoreInitialStats();
   }
 
-  _restoreInitialStats() {
-    const state = this.store.getState();
-    if (state) {
-      this.stats.totalDreamCycles = state.totalDreamCycles || 0;
-      this.stats.lastDreamTimestamp = state.lastDreamTimestamp || null;
-      this.stats.mistakesDiscovered = state.totalMistakesFixed || 0;
-      this.stats.notesPruned = state.totalNotesCurated || 0;
+  database() {
+    if (!this.db) {
+      this.db = new DatabaseSync(path.join(this.store.baseDir, 'sleep.sqlite'));
+      this.db.exec(`PRAGMA busy_timeout = 3000;
+        CREATE TABLE IF NOT EXISTS sleep (
+          chat TEXT PRIMARY KEY, cursor INTEGER NOT NULL, fingerprint TEXT NOT NULL,
+          notes TEXT NOT NULL, report TEXT NOT NULL, cycles INTEGER NOT NULL
+        );`);
     }
-    const pages = this.store.listWikiPages();
-    this.stats.wikiPagesCount = pages.length;
-    const index = this.store.getIndex();
-    this.stats.indexLines = index ? index.split('\n').length : 0;
+    return this.db;
+  }
+
+  snapshot(chat) {
+    const conversation = this.history.get(chat);
+    if (!conversation) return null;
+    const turns = episodes(conversation);
+    const saved = this.database().prepare('SELECT * FROM sleep WHERE chat = ?').get(chat);
+    const current =
+      saved && replayFingerprint(conversation, turns.slice(0, saved.cursor)) === saved.fingerprint;
+    const notes = current ? JSON.parse(saved.notes) : [];
+    if (saved && !current) this.removeOrganizedNotes(chat);
+    else if (current && saved.cursor && JSON.stringify(this.readOrganizedNotes(chat)?.notes) !== JSON.stringify(notes))
+      this.organizeNotes(chat, notes);
+    return {
+      conversation,
+      turns,
+      saved,
+      cursor: current ? saved.cursor : 0,
+      notes,
+    };
+  }
+
+  memoryFor(chat, query = null) {
+    const notes = this.snapshot(chat)?.notes || [];
+    if (query === null) return notes;
+    const vector = sparseVector(query.slice(0, 2000));
+    return notes
+      .map((note) => ({ note, score: cosine(vector, sparseVector(note.note)) }))
+      .filter(({ score }) => score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3)
+      .map(({ note: { sourceId, note } }) => ({ sourceId, note }));
+  }
+
+  organizedFile(chat) {
+    return path.join(this.store.baseDir, 'sleep-notes', `${digest(chat)}.json`);
+  }
+
+  readOrganizedNotes(chat) {
+    try {
+      const folder = path.join(this.store.baseDir, 'sleep-notes');
+      if (fs.lstatSync(folder).isSymbolicLink()) return null;
+      const file = this.organizedFile(chat);
+      if (fs.lstatSync(file).isSymbolicLink()) return null;
+      const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+      return data?.format === 'arem-sleep-notes-v1' && data.conversationId === chat ? data : null;
+    } catch {
+      return null;
+    }
+  }
+
+  organizeNotes(chat, notes) {
+    const folder = path.join(this.store.baseDir, 'sleep-notes');
+    let temporary;
+    try {
+      fs.mkdirSync(folder, { recursive: true });
+      if (fs.lstatSync(folder).isSymbolicLink()) throw new Error('Sleep notes folder is a link');
+      const file = this.organizedFile(chat);
+      if (fs.existsSync(file) && !this.readOrganizedNotes(chat))
+        throw new Error('Existing sleep notes file is not managed by AREM');
+      temporary = path.join(folder, `.${randomUUID()}.tmp`);
+      fs.writeFileSync(temporary, JSON.stringify({ format: 'arem-sleep-notes-v1', conversationId: chat, notes }, null, 2), { flag: 'wx', mode: 0o600 });
+      fs.renameSync(temporary, file);
+      return 'updated';
+    } catch {
+      if (temporary) {
+        try { fs.unlinkSync(temporary); } catch { /* No temporary file to remove. */ }
+      }
+      return 'unavailable';
+    }
+  }
+
+  removeOrganizedNotes(chat) {
+    if (!this.readOrganizedNotes(chat)) return;
+    try { fs.unlinkSync(this.organizedFile(chat)); } catch { /* Leave unremovable files unchanged. */ }
+  }
+
+  forgetChat(chat) {
+    if (this.active?.chat === chat) this.active.controller.abort();
+    this.removeOrganizedNotes(chat);
+    if (this.lastAttempt?.chat === chat) this.lastAttempt = null;
+    this.database().prepare('DELETE FROM sleep WHERE chat = ?').run(chat);
+  }
+
+  beginForeground() {
+    this.foreground++;
+    this.active?.controller.abort();
+    return () => {
+      this.foreground--;
+      this.idleSince = this.now();
+      if (!this.foreground && this.isRunning) this.schedule(IDLE_MS);
+    };
   }
 
   startScheduler(cadenceMs = this.cadenceMs) {
     if (this.isRunning) return;
     this.isRunning = true;
     this.cadenceMs = cadenceMs;
-
-    console.log(
-      `[AREM] 🌌 Autonomous Memory Dream Scheduler online (cadence: ${Math.round(cadenceMs / 60000)}m / 2-3 hrs)`,
-    );
-
-    // Initial check: if never dreamed, schedule a dream soon
-    const elapsedSinceLast = Date.now() - (this.stats.lastDreamTimestamp || 0);
-    const initialDelay = this.stats.lastDreamTimestamp
-      ? Math.max(30000, cadenceMs - elapsedSinceLast)
-      : 15000;
-
-    this._scheduleNextDream(initialDelay);
+    this.schedule(IDLE_MS);
   }
 
-  _scheduleNextDream(delayMs) {
-    if (this.timer) clearTimeout(this.timer);
+  schedule(delay) {
     if (!this.isRunning) return;
-
+    clearTimeout(this.timer);
     this.timer = setTimeout(async () => {
+      let next = this.cadenceMs;
       try {
-        await this.runDreamCycle();
-      } catch (err) {
-        console.warn('[AREM] Dream cycle error:', err.message);
+        const result = await this.runDreamCycle();
+        if (['busy', 'interrupted', 'already_running', 'success'].includes(result.status)) next = IDLE_MS;
+        else if (result.status === 'error') next = 5 * IDLE_MS;
+      } catch (error) {
+        console.warn('[AREM] Could not start scheduled sleep:', error.message);
       } finally {
-        // Add random jitter between 2 and 3 hours for human-like circadian variation
-        const jitter = Math.floor(Math.random() * (MAX_CADENCE_MS - DEFAULT_CADENCE_MS));
-        const nextInterval = this.cadenceMs + jitter;
-        this._scheduleNextDream(nextInterval);
+        this.schedule(next);
       }
-    }, delayMs);
+    }, delay);
+    this.timer.unref();
   }
 
   stopScheduler() {
-    if (this.timer) {
-      clearTimeout(this.timer);
-      this.timer = null;
-    }
     this.isRunning = false;
-    console.log('[AREM] Memory Dream Scheduler paused.');
+    clearTimeout(this.timer);
+    this.timer = null;
+    this.active?.controller.abort();
   }
 
-  /**
-   * Runs the complete multi-agent dream consolidation cycle:
-   * 1. Arem-Inspector audits transcripts for mistakes & flaws.
-   * 2. Arem-Corrector synthesizes zero-regression invariants ("never/always").
-   * 3. Arem-Curator deduplicates, prunes bloat, and resolves contradictions.
-   * 4. Arem-Cartographer structures wiki notes and bounds the Top-Layer Index (<200 lines).
-   */
-  async runDreamCycle({ simultaneous = false, manualTrigger = false } = {}) {
-    if (this.isDreaming && !simultaneous) {
-      console.log(
-        '[AREM] A dream consolidation cycle is already active. Skipping overlapping run.',
+  async runDreamCycle({ conversationId, manualTrigger = false, signal: callerSignal } = {}) {
+    if (this.active) return { status: 'already_running' };
+    if (this.foreground || (!manualTrigger && this.now() - this.idleSince < IDLE_MS))
+      return { status: 'busy' };
+
+    let chat = conversationId;
+    let replay = chat ? this.snapshot(chat) : null;
+    if (!chat) {
+      const last = this.database().prepare('SELECT chat, report FROM sleep').all();
+      const reviewed = new Map(last.map((row) => [row.chat, JSON.parse(row.report).finishedAt]));
+      if (this.lastAttempt) reviewed.set(this.lastAttempt.chat, this.lastAttempt.at);
+      const candidates = [...this.history.list()].sort(
+        (a, b) => (reviewed.get(a.id) || 0) - (reviewed.get(b.id) || 0),
       );
-      return { status: 'already_running', cycle: this.stats.totalDreamCycles };
-    }
-
-    this.isDreaming = true;
-    const cycleId = `dream-${Date.now()}`;
-    const startTime = Date.now();
-    console.log(
-      `[AREM] 🌌 Starting Dream Consolidation Cycle #${this.stats.totalDreamCycles + 1} (${cycleId})`,
-    );
-
-    this._broadcastPulse({
-      stage: 'initiating_dream',
-      agentId: 'arem-dreammaster',
-      agentName: 'Arem-DreamMaster',
-      action: 'Entering REM Memory Consolidation State...',
-      details: 'Waking the Supergence AREM Team to reflect and synthesize experiences.',
-    });
-
-    const dreamReport = {
-      cycleId,
-      startTime,
-      mistakesFound: [],
-      invariantsCreated: [],
-      curatedPages: [],
-      indexUpdated: false,
-    };
-
-    try {
-      // ─── STEP 1: Gather Episodic Transcripts ───
-      this.dreamProgress = 'gathering_episodes';
-      let transcripts = this.store.getUnconsolidatedTranscripts(50);
-      if (transcripts.length === 0) {
-        // Offline replay: inspect recent history to deepen patterns even during quiet periods
-        transcripts = this.store.getRecentTranscripts(15);
+      for (const candidate of candidates) {
+        replay = this.snapshot(candidate.id);
+        if (replay && replay.turns.length > replay.cursor) {
+          chat = candidate.id;
+          break;
+        }
       }
+    }
+    if (!chat || !replay) return { status: conversationId ? 'missing' : 'empty' };
 
-      const existingPages = this.store.listWikiPages().map((p) => ({
-        ...p,
-        content: this.store.readWikiPage(p.slug)?.content || '',
+    const batch = replay.turns.slice(replay.cursor, replay.cursor + BATCH_SIZE);
+    if (!batch.length) return { status: 'empty' };
+    const evidence = batch
+      .filter(({ user, assistant }) => !SECRET.test(user) && !SECRET.test(assistant))
+      .map(({ id, user, assistant }) => ({
+        id,
+        user: user.slice(0, 2400),
+        assistant: assistant.slice(0, 1600),
       }));
-      const existingSummary = existingPages.map((p) => `- [[${p.slug}]]: ${p.title}`).join('\n');
-
-      // ─── STEP 2: Arem-Inspector Audits Transcripts ───
-      this.dreamProgress = 'auditing_transcripts';
-      this._broadcastPulse({
-        stage: 'auditing_transcripts',
-        agentId: 'arem-inspector',
-        agentName: 'Arem-Inspector',
-        action: 'Auditing episodic traces and identifying flaws...',
-        details: `Examining ${transcripts.length} session transcripts for latent mistakes and user corrections.`,
-      });
-
-      const mistakes = await this.agents.inspectTranscripts({
-        transcripts,
-        existingNotesSummary: existingSummary,
-      });
-
-      dreamReport.mistakesFound = mistakes;
-      this.stats.mistakesDiscovered += mistakes.length;
-
-      // ─── STEP 3: Arem-Corrector Synthesizes Invariants ───
-      this.dreamProgress = 'synthesizing_corrections';
-      this._broadcastPulse({
-        stage: 'synthesizing_corrections',
-        agentId: 'arem-corrector',
-        agentName: 'Arem-Corrector',
-        action: 'Synthesizing zero-regression invariants & procedures...',
-        details: `Formulating ${mistakes.length} permanent rules ("never do X / always do Y") to prevent regression.`,
-      });
-
-      const fixes = await this.agents.synthesizeCorrections({
-        mistakes,
-        currentInvariants: [],
-      });
-
-      dreamReport.invariantsCreated = fixes;
-      this.stats.invariantsSynthesized += fixes.length;
-
-      // ─── STEP 4: Arem-Curator Prunes & Deduplicates ───
-      this.dreamProgress = 'curating_memory';
-      this._broadcastPulse({
-        stage: 'curating_memory',
-        agentId: 'arem-curator',
-        agentName: 'Arem-Curator',
-        action: 'Pruning bloat, deduplicating, and resolving contradictions...',
-        details:
-          'Reviewing wiki notes to ensure memories remain lean, truthful, and non-redundant.',
-      });
-
-      const curatedPages = await this.agents.curateAndPrune({
-        existingPages,
-        newFixes: fixes,
-      });
-
-      dreamReport.curatedPages = curatedPages;
-      const prunedCount = curatedPages.reduce((acc, p) => acc + (p.prunedItemsCount || 0), 0);
-      this.stats.notesPruned += prunedCount;
-
-      // ─── STEP 5: Arem-Cartographer Weaves Wiki & Bounds Top Index ───
-      this.dreamProgress = 'compiling_wiki_index';
-      this._broadcastPulse({
-        stage: 'compiling_wiki_index',
-        agentId: 'arem-cartographer',
-        agentName: 'Arem-Cartographer',
-        action: 'Weaving cross-linked Markdown wiki pages & compiling bounded index...',
-        details: 'Enforcing strictly bounded <200 lines and <25KB top-layer prompt index.',
-      });
-
-      const compiled = await this.agents.compileIndexAndWiki({
-        curatedPages,
-        topInvariants: fixes.filter((f) => f.promoteToTopIndex || f.invariantNever),
-      });
-
-      // Save wiki pages to disk
-      if (Array.isArray(compiled?.wikiPages)) {
-        for (const wp of compiled.wikiPages) {
-          if (wp.slug && wp.markdown) {
-            this.store.writeWikiPage(wp.slug, wp.markdown, { title: wp.title });
-          }
+    const controller = new AbortController();
+    const signal = callerSignal
+      ? AbortSignal.any([controller.signal, callerSignal])
+      : controller.signal;
+    this.active = { chat, controller, phase: 'consolidating' };
+    try {
+      this.setPhase('consolidating');
+      signal.throwIfAborted();
+      let proposals = [];
+      if (evidence.length) {
+        proposals = ground(
+          await this.agents.consolidateReplay({ evidence, retained: replay.notes, signal }),
+          evidence,
+          replay.notes,
+          replay.turns,
+        );
+      }
+      signal.throwIfAborted();
+      const notes = [...replay.notes];
+      let retained = 0;
+      if (proposals.length) {
+        this.setPhase('rehearsing');
+        signal.throwIfAborted();
+        const approved = await this.agents.reviewReplay({
+          evidence,
+          retained: replay.notes,
+          proposals,
+          signal,
+        });
+        for (const candidate of proposals) {
+          if (!approved.has(candidate.id)) continue;
+          const previous = notes.findIndex(({ id }) => id === candidate.supersedes);
+          const { supersedes, ...note } = candidate;
+          if (supersedes && previous < 0) continue;
+          if (previous >= 0) notes.splice(previous, 1, note);
+          else if (notes.length < MAX_NOTES) notes.push(note);
+          else continue;
+          retained++;
         }
       }
-
-      // If curator returned updated pages, ensure they are also persisted
-      for (const cp of curatedPages) {
-        if (cp.slug && cp.content) {
-          this.store.writeWikiPage(cp.slug, cp.content, { title: cp.title });
-        }
-      }
-
-      // Update Top-Layer Index
-      if (compiled?.indexContent) {
-        const bounded = this.store.updateIndex(compiled.indexContent);
-        dreamReport.indexUpdated = true;
-        this.stats.indexLines = bounded.split('\n').length;
-      }
-
-      // Mark processed transcripts as consolidated
-      this.store.markTranscriptsConsolidated(transcripts.map((t) => t.id));
-
-      // ─── STEP 6: Finalize Dream Cycle ───
-      this.stats.totalDreamCycles++;
-      this.stats.lastDreamTimestamp = Date.now();
-      this.stats.wikiPagesCount = this.store.listWikiPages().length;
-      this.store.updateState({
-        lastDreamTimestamp: this.stats.lastDreamTimestamp,
-        totalDreamCycles: this.stats.totalDreamCycles,
-        totalMistakesFixed: this.stats.mistakesDiscovered,
-        totalNotesCurated: this.stats.notesPruned,
-      });
-
-      dreamReport.durationMs = Date.now() - startTime;
-      this.stats.recentDreamLogs.unshift(dreamReport);
-      if (this.stats.recentDreamLogs.length > 20) this.stats.recentDreamLogs.pop();
-
-      this._broadcastPulse({
-        stage: 'completed',
-        agentId: 'arem-dreammaster',
-        agentName: 'Arem-DreamMaster',
-        action: 'Memory Consolidation Cycle Complete',
-        details: `Dream cycle finished in ${Math.round(dreamReport.durationMs / 1000)}s: ${mistakes.length} flaws resolved, ${fixes.length} invariants synthesized, top index bounded.`,
-      });
-
-      console.log(
-        `[AREM] ✨ Dream Cycle #${this.stats.totalDreamCycles} complete in ${dreamReport.durationMs}ms. Memory updated and bounded.`,
-      );
-      return { status: 'success', report: dreamReport };
-    } catch (err) {
-      console.error('[AREM] Dream cycle failed:', err);
-      this._broadcastPulse({
-        stage: 'error',
-        agentId: 'arem-dreammaster',
-        agentName: 'Arem-DreamMaster',
-        action: 'Dream cycle encountered an exception',
-        details: err.message,
-      });
-      return { status: 'error', error: err.message };
+      signal.throwIfAborted();
+      const fresh = this.history.get(chat);
+      const cursor = replay.cursor + batch.length;
+      const fingerprint = replayFingerprint(replay.conversation, replay.turns.slice(0, cursor));
+      if (!fresh || replayFingerprint(fresh, episodes(fresh).slice(0, cursor)) !== fingerprint)
+        return this.finish(chat, 'interrupted');
+      const report = {
+        reviewed: evidence.length,
+        skipped: batch.length - evidence.length,
+        retained,
+        finishedAt: this.now(),
+      };
+      const expected = replay.saved?.cycles ?? 0;
+      const saved = this.database()
+        .prepare(
+          `INSERT INTO sleep VALUES (?, ?, ?, ?, ?, 1)
+        ON CONFLICT(chat) DO UPDATE SET cursor=excluded.cursor, fingerprint=excluded.fingerprint,
+        notes=excluded.notes, report=excluded.report, cycles=sleep.cycles+1 WHERE sleep.cycles=?`,
+        )
+        .run(chat, cursor, fingerprint, JSON.stringify(notes), JSON.stringify(report), expected);
+      if (!saved.changes) return this.finish(chat, 'interrupted');
+      const organized = this.organizeNotes(chat, notes);
+      return this.finish(chat, 'success', report, organized);
+    } catch {
+      return this.finish(chat, signal.aborted ? 'interrupted' : 'error');
     } finally {
-      this.isDreaming = false;
-      this.dreamProgress = 'idle';
+      this.active = null;
     }
   }
 
-  _broadcastPulse(pulse) {
-    this.activePulse = { ...pulse, timestamp: Date.now() };
-    try {
-      aremEvents.emit('pulse', this.activePulse);
-      if (globalThis.__supergence_brain?.broadcast) {
-        globalThis.__supergence_brain.broadcast('arem:pulse', this.activePulse);
-      }
-    } catch (_) {}
+  finish(chat, status, report, organized) {
+    this.lastAttempt = { chat, status, at: this.now(), ...(organized && { organized }) };
+    return { status, ...(report && { report }), ...(organized && { organized }) };
+  }
+
+  setPhase(phase) {
+    this.active.phase = phase;
+    const pulse = { stage: phase, timestamp: this.now() };
+    aremEvents.emit('pulse', pulse);
+    globalThis.__supergence_brain?.broadcast?.('arem:pulse', pulse);
   }
 
   getTopLayerIndex() {
@@ -309,21 +369,43 @@ export class AremEngine {
     return this.store.searchWiki(query, limit);
   }
 
+  getSleepStatus(chat) {
+    const replay = this.snapshot(chat);
+    if (!replay) return null;
+    return {
+      phase: this.active?.chat === chat ? this.active.phase : 'awake',
+      pending: replay.turns.length - replay.cursor,
+      report: replay.saved && replay.cursor ? JSON.parse(replay.saved.report) : null,
+      lastOutcome: this.lastAttempt?.chat === chat ? this.lastAttempt.status : null,
+      organized: replay.saved && replay.cursor
+        ? (JSON.stringify(this.readOrganizedNotes(chat)?.notes) === JSON.stringify(replay.notes) ? 'up-to-date' : 'unavailable')
+        : 'not-created',
+      notes: replay.notes,
+    };
+  }
+
   getStatus() {
+    const stats = this.database()
+      .prepare('SELECT COALESCE(SUM(cycles), 0) AS totalDreamCycles FROM sleep')
+      .get();
     return {
       name: 'Supergence AREM Memory System',
-      version: '3.0.0-ANTHROPIC',
       isRunning: this.isRunning,
-      isDreaming: this.isDreaming,
-      dreamProgress: this.dreamProgress,
-      activePulse: this.activePulse,
-      cadenceHours: Number((this.cadenceMs / (60 * 60 * 1000)).toFixed(1)),
-      stats: { ...this.stats },
+      isDreaming: Boolean(this.active),
+      automaticSleep: this.isRunning,
+      lastOutcome: this.lastAttempt?.status || null,
+      dreamProgress: this.active?.phase || 'awake',
+      cadenceHours: this.cadenceMs / (60 * 60 * 1000),
+      stats,
       team: AREM_TEAM_MEMBERS,
       wikiPagesCount: this.store.listWikiPages().length,
       indexLines: this.store.getIndex().split('\n').length,
     };
   }
+}
+
+export function automaticSleepEnabled(value = process.env.ENABLE_AREM_SLEEP) {
+  return String(value ?? '').trim().toLowerCase() !== 'false';
 }
 
 export const aremEngine = new AremEngine();

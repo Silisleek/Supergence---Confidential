@@ -47,7 +47,7 @@ export function assertProviderAvailable(baseURL) {
     throw new Error('Groq has been removed. Select the configured router or another provider.');
 }
 
-export let DEFAULT_MODEL = normalizeRouterModel(process.env.DEFAULT_MODEL || 'gemma4:31b');
+export let DEFAULT_MODEL = normalizeRouterModel(process.env.DEFAULT_MODEL || 'gpt-4o-mini');
 export let FALLBACK_MODEL = process.env.FALLBACK_MODEL || process.env.FALLBACK_MODELS || '';
 export let PREMIUM_MODEL = process.env.PREMIUM_MODEL || FALLBACK_MODEL || DEFAULT_MODEL;
 export let FREE_MODEL = process.env.FREE_MODEL || DEFAULT_MODEL;
@@ -60,8 +60,63 @@ const OPENCODE_SESSION_ID = uuidv4();
 
 let rawBaseURL =
   process.env.BASE_URL || process.env.OPENROUTER_BASE_URL || 'http://127.0.0.1:20128/v1';
-let cleanBaseURL = rawBaseURL.replace('//localhost:', '//127.0.0.1:');
-let isLocal = cleanBaseURL.includes('localhost') || cleanBaseURL.includes('127.0.0.1');
+const loopbackHosts = new Set(['127.0.0.1', 'localhost', '[::1]']);
+export const providerEndpoint = (value) => new URL(value).href.replace(/\/+$/, '');
+let cleanBaseURL = providerEndpoint(rawBaseURL);
+let isLocal = loopbackHosts.has(new URL(cleanBaseURL).hostname);
+const startupEndpoint = providerEndpoint(rawBaseURL);
+export const startupProvider = {
+  baseURL: startupEndpoint,
+  model: DEFAULT_MODEL,
+};
+const startupKey = (
+  process.env.API_KEY ||
+  (providerEndpoint(process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1') ===
+  startupEndpoint
+    ? process.env.OPENROUTER_API_KEY
+    : '') ||
+  (isLocal ? process.env.LOCAL_ROUTER_API_KEY : '')
+)?.trim();
+let defaultProviderKey = startupKey || (isLocal ? 'local' : '');
+
+export function validateProviderEndpoint(baseURL) {
+  const url = new URL(baseURL);
+  assertProviderAvailable(baseURL);
+  const local = loopbackHosts.has(url.hostname);
+  if (
+    url.username ||
+    url.password ||
+    url.search ||
+    url.hash ||
+    (url.protocol !== 'https:' && !(url.protocol === 'http:' && local))
+  ) {
+    throw new Error('Use a plain HTTPS endpoint or a local HTTP endpoint.');
+  }
+  return { endpoint: providerEndpoint(baseURL), local };
+}
+
+export function resolveProviderKey(baseURL, suppliedKey, { useActiveKey = true } = {}) {
+  if (suppliedKey !== undefined && typeof suppliedKey !== 'string') {
+    throw new Error('Enter a valid API key.');
+  }
+  const { endpoint, local } = validateProviderEndpoint(baseURL);
+  const explicitKey = suppliedKey?.trim();
+  const saved = !explicitKey && useActiveKey ? evolutionSettings.provider() : null;
+  const key =
+    explicitKey ||
+    (saved?.baseURL && providerEndpoint(saved.baseURL) === endpoint ? saved.apiKey?.trim() : '') ||
+    (endpoint === startupEndpoint ? startupKey : '') ||
+    (local ? 'local' : '');
+  if (!key || (key === 'local' && !local)) {
+    throw new Error('Enter an API key for this provider before activating it.');
+  }
+  return key;
+}
+
+export const getStartupProviderKey = () =>
+  resolveProviderKey(startupEndpoint, startupKey, {
+    useActiveKey: false,
+  });
 
 function buildOpenCodeHeaders(orgId) {
   return {
@@ -187,11 +242,7 @@ function createLocalRouterClient(baseURL) {
   return new OpenAI({
     maxRetries: 0,
     baseURL,
-    apiKey:
-      process.env.API_KEY ||
-      process.env.OPENROUTER_API_KEY ||
-      process.env.LOCAL_ROUTER_API_KEY ||
-      'local',
+    apiKey: defaultProviderKey,
     fetch: localRouterFetch,
     defaultHeaders: {
       'HTTP-Referer': 'http://localhost:3008',
@@ -295,18 +346,19 @@ async function compatibleCompletion(provider, params, requestOptions) {
  * Allows live updates from /api/settings or evolutionSettings without process restart.
  */
 export function configureDefaultProvider({ baseURL, apiKey, defaultModel, fallbackModel } = {}) {
+  if (baseURL || apiKey !== undefined) {
+    defaultProviderKey = resolveProviderKey(baseURL || rawBaseURL, apiKey);
+    process.env.API_KEY = defaultProviderKey;
+  }
   if (baseURL) {
     process.env.BASE_URL = String(baseURL).trim();
     rawBaseURL = process.env.BASE_URL;
-    cleanBaseURL = rawBaseURL.replace('//localhost:', '//127.0.0.1:');
-    isLocal = cleanBaseURL.includes('localhost') || cleanBaseURL.includes('127.0.0.1');
-  }
-  if (apiKey !== undefined && apiKey !== null && String(apiKey).trim().length > 0) {
-    process.env.API_KEY = String(apiKey).trim();
+    cleanBaseURL = providerEndpoint(rawBaseURL);
+    isLocal = loopbackHosts.has(new URL(cleanBaseURL).hostname);
   }
   if (defaultModel) {
     process.env.DEFAULT_MODEL = String(defaultModel).trim();
-    DEFAULT_MODEL = normalizeRouterModel(process.env.DEFAULT_MODEL);
+    DEFAULT_MODEL = process.env.DEFAULT_MODEL;
   }
   if (fallbackModel !== undefined) {
     process.env.FALLBACK_MODEL = String(fallbackModel).trim();
@@ -338,6 +390,18 @@ export function configureDefaultProvider({ baseURL, apiKey, defaultModel, fallba
 
 export function getDefaultModel() {
   return DEFAULT_MODEL;
+}
+
+try {
+  const selectedProvider = evolutionSettings.provider();
+  if (selectedProvider)
+    configureDefaultProvider({
+      baseURL: selectedProvider.baseURL,
+      apiKey: selectedProvider.apiKey,
+      defaultModel: selectedProvider.model,
+    });
+} catch (error) {
+  console.warn('[AI Gateway] Saved provider setup failed:', error.message);
 }
 
 export function getFallbackModel() {
@@ -373,10 +437,10 @@ export function getProviderConfig() {
  */
 export function resolveClientAndModel(byok = null, requestedModel = null) {
   if (!byok || byok.enabled === false) byok = evolutionSettings.provider() || byok;
-  if (byok && byok.enabled !== false && byok.baseURL && byok.apiKey) {
+  if (byok && byok.enabled !== false && byok.baseURL) {
     const cleanUrl = String(byok.baseURL).trim().replace(/\/+$/, '');
     assertProviderAvailable(cleanUrl);
-    const cleanKey = String(byok.apiKey).trim();
+    const cleanKey = resolveProviderKey(cleanUrl, byok.apiKey);
     const orgId = byok.orgId ? String(byok.orgId).trim() : '';
     const cacheKey = `${cleanUrl}::${cleanKey}::${orgId}`;
 
@@ -473,7 +537,8 @@ async function createCompletionWithRetry(params, signal) {
         if (entry.name === 'configuredRouter') {
           // If transient 502/503/timeout, wait for reset cooldown and retry reqModel before moving to next candidate
           let currentErr = lastError;
-          while (Date.now() < deadline) {
+          let retries = 0;
+          while (retries < 2 && Date.now() < deadline) {
             const currentMsg = String(currentErr?.message || '').toLowerCase();
             const currentTransient =
               currentErr.status === 502 ||
@@ -495,6 +560,7 @@ async function createCompletionWithRetry(params, signal) {
             console.warn(
               `[AI Gateway] Local router transient notice on ${reqModel} (${currentErr.status || currentErr.message}). Retrying in ${waitSeconds}s...`,
             );
+            retries++;
             await delay(
               Math.min(waitSeconds * 1000, Math.max(0, deadline - Date.now())),
               undefined,
@@ -627,7 +693,7 @@ export async function callAI({
   signal?.throwIfAborted();
 
   const resolved = resolveClientAndModel(byok, model);
-  const targetModel = resolved.model === 'openrouter/auto' ? DEFAULT_MODEL : resolved.model;
+  const targetModel = resolved.model;
 
   const fullMessages = [];
   if (systemPrompt) {
@@ -828,6 +894,7 @@ export async function streamAI(options, onToken, onDone) {
       }
     }
   } catch (e) {
+    options.signal?.throwIfAborted();
     // Mid-stream cut with tokens in hand → partial turn, NOT an exception.
     // Caller decides: resume via "continue" or accept the partial.
     if (isStreamCutError(e) && (fullText.length > 0 || toolCalls.length > 0)) {

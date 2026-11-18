@@ -2,10 +2,7 @@
 // Gives every agent their own dedicated, isolated personal browser (Chromium/Playwright).
 // Features:
 // 1. Isolated BrowserContext & Page per agent (separate cookies, storage, history, tabs).
-// 2. ChatGPT-Dots & Grokbot style Virtual Agent Cursor:
-//    - Smooth gliding trajectory across the page.
-//    - Agent avatar, badge, colored glowing orb, trailing particles.
-//    - Animated click shockwaves / ripple rings, hover states, and typing indicators.
+// 2. Virtual agent pointer with Tahoe cursor artwork and an activity label.
 // 3. Real-time Live Screencast streaming (CDP + WebSocket) to the user's screen.
 // 4. Interactive dual-mode: Autonomous AI web execution or Manual user takeover.
 // 5. Intelligent autonomous internet exploration & search engine navigation.
@@ -22,6 +19,7 @@ import enterpriseVault from '../security/vault.js';
 import { randomUUID } from 'node:crypto';
 import { assertBrowserEnabled } from '../security/browser-access.js';
 import { runtimeAccess } from './runtimeAccess.js';
+import { generateBrowserCursorScript } from './browserCursor.js';
 import { quickAI, DEFAULT_MODEL } from '../api/openrouter.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -512,7 +510,7 @@ export class AgentBrowserManager {
           });
         } catch (_) {}
       });
-      await context.addInitScript(this._generateCursorInjectionScript(meta));
+      await context.addInitScript(generateBrowserCursorScript(meta.name));
 
       const tabId = 'tab-' + Math.random().toString(36).substring(2, 9);
       const startUrl = this.getHomeUrl(agentId);
@@ -568,7 +566,7 @@ export class AgentBrowserManager {
               Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
             })
             .catch(() => {});
-          await newPage.addInitScript(this._generateCursorInjectionScript(meta)).catch(() => {});
+          await newPage.addInitScript(generateBrowserCursorScript(meta.name)).catch(() => {});
           if (session.tabs.some((t) => t.page === newPage)) return;
           const newTabObj = {
             id: newTabId,
@@ -639,7 +637,7 @@ export class AgentBrowserManager {
         Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
       })
       .catch(() => {});
-    await newPage.addInitScript(this._generateCursorInjectionScript(session.meta)).catch(() => {});
+    await newPage.addInitScript(generateBrowserCursorScript(session.meta.name)).catch(() => {});
 
     // Deduplicate if context.on('page') already registered it
     let existingTab = session.tabs.find((t) => t.page === newPage);
@@ -800,142 +798,12 @@ export class AgentBrowserManager {
     return { success: true, agentId, closedTabId: tabId, tabs };
   }
 
-  // ─── Virtual Cursor Injection (ChatGPT Dots / Grokbot Style) ───
-  _generateCursorInjectionScript(meta) {
-    return `
-      (function() {
-        if (window.__sisAgentCursorInjected) return;
-        window.__sisAgentCursorInjected = true;
-
-        const cursorContainer = document.createElement('div');
-        cursorContainer.id = 'sis-agent-virtual-cursor';
-        cursorContainer.style.cssText = [
-          'position: fixed',
-          'top: 0',
-          'left: 0',
-          'width: 24px',
-          'height: 24px',
-          'border-radius: 50%',
-          'background: radial-gradient(circle at 35% 35%, #FFFFFF 0%, ${meta.color} 60%, rgba(0,0,0,0.6) 100%)',
-          'border: 2px solid #FFFFFF',
-          'box-shadow: 0 0 18px ${meta.color}, 0 0 35px ${meta.color}88, 0 4px 15px rgba(0,0,0,0.6)',
-          'pointer-events: none',
-          'z-index: 2147483647',
-          'transform: translate(-50%, -50%)',
-          'transition: transform 0.08s cubic-bezier(0.16, 1, 0.3, 1)',
-          'display: flex',
-          'align-items: center',
-          'justify-content: center'
-        ].join(';');
-
-        // Center dot inner pupil
-        const innerPupil = document.createElement('div');
-        innerPupil.style.cssText = 'width:6px; height:6px; border-radius:50%; background:#FFFFFF; pointer-events:none;';
-        cursorContainer.appendChild(innerPupil);
-
-        // Agent Name / Status Tag Badge
-        const badge = document.createElement('div');
-        badge.id = 'sis-agent-cursor-badge';
-        badge.textContent = '${meta.name} ${meta.avatar}';
-        badge.style.cssText = [
-          'position: absolute',
-          'left: 28px',
-          'top: -3px',
-          'background: rgba(10, 15, 24, 0.92)',
-          'backdrop-filter: blur(8px)',
-          'color: #F4F0E0',
-          'font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-          'font-size: 11px',
-          'font-weight: 700',
-          'padding: 3px 10px',
-          'border-radius: 20px',
-          'border: 1px solid ${meta.color}',
-          'box-shadow: 0 4px 14px rgba(0,0,0,0.5), 0 0 10px ${meta.color}44',
-          'white-space: nowrap',
-          'pointer-events: none',
-          'transition: all 0.15s ease'
-        ].join(';');
-        cursorContainer.appendChild(badge);
-
-        // Click Shockwave Ripple Ring
-        const ripple = document.createElement('div');
-        ripple.id = 'sis-agent-cursor-ripple';
-        ripple.style.cssText = [
-          'position: absolute',
-          'width: 100%',
-          'height: 100%',
-          'border-radius: 50%',
-          'border: 2px solid ${meta.color}',
-          'box-shadow: 0 0 12px ${meta.color}',
-          'pointer-events: none',
-          'opacity: 0',
-          'transform: scale(1)'
-        ].join(';');
-        cursorContainer.appendChild(ripple);
-
-        function mountCursor() {
-          if (!document.body) {
-            window.requestAnimationFrame(mountCursor);
-            return;
-          }
-          if (!document.getElementById('sis-agent-virtual-cursor')) {
-            document.body.appendChild(cursorContainer);
-          }
-        }
-        mountCursor();
-
-        window.__updateAgentCursor = function(x, y, action, label) {
-          mountCursor();
-          cursorContainer.style.left = x + 'px';
-          cursorContainer.style.top = y + 'px';
-          if (label) badge.textContent = label;
-
-          if (action === 'click') {
-            ripple.style.borderColor = '${meta.color}';
-            ripple.style.boxShadow = '0 0 14px ${meta.color}';
-            ripple.animate([
-              { transform: 'scale(1)', opacity: 1 },
-              { transform: 'scale(3.4)', opacity: 0 }
-            ], { duration: 420, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' });
-          } else if (action === 'right-click') {
-            // Golden / Amber context menu shockwave
-            ripple.style.borderColor = '#F59E0B';
-            ripple.style.boxShadow = '0 0 16px #F59E0B';
-            ripple.animate([
-              { transform: 'scale(1)', opacity: 1, borderColor: '#F59E0B' },
-              { transform: 'scale(3.6)', opacity: 0, borderColor: '#F59E0B' }
-            ], { duration: 460, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' });
-            badge.style.borderColor = '#F59E0B';
-            setTimeout(() => { badge.style.borderColor = '${meta.color}'; }, 600);
-          } else if (action === 'dblclick') {
-            // Twin rapid violet shockwaves
-            ripple.style.borderColor = '#A855F7';
-            ripple.style.boxShadow = '0 0 18px #A855F7';
-            ripple.animate([
-              { transform: 'scale(1)', opacity: 1 },
-              { transform: 'scale(2.5)', opacity: 0.4 },
-              { transform: 'scale(4.0)', opacity: 0 }
-            ], { duration: 520, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' });
-          } else if (action === 'hover') {
-            badge.style.transform = 'scale(1.08)';
-            setTimeout(() => { badge.style.transform = 'scale(1)'; }, 200);
-          } else if (action === 'typing' || action === 'key') {
-            cursorContainer.animate([
-              { transform: 'translate(-50%, -50%) scale(1)' },
-              { transform: 'translate(-50%, -50%) scale(1.22)' },
-              { transform: 'translate(-50%, -50%) scale(1)' }
-            ], { duration: 240, easing: 'ease-in-out' });
-          }
-        };
-      })();
-    `;
-  }
-
+  // ─── Virtual Cursor Injection ───
   async _injectCursorIfNeeded(session) {
     try {
       const hasCursor = await session.page.evaluate(() => !!window.__updateAgentCursor);
       if (!hasCursor) {
-        await session.page.evaluate(this._generateCursorInjectionScript(session.meta));
+        await session.page.evaluate(generateBrowserCursorScript(session.meta.name));
       }
       await session.page.evaluate(({ x, y, action, label }) => {
         if (window.__updateAgentCursor) window.__updateAgentCursor(x, y, action, label);
@@ -1145,7 +1013,7 @@ export class AgentBrowserManager {
       label,
     });
 
-    // 2. Pulse click shockwave and trigger DOM click
+    // 2. Update the pointer label and trigger the page click
     session.cursor.action = 'click';
     session.cursor.label = label;
     try {
@@ -1383,7 +1251,7 @@ export class AgentBrowserManager {
       label,
     });
 
-    // 2. Pulse right-click golden shockwave and trigger native mouse right click
+    // 2. Update the pointer label and trigger the native right click
     session.cursor.action = 'right-click';
     session.cursor.label = label;
     try {
@@ -1453,7 +1321,7 @@ export class AgentBrowserManager {
       label,
     });
 
-    // 2. Pulse double-click shockwaves and trigger native mouse dblclick
+    // 2. Update the pointer label and trigger the native double click
     session.cursor.action = 'dblclick';
     session.cursor.label = label;
     try {
@@ -2951,7 +2819,7 @@ Always output valid JSON ONLY with this schema:
               label: `${meta.name} [Clicking Result #${targetIdx + 1}: "${targetResult.text.slice(0, 20)}..."]`,
             });
 
-            // Click link with shockwave ripple
+            // Click the link with the agent pointer
             await this.click(
               targetAgentId,
               { x: targetResult.x, y: targetResult.y },

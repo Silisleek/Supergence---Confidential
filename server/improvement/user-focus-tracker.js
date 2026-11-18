@@ -4,6 +4,7 @@
 // Feeds 24/7 background learning so the AI recursively evolves on what the user uses it for most.
 
 import fs from 'fs';
+import { Worker } from 'node:worker_threads';
 import { hasPassingOracle } from '../trajectory/learning-grade.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -94,6 +95,8 @@ class UserFocusTracker {
     this.conversationsDir = options.conversationsDir || DEFAULT_CONVERSATIONS_DIR;
     this.learnedSkillsDir = options.learnedSkillsDir || LEARNED_SKILLS_DIR;
     this.saveTimeout = null;
+    this.saveInProgress = null;
+    this.savePending = false;
 
     this.profile = {
       version: '1.0.0',
@@ -152,15 +155,34 @@ class UserFocusTracker {
   }
 
   _saveImmediate() {
+    this.savePending = true;
+    this.saveInProgress ??= this._persistPendingProfiles();
+    return this.saveInProgress;
+  }
+
+  async _persistPendingProfiles() {
     try {
-      const dir = path.dirname(this.profilePath);
-      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-      this.profile.lastUpdated = Date.now();
-      const tempPath = `${this.profilePath}.tmp_${Date.now()}`;
-      fs.writeFileSync(tempPath, JSON.stringify(this.profile, null, 2), 'utf8');
-      fs.renameSync(tempPath, this.profilePath);
-    } catch (err) {
-      console.error('[UserFocusTracker] Save error:', err.message);
+      while (this.savePending) {
+        this.savePending = false;
+        this.profile.lastUpdated = Date.now();
+        try {
+          await new Promise((resolve, reject) => {
+            const worker = new Worker(new URL('./user-focus-profile-writer.js', import.meta.url), {
+              execArgv: [],
+              workerData: { profilePath: this.profilePath, profile: this.profile },
+            });
+            worker.once('error', reject);
+            worker.once('exit', (code) => {
+              if (code === 0) resolve();
+              else reject(new Error(`Profile writer exited with code ${code}.`));
+            });
+          });
+        } catch (err) {
+          console.error('[UserFocusTracker] Save error:', err.message);
+        }
+      }
+    } finally {
+      this.saveInProgress = null;
     }
   }
 
@@ -173,7 +195,7 @@ class UserFocusTracker {
         console.log(
           '[UserFocusTracker] Bootstrapping user focus profile from historical conversations...',
         );
-        this.bootstrapFromHistory();
+        await this.bootstrapFromHistory();
       }
       this._syncLearnedSkillsFromDisk();
       console.log(
@@ -187,7 +209,7 @@ class UserFocusTracker {
   /**
    * Parse all past conversation files to extract historical baseline
    */
-  bootstrapFromHistory() {
+  async bootstrapFromHistory() {
     try {
       if (!fs.existsSync(this.conversationsDir)) return;
       const files = fs.readdirSync(this.conversationsDir).filter((f) => f.endsWith('.json'));
@@ -215,7 +237,7 @@ class UserFocusTracker {
         }
       }
 
-      this._saveImmediate();
+      await this._saveImmediate();
       console.log(
         `[UserFocusTracker] Historical bootstrap complete. Analyzed ${files.length} conversations.`,
       );

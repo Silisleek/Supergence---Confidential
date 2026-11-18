@@ -43,9 +43,14 @@ const screenshotDir = path.resolve('test-results/current-ui');
       hasInjectedWidget: Boolean(document.getElementById('sis-widget-eval_live_hud')),
       floatingLayerChildren: document.getElementById('sisFloatingLayer')?.children.length,
       turnsCount: document.querySelectorAll('.chat-turn-item').length,
-      mainResponseBody: document.getElementById('mainResponseBody')?.textContent.trim().slice(0, 100),
+      mainResponseBody: document
+        .getElementById('mainResponseBody')
+        ?.textContent.trim()
+        .slice(0, 100),
       currentTitle: document.getElementById('activeWorkspaceTitleDisplay')?.textContent,
-      navItems: Array.from(document.querySelectorAll('nav a, .nav-item, [role="tab"]')).map(el => el.textContent.trim()).filter(Boolean),
+      navItems: Array.from(document.querySelectorAll('nav a, .nav-item, [role="tab"]'))
+        .map((el) => el.textContent.trim())
+        .filter(Boolean),
     };
   });
   console.log('Page State:', JSON.stringify(pageState, null, 2));

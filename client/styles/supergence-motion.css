@@ -35,11 +35,7 @@
   inset: 0;
   z-index: -1;
   border-radius: inherit;
-  background: radial-gradient(
-    300px circle at var(--pointer-x, 50%) var(--pointer-y, 50%),
-    color-mix(in srgb, var(--shell-accent) 10%, transparent),
-    transparent 75%
-  );
+  background: var(--sg-glass-wash, rgb(184 117 72 / 14%));
   opacity: 0;
   transition: opacity 300ms ease;
   pointer-events: none;
@@ -94,7 +90,6 @@ body[data-sg-page-hidden='true'] .guide-hero::before {
   }
 }
 
-
 /* ══════════════════════════════════════════════════════════════════════════
    SUPERGENCE UI/UX MOTION & FLUID ANIMATIONS (LESS CODE, HIGH PERFORMANCE)
    ══════════════════════════════════════════════════════════════════════════ */
@@ -148,8 +143,13 @@ body[data-sg-page-hidden='true'] .guide-hero::before {
 }
 
 @keyframes sgBlinkCursor {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
 }
 
 /* 4. Tasks Running Floating & Inline Banner */
@@ -163,19 +163,29 @@ body[data-sg-page-hidden='true'] .guide-hero::before {
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(56, 189, 248, 0.35);
   border-radius: 999px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 12px rgba(56, 189, 248, 0.2);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.4),
+    0 0 12px rgba(56, 189, 248, 0.2);
   margin: 8px 0;
   color: #f1f5f9;
   font-family: var(--font-ui, system-ui, sans-serif);
   font-size: 12px;
   font-weight: 550;
-  transition: opacity 300ms ease, transform 300ms ease;
+  transition:
+    opacity 300ms ease,
+    transform 300ms ease;
   animation: sgPillAppear 220ms ease-out;
 }
 
 @keyframes sgPillAppear {
-  from { opacity: 0; transform: translateY(-4px) scale(0.95); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .supergence-tasks-running.fade-out {
@@ -217,7 +227,8 @@ body[data-sg-page-hidden='true'] .guide-hero::before {
 }
 
 @keyframes sgTaskPulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(0.9);
     opacity: 0.7;
     box-shadow: 0 0 4px #38bdf8;
@@ -225,7 +236,9 @@ body[data-sg-page-hidden='true'] .guide-hero::before {
   50% {
     transform: scale(1.2);
     opacity: 1;
-    box-shadow: 0 0 12px #38bdf8, 0 0 20px rgba(56, 189, 248, 0.5);
+    box-shadow:
+      0 0 12px #38bdf8,
+      0 0 20px rgba(56, 189, 248, 0.5);
   }
 }
 
@@ -451,36 +464,96 @@ body[data-sg-page-hidden='true'] .guide-hero::before {
   border: none;
 }
 
-.loader-letter:nth-child(1) { animation-delay: 0s; }
-.loader-letter:nth-child(2) { animation-delay: 0.08s; }
-.loader-letter:nth-child(3) { animation-delay: 0.16s; }
-.loader-letter:nth-child(4) { animation-delay: 0.24s; }
-.loader-letter:nth-child(5) { animation-delay: 0.32s; }
-.loader-letter:nth-child(6) { animation-delay: 0.4s; }
-.loader-letter:nth-child(7) { animation-delay: 0.48s; }
-.loader-letter:nth-child(8) { animation-delay: 0.56s; }
-.loader-letter:nth-child(9) { animation-delay: 0.64s; }
-.loader-letter:nth-child(10) { animation-delay: 0.72s; }
-.loader-letter:nth-child(11) { animation-delay: 0.8s; }
-.loader-letter:nth-child(12) { animation-delay: 0.88s; }
-.loader-letter:nth-child(13) { animation-delay: 0.96s; }
-.loader-letter:nth-child(14) { animation-delay: 1.04s; }
-.loader-letter:nth-child(15) { animation-delay: 1.12s; }
-.loader-letter:nth-child(16) { animation-delay: 1.2s; }
-.loader-letter:nth-child(17) { animation-delay: 1.28s; }
-.loader-letter:nth-child(18) { animation-delay: 1.36s; }
-.loader-letter:nth-child(19) { animation-delay: 1.44s; }
-.loader-letter:nth-child(20) { animation-delay: 1.52s; }
-.loader-letter:nth-child(21) { animation-delay: 1.6s; }
-.loader-letter:nth-child(22) { animation-delay: 1.68s; }
-.loader-letter:nth-child(23) { animation-delay: 1.76s; }
-.loader-letter:nth-child(24) { animation-delay: 1.84s; }
-.loader-letter:nth-child(25) { animation-delay: 1.92s; }
-.loader-letter:nth-child(26) { animation-delay: 2.0s; }
-.loader-letter:nth-child(27) { animation-delay: 2.08s; }
-.loader-letter:nth-child(28) { animation-delay: 2.16s; }
-.loader-letter:nth-child(29) { animation-delay: 2.24s; }
-.loader-letter:nth-child(30) { animation-delay: 2.32s; }
+.loader-letter:nth-child(1) {
+  animation-delay: 0s;
+}
+.loader-letter:nth-child(2) {
+  animation-delay: 0.08s;
+}
+.loader-letter:nth-child(3) {
+  animation-delay: 0.16s;
+}
+.loader-letter:nth-child(4) {
+  animation-delay: 0.24s;
+}
+.loader-letter:nth-child(5) {
+  animation-delay: 0.32s;
+}
+.loader-letter:nth-child(6) {
+  animation-delay: 0.4s;
+}
+.loader-letter:nth-child(7) {
+  animation-delay: 0.48s;
+}
+.loader-letter:nth-child(8) {
+  animation-delay: 0.56s;
+}
+.loader-letter:nth-child(9) {
+  animation-delay: 0.64s;
+}
+.loader-letter:nth-child(10) {
+  animation-delay: 0.72s;
+}
+.loader-letter:nth-child(11) {
+  animation-delay: 0.8s;
+}
+.loader-letter:nth-child(12) {
+  animation-delay: 0.88s;
+}
+.loader-letter:nth-child(13) {
+  animation-delay: 0.96s;
+}
+.loader-letter:nth-child(14) {
+  animation-delay: 1.04s;
+}
+.loader-letter:nth-child(15) {
+  animation-delay: 1.12s;
+}
+.loader-letter:nth-child(16) {
+  animation-delay: 1.2s;
+}
+.loader-letter:nth-child(17) {
+  animation-delay: 1.28s;
+}
+.loader-letter:nth-child(18) {
+  animation-delay: 1.36s;
+}
+.loader-letter:nth-child(19) {
+  animation-delay: 1.44s;
+}
+.loader-letter:nth-child(20) {
+  animation-delay: 1.52s;
+}
+.loader-letter:nth-child(21) {
+  animation-delay: 1.6s;
+}
+.loader-letter:nth-child(22) {
+  animation-delay: 1.68s;
+}
+.loader-letter:nth-child(23) {
+  animation-delay: 1.76s;
+}
+.loader-letter:nth-child(24) {
+  animation-delay: 1.84s;
+}
+.loader-letter:nth-child(25) {
+  animation-delay: 1.92s;
+}
+.loader-letter:nth-child(26) {
+  animation-delay: 2s;
+}
+.loader-letter:nth-child(27) {
+  animation-delay: 2.08s;
+}
+.loader-letter:nth-child(28) {
+  animation-delay: 2.16s;
+}
+.loader-letter:nth-child(29) {
+  animation-delay: 2.24s;
+}
+.loader-letter:nth-child(30) {
+  animation-delay: 2.32s;
+}
 
 @keyframes loader-letter-anim {
   0%,
@@ -509,4 +582,3 @@ body[data-sg-page-hidden='true'] .guide-hero::before {
     opacity: 0.9;
   }
 }
-

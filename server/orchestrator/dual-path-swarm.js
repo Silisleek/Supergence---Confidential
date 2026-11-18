@@ -4,6 +4,7 @@
 //  - NOVA: Ultra-fast speculative drafter generating candidate branches & diffs
 //  - AEGIS: Adversarial micro-sandbox verifier auditing AST, runtime invariants & hallucinations
 
+import { parse } from 'acorn';
 import brain from './brain.js';
 
 export class SpeculativeDualPathSwarm {
@@ -13,10 +14,10 @@ export class SpeculativeDualPathSwarm {
     this.history = [];
     this.stats = {
       totalTasks: 0,
-      speculativeSpeedup: '3.42x',
-      aegisAcceptanceRate: '96.8%',
+      speculativeSpeedup: null,
+      aegisAcceptanceRate: null,
       violationsIntercepted: 0,
-      averageVerificationMs: 42,
+      averageVerificationMs: null,
     };
   }
 
@@ -39,21 +40,14 @@ export class SpeculativeDualPathSwarm {
 
     // 2. Aegis Phase: Parallel Adversarial Verification & AST Linting
     const aegisStartTime = performance.now();
-    const verification = await this._runAegisVerifier(draft, prompt, mode);
+    const verification = await this._runAegisVerifier(draft, mode);
     const aegisDuration = Math.round(performance.now() - aegisStartTime);
 
-    // 3. Reconcile & Synthesize Final Execution Envelope
-    let finalCode = draft.speculativeOutput;
-    let accepted = verification.passed;
-    let autoRemediated = false;
-
-    if (!accepted && verification.patches && verification.patches.length > 0) {
-      // Apply Aegis patch
-      finalCode = this._applyAegisPatches(draft.speculativeOutput, verification.patches);
-      autoRemediated = true;
-      accepted = true;
-      this.stats.violationsIntercepted++;
-    }
+    const status = verification.syntaxValid === null
+      ? 'UNVERIFIED'
+      : verification.syntaxValid
+        ? 'SYNTAX_CHECKED'
+        : 'REJECTED';
 
     const totalDuration = Math.round(performance.now() - startTime);
 
@@ -65,8 +59,7 @@ export class SpeculativeDualPathSwarm {
         totalMs: totalDuration,
         novaMs: novaDuration,
         aegisMs: aegisDuration,
-        speculativeSpeedup:
-          (totalDuration > 0 ? ((totalDuration * 3.4) / totalDuration).toFixed(2) : '3.40') + 'x',
+        speculativeSpeedup: null,
       },
       nova: {
         hypothesis: draft.hypothesis,
@@ -75,17 +68,18 @@ export class SpeculativeDualPathSwarm {
         draftOutput: draft.speculativeOutput,
       },
       aegis: {
-        status: accepted ? 'VERIFIED' : 'REJECTED',
-        astIntegrityScore: verification.astScore,
+        status,
+        astIntegrityScore: null,
+        syntaxValid: verification.syntaxValid,
         invariantChecks: verification.invariants,
         violationsFound: verification.violations,
         adversarialNotes: verification.notes,
-        autoRemediated,
+        autoRemediated: false,
       },
       finalArtifact: {
-        code: finalCode,
+        code: draft.speculativeOutput,
         summary: draft.summary,
-        verified: true,
+        verified: false,
       },
       timestamp: new Date().toISOString(),
     };
@@ -98,7 +92,7 @@ export class SpeculativeDualPathSwarm {
       brain.broadcast('swarm-dual-path-event', {
         taskId: resultEnvelope.taskId,
         prompt: prompt.slice(0, 80),
-        status: 'VERIFIED',
+        status,
         timing: resultEnvelope.timing,
         violationsIntercepted: this.stats.violationsIntercepted,
       });
@@ -171,8 +165,8 @@ export class SystemController {
 
     return {
       hypothesis,
-      confidence: 0.965,
-      speculativeBranches: 3,
+      confidence: null,
+      speculativeBranches: null,
       speculativeOutput,
       summary,
     };
@@ -181,11 +175,10 @@ export class SystemController {
   /**
    * Aegis: Adversarial verifier and invariant checker
    */
-  async _runAegisVerifier(draft, prompt, mode) {
+  async _runAegisVerifier(draft, mode) {
     const code = draft.speculativeOutput;
     const violations = [];
     const invariants = [];
-    const patches = [];
 
     // Check 1: Null/undefined defensive guardrails
     if (!code.includes('if (!record') && !code.includes('throw new Error')) {
@@ -208,30 +201,24 @@ export class SystemController {
       invariants.push({ name: 'Memory Boundedness', status: 'PASSED' });
     }
 
-    // Check 3: Concurrency & Async Invariants
-    invariants.push({ name: 'Async Non-Blocking Loop', status: 'PASSED' });
-    invariants.push({ name: 'Cryptographic Determinism', status: 'PASSED' });
-    invariants.push({ name: 'AST Syntax Validity', status: 'PASSED' });
+    let syntaxValid = null;
+    if (mode.includes('code') || mode.includes('bug')) {
+      try {
+        parse(code, { ecmaVersion: 'latest', sourceType: 'module' });
+        syntaxValid = true;
+      } catch (error) {
+        syntaxValid = false;
+        violations.push(error.message);
+      }
+      invariants.push({ name: 'JavaScript syntax', status: syntaxValid ? 'PASSED' : 'FAILED' });
+    }
 
     return {
-      passed: true,
-      astScore: 98.4,
+      syntaxValid,
       violations,
       invariants,
-      patches,
-      notes:
-        'Aegis audited all execution paths. Invariants confirmed healthy. Zero hallucination detected.',
+      notes: 'Static checks only. Runtime invariants were not tested.',
     };
-  }
-
-  _applyAegisPatches(code, patches) {
-    let patched = code;
-    for (const patch of patches) {
-      if (patch.find && patch.replace) {
-        patched = patched.replace(patch.find, patch.replace);
-      }
-    }
-    return patched;
   }
 
   getHistory() {

@@ -7,7 +7,7 @@ if (!baseURL) throw new Error('Set SIS_BASE_URL.');
 const output = path.resolve('test-results/workspace-browser');
 await fs.mkdir(output, { recursive: true });
 const browser = await chromium.launch({ channel: 'chrome', headless: true });
-const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
+const page = await browser.newPage({ viewport: { width: 1095, height: 790 } });
 page.setDefaultTimeout(60000);
 const errors = [];
 const checks = [];
@@ -40,9 +40,15 @@ async function clickRemote(x, y) {
 try {
   await page.goto(baseURL, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => window.__sisWorkspaceReady && window.SupergenceBrowser);
-  await page.locator('#shellNewConversation').click();
-  await page.locator('#workspaceBtnSideBrowser').click();
-  await page.locator('#workspaceBrowserPanel').waitFor();
+  const browserTab = page.getByRole('tab', { name: 'Browser', exact: true });
+  const dockedBrowser = page.locator('#sgBrowserDock > #workspaceBrowserPanel');
+  await page.getByRole('button', { name: 'Open workspace browser', exact: true }).click();
+  await dockedBrowser.waitFor();
+  assert.equal(await page.locator('#sgPanelBrowser iframe').count(), 0);
+  const chatBounds = await page.locator('.sg-conversation-container').boundingBox();
+  const browserBounds = await dockedBrowser.boundingBox();
+  assert.ok(browserBounds.x >= chatBounds.x + chatBounds.width);
+  assert.ok(browserBounds.y < chatBounds.y + chatBounds.height);
   await page.evaluate(() => window.SupergenceBrowser.open('https://www.google.com/'));
   const google = await until(
     (value) =>
@@ -63,6 +69,12 @@ try {
   }, desktop.viewport);
   assert.ok(google.text.length > 0);
   checks.push('real Google page and live Chrome frame');
+  await page.getByRole('tab', { name: 'Files', exact: true }).click();
+  await page.getByRole('region', { name: 'Chat workspace' }).waitFor();
+  await browserTab.click();
+  await dockedBrowser.locator('.wb-frame').waitFor();
+  assert.match(await dockedBrowser.locator('.wb-address').inputValue(), /google\./);
+  checks.push('browser stays beside chat and restores its page after switching panels');
   await page.screenshot({ path: path.join(output, 'google-desktop.png') });
   await page.request.post(`${baseURL}/api/workspace/file`, {
     data: {

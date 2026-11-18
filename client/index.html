@@ -11,19 +11,9 @@
     />
     <script src="/scripts/reload-guard.js"></script>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&family=Instrument+Serif:ital@0;1&family=Inter:wght@300..800&family=JetBrains+Mono:wght@400..700&family=Manrope:wght@300..800&family=Space+Grotesk:wght@400..700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
-      media="print"
-      onload="this.media = 'all'"
-    />
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <link rel="stylesheet" href="/styles/sleek-fonts.css" />
+    <link rel="stylesheet" href="/vendor/katex/katex.min.css" />
+    <script defer src="/vendor/katex/katex.min.js"></script>
 
     <!-- Importmap for Three.js ES Modules -->
     <script type="importmap">
@@ -42,24 +32,28 @@
     <link rel="stylesheet" href="/styles/chat-artifacts.css" />
     <link rel="stylesheet" href="/styles/workspace-theme.css" />
     <link rel="stylesheet" href="/styles/workspace-learning.css" />
-    <link rel="stylesheet" href="/styles/workspace-browser.css" />
+    <link rel="stylesheet" href="/styles/workspace-browser.css?v=20261115a" />
     <link rel="stylesheet" href="/styles/workspace-cockpit.css" />
     <link rel="stylesheet" href="/styles/workspace-access.css" />
     <link rel="stylesheet" href="/styles/workspace-chat-files.css" />
     <link rel="stylesheet" href="/styles/workspace-proactive.css" />
-    <link rel="stylesheet" href="/styles/workspace-styles-window.css" />
+    <link rel="stylesheet" href="/styles/workspace-styles-window.css?v=overlay-appearance" />
     <link rel="stylesheet" href="/styles/workspace-polish.css" />
     <link rel="stylesheet" href="/styles/workspace-agent-profiles.css" />
     <link rel="stylesheet" href="/styles/workspace-sidechat.css" />
     <link rel="stylesheet" href="/styles/storage-dashboard.css?v=2" />
     <link rel="stylesheet" href="/styles/workspace-onboarding.css" />
     <link rel="stylesheet" href="/styles/workspace-mascot.css" />
-    <link rel="stylesheet" href="/styles/workspace-liquid-glass.css" />
+    <link rel="stylesheet" href="/styles/workspace-liquid-glass.css?v=component-appearance" />
     <link rel="icon" type="image/png" href="/images/supergence-logo.png" />
   </head>
 
   <body class="sis-workspace-ui hud-liquid-glass-pure">
-    <div id="workspaceDrawerBackdrop" class="workspace-drawer-backdrop" onclick="window.SupergenceLiquidGlass &amp;&amp; window.SupergenceLiquidGlass.toggleDrawer(false)"></div>
+    <div
+      id="workspaceDrawerBackdrop"
+      class="workspace-drawer-backdrop"
+      onclick="window.SupergenceLiquidGlass &amp;&amp; window.SupergenceLiquidGlass.toggleDrawer(false)"
+    ></div>
     <div id="supergenceWorkspace" class="supergence-workspace active">
       <nav class="workspace-rail" aria-label="Workspace navigation">
         <button
@@ -223,8 +217,8 @@
               aria-hidden="true"
             >
               <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-            </svg><span class="shell-tooltip">Learning library</span>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg
+            ><span class="shell-tooltip">Learning library</span>
           </button>
           <button
             id="railStudio"
@@ -243,8 +237,10 @@
               stroke-linejoin="round"
               aria-hidden="true"
             >
-              <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z" />
-            </svg><span class="shell-tooltip">Creation studio</span>
+              <path
+                d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"
+              /></svg
+            ><span class="shell-tooltip">Creation studio</span>
           </button>
         </div>
         <div class="shell-rail-bottom">
@@ -271,7 +267,7 @@
           </button>
           <button
             id="railOnboarding"
-            style="display: none;"
+            style="display: none"
             type="button"
             class="shell-rail-button"
             onclick="window.openSupergenceSetup &amp;&amp; window.openSupergenceSetup()"
@@ -347,6 +343,31 @@
         </div>
         <div class="workspace-right-actions">
           <button
+            id="workspaceModelSwitcherBtn"
+            type="button"
+            class="sis-borderless-model-pill"
+            onclick="window.SisModelSwitcher &amp;&amp; window.SisModelSwitcher.toggle()"
+            aria-label="Switch AI Model &amp; Provider"
+            title="Active Model &amp; Provider"
+          >
+            <span class="sis-model-pulse-dot"></span>
+            <span class="sis-model-label">
+              <span id="sisActiveProviderName" class="sis-provider-sub">AI Engine</span>
+              <span id="sisActiveModelName" class="sis-model-main">Loading...</span>
+            </span>
+            <svg
+              class="sis-model-chevron"
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </button>
+          <button
             id="workspaceBtnSideChat"
             type="button"
             class="shell-header-btn shell-sidechat-btn"
@@ -363,7 +384,7 @@
               stroke-linejoin="round"
               aria-hidden="true"
             >
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
             <span>Side chat</span>
           </button>
@@ -371,7 +392,19 @@
             id="workspaceBtnSuperbox"
             type="button"
             class="shell-header-btn"
-            style="display:inline-flex; align-items:center; gap:6px; padding:6px 12px; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.3); border-radius:8px; color:#38bdf8; font-size:12px; font-weight:600; cursor:pointer;"
+            style="
+              display: inline-flex;
+              align-items: center;
+              gap: 6px;
+              padding: 6px 12px;
+              background: rgba(56, 189, 248, 0.12);
+              border: 1px solid rgba(56, 189, 248, 0.3);
+              border-radius: 8px;
+              color: #38bdf8;
+              font-size: 12px;
+              font-weight: 600;
+              cursor: pointer;
+            "
             onclick="window.Superbox &amp;&amp; window.Superbox.toggle()"
             aria-label="Superbox Sandbox &amp; Live Stage"
             title="Superbox (Universal Sandbox &amp; Live Stage)"
@@ -411,74 +444,39 @@
           id="workspaceConversationsSidebar"
           aria-label="Conversation history"
         >
-          <div class="shell-sidebar-heading">
-            <span>Conversations</span
-            ><button
-              id="shellNewConversation"
-              type="button"
-              class="shell-icon-button"
-              data-shell-action="new-chat"
-              aria-label="New conversation"
-              title="New conversation (Ctrl+Shift+O)"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M12 5v14M5 12h14" />
-              </svg>
+          <nav class="sg-history-actions" aria-label="Conversation actions">
+            <button type="button" id="shellNewConversation" data-shell-action="new-chat" title="New conversation (Ctrl+Shift+O)">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>New</span>
             </button>
+            <button type="button" id="sgHistorySearch" aria-label="Search conversations" aria-expanded="false" aria-controls="sgHistorySearchBox" title="Search conversations (Ctrl+K)">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg><span>Search</span><kbd>Ctrl K</kbd>
+            </button>
+            <button type="button" data-shell-action="preferences">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9m4 0h3M4 17h3m4 0h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg><span>Settings</span>
+            </button>
+            <button type="button" id="sidebarSetupTour">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 2-2.5 2-2.5 4m0 3h.01"/></svg><span>Setup and tour</span>
+            </button>
+            <button type="button" data-shell-action="suggestions">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 13.7 8.3 18.5 10l-4.8 1.7L12 16.5l-1.7-4.8L5.5 10l4.8-1.7L12 3.5ZM19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8L19 14Z"/></svg><span>Suggestions</span>
+            </button>
+            <button type="button" data-shell-action="styles">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="7.5" width="17" height="12" rx="2.5"/><path d="M8.5 7.5V6a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v1.5"/></svg><span>Customize</span>
+            </button>
+          </nav>
+          <div class="sidebar-search-box" id="sgHistorySearchBox" hidden>
+            <input type="search" id="sidebarConvSearch" placeholder="Find a conversation" aria-label="Find a conversation" autocomplete="off">
           </div>
-          <div class="sidebar-search-box">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.6"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <circle cx="10.5" cy="10.5" r="6.5" />
-              <path d="m16 16 4 4" /></svg
-            ><input
-              type="search"
-              id="sidebarConvSearch"
-              placeholder="Search conversations"
-              aria-label="Search conversations"
-              oninput="filterSidebarConversations(this.value)"
-            /><kbd>Ctrl K</kbd>
-          </div>
-          <div class="shell-sidebar-section">Recent</div>
-          <div class="sidebar-conv-list" id="sidebarConvList">
+          <div class="sidebar-conv-list" id="sidebarConvList" aria-label="Saved conversations">
             <p class="shell-history-empty">Loading conversations&hellip;</p>
           </div>
           <div class="shell-sidebar-footer">
-            <span class="shell-connection" id="shellConnection" role="status"
-              ><span></span><span id="shellConnectionLabel">Connecting</span></span
-            ><button
-              class="shell-shortcut-link"
-              data-shell-action="help"
-              aria-label="Show keyboard shortcuts"
-            >
-              Shortcuts
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <circle cx="12" cy="12" r="9" />
-                <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 2-2.5 2-2.5 4m0 3h.01" />
-              </svg>
+            <span class="shell-connection" id="shellConnection" role="status"><span></span><span id="shellConnectionLabel">Connecting</span></span>
+            <button type="button" class="sg-history-footer-action" data-shell-action="help" aria-label="Show keyboard shortcuts" title="Keyboard shortcuts">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2.5"/><path d="M7 10h.01M10 10h.01M14 10h.01M17 10h.01M8 14h8"/></svg>
+            </button>
+            <button type="button" class="sg-history-footer-action" data-shell-action="preferences" aria-label="Open settings" title="Settings">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9m4 0h3M4 17h3m4 0h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>
             </button>
           </div>
         </aside>
@@ -529,8 +527,16 @@
                     title="Select model"
                   >
                     <span>Supergence · Auto</span>
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                      <path d="m6 9 6 6 6-6"/>
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="14"
+                      height="14"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      aria-hidden="true"
+                    >
+                      <path d="m6 9 6 6 6-6" />
                     </svg>
                   </button>
                 </div>
@@ -2526,10 +2532,12 @@
       </div>
     </div>
 
-    <script src="/scripts/modern-loader.js"></script>
-    <script src="/scripts/workspace-task-status.js"></script>
+    <script src="/scripts/modern-loader.js?v=20261114e"></script>
+    <script src="/scripts/workspace-task-status.js?v=20261114e"></script>
     <script src="/vendor/dompurify/purify.min.js"></script>
-    <script src="/scripts/workspace-controller.js"></script>
+    <script src="/scripts/workspace-liquid-glass.js?v=voice-recovery-2"></script>
+    <script src="/scripts/workspace-conversation-sidebar.js"></script>
+    <script src="/scripts/workspace-controller.js?v=workspace-split"></script>
 
     <script src="/scripts/feature-catalog.js"></script>
     <script src="/scripts/feature-actions.js"></script>
@@ -2580,14 +2588,48 @@
           role="switch"
       /></label>
       <label class="shell-preference"
+        ><span
+          ><strong>Start automatically on boot</strong
+          ><small id="shellAutostartSubtitle"
+            >Launch Supergence when your computer boots up (Windows, macOS, Linux).</small
+          ></span
+        ><input id="shellAutostartPreference" type="checkbox" role="switch"
+      /></label>
+      <label class="shell-preference"
         ><span><strong>Appearance</strong><small>Choose a palette for your workspace.</small></span
         ><select id="shellThemePreference" class="shell-theme-select" aria-label="Workspace theme">
-          <option value="warm">Apricot Cream</option>
-          <option value="midnight">Lavender Dusk</option>
-          <option value="cyber">Mint Glass</option>
-          <option value="obsidian">Lilac Mist</option>
+          <option value="warm">Charcoal</option>
+          <option value="midnight">Midnight</option>
+          <option value="cyber">Graphite</option>
+          <option value="obsidian">Obsidian</option>
         </select></label
       >
+      <div
+        class="shell-preference"
+        style="align-items: center; justify-content: space-between; display: flex"
+      >
+        <span
+          ><strong>Intelligence &amp; Models</strong
+          ><small>Switch reasoning cores or configure multi-cloud providers.</small></span
+        >
+        <button
+          type="button"
+          class="sis-btn-primary"
+          style="
+            padding: 7px 16px;
+            border-radius: 10px;
+            border: none;
+            background: var(--shell-accent, #a855f7);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+          "
+          onclick="window.SisModelSwitcher &amp;&amp; window.SisModelSwitcher.open()"
+        >
+          Switch / Add Models
+        </button>
+      </div>
       <p class="shell-preference-note">Saved in this browser. Your conversations stay unchanged.</p>
     </dialog>
     <dialog id="workspaceShortcuts" class="shell-dialog" aria-labelledby="shellShortcutsTitle">
@@ -2634,7 +2676,7 @@
     </dialog>
     <script src="/scripts/chat-artifacts.js"></script>
     <script src="/scripts/workspace-result-summary.js"></script>
-    <script src="/scripts/workspace-browser.js"></script>
+    <script src="/scripts/workspace-browser.js?v=20261115c"></script>
     <script src="/scripts/workspace-learning.js"></script>
     <link rel="stylesheet" href="/styles/workspace-evolution.css" />
     <script src="/scripts/workspace-evolution.js"></script>
@@ -2647,12 +2689,16 @@
     <script src="/scripts/workspace-proactive.js"></script>
     <script src="/scripts/workspace-agent-profiles.js"></script>
     <script src="/scripts/workspace-sidechat.js"></script>
-    <script src="/scripts/workspace-styles-window.js"></script>
+    <script type="module" src="/scripts/workspace-styles-window.js?v=overlay-appearance"></script>
     <script src="/scripts/workspace-polish.js"></script>
     <script src="/scripts/storage-dashboard.js?v=2"></script>
-    <script src="/scripts/workspace-onboarding.js"></script>
+    <script src="/scripts/workspace-onboarding.js?v=20261114f"></script>
     <script src="/scripts/workspace-mascot.js"></script>
-    <script src="/scripts/workspace-liquid-glass.js"></script>
-    <script src="/scripts/workspace-superbox.js"></script>
+    <script src="/scripts/workspace-superbox.js?v=1"></script>
+    <link rel="stylesheet" href="/styles/model-switcher.css" />
+    <link rel="stylesheet" href="/styles/supergence-glass.css?v=component-appearance" />
+    <link rel="stylesheet" href="/styles/workspace-controls.css" />
+    <script src="/scripts/workspace-notifications.js?v=3"></script>
+    <script src="/scripts/model-switcher.js?v=coffee-settings"></script>
   </body>
 </html>

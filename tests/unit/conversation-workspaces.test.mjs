@@ -8,6 +8,7 @@ import { runtimeAccess } from '../../server/services/runtimeAccess.js';
 import {
   ConversationWorkspaces,
   containedPath,
+  selectWorkspaceProject,
 } from '../../server/services/conversationWorkspaces.js';
 
 function fixture(t) {
@@ -22,6 +23,63 @@ function fixture(t) {
   });
   return { directory, service, baseRoot: workspace.baseRoot };
 }
+
+test('new agent work is grouped by project and follow-up turns reopen it', async (t) => {
+  const { directory, service, baseRoot } = fixture(t);
+  const turn = (requestId, query, work, storage = service) =>
+    storage.run({ baseRoot, conversationId: 'project-chat', requestId }, async () => {
+      selectWorkspaceProject(query);
+      return work();
+    });
+  const { root } = service.ensure(baseRoot, 'project-chat');
+  fs.writeFileSync(path.join(root, 'legacy.txt'), 'prior artifact');
+  await turn('hello', 'Hello', () => assert.equal(fs.existsSync(workspace.root), false));
+  assert.equal(fs.existsSync(path.join(root, 'projects')), false);
+
+  let first;
+  await turn('first', 'Build a notebook app', async () => {
+    const file = workspace.createFile('index.html', '<main>Notebook</main>');
+    first = workspace.root;
+    assert.match(file.path, /^projects\/notebook-app-[0-9a-f]+\/index\.html$/);
+    assert.match(file.url, /\/workspace\/chats\/project-chat\/projects\/.+\/index\.html$/);
+    workspace.createFolder('assets');
+    const result = await workspace.runCommand(
+      `"${process.execPath}" -e "require('fs').writeFileSync('assets/result.txt','ready')"`,
+    );
+    assert.equal(result.exitCode, 0);
+    assert.equal(workspace.readFile('assets/result.txt').content, 'ready');
+    assert.equal(workspace.readFile('legacy.txt').content, 'prior artifact');
+  });
+  service.close();
+  const reopened = new ConversationWorkspaces({ directory: path.join(directory, 'data') });
+  t.after(() => reopened.close());
+  await turn(
+    'follow-up',
+    'Add an export button',
+    () => {
+      assert.equal(workspace.root, first);
+      assert.equal(workspace.readFile('index.html').content, '<main>Notebook</main>');
+      workspace.createFile('projects/side-demo/index.html', '<main>Side project</main>');
+    },
+    reopened,
+  );
+  await turn(
+    'second',
+    'Create another app for recipes',
+    () => {
+      assert.notEqual(workspace.root, first);
+      workspace.createFile('index.html', '<main>Recipes</main>');
+      assert.equal(
+        workspace.readFile('projects/side-demo/index.html').content,
+        '<main>Side project</main>',
+      );
+    },
+    reopened,
+  );
+  assert.equal(fs.readFileSync(path.join(first, 'index.html'), 'utf8'), '<main>Notebook</main>');
+  assert.equal(fs.existsSync(path.join(root, 'index.html')), false);
+  assert.equal(fs.existsSync(path.join(baseRoot, 'projects', 'side-demo')), false);
+});
 
 test('revocation stops a running workspace process before it can write a delayed result', async (t) => {
   const { service, baseRoot } = fixture(t);
@@ -154,4 +212,24 @@ test('workspace history survives restart and viewer paths reject traversal and d
   assert.throws(() => containedPath(record.root, 'outside/anything'), /Linked/);
   assert.equal(reopened.list(record).entries.find((e) => e.name === 'outside').type, 'link');
   assert.throws(() => reopened.ensure(baseRoot, '../invalid'), /Invalid/);
+});
+
+test('a delegated agent shares the initiating project workspace without changing project', async (t) => {
+  const { service, baseRoot } = fixture(t);
+  let projectDirectory;
+  let projectRoot;
+  await service.run({ baseRoot, conversationId: 'shared-project', requestId: 'main-turn' }, async () => {
+    selectWorkspaceProject('Build a notebook app');
+    workspace.createFile('index.html', 'original');
+    projectRoot = workspace.root;
+    projectDirectory = path.relative(service.ensure(baseRoot, 'shared-project').root, projectRoot).replaceAll('\\', '/');
+    await service.run({ baseRoot, conversationId: 'shared-project', requestId: 'delegated-turn', lockedProjectDirectory: projectDirectory }, async () => {
+      selectWorkspaceProject('Create another project for testing');
+      assert.equal(workspace.root, projectRoot);
+      workspace.createFile('review.txt', 'agent work');
+    });
+    assert.equal(workspace.readFile('review.txt').content, 'agent work');
+  });
+  assert.equal(fs.readFileSync(path.join(projectRoot, 'index.html'), 'utf8'), 'original');
+  assert.equal(service.ensure(baseRoot, 'shared-project').activeProject, projectDirectory);
 });

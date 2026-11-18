@@ -11,9 +11,13 @@ export function registerAgentConversationRoutes(app) {
           .json({ success: false, error: error.message });
       }
     });
+  route('get', '/api/team-chat', (req) => ({ thread: conversations.team(String(req.query.conversationId || '')) }));
+  route('post', '/api/team-chat/messages', async (req) => ({
+    thread: await conversations.sendTeam(String(req.body?.conversationId || ''), { content: req.body?.content, targetAgentId: req.body?.targetAgentId }),
+  }));
   route('get', '/api/agent-conversations', () => ({ threads: conversations.list() }));
   route('post', '/api/agent-conversations', async (req) => ({
-    thread: await conversations.create(req.body),
+    thread: await conversations.create({ agentIds: req.body?.agentIds, title: req.body?.title }),
   }));
   route('get', '/api/agent-conversations/:id', (req) => ({
     thread: conversations.get(req.params.id),

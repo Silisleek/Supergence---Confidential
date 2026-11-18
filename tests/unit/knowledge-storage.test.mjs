@@ -252,7 +252,7 @@ test('metadata-only edits reject stale revision tokens and bounded rule context 
   assert.ok(Array.isArray(JSON.parse(json)));
 });
 
-test('ordinary questions receive recall and explicit memory requests receive editing tools', () => {
+test('ordinary questions receive recall and retention while explicit memory requests receive editing tools', () => {
   const definitions = [
     'recall_knowledge',
     'retain_knowledge',
@@ -261,7 +261,7 @@ test('ordinary questions receive recall and explicit memory requests receive edi
   ].map((name) => ({ function: { name } }));
   assert.deepEqual(
     selectWorkspaceTools(definitions, 'How does cobalt work?').map((tool) => tool.function.name),
-    ['recall_knowledge'],
+    ['recall_knowledge', 'retain_knowledge'],
   );
   assert.equal(selectWorkspaceTools(definitions, 'Update my saved rules').length, 4);
 });

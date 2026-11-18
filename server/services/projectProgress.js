@@ -128,7 +128,7 @@ export function projectCheckpoint(calls = [], workspaceRoot = null) {
   for (const call of calls) {
     if (call.status !== 'RESOLVED' || call.output?.error || call.output?.success === false)
       continue;
-    const filepath = call.args?.filepath || call.args?.path;
+    const filepath = call.output?.path || call.args?.filepath || call.args?.path;
     if (!filepath || !changesSource.test(call.tool)) continue;
     const content = call.args?.content;
     // A later edit supersedes an earlier full-source observation. Never retain
